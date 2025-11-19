@@ -1,4 +1,0 @@
-[Running] cd "c:\Users\Utilizador\Documents\GitHub\BaseMinimum_IncludeCpp\" && g++ main.cpp -o main && "c:\Users\Utilizador\Documents\GitHub\BaseMinimum_IncludeCpp\"main
-C:\Users\UTILIZ~1\AppData\Local\Temp\ccdwvGdc.o:main.cpp:(.text+0x35): undefined reference to `IncludeLib::IncludeLib()'
-C:\Users\UTILIZ~1\AppData\Local\Temp\ccdwvGdc.o:main.cpp:(.text+0x44): undefined reference to `IncludeLib::PrintText()'
-collect2.exe: error: ld returned 1 exit status
