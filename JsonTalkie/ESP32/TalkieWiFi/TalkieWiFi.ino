@@ -12,10 +12,10 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#define SOURCE_LIBRARY_MODE 1
+#define SOURCE_LIBRARY_MODE 2
 //      0 - Arduino Library
 //      1 - Project Library
-//      2 - Local User Library
+//      2 - Copy Library
 
 #define SOCKET_TYPE 0
 //      0 - WiFi Socket
@@ -39,7 +39,7 @@ https://github.com/ruiseixasm/JsonTalkie
     #endif
 
 #elif SOURCE_LIBRARY_MODE == 2
-#include <LocalUser_JsonTalkie.hpp>
+#include <Copy_JsonTalkie.hpp>
     #if SOCKET_TYPE == 0
     #include <sockets/BroadcastSocket_ESP32.hpp>
     #elif SOCKET_TYPE == 1
