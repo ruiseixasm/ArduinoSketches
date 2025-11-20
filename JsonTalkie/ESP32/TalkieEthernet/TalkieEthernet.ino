@@ -136,71 +136,43 @@ void setup() {
     
     Serial.println("Pins initialized successfully");
 
-    // INITIATING THE ETHERNET CONNECTION
-
-    // Initialize SPI and Ethernet with CS pin first
+    // STEP 1: Initialize SPI only
     const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
     
+    Serial.println("Step 1: Starting SPI...");
     SPI.begin();
-    Ethernet.init(CS_PIN);  // ← CRITICAL: Initialize Ethernet with CS pin!
-    Serial.println("SPI initialized");
+    Serial.println("SPI started successfully");
+    delay(1000);
 
-    Serial.print("Starting Ethernet...");
+    // STEP 2: Initialize Ethernet with CS pin
+    Serial.println("Step 2: Initializing Ethernet...");
+    Ethernet.init(CS_PIN);
+    Serial.println("Ethernet initialized successfully");
+    delay(1000);
+
+    // STEP 3: Begin Ethernet connection
+    Serial.println("Step 3: Starting Ethernet connection...");
     Ethernet.begin(mac);
-    
-    // Check if ENC28J60 is connected
-    Serial.print("Checking ENC28J60 connection...");
-    delay(1000); // Give time for initialization
-    
+    Serial.println("Ethernet.begin completed");
+    delay(1000);
+
+    // STEP 4: Check hardware status
+    Serial.print("Step 4: Checking hardware...");
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
         Serial.println(" FAILED - ENC28J60 not found!");
-        while (true) {
-            digitalWrite(LED_BUILTIN, HIGH);
-            delay(100);
-            digitalWrite(LED_BUILTIN, LOW);
-            delay(100);
-            digitalWrite(LED_BUILTIN, HIGH);
-            delay(100);
-            digitalWrite(LED_BUILTIN, LOW);
-            delay(700); // Blink pattern to indicate hardware error
-        }
-    } else if (Ethernet.hardwareStatus() == EthernetW5100) {
-        Serial.println(" WARNING - Found W5100 instead of ENC28J60");
-    } else if (Ethernet.hardwareStatus() == EthernetW5500) {
-        Serial.println(" WARNING - Found W5500 instead of ENC28J60");
     } else {
-        Serial.println(" SUCCESS - ENC28J60 detected");
+        Serial.println(" SUCCESS - Hardware detected");
     }
-    
-    // Check link status
-    Serial.print("Checking link status...");
-    if (Ethernet.linkStatus() == LinkOFF) {
-        Serial.println(" NO LINK - Check Ethernet cable!");
-    } else {
-        Serial.println(" LINK OK");
-    }
-        
+
+    // If we get here, Ethernet is working!
     Serial.print("IP: ");
     Serial.println(Ethernet.localIP());
-    
-    // Calculate broadcast address manually
-    IPAddress localIP = Ethernet.localIP();
-    IPAddress subnetMask = Ethernet.subnetMask();
-    IPAddress broadcastIP;
-    
-    for (int i = 0; i < 4; i++) {
-        broadcastIP[i] = localIP[i] | (~subnetMask[i] & 0xFF);
-    }
-    
-    Serial.print("Broadcast: ");
-    Serial.println(broadcastIP);
 
-    // ETHERNET CONNECTION MADE
-
+    // Rest of your Ethernet code...
     udp.begin(PORT);
 
     Serial.println("Opening the Socket...");
-    broadcast_socket.set_port(5005);    // By default is already 5005
+    broadcast_socket.set_port(5005);
     broadcast_socket.set_udp(&udp);
 
     Serial.println("Setting JsonTalkie...");
