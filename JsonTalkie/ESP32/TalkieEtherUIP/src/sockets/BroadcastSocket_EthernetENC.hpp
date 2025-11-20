@@ -19,8 +19,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <EthernetUdp.h>  // Using EthernetUdp instead of UIPUdp
 
 
-#define BROADCAST_ETHERNETENC_DEBUG
-// #define ENABLE_DIRECT_ADDRESSING
+// #define BROADCAST_ETHERNETENC_DEBUG
+#define ENABLE_DIRECT_ADDRESSING
 
 
 class BroadcastSocket_EthernetENC : public BroadcastSocket {

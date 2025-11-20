@@ -11,32 +11,28 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SOCKET_ETHERNETENC_HPP
-#define BROADCAST_SOCKET_ETHERNETENC_HPP
+#ifndef BROADCAST_SOCKET_ESP8266_HPP
+#define BROADCAST_SOCKET_ESP8266_HPP
 
 #include "../BroadcastSocket.hpp"
-#include <EthernetENC.h>
-#include <EthernetUdp.h>  // Using EthernetUdp instead of UIPUdp
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 
 
-#define BROADCAST_ETHERNETENC_DEBUG
-// #define ENABLE_DIRECT_ADDRESSING
+
+// #define BROADCAST_ESP8266_DEBUG
+#define ENABLE_DIRECT_ADDRESSING
 
 
-class BroadcastSocket_EthernetENC : public BroadcastSocket {
+class BroadcastSocket_ESP8266 : public BroadcastSocket {
 private:
-    IPAddress _source_ip;   // By default it's used the broadcast IP
-    EthernetUDP* _udp = nullptr;
-
-    // Private constructor for singleton
-    BroadcastSocket_EthernetENC() {
-        _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
-    }
+    static IPAddress _source_ip;
+    static WiFiUDP* _udp;
 
 public:
     // Singleton accessor
-    static BroadcastSocket_EthernetENC& instance() {
-        static BroadcastSocket_EthernetENC instance;
+    static BroadcastSocket_ESP8266& instance() {
+        static BroadcastSocket_ESP8266 instance;
         return instance;
     }
 
@@ -48,14 +44,14 @@ public:
         
         #ifdef ENABLE_DIRECT_ADDRESSING
         if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
+            #ifdef BROADCAST_ESP8266_DEBUG
             Serial.println(F("Failed to begin packet"));
             #endif
             return false;
         }
         #else
         if (!_udp->beginPacket(broadcastIP, _port)) {
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
+            #ifdef BROADCAST_ESP8266_DEBUG
             Serial.println(F("Failed to begin packet"));
             #endif
             return false;
@@ -66,13 +62,13 @@ public:
         (void)bytesSent; // Silence unused variable warning
 
         if (!_udp->endPacket()) {
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
+            #ifdef BROADCAST_ESP8266_DEBUG
             Serial.println(F("Failed to end packet"));
             #endif
             return false;
         }
 
-        #ifdef BROADCAST_ETHERNETENC_DEBUG
+        #ifdef BROADCAST_ESP8266_DEBUG
         Serial.print(F("S: "));
         Serial.write(data, size);
         Serial.println();
@@ -84,15 +80,13 @@ public:
 
     size_t receive(char* buffer, size_t size) override {
         if (_udp == nullptr) return 0;
-        
         // Receive packets
         int packetSize = _udp->parsePacket();
         if (packetSize > 0) {
-            // Use std::min instead of min to avoid potential conflicts
-            int length = _udp->read(buffer, std::min(static_cast<size_t>(packetSize), size));
+            int length = _udp->read(buffer, min(static_cast<size_t>(packetSize), size));
             if (length <= 0) return 0;  // Your requested check - handles all error cases
             
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
+            #ifdef BROADCAST_ESP8266_DEBUG
             Serial.print(packetSize);
             Serial.print(F("B from "));
             Serial.print(_udp->remoteIP());
@@ -108,7 +102,10 @@ public:
         return 0;   // nothing received
     }
 
-    void set_udp(EthernetUDP* udp) { _udp = udp; }
+    void set_udp(WiFiUDP* udp) { _udp = udp; }
 };
 
-#endif // BROADCAST_SOCKET_ETHERNETENC_HPP
+IPAddress BroadcastSocket_ESP8266::_source_ip(0, 0, 0, 0);
+WiFiUDP* BroadcastSocket_ESP8266::_udp = nullptr;
+
+#endif // BROADCAST_SOCKET_ESP8266_HPP
