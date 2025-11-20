@@ -26,7 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #elif SOURCE_LIBRARY_MODE == 1
 #include "src/JsonTalkie.hpp"
-#include "src/sockets/BroadcastSocket_EthernetENC.hpp"
+#include "src/BroadcastSocket_LocalEthernetENC.hpp"
 
 #elif SOURCE_LIBRARY_MODE == 2
 #include <Copy_JsonTalkie.hpp>
@@ -37,9 +37,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <SPI.h>
 
 
-// The library below uses the libraries:
-#include <EthernetENC.h>
-#include <EthernetUdp.h>
 auto& broadcast_socket = BroadcastSocket_EthernetENC::instance();
 
 EthernetUDP udp;
@@ -162,10 +159,6 @@ void setup() {
     } else {
         Serial.println("DHCP successful!");
     }
-
-    // CRITICAL: Enable broadcast reception
-    Ethernet.setBroadcast(true);
-    Serial.println("Broadcast reception enabled");
 
     // Give Ethernet time to stabilize
     delay(2000);
