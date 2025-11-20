@@ -22,34 +22,28 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #if SOURCE_LIBRARY_MODE == 0
 #include <JsonTalkie.hpp>
-#include <sockets/BroadcastSocket_EtherCard.hpp>
+#include <sockets/BroadcastSocket_EthernetENC.hpp>
 
 #elif SOURCE_LIBRARY_MODE == 1
 #include "src/JsonTalkie.hpp"
-#include "src/sockets/BroadcastSocket_EtherCard.hpp"
+#include "src/sockets/BroadcastSocket_EthernetENC.hpp"
 
 #elif SOURCE_LIBRARY_MODE == 2
 #include <Copy_JsonTalkie.hpp>
-#include <sockets/BroadcastSocket_EtherCard.hpp>
+#include <sockets/BroadcastSocket_EthernetENC.hpp>
 #endif
 
 // Needed for the SPI module connection
 #include <SPI.h>
 
 
-// The liberally bellow uses the libraries:
-// #include <Ethernet.h>
-// #include <EthernetUdp.h>
-auto& broadcast_socket = BroadcastSocket_EtherCard::instance();
-
-// Adjust the Ethercard buffer size to the absolutely minimum needed
-// for the DHCP so that it works, but too much and the Json messages
-// become corrupted due to lack of memory in the Uno and Nano.
-#define ETHERNET_BUFFER_SIZE 500
-byte Ethernet::buffer[ETHERNET_BUFFER_SIZE];  // Ethernet buffer
+// The library below uses the libraries:
+#include <EthernetENC.h>
+#include <EthernetUdp.h>
+auto& broadcast_socket = BroadcastSocket_EthernetENC::instance();
 
 EthernetUDP udp;
-byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
 // IN DEVELOPMENT
 
@@ -129,7 +123,7 @@ void setup() {
     // Then start Serial
     Serial.begin(115200);
     delay(2000); // Important: Give time for serial to initialize
-    Serial.println("\n\n=== ESP32 STARTING ===");
+    Serial.println("\n\n=== ESP32 with EthernetENC STARTING ===");
 
     // Add a small LED blink to confirm code is running
     digitalWrite(LED_BUILTIN, HIGH);
@@ -151,50 +145,75 @@ void setup() {
     delay(1000);
 
     // STEP 2: Initialize Ethernet with CS pin
-    Serial.println("Step 2: Initializing Ethernet...");
+    Serial.println("Step 2: Initializing EthernetENC...");
     Ethernet.init(CS_PIN);
     Serial.println("Ethernet initialized successfully");
     delay(1000);
 
-
-    
-    // Saving string in PROGMEM (flash) to save RAM memory
-    Serial.println("\n\nOpening the Socket...");
-    
-    // MAC and CS pin in constructor
-    // SS is a macro variable normally equal to 10
-    if (!ether.begin(ETHERNET_BUFFER_SIZE, mac, SS)) {
-        Serial.println("Failed to access ENC28J60");
-        while (1);
+    // STEP 3: Begin Ethernet connection with DHCP
+    Serial.println("Step 3: Starting Ethernet connection with DHCP...");
+    if (Ethernet.begin(mac) == 0) {
+        Serial.println("Failed to configure Ethernet using DHCP");
+        // Optional: Fallback to static IP
+        // Ethernet.begin(mac, IPAddress(192, 168, 1, 100));
+        // while (Ethernet.localIP() == INADDR_NONE) {
+        //     delay(1000);
+        // }
+    } else {
+        Serial.println("DHCP successful!");
     }
-    // Set dynamic IP (via DHCP)
-    if (!ether.dhcpSetup()) {
-        Serial.println("DHCP failed");
-        while (1);
+    
+    // Give Ethernet time to stabilize
+    delay(2000);
+
+    // STEP 4: Check connection status
+    Serial.println("Step 4: Checking Ethernet status...");
+    Serial.print("Local IP: ");
+    Serial.println(Ethernet.localIP());
+    Serial.print("Subnet Mask: ");
+    Serial.println(Ethernet.subnetMask());
+    Serial.print("Gateway IP: ");
+    Serial.println(Ethernet.gatewayIP());
+    Serial.print("DNS Server: ");
+    Serial.println(Ethernet.dnsServerIP());
+
+    // Hardware status check (EthernetENC may not have hardwareStatus())
+    // if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+    //     Serial.println("WARNING: Ethernet hardware not detected!");
+    // } else {
+    //     Serial.println("Ethernet hardware detected");
+    // }
+
+    // STEP 5: Initialize UDP and broadcast socket
+    Serial.println("Step 5: Initializing UDP...");
+    if (udp.begin(PORT)) {
+        Serial.println("UDP started successfully on port " + String(PORT));
+    } else {
+        Serial.println("Failed to start UDP!");
     }
-    // Makes sure it allows broadcast
-    ether.enableBroadcast();
 
-    // By default is already 5005
-    broadcast_socket.set_port(5005);
-
-
+    Serial.println("Setting up broadcast socket...");
+    broadcast_socket.set_port(PORT);
+    broadcast_socket.set_udp(&udp);
 
     Serial.println("Setting JsonTalkie...");
     json_talkie.set_manifesto(&manifesto);
     json_talkie.plug_socket(&broadcast_socket);
 
-    Serial.println("Talker ready");
+    Serial.println("Talker ready with EthernetENC!");
 
     // Final startup indication
     digitalWrite(LED_BUILTIN, HIGH);
     delay(500);
     digitalWrite(LED_BUILTIN, LOW);
 
-    Serial.println("Sending JSON...");
+    Serial.println("Setup completed - Ready for JSON communication!");
 }
 
 void loop() {
+    // Maintain DHCP lease (important for long-running applications)
+    Ethernet.maintain();
+    
     json_talkie.listen();
 
     static unsigned long lastSend = 0;
@@ -302,3 +321,4 @@ bool process_response(JsonObject json_message) {
     }
     return false;
 }
+
