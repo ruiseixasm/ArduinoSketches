@@ -42,8 +42,14 @@ https://github.com/ruiseixasm/JsonTalkie
 // #include <EthernetUdp.h>
 auto& broadcast_socket = BroadcastSocket_EtherCard::instance();
 
+// Adjust the Ethercard buffer size to the absolutely minimum needed
+// for the DHCP so that it works, but too much and the Json messages
+// become corrupted due to lack of memory in the Uno and Nano.
+#define ETHERNET_BUFFER_SIZE 500
+byte Ethernet::buffer[ETHERNET_BUFFER_SIZE];  // Ethernet buffer
+
 EthernetUDP udp;
-uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
 // IN DEVELOPMENT
 
@@ -150,30 +156,29 @@ void setup() {
     Serial.println("Ethernet initialized successfully");
     delay(1000);
 
-    // STEP 3: Begin Ethernet connection
-    Serial.println("Step 3: Starting Ethernet connection...");
-    Ethernet.begin(mac);
-    Serial.println("Ethernet.begin completed");
-    delay(1000);
 
-    // STEP 4: Check hardware status
-    Serial.print("Step 4: Checking hardware...");
-    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-        Serial.println(" FAILED - ENC28J60 not found!");
-    } else {
-        Serial.println(" SUCCESS - Hardware detected");
+    
+    // Saving string in PROGMEM (flash) to save RAM memory
+    Serial.println("\n\nOpening the Socket...");
+    
+    // MAC and CS pin in constructor
+    // SS is a macro variable normally equal to 10
+    if (!ether.begin(ETHERNET_BUFFER_SIZE, mac, SS)) {
+        Serial.println("Failed to access ENC28J60");
+        while (1);
     }
+    // Set dynamic IP (via DHCP)
+    if (!ether.dhcpSetup()) {
+        Serial.println("DHCP failed");
+        while (1);
+    }
+    // Makes sure it allows broadcast
+    ether.enableBroadcast();
 
-    // If we get here, Ethernet is working!
-    Serial.print("IP: ");
-    Serial.println(Ethernet.localIP());
-
-    // Rest of your Ethernet code...
-    udp.begin(PORT);
-
-    Serial.println("Opening the Socket...");
+    // By default is already 5005
     broadcast_socket.set_port(5005);
-    broadcast_socket.set_udp(&udp);
+
+
 
     Serial.println("Setting JsonTalkie...");
     json_talkie.set_manifesto(&manifesto);
