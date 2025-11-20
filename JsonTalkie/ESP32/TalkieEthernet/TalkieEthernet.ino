@@ -51,8 +51,11 @@ JsonTalkie json_talkie;
 // Network settings
 #define PORT 5005   // UDP port
 
-const int LED_BUILTIN = 2;  // Most ESP32 boards have onboard LED at GPIO2
-
+// LED_BUILTIN is already defined by ESP32 platform
+// Typically GPIO2 for most ESP32 boards
+#ifndef LED_BUILTIN
+  #define LED_BUILTIN 2  // Fallback definition if not already defined
+#endif
 
 
 
@@ -114,8 +117,11 @@ void setup() {
     // Saving string in PROGMEM (flash) to save RAM memory
     Serial.println("\n\nOpening the Socket...");
     
+
+    // INITIATING THE ETHERNET CONNECTION
+
     Ethernet.begin(mac);
-        
+    
     // Check if ENC28J60 is connected
     Serial.print("Checking ENC28J60 connection...");
     delay(1000); // Give time for initialization
@@ -148,13 +154,23 @@ void setup() {
         Serial.println(" LINK OK");
     }
         
-    Serial.print("\nIP: ");
+    Serial.print("IP: ");
     Serial.println(Ethernet.localIP());
+    
+    // Calculate broadcast address manually
+    IPAddress localIP = Ethernet.localIP();
+    IPAddress subnetMask = Ethernet.subnetMask();
+    IPAddress broadcastIP;
+    
+    for (int i = 0; i < 4; i++) {
+        broadcastIP[i] = localIP[i] | (~subnetMask[i] & 0xFF);
+    }
+    
     Serial.print("Broadcast: ");
-    Serial.println(Ethernet.localIP() | ~Ethernet.subnetMask());
+    Serial.println(broadcastIP);
 
-    // IN DEVELOPMENT
-
+    // ETHERNET CONNECTION MADE
+    
     
 
     udp.begin(PORT);
@@ -221,6 +237,7 @@ long _duration = 5;  // Example variable
 
 // Command implementations
 bool buzz(JsonObject json_message) {
+    (void)json_message; // Silence unused parameter warning
     #ifndef BROADCASTSOCKET_SERIAL
     digitalWrite(buzzer_pin, HIGH);
     delay(_duration); 
@@ -234,6 +251,7 @@ bool buzz(JsonObject json_message) {
 bool is_led_on = false;  // keep track of state yourself, by default it's off
 
 bool led_on(JsonObject json_message) {
+    (void)json_message; // Silence unused parameter warning
     if (!is_led_on) {
         digitalWrite(LED_BUILTIN, HIGH);
         is_led_on = true;
@@ -247,6 +265,7 @@ bool led_on(JsonObject json_message) {
 }
 
 bool led_off(JsonObject json_message) {
+    (void)json_message; // Silence unused parameter warning
     if (is_led_on) {
         digitalWrite(LED_BUILTIN, LOW);
         is_led_on = false;
@@ -261,15 +280,18 @@ bool led_off(JsonObject json_message) {
 
 
 bool set_duration(JsonObject json_message, long duration) {
+    (void)json_message; // Silence unused parameter warning
     _duration = duration;
     return true;
 }
 
 long get_duration(JsonObject json_message) {
+    (void)json_message; // Silence unused parameter warning
     return _duration;
 }
 
 long get_total_runs(JsonObject json_message) {
+    (void)json_message; // Silence unused parameter warning
     return total_runs;
 }
 
