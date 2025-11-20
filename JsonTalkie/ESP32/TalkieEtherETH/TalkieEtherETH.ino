@@ -13,7 +13,7 @@ https://github.com/ruiseixasm/JsonTalkie
 */
 
 // To upload a sketch to an ESP32, when the "......." appears press the button BOOT for a while
-#define ETHERNET_LINK_STATUS
+
 #define SOURCE_LIBRARY_MODE 1
 //      0 - Arduino Library
 //      1 - Project Library
@@ -22,31 +22,27 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #if SOURCE_LIBRARY_MODE == 0
 #include <JsonTalkie.hpp>
-#include <sockets/BroadcastSocket_Ethernet.hpp>
+#include <sockets/BroadcastSocket_ETH.hpp>
 
 #elif SOURCE_LIBRARY_MODE == 1
 #include "src/JsonTalkie.hpp"
-#include "src/sockets/BroadcastSocket_Ethernet.hpp"
+#include "src/sockets/BroadcastSocket_ETH.hpp"
 
 #elif SOURCE_LIBRARY_MODE == 2
 #include <Copy_JsonTalkie.hpp>
-#include <sockets/BroadcastSocket_Ethernet.hpp>
+#include <sockets/BroadcastSocket_ETH.hpp>
 #endif
 
-// Needed for the SPI module connection
-#include <SPI.h>
+// ESP32 native Ethernet - no SPI needed for built-in Ethernet
+#include <ETH.h>
+#include <WiFiUdp.h>
 
+auto& broadcast_socket = BroadcastSocket_ETH::instance();
 
-// The liberally bellow uses the libraries:
-// #include <Ethernet.h>
-// #include <EthernetUdp.h>
-auto& broadcast_socket = BroadcastSocket_Ethernet::instance();
-
-EthernetUDP udp;
-uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+WiFiUDP udp;
+// No MAC needed - ETH.h handles it automatically
 
 // IN DEVELOPMENT
-
 
 JsonTalkie json_talkie;
 
@@ -58,8 +54,6 @@ JsonTalkie json_talkie;
 #ifndef LED_BUILTIN
   #define LED_BUILTIN 2  // Fallback definition if not already defined
 #endif
-
-
 
 // MANIFESTO DEFINITION
 
@@ -91,7 +85,6 @@ JsonTalkie::Get getCommands[] = {
 
 bool process_response(JsonObject json_message);
 
-
 // MANIFESTO DECLARATION
 
 JsonTalkie::Manifesto manifesto(
@@ -104,11 +97,40 @@ JsonTalkie::Manifesto manifesto(
 
 // END OF MANIFESTO
 
-
-
 // Buzzer pin
 #define buzzer_pin 3
 
+// Ethernet event handler
+void WiFiEvent(WiFiEvent_t event) {
+    switch (event) {
+        case ARDUINO_EVENT_ETH_START:
+            Serial.println("ETH Started");
+            break;
+        case ARDUINO_EVENT_ETH_CONNECTED:
+            Serial.println("ETH Connected");
+            break;
+        case ARDUINO_EVENT_ETH_GOT_IP:
+            Serial.print("ETH MAC: ");
+            Serial.print(ETH.macAddress());
+            Serial.print(", IPv4: ");
+            Serial.print(ETH.localIP());
+            if (ETH.fullDuplex()) {
+                Serial.print(", FULL_DUPLEX");
+            }
+            Serial.print(", ");
+            Serial.print(ETH.linkSpeed());
+            Serial.println("Mbps");
+            break;
+        case ARDUINO_EVENT_ETH_DISCONNECTED:
+            Serial.println("ETH Disconnected");
+            break;
+        case ARDUINO_EVENT_ETH_STOP:
+            Serial.println("ETH Stopped");
+            break;
+        default:
+            break;
+    }
+}
 
 void setup() {
     // Initialize pins FIRST before anything else
@@ -123,7 +145,7 @@ void setup() {
     // Then start Serial
     Serial.begin(115200);
     delay(2000); // Important: Give time for serial to initialize
-    Serial.println("\n\n=== ESP32 STARTING ===");
+    Serial.println("\n\n=== ESP32 with Native Ethernet STARTING ===");
 
     // Add a small LED blink to confirm code is running
     digitalWrite(LED_BUILTIN, HIGH);
@@ -136,73 +158,118 @@ void setup() {
     
     Serial.println("Pins initialized successfully");
 
-    // STEP 1: Initialize SPI only
-    const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
+    // Setup Ethernet event handler
+    WiFi.onEvent(WiFiEvent);
+
+    // STEP 1: Initialize ESP32 Native Ethernet
+    Serial.println("Step 1: Starting Native Ethernet...");
     
-    Serial.println("Step 1: Starting SPI...");
-    SPI.begin();
-    Serial.println("SPI started successfully");
-    delay(1000);
-
-    // STEP 2: Initialize Ethernet with CS pin
-    Serial.println("Step 2: Initializing Ethernet...");
-    Ethernet.init(CS_PIN);
-    Serial.println("Ethernet initialized successfully");
-    delay(1000);
-
-    // STEP 3: Begin Ethernet connection
-    Serial.println("Step 3: Starting Ethernet connection...");
-    Ethernet.begin(mac);
-    Serial.println("Ethernet.begin completed");
-    delay(1000);
-
-    // STEP 4: Check hardware status (EthernetENC compatible)
-    Serial.print("Step 4: Checking hardware...");
-
-    // Method 1: Check if we got an IP address
-    if (Ethernet.localIP() == INADDR_NONE) {
-        Serial.println(" FAILED - No IP address assigned!");
+    // ETH.begin() with default parameters
+    // For specific boards, you might need additional parameters:
+    // ETH.begin(phy_addr, power_pin, mdc_pin, mdio_pin, phy_type, clock_speed)
+    
+    if (ETH.begin()) {
+        Serial.println("Ethernet initialization started successfully");
     } else {
-        Serial.println(" SUCCESS - Hardware detected and configured");
-        Serial.print("IP: ");
-        Serial.println(Ethernet.localIP());
+        Serial.println("Ethernet initialization failed!");
+        while (1) {
+            // Blink LED rapidly to indicate error
+            digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+            delay(200);
+        }
     }
 
-    // Method 2: Optional - Check link status if available
-    #if defined(ETHERNET_LINK_STATUS)
-    if (Ethernet.linkStatus() == LinkON) {
-        Serial.println("Network link: UP");
-    } else {
-        Serial.println("Network link: DOWN - check cable");
+    // STEP 2: Wait for Ethernet connection
+    Serial.println("Step 2: Waiting for Ethernet connection...");
+    unsigned long startTime = millis();
+    const unsigned long timeout = 15000; // 15 second timeout
+    
+    while (!ETH.linkUp()) {
+        if (millis() - startTime > timeout) {
+            Serial.println("Ethernet connection timeout!");
+            break;
+        }
+        delay(500);
+        Serial.print(".");
     }
-    #endif
+    
+    if (ETH.linkUp()) {
+        Serial.println("\nEthernet link is UP!");
+    } else {
+        Serial.println("\nEthernet link is DOWN - check cable!");
+    }
 
-    // If we get here, Ethernet is working!
-    Serial.print("IP: ");
-    Serial.println(Ethernet.localIP());
+    // STEP 3: Wait for IP address
+    Serial.println("Step 3: Waiting for IP address...");
+    startTime = millis();
+    
+    while (ETH.localIP() == INADDR_NONE) {
+        if (millis() - startTime > timeout) {
+            Serial.println("IP address timeout!");
+            break;
+        }
+        delay(500);
+        Serial.print(".");
+    }
+    
+    if (ETH.localIP() != INADDR_NONE) {
+        Serial.println("\nIP address obtained!");
+    } else {
+        Serial.println("\nFailed to get IP address!");
+    }
 
-    // Rest of your Ethernet code...
-    udp.begin(PORT);
+    // STEP 4: Display network status
+    Serial.println("Step 4: Network Status:");
+    Serial.print("IP Address: ");
+    Serial.println(ETH.localIP());
+    Serial.print("Subnet Mask: ");
+    Serial.println(ETH.subnetMask());
+    Serial.print("Gateway: ");
+    Serial.println(ETH.gatewayIP());
+    Serial.print("DNS: ");
+    Serial.println(ETH.dnsIP());
+    Serial.print("Link Speed: ");
+    Serial.print(ETH.linkSpeed());
+    Serial.println(" Mbps");
+    Serial.print("Full Duplex: ");
+    Serial.println(ETH.fullDuplex() ? "Yes" : "No");
 
-    Serial.println("Opening the Socket...");
-    broadcast_socket.set_port(5005);
+    // STEP 5: Initialize UDP and broadcast socket
+    Serial.println("Step 5: Initializing UDP...");
+    if (udp.begin(PORT)) {
+        Serial.println("UDP started successfully on port " + String(PORT));
+    } else {
+        Serial.println("Failed to start UDP!");
+    }
+
+    Serial.println("Setting up broadcast socket...");
+    broadcast_socket.set_port(PORT);
     broadcast_socket.set_udp(&udp);
 
     Serial.println("Setting JsonTalkie...");
     json_talkie.set_manifesto(&manifesto);
     json_talkie.plug_socket(&broadcast_socket);
 
-    Serial.println("Talker ready");
+    Serial.println("Talker ready with Native Ethernet!");
 
     // Final startup indication
     digitalWrite(LED_BUILTIN, HIGH);
     delay(500);
     digitalWrite(LED_BUILTIN, LOW);
 
-    Serial.println("Sending JSON...");
+    Serial.println("Setup completed - Ready for JSON communication!");
 }
 
 void loop() {
+    // Check Ethernet status periodically
+    static unsigned long lastStatusCheck = 0;
+    if (millis() - lastStatusCheck > 10000) {
+        if (!ETH.linkUp()) {
+            Serial.println("Ethernet link lost!");
+        }
+        lastStatusCheck = millis();
+    }
+    
     json_talkie.listen();
 
     static unsigned long lastSend = 0;
@@ -233,7 +300,6 @@ void loop() {
     }
 }
 
-
 long total_runs = 0;
 long _duration = 5;  // Example variable
 
@@ -248,7 +314,6 @@ bool buzz(JsonObject json_message) {
     total_runs++;
     return true;
 }
-
 
 bool is_led_on = false;  // keep track of state yourself, by default it's off
 
@@ -280,7 +345,6 @@ bool led_off(JsonObject json_message) {
     return true;
 }
 
-
 bool set_duration(JsonObject json_message, long duration) {
     (void)json_message; // Silence unused parameter warning
     _duration = duration;
@@ -297,7 +361,6 @@ long get_total_runs(JsonObject json_message) {
     return total_runs;
 }
 
-
 bool process_response(JsonObject json_message) {
     Serial.print(json_message["f"].as<String>());
     Serial.print(" - ");
@@ -310,3 +373,4 @@ bool process_response(JsonObject json_message) {
     }
     return false;
 }
+
