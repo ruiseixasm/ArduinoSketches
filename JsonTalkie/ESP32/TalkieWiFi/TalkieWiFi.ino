@@ -12,20 +12,39 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#define SOURCE_LIBRARY_MODE 2
+#define SOURCE_LIBRARY_MODE 1
 //      0 - Arduino Library
 //      1 - Project Library
 //      2 - Local User Library
 
+#define SOCKET_TYPE 0
+//      0 - WiFi Socket
+//      1 - Ethernet Socket
+
+
 #if SOURCE_LIBRARY_MODE == 0
 #include <JsonTalkie.hpp>
-#include <sockets/BroadcastSocket_ESP32.hpp>
+    #if SOCKET_TYPE == 0
+    #include <sockets/BroadcastSocket_ESP32.hpp>
+    #elif SOCKET_TYPE == 1
+    #include <sockets/BroadcastSocket_Ethernet.hpp>
+    #endif
+
 #elif SOURCE_LIBRARY_MODE == 1
 #include "JsonTalkie.hpp"
-#include "sockets/BroadcastSocket_ESP32.hpp"
+    #if SOCKET_TYPE == 0
+    #include "sockets/BroadcastSocket_ESP32.hpp"
+    #elif SOCKET_TYPE == 1
+    #include "sockets/BroadcastSocket_Ethernet.hpp"
+    #endif
+
 #elif SOURCE_LIBRARY_MODE == 2
-#include <LocalUser/JsonTalkie/JsonTalkie.hpp>
-#include <LocalUser/JsonTalkie/sockets/BroadcastSocket_ESP32.hpp>
+#include <LocalUser_JsonTalkie.hpp>
+    #if SOCKET_TYPE == 0
+    #include <sockets/BroadcastSocket_ESP32.hpp>
+    #elif SOCKET_TYPE == 1
+    #include <sockets/BroadcastSocket_Ethernet.hpp>
+    #endif
 #endif
 
 
