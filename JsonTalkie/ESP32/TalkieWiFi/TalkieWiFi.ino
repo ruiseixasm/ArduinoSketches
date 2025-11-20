@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 //      1 - Project Library
 //      2 - Arduino Copy Library
 
-#define SOCKET_TYPE 0
+#define SOCKET_TYPE 1
 //      0 - WiFi Socket
 //      1 - Ethernet Socket
 
@@ -51,13 +51,26 @@ https://github.com/ruiseixasm/JsonTalkie
 // To upload a sketch to an ESP32, when the "......." appears press the button BOOT for a while
 
 
-JsonTalkie json_talkie;
+#if SOCKET_TYPE == 0
 auto& broadcast_socket = BroadcastSocket_ESP32::instance();
 WiFiUDP udp;
+const char ssid[] = "WiFi";
+const char password[] = "password";
 
-const char ssid[] = "Pirelli";
-const char password[] = "rabitzita";
+#elif SOCKET_TYPE == 1
+// The liberally bellow uses the libraries:
+// #include <Ethernet.h>
+// #include <EthernetUdp.h>
+auto& broadcast_socket = BroadcastSocket_Ethernet::instance();
 
+EthernetUDP udp;
+uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+
+// IN DEVELOPMENT
+
+#endif
+
+JsonTalkie json_talkie;
 
 // Network settings
 #define PORT 5005   // UDP port
@@ -125,6 +138,8 @@ void setup() {
     // Saving string in PROGMEM (flash) to save RAM memory
     Serial.println("\n\nOpening the Socket...");
     
+
+#if SOCKET_TYPE == 0
     WiFi.begin(ssid, password);
     
     Serial.print("\n\nConnecting");
@@ -137,6 +152,18 @@ void setup() {
     Serial.println(WiFi.localIP());
     Serial.print("Broadcast: ");
     Serial.println(WiFi.localIP() | ~WiFi.subnetMask());
+
+#elif SOCKET_TYPE == 1
+    Ethernet.begin(mac);
+        
+    Serial.print("\nIP: ");
+    Serial.println(Ethernet.localIP());
+    Serial.print("Broadcast: ");
+    Serial.println(Ethernet.localIP() | ~Ethernet.subnetMask());
+
+    // IN DEVELOPMENT
+
+#endif
 
     udp.begin(PORT);
 
