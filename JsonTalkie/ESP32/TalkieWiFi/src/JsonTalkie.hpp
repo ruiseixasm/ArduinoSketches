@@ -86,6 +86,20 @@ https://github.com/ruiseixasm/JsonTalkie
  */
 
 
+
+enum MessageCode {
+    talk,
+    list,
+    run,
+    set,
+    get,
+    sys,
+    echo,
+    error,
+    channel
+};
+
+
 class JsonTalkie {
 public:
 
@@ -211,7 +225,7 @@ public:
         }
 
         // Set default 'id' field if missing
-        if (!message.containsKey("i")) {
+        if (!message["i"].is<uint32_t>()) {
             message["i"] = generateMessageId();
         }
         message["f"] = _manifesto->device->name;
@@ -301,7 +315,7 @@ private:
     bool validateChecksum(JsonObject message) {
         
         uint16_t message_checksum = 0;
-        if (message.containsKey("c")) {
+        if (message["c"].is<uint16_t>()) {
             message_checksum = message["c"].as<uint16_t>();
         }
         message["c"] = 0;
@@ -335,34 +349,35 @@ private:
         //     4 - Message NOT identified
         //     5 - Set command arrived too late
 
-        if (!(message.containsKey("m") && message["m"].is<int>())) {
+        if (!message["m"].is<int>()) {
             #ifdef JSONTALKIE_DEBUG
             Serial.println(F("Message \"m\" is NOT an integer!"));
             #endif
             return false;
         }
-        if (message.containsKey("t")) {
-            if (message["t"].is<uint8_t>()) {
-                if (message["t"].as<uint8_t>() != _channel) {
-                    #ifdef JSONTALKIE_DEBUG
-                    Serial.println(F("Message on different channel!"));
-                    #endif
-                    return false;
-                }
-            } else if (message["t"] != _manifesto->device->name) {
+        if (message["t"].is<uint8_t>()) {
+            if (message["t"].as<uint8_t>() != _channel) {
+                #ifdef JSONTALKIE_DEBUG
+                Serial.println(F("Message on different channel!"));
+                #endif
+                return false;
+            }
+        } else if (message["t"].is<String>()) {
+        
+            if (message["t"] != _manifesto->device->name) {
                 #ifdef JSONTALKIE_DEBUG
                 Serial.println(F("Message NOT for me!"));
                 #endif
                 return false;
             }
         }
-        if (!(message.containsKey("f") && message["f"].is<String>())) {
+        if (!message["f"].is<String>()) {
             #ifdef JSONTALKIE_DEBUG
             Serial.println(0);
             #endif
             return false;
         }
-        if (!(message.containsKey("c") && message["c"].is<uint16_t>())) {
+        if (!message["c"].is<uint16_t>()) {
             #ifdef JSONTALKIE_DEBUG
             Serial.println(1);
             #endif
@@ -382,7 +397,7 @@ private:
             talk(message, true);
             return false;
         }
-        if (!(message.containsKey("m") && message["m"].is<int>())) {
+        if (!message["m"].is<int>()) {
             #ifdef JSONTALKIE_DEBUG
             Serial.println(3);
             #endif
@@ -392,7 +407,7 @@ private:
             talk(message, true);
             return false;
         }
-        if (!(message.containsKey("i") && message["i"].is<uint32_t>())) {
+        if (!message["i"].is<uint32_t>()) {
             #ifdef JSONTALKIE_DEBUG
             Serial.println(4);
             #endif
@@ -424,7 +439,6 @@ private:
         return true;
     }
     
-
     bool processMessage(JsonObject message) {
         if (_manifesto == nullptr || _manifesto->device == nullptr) return false;
         // Echo codes:
@@ -438,43 +452,50 @@ private:
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-        int message_code = message["m"].as<int>(); // Throws on type mismatch
+        MessageCode message_code = static_cast<MessageCode>(message["m"].as<int>());
         message["t"] = message["f"];
         message["m"] = 6;   // echo
-        if (message_code == 0) {            // talk
+
+        switch (message_code)
+        {
+        case MessageCode::talk:
             message["w"] = 0;
             message["d"] = _manifesto->device->desc;
             return talk(message, true);
-        } else if (message_code == 1) {     // list
-            bool none_list = true;
-            message["w"] = 2;
-            for (size_t run_i = 0; run_i < _manifesto->runSize; ++run_i) {
-                message["n"] = _manifesto->runCommands[run_i].name;
-                message["d"] = _manifesto->runCommands[run_i].desc;
-                none_list = false;
-                talk(message, true);
-            }
-            message["w"] = 3;
-            for (size_t set_i = 0; set_i < _manifesto->setSize; ++set_i) {
-                message["n"] = _manifesto->setCommands[set_i].name;
-                message["d"] = _manifesto->setCommands[set_i].desc;
-                none_list = false;
-                talk(message, true);
-            }
-            message["w"] = 4;
-            for (size_t get_i = 0; get_i < _manifesto->getSize; ++get_i) {
-                message["n"] = _manifesto->getCommands[get_i].name;
-                message["d"] = _manifesto->getCommands[get_i].desc;
-                none_list = false;
-                talk(message, true);
-            }
-            if(none_list) {
-                message["g"] = 2;       // NONE
+        
+        case MessageCode::list:
+            {   // Because of none_list !!!
+                bool none_list = true;
+                message["w"] = 2;
+                for (size_t run_i = 0; run_i < _manifesto->runSize; ++run_i) {
+                    message["n"] = _manifesto->runCommands[run_i].name;
+                    message["d"] = _manifesto->runCommands[run_i].desc;
+                    none_list = false;
+                    talk(message, true);
+                }
+                message["w"] = 3;
+                for (size_t set_i = 0; set_i < _manifesto->setSize; ++set_i) {
+                    message["n"] = _manifesto->setCommands[set_i].name;
+                    message["d"] = _manifesto->setCommands[set_i].desc;
+                    none_list = false;
+                    talk(message, true);
+                }
+                message["w"] = 4;
+                for (size_t get_i = 0; get_i < _manifesto->getSize; ++get_i) {
+                    message["n"] = _manifesto->getCommands[get_i].name;
+                    message["d"] = _manifesto->getCommands[get_i].desc;
+                    none_list = false;
+                    talk(message, true);
+                }
+                if(none_list) {
+                    message["g"] = 2;       // NONE
+                }
             }
             return true;
-        } else if (message_code == 2) {     // run
+        
+        case MessageCode::run:
             message["w"] = 2;
-            if (message.containsKey("n")) {
+            if (message["n"].is<String>()) {
                 const Run* run = _manifesto->get_run(message["n"]);
                 if (run == nullptr) {
                     message["g"] = 1;   // UNKNOWN
@@ -488,9 +509,11 @@ private:
                 run->function(message);
                 return true;
             }
-        } else if (message_code == 3) {     // set
+            break;
+        
+        case MessageCode::set:
             message["w"] = 3;
-            if (message.containsKey("n") && message.containsKey("v") && message["v"].is<long>()) {
+            if (message["n"].is<String>() && message["v"].is<long>()) {
                 const Set* set = _manifesto->get_set(message["n"]);
                 if (set == nullptr) {
                     message["g"] = 1;   // UNKNOWN
@@ -504,9 +527,11 @@ private:
                 set->function(message, message["v"].as<long>());
                 return true;
             }
-        } else if (message_code == 4) {     // get
+            break;
+        
+        case MessageCode::get:
             message["w"] = 4;
-            if (message.containsKey("n")) {
+            if (message["n"].is<String>()) {
                 message["w"] = message_code;
                 const Get* get = _manifesto->get_get(message["n"]);
                 if (get == nullptr) {
@@ -521,7 +546,9 @@ private:
                 message["v"] = get->function(message);
                 return talk(message, true);
             }
-        } else if (message_code == 5) {     // sys
+            break;
+        
+        case MessageCode::sys:
             message["w"] = 5;
             
             // AVR Boards (Uno, Nano, Mega) - Check RAM size
@@ -569,31 +596,37 @@ private:
             #endif
 
             return talk(message, true);
-        } else if (message_code == 6) {     // echo
+        
+        case MessageCode::echo:
             if (_manifesto->echo != nullptr) {
                 _manifesto->echo(message);
                 return true;
             }
-        } else if (message_code == 7) {     // error
+            break;
+        
+        case MessageCode::error:
             if (_manifesto->error != nullptr) {
                 _manifesto->error(message);
                 return true;
             }
-        } else if (message_code == 8) {     // channel
-            if (message.containsKey("b")) {
+            break;
+        
+        case MessageCode::channel:
+            if (message["b"].is<uint8_t>()) {
 
                 #ifdef JSONTALKIE_DEBUG
                 Serial.print(F("Channel B value is an <uint8_t>: "));
                 Serial.println(message["b"].is<uint8_t>());
                 #endif
 
-                if (message["b"].is<uint8_t>()) {
-                    _channel = message["b"].as<uint8_t>();
-                }
+                _channel = message["b"].as<uint8_t>();
             }
             message["w"] = 8;
             message["b"] = _channel;
             return talk(message, true);
+        
+        default:
+            break;
         }
         return false;
     }

@@ -35,7 +35,7 @@ private:
     bool validateChecksum(JsonObject message, char* buffer, size_t size) {
         // Use a static buffer size, large enough for your JSON
         uint16_t message_checksum = 0;
-        if (message.containsKey("c")) {
+        if (message["c"].is<uint16_t>()) {
             message_checksum = message["c"].as<uint16_t>();
         }
         message["c"] = 0;

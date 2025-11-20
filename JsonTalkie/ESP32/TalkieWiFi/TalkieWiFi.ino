@@ -12,10 +12,10 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#define SOURCE_LIBRARY_MODE 2
+#define SOURCE_LIBRARY_MODE 1
 //      0 - Arduino Library
 //      1 - Project Library
-//      2 - Copy Library
+//      2 - Arduino Copy Library
 
 #define SOCKET_TYPE 0
 //      0 - WiFi Socket
@@ -31,11 +31,11 @@ https://github.com/ruiseixasm/JsonTalkie
     #endif
 
 #elif SOURCE_LIBRARY_MODE == 1
-#include "JsonTalkie.hpp"
+#include "src/JsonTalkie.hpp"
     #if SOCKET_TYPE == 0
-    #include "sockets/BroadcastSocket_ESP32.hpp"
+    #include "src/sockets/BroadcastSocket_ESP32.hpp"
     #elif SOCKET_TYPE == 1
-    #include "sockets/BroadcastSocket_Ethernet.hpp"
+    #include "src/sockets/BroadcastSocket_Ethernet.hpp"
     #endif
 
 #elif SOURCE_LIBRARY_MODE == 2
@@ -55,8 +55,8 @@ JsonTalkie json_talkie;
 auto& broadcast_socket = BroadcastSocket_ESP32::instance();
 WiFiUDP udp;
 
-const char ssid[] = "wifiName";
-const char password[] = "wifiPassword";
+const char ssid[] = "Pirelli";
+const char password[] = "rabitzita";
 
 
 // Network settings
@@ -258,9 +258,9 @@ long get_total_runs(JsonObject json_message) {
 bool process_response(JsonObject json_message) {
     Serial.print(json_message["f"].as<String>());
     Serial.print(" - ");
-    if (json_message.containsKey("r")) {
+    if (json_message["r"].is<String>()) {
         Serial.println(json_message["r"].as<String>());
-    } else if (json_message.containsKey("d")) {
+    } else if (json_message["d"].is<String>()) {
         Serial.println(json_message["d"].as<String>());
     } else {
         Serial.println("Empty echo received!");
