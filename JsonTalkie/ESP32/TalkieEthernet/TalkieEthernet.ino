@@ -109,7 +109,7 @@ JsonTalkie::Manifesto manifesto(
 
 void setup() {
     // Serial is a singleton class (can be began multiple times)
-    Serial.begin(9600);
+    Serial.begin(115200);
     while (!Serial);
     
     delay(2000);    // Just to give some time to Serial
