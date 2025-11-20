@@ -11,20 +11,42 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+#define SOURCE_LIBRARY_MODE 1
+//      0 - Arduino Library
+//      1 - Project Library
+//      2 - Arduino Copy Library
+
+
+#if SOURCE_LIBRARY_MODE == 0
 #include <JsonTalkie.hpp>
-#include <sockets/BroadcastSocket_ESP32.hpp>
+#include <sockets/BroadcastSocket_Ethernet.hpp>
+
+#elif SOURCE_LIBRARY_MODE == 1
+#include "src/JsonTalkie.hpp"
+#include "src/sockets/BroadcastSocket_Ethernet.hpp"
+
+#elif SOURCE_LIBRARY_MODE == 2
+#include <Copy_JsonTalkie.hpp>
+#include <sockets/BroadcastSocket_Ethernet.hpp>
+#endif
 
 
 // To upload a sketch to an ESP32, when the "......." appears press the button BOOT for a while
 
 
+// The liberally bellow uses the libraries:
+// #include <Ethernet.h>
+// #include <EthernetUdp.h>
+auto& broadcast_socket = BroadcastSocket_Ethernet::instance();
+
+EthernetUDP udp;
+uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+
+// IN DEVELOPMENT
+
+
 JsonTalkie json_talkie;
-auto& broadcast_socket = BroadcastSocket_ESP32::instance();
-WiFiUDP udp;
-
-const char ssid[] = "wifiName";
-const char password[] = "wifiPassword";
-
 
 // Network settings
 #define PORT 5005   // UDP port
@@ -92,18 +114,48 @@ void setup() {
     // Saving string in PROGMEM (flash) to save RAM memory
     Serial.println("\n\nOpening the Socket...");
     
-    WiFi.begin(ssid, password);
+    Ethernet.begin(mac);
+        
+    // Check if ENC28J60 is connected
+    Serial.print("Checking ENC28J60 connection...");
+    delay(1000); // Give time for initialization
     
-    Serial.print("\n\nConnecting");
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
+    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+        Serial.println(" FAILED - ENC28J60 not found!");
+        while (true) {
+            digitalWrite(LED_BUILTIN, HIGH);
+            delay(100);
+            digitalWrite(LED_BUILTIN, LOW);
+            delay(100);
+            digitalWrite(LED_BUILTIN, HIGH);
+            delay(100);
+            digitalWrite(LED_BUILTIN, LOW);
+            delay(700); // Blink pattern to indicate hardware error
+        }
+    } else if (Ethernet.hardwareStatus() == EthernetW5100) {
+        Serial.println(" WARNING - Found W5100 instead of ENC28J60");
+    } else if (Ethernet.hardwareStatus() == EthernetW5500) {
+        Serial.println(" WARNING - Found W5500 instead of ENC28J60");
+    } else {
+        Serial.println(" SUCCESS - ENC28J60 detected");
     }
-
+    
+    // Check link status
+    Serial.print("Checking link status...");
+    if (Ethernet.linkStatus() == LinkOFF) {
+        Serial.println(" NO LINK - Check Ethernet cable!");
+    } else {
+        Serial.println(" LINK OK");
+    }
+        
     Serial.print("\nIP: ");
-    Serial.println(WiFi.localIP());
+    Serial.println(Ethernet.localIP());
     Serial.print("Broadcast: ");
-    Serial.println(WiFi.localIP() | ~WiFi.subnetMask());
+    Serial.println(Ethernet.localIP() | ~Ethernet.subnetMask());
+
+    // IN DEVELOPMENT
+
+    
 
     udp.begin(PORT);
 
@@ -234,4 +286,3 @@ bool process_response(JsonObject json_message) {
     }
     return false;
 }
-
