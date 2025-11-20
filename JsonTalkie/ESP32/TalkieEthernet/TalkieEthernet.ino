@@ -187,12 +187,6 @@ void setup() {
 
     Serial.println("Talker ready");
 
-    #ifndef BROADCAST_SOCKET_SERIAL_HPP
-    pinMode(buzzer_pin, OUTPUT);
-    digitalWrite(buzzer_pin, HIGH);
-    delay(10); 
-    digitalWrite(buzzer_pin, LOW);
-    #endif
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     digitalWrite(LED_BUILTIN, LOW);
