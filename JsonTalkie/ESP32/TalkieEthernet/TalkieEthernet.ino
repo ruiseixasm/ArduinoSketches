@@ -42,6 +42,7 @@ auto& broadcast_socket = BroadcastSocket_Ethernet::instance();
 
 EthernetUDP udp;
 uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
 
 // IN DEVELOPMENT
 
