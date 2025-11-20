@@ -12,6 +12,8 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
+// To upload a sketch to an ESP32, when the "......." appears press the button BOOT for a while
+
 #define SOURCE_LIBRARY_MODE 1
 //      0 - Arduino Library
 //      1 - Project Library
@@ -31,8 +33,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <sockets/BroadcastSocket_Ethernet.hpp>
 #endif
 
-
-// To upload a sketch to an ESP32, when the "......." appears press the button BOOT for a while
+// Needed for the SPI module connection
+#include <SPI.h>
 
 
 // The liberally bellow uses the libraries:
@@ -42,7 +44,6 @@ auto& broadcast_socket = BroadcastSocket_Ethernet::instance();
 
 EthernetUDP udp;
 uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
 
 // IN DEVELOPMENT
 
@@ -108,19 +109,43 @@ JsonTalkie::Manifesto manifesto(
 // Buzzer pin
 #define buzzer_pin 3
 
-void setup() {
-    // Serial is a singleton class (can be began multiple times)
-    Serial.begin(115200);
-    while (!Serial);
-    
-    delay(2000);    // Just to give some time to Serial
 
-    // Saving string in PROGMEM (flash) to save RAM memory
-    Serial.println("\n\nOpening the Socket...");
+void setup() {
+    // Initialize pins FIRST before anything else
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW); // Start with LED off
     
+    #ifndef BROADCAST_SOCKET_SERIAL_HPP
+    pinMode(buzzer_pin, OUTPUT);
+    digitalWrite(buzzer_pin, LOW);
+    #endif
+
+    // Then start Serial
+    Serial.begin(115200);
+    delay(2000); // Important: Give time for serial to initialize
+    Serial.println("\n\n=== ESP32 STARTING ===");
+
+    // Add a small LED blink to confirm code is running
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(100);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(100);
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(100);
+    digitalWrite(LED_BUILTIN, LOW);
+    
+    Serial.println("Pins initialized successfully");
 
     // INITIATING THE ETHERNET CONNECTION
 
+    // Initialize SPI and Ethernet with CS pin first
+    const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
+    
+    SPI.begin();
+    Ethernet.init(CS_PIN);  // ← CRITICAL: Initialize Ethernet with CS pin!
+    Serial.println("SPI initialized");
+
+    Serial.print("Starting Ethernet...");
     Ethernet.begin(mac);
     
     // Check if ENC28J60 is connected
@@ -171,13 +196,10 @@ void setup() {
     Serial.println(broadcastIP);
 
     // ETHERNET CONNECTION MADE
-    
-    
 
     udp.begin(PORT);
 
-    // Saving string in PROGMEM (flash) to save RAM memory
-    Serial.println("\n\nOpening the Socket...");
+    Serial.println("Opening the Socket...");
     broadcast_socket.set_port(5005);    // By default is already 5005
     broadcast_socket.set_udp(&udp);
 
@@ -185,11 +207,11 @@ void setup() {
     json_talkie.set_manifesto(&manifesto);
     json_talkie.plug_socket(&broadcast_socket);
 
-
     Serial.println("Talker ready");
 
-    pinMode(LED_BUILTIN, OUTPUT);
+    // Final startup indication
     digitalWrite(LED_BUILTIN, HIGH);
+    delay(500);
     digitalWrite(LED_BUILTIN, LOW);
 
     Serial.println("Sending JSON...");
