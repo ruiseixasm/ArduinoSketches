@@ -12,52 +12,39 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-// To upload a sketch to an ESP32, when the "......." appears press the button BOOT for a while
-
 #define SOURCE_LIBRARY_MODE 1
-//      0 - Arduino Library
-//      1 - Project Library
-//      2 - Arduino Copy Library
-
 
 #if SOURCE_LIBRARY_MODE == 0
 #include <JsonTalkie.hpp>
-#include <sockets/BroadcastSocket_ETH.hpp>
+#include <sockets/BroadcastSocket_EthernetUIP.hpp>
 
 #elif SOURCE_LIBRARY_MODE == 1
 #include "src/JsonTalkie.hpp"
-#include "src/sockets/BroadcastSocket_ETH.hpp"
+#include "src/sockets/BroadcastSocket_EthernetUIP.hpp"
 
 #elif SOURCE_LIBRARY_MODE == 2
 #include <Copy_JsonTalkie.hpp>
-#include <sockets/BroadcastSocket_ETH.hpp>
+#include <sockets/BroadcastSocket_EthernetUIP.hpp>
 #endif
 
-// ESP32 native Ethernet - no SPI needed for built-in Ethernet
-#include <ETH.h>
-#include <WiFiUdp.h>
+#include <SPI.h>
 
-auto& broadcast_socket = BroadcastSocket_ETH::instance();
+auto& broadcast_socket = BroadcastSocket_EthernetUIP::instance();
 
-WiFiUDP udp;
-// No MAC needed - ETH.h handles it automatically
+UIPUDP udp;
+uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
-// IN DEVELOPMENT
+#define ETHERNET_BUFFER_SIZE 800
+uint8_t uip_eth_buffer[ETHERNET_BUFFER_SIZE];
 
 JsonTalkie json_talkie;
 
-// Network settings
-#define PORT 5005   // UDP port
+#define PORT 5005
 
-// LED_BUILTIN is already defined by ESP32 platform
-// Typically GPIO2 for most ESP32 boards
 #ifndef LED_BUILTIN
-  #define LED_BUILTIN 2  // Fallback definition if not already defined
+  #define LED_BUILTIN 2
 #endif
 
-// MANIFESTO DEFINITION
-
-// Define the commands (stored in RAM)
 JsonTalkie::Device device = {
     "ESP32", "I do a 500ms buzz!"
 };
@@ -85,8 +72,6 @@ JsonTalkie::Get getCommands[] = {
 
 bool process_response(JsonObject json_message);
 
-// MANIFESTO DECLARATION
-
 JsonTalkie::Manifesto manifesto(
     &device,
     runCommands, sizeof(runCommands)/sizeof(JsonTalkie::Run),
@@ -95,42 +80,8 @@ JsonTalkie::Manifesto manifesto(
     process_response, nullptr
 );
 
-// END OF MANIFESTO
-
-// Buzzer pin
 #define buzzer_pin 3
 
-// Ethernet event handler
-void WiFiEvent(WiFiEvent_t event) {
-    switch (event) {
-        case ARDUINO_EVENT_ETH_START:
-            Serial.println("ETH Started");
-            break;
-        case ARDUINO_EVENT_ETH_CONNECTED:
-            Serial.println("ETH Connected");
-            break;
-        case ARDUINO_EVENT_ETH_GOT_IP:
-            Serial.print("ETH MAC: ");
-            Serial.print(ETH.macAddress());
-            Serial.print(", IPv4: ");
-            Serial.print(ETH.localIP());
-            if (ETH.fullDuplex()) {
-                Serial.print(", FULL_DUPLEX");
-            }
-            Serial.print(", ");
-            Serial.print(ETH.linkSpeed());
-            Serial.println("Mbps");
-            break;
-        case ARDUINO_EVENT_ETH_DISCONNECTED:
-            Serial.println("ETH Disconnected");
-            break;
-        case ARDUINO_EVENT_ETH_STOP:
-            Serial.println("ETH Stopped");
-            break;
-        default:
-            break;
-    }
-}
 
 void setup() {
     // Initialize pins FIRST before anything else
@@ -145,7 +96,7 @@ void setup() {
     // Then start Serial
     Serial.begin(115200);
     delay(2000); // Important: Give time for serial to initialize
-    Serial.println("\n\n=== ESP32 with Native Ethernet STARTING ===");
+    Serial.println("\n\n=== ESP32 with UIPEthernet STARTING ===");
 
     // Add a small LED blink to confirm code is running
     digitalWrite(LED_BUILTIN, HIGH);
@@ -158,84 +109,72 @@ void setup() {
     
     Serial.println("Pins initialized successfully");
 
-    // Setup Ethernet event handler
-    WiFi.onEvent(WiFiEvent);
+    // STEP 1: Initialize SPI only
+    const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
+    
+    Serial.println("Step 1: Starting SPI...");
+    SPI.begin();
+    Serial.println("SPI started successfully");
+    delay(1000);
 
-    // STEP 1: Initialize ESP32 Native Ethernet
-    Serial.println("Step 1: Starting Native Ethernet...");
+    // STEP 2: Initialize UIPEthernet
+    Serial.println("Step 2: Initializing UIPEthernet...");
     
-    // ETH.begin() with default parameters
-    // For specific boards, you might need additional parameters:
-    // ETH.begin(phy_addr, power_pin, mdc_pin, mdio_pin, phy_type, clock_speed)
+    // UIPEthernet requires init() first, then begin()
+    Ethernet.init(CS_PIN);
     
-    if (ETH.begin()) {
-        Serial.println("Ethernet initialization started successfully");
-    } else {
-        Serial.println("Ethernet initialization failed!");
-        while (1) {
-            // Blink LED rapidly to indicate error
-            digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-            delay(200);
-        }
-    }
-
-    // STEP 2: Wait for Ethernet connection
-    Serial.println("Step 2: Waiting for Ethernet connection...");
-    unsigned long startTime = millis();
-    const unsigned long timeout = 15000; // 15 second timeout
-    
-    while (!ETH.linkUp()) {
-        if (millis() - startTime > timeout) {
-            Serial.println("Ethernet connection timeout!");
+    // Try DHCP with retries
+    bool dhcpSuccess = false;
+    for (int i = 0; i < 3; i++) {
+        Serial.print("DHCP attempt ");
+        Serial.println(i + 1);
+        
+        if (Ethernet.begin(mac) == 1) {
+            dhcpSuccess = true;
+            Serial.println("DHCP successful!");
             break;
         }
-        delay(500);
-        Serial.print(".");
+        delay(3000); // Wait longer between attempts
     }
     
-    if (ETH.linkUp()) {
-        Serial.println("\nEthernet link is UP!");
-    } else {
-        Serial.println("\nEthernet link is DOWN - check cable!");
+    // If DHCP fails, use static IP
+    if (!dhcpSuccess) {
+        Serial.println("DHCP failed, using static IP...");
+        IPAddress ip(192, 168, 31, 208);  // Use your network range
+        IPAddress dns(8, 8, 8, 8);
+        IPAddress gateway(192, 168, 31, 77);
+        IPAddress subnet(255, 255, 255, 0);
+        Ethernet.begin(mac, ip, dns, gateway, subnet);
     }
+    
+    delay(2000);
 
-    // STEP 3: Wait for IP address
-    Serial.println("Step 3: Waiting for IP address...");
-    startTime = millis();
-    
-    while (ETH.localIP() == INADDR_NONE) {
-        if (millis() - startTime > timeout) {
-            Serial.println("IP address timeout!");
-            break;
-        }
-        delay(500);
-        Serial.print(".");
-    }
-    
-    if (ETH.localIP() != INADDR_NONE) {
-        Serial.println("\nIP address obtained!");
-    } else {
-        Serial.println("\nFailed to get IP address!");
-    }
-
-    // STEP 4: Display network status
-    Serial.println("Step 4: Network Status:");
-    Serial.print("IP Address: ");
-    Serial.println(ETH.localIP());
+    // STEP 3: Check connection status
+    Serial.println("Step 3: Checking network status...");
+    Serial.print("Local IP: ");
+    Serial.println(Ethernet.localIP());
     Serial.print("Subnet Mask: ");
-    Serial.println(ETH.subnetMask());
-    Serial.print("Gateway: ");
-    Serial.println(ETH.gatewayIP());
-    Serial.print("DNS: ");
-    Serial.println(ETH.dnsIP());
-    Serial.print("Link Speed: ");
-    Serial.print(ETH.linkSpeed());
-    Serial.println(" Mbps");
-    Serial.print("Full Duplex: ");
-    Serial.println(ETH.fullDuplex() ? "Yes" : "No");
+    Serial.println(Ethernet.subnetMask());
+    Serial.print("Gateway IP: ");
+    Serial.println(Ethernet.gatewayIP());
+    Serial.print("DNS Server: ");
+    Serial.println(Ethernet.dnsServerIP());
 
-    // STEP 5: Initialize UDP and broadcast socket
-    Serial.println("Step 5: Initializing UDP...");
+    // Validate IP address
+    IPAddress currentIP = Ethernet.localIP();
+    if (currentIP == IPAddress(0,0,0,0) || currentIP == IPAddress(5,0,0,0)) {
+        Serial.println("❌ Invalid IP address - network initialization failed!");
+        // Blink LED rapidly to indicate error
+        while(1) {
+            digitalWrite(LED_BUILTIN, HIGH);
+            delay(100);
+            digitalWrite(LED_BUILTIN, LOW);
+            delay(100);
+        }
+    }
+
+    // STEP 4: Initialize UDP and broadcast socket
+    Serial.println("Step 4: Initializing UDP...");
     if (udp.begin(PORT)) {
         Serial.println("UDP started successfully on port " + String(PORT));
     } else {
@@ -250,7 +189,7 @@ void setup() {
     json_talkie.set_manifesto(&manifesto);
     json_talkie.plug_socket(&broadcast_socket);
 
-    Serial.println("Talker ready with Native Ethernet!");
+    Serial.println("✅ Talker ready with UIPEthernet!");
 
     // Final startup indication
     digitalWrite(LED_BUILTIN, HIGH);
@@ -260,38 +199,26 @@ void setup() {
     Serial.println("Setup completed - Ready for JSON communication!");
 }
 
+
 void loop() {
-    // Check Ethernet status periodically
-    static unsigned long lastStatusCheck = 0;
-    if (millis() - lastStatusCheck > 10000) {
-        if (!ETH.linkUp()) {
-            Serial.println("Ethernet link lost!");
-        }
-        lastStatusCheck = millis();
-    }
+    Ethernet.maintain();
     
     json_talkie.listen();
 
     static unsigned long lastSend = 0;
     if (millis() - lastSend > 39000) {
-
-        // AVOID GLOBAL JSONDOCUMENT VARIABLES, HIGH RISK OF MEMORY LEAKS
         #if ARDUINOJSON_VERSION_MAJOR >= 7
         JsonDocument message_doc;
-        if (message_doc.overflowed()) {
-            Serial.println("CRITICAL: Insufficient RAM");
-        } else {
+        if (!message_doc.overflowed()) {
             JsonObject message = message_doc.to<JsonObject>();
-            message["m"] = 0;   // talk
+            message["m"] = 0;
             json_talkie.talk(message);
         }
         #else
         StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
-        if (message_doc.capacity() < BROADCAST_SOCKET_BUFFER_SIZE) {  // Absolute minimum
-            Serial.println("CRITICAL: Insufficient RAM");
-        } else {
+        if (message_doc.capacity() >= BROADCAST_SOCKET_BUFFER_SIZE) {
             JsonObject message = message_doc.to<JsonObject>();
-            message["m"] = 0;   // talk
+            message["m"] = 0;
             json_talkie.talk(message);
         }
         #endif
@@ -301,11 +228,10 @@ void loop() {
 }
 
 long total_runs = 0;
-long _duration = 5;  // Example variable
+long _duration = 5;
 
-// Command implementations
 bool buzz(JsonObject json_message) {
-    (void)json_message; // Silence unused parameter warning
+    (void)json_message;
     #ifndef BROADCASTSOCKET_SERIAL
     digitalWrite(buzzer_pin, HIGH);
     delay(_duration); 
@@ -315,10 +241,10 @@ bool buzz(JsonObject json_message) {
     return true;
 }
 
-bool is_led_on = false;  // keep track of state yourself, by default it's off
+bool is_led_on = false;
 
 bool led_on(JsonObject json_message) {
-    (void)json_message; // Silence unused parameter warning
+    (void)json_message;
     if (!is_led_on) {
         digitalWrite(LED_BUILTIN, HIGH);
         is_led_on = true;
@@ -332,7 +258,7 @@ bool led_on(JsonObject json_message) {
 }
 
 bool led_off(JsonObject json_message) {
-    (void)json_message; // Silence unused parameter warning
+    (void)json_message;
     if (is_led_on) {
         digitalWrite(LED_BUILTIN, LOW);
         is_led_on = false;
@@ -346,18 +272,18 @@ bool led_off(JsonObject json_message) {
 }
 
 bool set_duration(JsonObject json_message, long duration) {
-    (void)json_message; // Silence unused parameter warning
+    (void)json_message;
     _duration = duration;
     return true;
 }
 
 long get_duration(JsonObject json_message) {
-    (void)json_message; // Silence unused parameter warning
+    (void)json_message;
     return _duration;
 }
 
 long get_total_runs(JsonObject json_message) {
-    (void)json_message; // Silence unused parameter warning
+    (void)json_message;
     return total_runs;
 }
 
