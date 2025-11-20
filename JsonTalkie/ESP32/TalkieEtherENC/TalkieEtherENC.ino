@@ -160,6 +160,10 @@ void setup() {
         Serial.println("DHCP successful!");
     }
 
+    // // CRITICAL: Enable broadcast reception
+    // Ethernet.setBroadcast(true);
+    // Serial.println("Broadcast reception enabled");
+
     // Give Ethernet time to stabilize
     delay(2000);
 
