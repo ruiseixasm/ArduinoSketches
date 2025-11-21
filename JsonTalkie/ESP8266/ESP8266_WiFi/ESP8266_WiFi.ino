@@ -108,7 +108,7 @@ JsonTalkie::Manifesto manifesto_2(
 
 
 // Buzzer pin
-#define buzzer_pin 2    // D2 (GPIO 4) is a fully available port on ESP8266
+#define buzzer_pin 4    // D2 (GPIO 4) is a fully available port on ESP8266
 
 void setup() {
     // Serial is a singleton class (can be began multiple times)
