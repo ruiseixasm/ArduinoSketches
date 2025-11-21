@@ -53,7 +53,7 @@ JsonTalkie::Device device_1 = {
     "ESP66_1", "I do a 500ms buzz for a given duration!"
 };
 JsonTalkie::Device device_2 = {
-    "ESP66_2", "I turn light On and Off!"
+    "ESP66_2", "I turn a led On and Off!"
 };
 
 bool buzz(JsonObject json_message);
