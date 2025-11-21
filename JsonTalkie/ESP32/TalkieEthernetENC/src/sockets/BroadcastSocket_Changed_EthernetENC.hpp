@@ -14,13 +14,23 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_ETHERNETENC_HPP
 #define BROADCAST_SOCKET_ETHERNETENC_HPP
 
-#include "BroadcastSocket.hpp"
-#include "EthernetENC/src/EthernetENC.h"
-#include <EthernetUdp.h>  // Using EthernetUdp instead of UIPUdp
+#include "../BroadcastSocket.hpp"
+
+    // writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
+
+    // // Pattern matching disabled – not needed for broadcast
+
+    // // writeRegPair(EPMM0, 0x303f);
+
+    // // writeRegPair(EPMCSL, 0xf7f9);
+
+#include "../Changed_EthernetENC/src/EthernetENC.h"
+// #include <EthernetUdp.h>  // DON'T INCLUDE THIS ONE BECAUSE ARDUINO COMPILER CAN PICH THE WRONG ONE
+#include "../Changed_EthernetENC/src/EthernetUdp.h"    // Forces the correct usage of EthernetUdp.h
 
 
-#define BROADCAST_ETHERNETENC_DEBUG
-// #define ENABLE_DIRECT_ADDRESSING
+// #define BROADCAST_ETHERNETENC_DEBUG
+#define ENABLE_DIRECT_ADDRESSING
 
 
 class BroadcastSocket_EthernetENC : public BroadcastSocket {

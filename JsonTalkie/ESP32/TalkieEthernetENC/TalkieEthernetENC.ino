@@ -22,16 +22,17 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #if SOURCE_LIBRARY_MODE == 0
 #include <JsonTalkie.hpp>
-#include <sockets/BroadcastSocket_EthernetENC.hpp>
 
 #elif SOURCE_LIBRARY_MODE == 1
 #include "src/JsonTalkie.hpp"
-#include "src/BroadcastSocket_LocalEthernetENC.hpp"
 
 #elif SOURCE_LIBRARY_MODE == 2
 #include <Copy_JsonTalkie.hpp>
-#include <sockets/BroadcastSocket_EthernetENC.hpp>
 #endif
+
+// ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
+#include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
+
 
 // Needed for the SPI module connection
 #include <SPI.h>
@@ -62,7 +63,7 @@ JsonTalkie json_talkie;
 
 // Define the commands (stored in RAM)
 JsonTalkie::Device device = {
-    "ESP32", "I do a 500ms buzz!"
+    "ESP32", "I turn my blue light on and off!"
 };
 
 bool buzz(JsonObject json_message);
