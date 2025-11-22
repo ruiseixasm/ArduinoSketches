@@ -15,20 +15,17 @@ https://github.com/ruiseixasm/JsonTalkie
 #define PLAYER_1_HPP
 
 #include <JsonTalkie.hpp>
-#include "BroadcastSocket.hpp"
 
 
 class Player1 {
 private:
-    static BroadcastSocket broadcast_socket;
-
     // Static command arrays
     static JsonTalkie::Set setCommands[];
     static JsonTalkie::Get getCommands[];
     
     // Static member variables (instead of instance variables)
-    static long bpm_n;
-    static long bpm_d;
+    static int bpm_n;
+    static int bpm_d;
     // ... other static state
 
 public:
@@ -64,13 +61,13 @@ public:
     
     static bool get_bpm_n(JsonObject json_message, long value) {
         // Write current value back to JSON
-        json_message["value"] = bpm_n;
+        json_message["value"] = static_cast<int>(bpm_n);
         return true;
     }
     
     static bool get_bpm_d(JsonObject json_message, long value) {
         // Write current value back to JSON
-        json_message["value"] = bpm_d;
+        json_message["value"] = static_cast<int>(bpm_d);
         return true;
     }
     
@@ -85,12 +82,10 @@ public:
 
 // Static definitions (required for C++)
 
-BroadcastSocket Player1::broadcast_socket;
-
 JsonTalkie Player1::json_talkie;
 
-long Player1::bpm_n = 120;
-long Player1::bpm_d = 4;
+int Player1::bpm_n = 120;
+int Player1::bpm_d = 4;
 
 JsonTalkie::Set Player1::setCommands[] = {
     {"bpm_n", &Player1::set_bpm_n},
