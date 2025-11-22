@@ -97,11 +97,11 @@ JsonTalkie::Run SinglePlayer::runCommands[] = {
 };
 
 JsonTalkie::Set SinglePlayer::setCommands[] = {
-    {"bpm_10", "Sets the Tempo in BPM", &SinglePlayer::set_bpm_10}
+    {"bpm_10", "Sets the Tempo in BPM x 10", &SinglePlayer::set_bpm_10}
 };
 
 JsonTalkie::Get SinglePlayer::getCommands[] = {
-    {"bpm_10", "Gets the Tempo in BPM", &SinglePlayer::get_bpm_10}
+    {"bpm_10", "Gets the Tempo in BPM x 10", &SinglePlayer::get_bpm_10}
 };
 
 JsonTalkie::Manifesto SinglePlayer::manifesto(
