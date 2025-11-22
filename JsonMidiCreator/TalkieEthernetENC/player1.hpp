@@ -73,9 +73,12 @@ private:
     }
 
     // Static command arrays (the main reason for beng static, due to dynamic size)
+    static JsonTalkie::Run runCommands[];
     static JsonTalkie::Set setCommands[];
     static JsonTalkie::Get getCommands[];
 
+    // The final manifesto
+    static JsonTalkie::Manifesto manifesto;
     
 public:
 
@@ -108,6 +111,10 @@ JsonTalkie::Device SinglePlayer::device = {
     "player1", "I receive commands from JsonTalkiePlayer"
 };
 
+JsonTalkie::Run SinglePlayer::runCommands[] = {
+    // Mandatory parameter
+};
+
 JsonTalkie::Set SinglePlayer::setCommands[] = {
     {"bpm_n", "Sets the Tempo numerator of BPM", &SinglePlayer::set_bpm_n},
     {"bpm_d", "Sets the Tempo denominator of BPM", &SinglePlayer::set_bpm_d}
@@ -119,11 +126,13 @@ JsonTalkie::Get SinglePlayer::getCommands[] = {
 };
 
 
-// JsonTalkie::Manifesto manifesto(
-//     &device_1,
-//     setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
-//     getCommands_1, sizeof(getCommands_1)/sizeof(JsonTalkie::Get)
-// );
+JsonTalkie::Manifesto SinglePlayer::manifesto(
+    &device,
+    runCommands, sizeof(runCommands)/sizeof(JsonTalkie::Run),
+    setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
+    getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get),
+    nullptr, nullptr
+);
 
 
 
