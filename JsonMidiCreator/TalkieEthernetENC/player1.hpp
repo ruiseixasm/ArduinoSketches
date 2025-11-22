@@ -39,7 +39,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 class Player1 {
 private:
-
+    JsonTalkie json_talkie; // 1. JSON_TALKIE INSTANTIATION
 
     // // Static command arrays
     // static JsonTalkie::Set setCommands[];

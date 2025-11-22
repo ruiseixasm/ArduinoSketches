@@ -73,7 +73,7 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01};
 
 
 JsonTalkie json_talkie;
-// Player1 player1;
+Player1 player1;
 
 
 // Network settings
