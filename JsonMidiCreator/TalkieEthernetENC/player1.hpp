@@ -11,96 +11,77 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SOCKET_HPP
-#define BROADCAST_SOCKET_HPP
+#ifndef PLAYER_1_HPP
+#define PLAYER_1_HPP
 
-#include <Arduino.h>    // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
+#include <JsonTalkie.hpp>
 
 
-// #define BROADCASTSOCKET_DEBUG
+class Player1 {
+private:
 
-class BroadcastSocket {
-protected:
-    static uint16_t _port;
+    // Tempo data
+    int _bpm_numerator = 120;   // bpm_n
+    int _bpm_denominator = 1;   // bpm_d
+    JsonTalkie json_talkie;
 
-    // Private constructor
-    BroadcastSocket() = default;
-    virtual ~BroadcastSocket() = default;
+    JsonTalkie::Device device = {
+        "player1", "First player that processes JsonMidiCreator data"
+    };
 
-    static size_t jsonStrip(char* buffer, size_t length) {
 
-        // Find the first '{' (start of JSON)
-        size_t json_start = 0;
-        while (buffer[json_start] != '{' && json_start < length) {
-            
-            #ifdef BROADCASTSOCKET_DEBUG
-            if (json_start == 0)
-                Serial.println(F("Json LEFT strip"));
-            #endif
-            
-            json_start++;
-        }
+    bool set_bpm_n(JsonObject json_message, long bpm_n);
+    bool set_bpm_d(JsonObject json_message, long bpm_d);
+    JsonTalkie::Set setCommands[] = {
+        {"bpm_n", "Sets the Tempo numerator (BPM)", set_bpm_n},
+        {"bpm_d", "Sets the Tempo denominator (BPM)", set_bpm_d}
+    };
 
-        // If no '{', discard
-        if (json_start == length) {
 
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("Json '{' NOT found"));
-            #endif
-            
-            return 0;
-        }
+    long get_bpm_n(JsonObject json_message);
+    long get_bpm_d(JsonObject json_message);
+    JsonTalkie::Get getCommands[] = {
+        {"bpm_n", "Gets the Tempo numerator (BPM)", get_bpm_n},
+        {"bpm_d", "Gets the Tempo denominator (BPM)", get_bpm_d}
+    };
 
-        // Find the first '}' (finish of JSON)
-        size_t json_finish = length - 1;  // json_start and json_finish are indexes, NOT sizes
-        while (buffer[json_finish] != '}' && json_finish > json_start) {
 
-            #ifdef BROADCASTSOCKET_DEBUG
-            if (json_finish == length - 1)
-                Serial.println(F("Json RIGHT strip"));
-            #endif
-            
-            json_finish--;
-        }
+    JsonTalkie::Manifesto manifesto(
+        &device,
+        setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
+        getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get)
+    );
 
-        // If no '}', discard
-        if (json_finish == json_start) {
-            
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("Json '}' NOT found"));
-            #endif
-            
-            return 0;
-        }
 
-        // Shift JSON to start of buffer if needed
-        if (json_start > 0) {
-            // Copies "numBytes" bytes from address "from" to address "to"
-            // void * memmove(void *to, const void *from, size_t numBytes);
-            memmove(buffer, buffer + json_start, json_finish - json_start + 1);
-        }
 
-        // Return actual JSON length (including both braces)
-        return json_finish - json_start + 1;
+    bool set_bpm_n(JsonObject json_message, long bpm_n) {
+        (void)json_message; // Silence unused parameter warning
+        _bpm_numerator = static_cast<int>(bpm_n);
+        return true;
     }
 
-public:
-    // Delete copy/move operations
-    BroadcastSocket(const BroadcastSocket&) = delete;
-    BroadcastSocket& operator=(const BroadcastSocket&) = delete;
-    BroadcastSocket(BroadcastSocket&&) = delete;
-    BroadcastSocket& operator=(BroadcastSocket&&) = delete;
+    bool set_bpm_d(JsonObject json_message, long bpm_d) {
+        (void)json_message; // Silence unused parameter warning
+        _bpm_denominator = static_cast<int>(bpm_d);
+        return true;
+    }
 
-    // Pure virtual methods remain unchanged
-    virtual bool send(const char* data, size_t len, bool as_reply = false) = 0;
-    virtual size_t receive(char* buffer, size_t size) = 0;
-    
-    virtual void set_port(uint16_t port) { _port = port; }
-    virtual uint16_t get_port() { return _port; }
+
+public:
+    Player1() {
+        
+        json_talkie.set_manifesto(&manifesto);
+    }
+
+    void plug_socket(BroadcastSocket *socket) {
+        json_talkie.plug_socket(socket);
+    }
+
+    void listen(bool receive = false) {
+        json_talkie.listen(receive);
+    }
+
 };
 
-// Static member initialization
-uint16_t BroadcastSocket::_port = 5005; // The default port
 
-
-#endif // BROADCAST_SOCKET_HPP
+#endif // PLAYER_1_HPP
