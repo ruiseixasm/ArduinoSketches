@@ -61,12 +61,18 @@ private:
         return true;
     }
     
-    static long get_bpm_n() { return static_cast<long>(bpm_n); }
-    static long get_bpm_d() { return static_cast<long>(bpm_d); }
+    static long get_bpm_n(JsonObject json_message) {
+        (void)json_message; // Silence unused parameter warning
+        return static_cast<long>(bpm_n);
+    }
+    static long get_bpm_d(JsonObject json_message) {
+        (void)json_message; // Silence unused parameter warning
+        return static_cast<long>(bpm_d);
+    }
 
     // Static command arrays (the main reason for beng static, due to dynamic size)
     static JsonTalkie::Set setCommands[];
-    // static JsonTalkie::Get getCommands[];
+    static JsonTalkie::Get getCommands[];
 
     
 public:
@@ -99,6 +105,11 @@ int Player1::bpm_d = 1;
 JsonTalkie::Set Player1::setCommands[] = {
     {"bpm_n", "Sets the Tempo numerator of BPM", &Player1::set_bpm_n},
     {"bpm_d", "Sets the Tempo denominator of BPM", &Player1::set_bpm_d}
+};
+
+JsonTalkie::Get Player1::getCommands[] = {
+    {"bpm_n", "Gets the Tempo numerator of BPM", &Player1::get_bpm_n},
+    {"bpm_d", "Gets the Tempo denominator of BPM", &Player1::get_bpm_d}
 };
 
 // JsonTalkie::Get Player1::getCommands[] = {
