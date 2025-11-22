@@ -85,6 +85,8 @@ public:
     SinglePlayer(BroadcastSocket* socket) {
         // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH
         json_talkie.plug_socket(socket);
+        // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE (NEED TO BE STATIC)
+        json_talkie.set_manifesto(&manifesto);
     }
 
     void listen(bool receive = false) {
@@ -124,7 +126,6 @@ JsonTalkie::Get SinglePlayer::getCommands[] = {
     {"bpm_n", "Gets the Tempo numerator of BPM", &SinglePlayer::get_bpm_n},
     {"bpm_d", "Gets the Tempo denominator of BPM", &SinglePlayer::get_bpm_d}
 };
-
 
 JsonTalkie::Manifesto SinglePlayer::manifesto(
     &device,
