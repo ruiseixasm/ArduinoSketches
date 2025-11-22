@@ -15,7 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define PLAYER_1_HPP
 
 // 1. THE PURPOSE OF THE PLAYER HEADER LIBRARY IS TO MANAGE ITS OWN JSON_TALKIE INSTANTIATION
-// 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE MAIN SKETCH THAT IS SHARED AMONG ALL PLAYERS
+// 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH THAT IS SHARED AMONG ALL PLAYERS
 // 3. THE PRESENT LIBRARY SHALL BE ABLE TO KEEP AND INSTANTIATE THE OTHER PARAMETERS NEEDED FOR
 //     ITS OWN JSON_TALKIE INSTANTIATION
 
@@ -36,31 +36,52 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Copy_JsonTalkie.hpp>
 #endif
 
-#include "src/BroadcastSocket.hpp"      // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE MAIN SKETCH
+#include "src/BroadcastSocket.hpp"      // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH
 
 
 class Player1 {
 private:
-    JsonTalkie json_talkie; // 1. JSON_TALKIE INSTANTIATION
+
+    // 1. JSON_TALKIE INSTANTIATION
+    JsonTalkie json_talkie;
+
+    // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE
+    static int bpm_n;
+    static int bpm_d;
+
+    static bool set_bpm_n(JsonObject json_message, long bpm_n_value) {
+        (void)json_message; // Silence unused parameter warning
+        bpm_n = static_cast<int>(bpm_n_value);
+        return true;
+    }
+    
+    static bool set_bpm_d(JsonObject json_message, long bpm_d_value) {
+        (void)json_message; // Silence unused parameter warning
+        bpm_d = static_cast<int>(bpm_d_value);
+        return true;
+    }
+    
+    static long get_bpm_n() { return static_cast<long>(bpm_n); }
+    static long get_bpm_d() { return static_cast<long>(bpm_d); }
+
+
 
     // // Static command arrays
     // static JsonTalkie::Set setCommands[];
     // static JsonTalkie::Get getCommands[];
     
-    // // Static member variables (instead of instance variables)
-    // static int bpm_n;
-    // static int bpm_d;
-    // // ... other static state
-
 public:
-    Player1(BroadcastSocket* socket) {  // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE MAIN SKETCH
+
+    Player1(BroadcastSocket* socket) {
+        // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH
         json_talkie.plug_socket(socket);
     }
 
-
-    // Static JsonTalkie instance
-    // static JsonTalkie json_talkie;
+    void listen(bool receive = false) {
+        json_talkie.listen(receive);
+    }
     
+
     // // Static initialization method
     // static void begin() {
     //     json_talkie = JsonTalkie(
@@ -69,25 +90,6 @@ public:
     //         getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get)
     //     );
         
-    //     // Initialize static state
-    //     bpm_n = 120;
-    //     bpm_d = 4;
-    //     // ... other initialization
-    // }
-    
-    // // Static methods (no 'this' pointer needed)
-    // static bool set_bpm_n(JsonObject json_message, long value) {
-    //     bpm_n = value;
-    //     // Add any validation logic here
-    //     return true;
-    // }
-    
-    // static bool set_bpm_d(JsonObject json_message, long value) {
-    //     bpm_d = value;
-    //     // Add any validation logic here
-    //     return true;
-    // }
-    
     // static bool get_bpm_n(JsonObject json_message, long value) {
     //     // Write current value back to JSON
     //     json_message["value"] = static_cast<int>(bpm_n);
@@ -100,10 +102,6 @@ public:
     //     return true;
     // }
     
-    // static void listen() {
-    //     json_talkie.listen();
-    // }
-    
     // // Static getters for other parts of your code
     // static long get_current_bpm_n() { return bpm_n; }
     // static long get_current_bpm_d() { return bpm_d; }
@@ -111,10 +109,10 @@ public:
 
 // Static definitions (required for C++)
 
-// JsonTalkie Player1::json_talkie;
+int Player1::bpm_n = 120;
+int Player1::bpm_d = 1;
 
-// int Player1::bpm_n = 120;
-// int Player1::bpm_d = 4;
+// JsonTalkie Player1::json_talkie;
 
 // JsonTalkie::Set Player1::setCommands[] = {
 //     {"bpm_n", &Player1::set_bpm_n},
