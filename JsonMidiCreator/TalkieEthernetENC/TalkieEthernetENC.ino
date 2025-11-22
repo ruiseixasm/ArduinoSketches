@@ -33,7 +33,8 @@ https://github.com/ruiseixasm/JsonTalkie
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
 
-#include "player1.hpp"
+#include "SinglePlayer.hpp"
+#include "MultiplePlayer.hpp"
 
 
 // Needed for the SPI module connection
@@ -73,7 +74,8 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01};
 
 
 JsonTalkie json_talkie;
-SinglePlayer player1(&broadcast_socket);
+SinglePlayer single_player(&broadcast_socket);
+MultiplePlayer player_1(&broadcast_socket);
 
 
 // Network settings
@@ -245,7 +247,8 @@ void loop() {
     Ethernet.maintain();
     
     json_talkie.listen();
-    player1.listen();
+    single_player.listen();
+    player_1.listen();
 
     static unsigned long lastSend = 0;
     if (millis() - lastSend > 39000) {

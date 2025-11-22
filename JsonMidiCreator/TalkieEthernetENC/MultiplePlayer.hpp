@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef PLAYER_1_HPP
-#define PLAYER_1_HPP
+#ifndef MULTIPLE_PLAYER_HPP
+#define MULTIPLE_PLAYER_HPP
 
 // 1. THE PURPOSE OF THE PLAYER HEADER LIBRARY IS TO MANAGE ITS OWN JSON_TALKIE INSTANTIATION
 // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH THAT IS SHARED AMONG ALL PLAYERS
@@ -39,7 +39,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/BroadcastSocket.hpp"      // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH
 
 
-class SinglePlayer {
+class MultiplePlayer {
 private:
 
     // 1. JSON_TALKIE INSTANTIATION
@@ -82,7 +82,7 @@ private:
     
 public:
 
-    SinglePlayer(BroadcastSocket* socket) {
+    MultiplePlayer(BroadcastSocket* socket) {
         // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH
         json_talkie.plug_socket(socket);
         // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE (NEED TO BE STATIC)
@@ -97,28 +97,28 @@ public:
 
 // Static definitions (required for C++)
 
-int SinglePlayer::bpm_n = 120;
-int SinglePlayer::bpm_d = 1;
+int MultiplePlayer::bpm_n = 120;
+int MultiplePlayer::bpm_d = 1;
 
-JsonTalkie::Device SinglePlayer::device = {
-    "player1", "I receive commands from JsonTalkiePlayer"
+JsonTalkie::Device MultiplePlayer::device = {
+    "mp1", "I'm a Multiple Player and I receive commands from JsonTalkiePlayer"
 };
 
-JsonTalkie::Run SinglePlayer::runCommands[] = {
+JsonTalkie::Run MultiplePlayer::runCommands[] = {
     // Mandatory parameter
 };
 
-JsonTalkie::Set SinglePlayer::setCommands[] = {
-    {"bpm_n", "Sets the Tempo numerator of BPM", &SinglePlayer::set_bpm_n},
-    {"bpm_d", "Sets the Tempo denominator of BPM", &SinglePlayer::set_bpm_d}
+JsonTalkie::Set MultiplePlayer::setCommands[] = {
+    {"bpm_n", "Sets the Tempo numerator of BPM", &MultiplePlayer::set_bpm_n},
+    {"bpm_d", "Sets the Tempo denominator of BPM", &MultiplePlayer::set_bpm_d}
 };
 
-JsonTalkie::Get SinglePlayer::getCommands[] = {
-    {"bpm_n", "Gets the Tempo numerator of BPM", &SinglePlayer::get_bpm_n},
-    {"bpm_d", "Gets the Tempo denominator of BPM", &SinglePlayer::get_bpm_d}
+JsonTalkie::Get MultiplePlayer::getCommands[] = {
+    {"bpm_n", "Gets the Tempo numerator of BPM", &MultiplePlayer::get_bpm_n},
+    {"bpm_d", "Gets the Tempo denominator of BPM", &MultiplePlayer::get_bpm_d}
 };
 
-JsonTalkie::Manifesto SinglePlayer::manifesto(
+JsonTalkie::Manifesto MultiplePlayer::manifesto(
     &device,
     runCommands, sizeof(runCommands)/sizeof(JsonTalkie::Run),
     setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
@@ -128,4 +128,4 @@ JsonTalkie::Manifesto SinglePlayer::manifesto(
 
 
 
-#endif // PLAYER_1_HPP
+#endif // MULTIPLE_PLAYER_HPP
