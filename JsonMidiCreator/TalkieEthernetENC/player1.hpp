@@ -72,7 +72,7 @@ private:
         return static_cast<long>(bpm_d);
     }
 
-    // Static command arrays (the main reason for beng static, due to dynamic size)
+    // Static command arrays (the main reason for being static, due to dynamic size)
     static JsonTalkie::Run runCommands[];
     static JsonTalkie::Set setCommands[];
     static JsonTalkie::Get getCommands[];
@@ -93,15 +93,6 @@ public:
         json_talkie.listen(receive);
     }
     
-
-    // // Static initialization method
-    // static void begin() {
-    //     json_talkie = JsonTalkie(
-    //         &device,
-    //         setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
-    //         getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get)
-    //     );
-        
 };
 
 // Static definitions (required for C++)
