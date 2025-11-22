@@ -45,7 +45,7 @@ private:
     // 1. JSON_TALKIE INSTANTIATION
     JsonTalkie json_talkie;
 
-    // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE
+    // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE (NEED TO BE STATIC)
     static int bpm_n;
     static int bpm_d;
 
@@ -64,11 +64,10 @@ private:
     static long get_bpm_n() { return static_cast<long>(bpm_n); }
     static long get_bpm_d() { return static_cast<long>(bpm_d); }
 
-
-
-    // // Static command arrays
-    // static JsonTalkie::Set setCommands[];
+    // Static command arrays (the main reason for beng static, due to dynamic size)
+    static JsonTalkie::Set setCommands[];
     // static JsonTalkie::Get getCommands[];
+
     
 public:
 
@@ -90,21 +89,6 @@ public:
     //         getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get)
     //     );
         
-    // static bool get_bpm_n(JsonObject json_message, long value) {
-    //     // Write current value back to JSON
-    //     json_message["value"] = static_cast<int>(bpm_n);
-    //     return true;
-    // }
-    
-    // static bool get_bpm_d(JsonObject json_message, long value) {
-    //     // Write current value back to JSON
-    //     json_message["value"] = static_cast<int>(bpm_d);
-    //     return true;
-    // }
-    
-    // // Static getters for other parts of your code
-    // static long get_current_bpm_n() { return bpm_n; }
-    // static long get_current_bpm_d() { return bpm_d; }
 };
 
 // Static definitions (required for C++)
@@ -112,13 +96,10 @@ public:
 int Player1::bpm_n = 120;
 int Player1::bpm_d = 1;
 
-// JsonTalkie Player1::json_talkie;
-
-// JsonTalkie::Set Player1::setCommands[] = {
-//     {"bpm_n", &Player1::set_bpm_n},
-//     {"bpm_d", &Player1::set_bpm_d}
-//     // Add more commands as needed
-// };
+JsonTalkie::Set Player1::setCommands[] = {
+    {"bpm_n", "Sets the Tempo numerator of BPM", &Player1::set_bpm_n},
+    {"bpm_d", "Sets the Tempo denominator of BPM", &Player1::set_bpm_d}
+};
 
 // JsonTalkie::Get Player1::getCommands[] = {
 //     {"bpm_n", &Player1::get_bpm_n},
