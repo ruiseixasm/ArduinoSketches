@@ -19,68 +19,83 @@ https://github.com/ruiseixasm/JsonTalkie
 
 class Player1 {
 private:
-
-    // Tempo data
-    int _bpm_numerator = 120;   // bpm_n
-    int _bpm_denominator = 1;   // bpm_d
-    JsonTalkie json_talkie;
-
-    JsonTalkie::Device device = {
-        "player1", "First player that processes JsonMidiCreator data"
-    };
-
-
-    bool set_bpm_n(JsonObject json_message, long bpm_n);
-    bool set_bpm_d(JsonObject json_message, long bpm_d);
-    JsonTalkie::Set setCommands[] = {
-        {"bpm_n", "Sets the Tempo numerator (BPM)", set_bpm_n},
-        {"bpm_d", "Sets the Tempo denominator (BPM)", set_bpm_d}
-    };
-
-
-    long get_bpm_n(JsonObject json_message);
-    long get_bpm_d(JsonObject json_message);
-    JsonTalkie::Get getCommands[] = {
-        {"bpm_n", "Gets the Tempo numerator (BPM)", get_bpm_n},
-        {"bpm_d", "Gets the Tempo denominator (BPM)", get_bpm_d}
-    };
-
-
-    JsonTalkie::Manifesto manifesto(
-        &device,
-        setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
-        getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get)
-    );
-
-
-
-    bool set_bpm_n(JsonObject json_message, long bpm_n) {
-        (void)json_message; // Silence unused parameter warning
-        _bpm_numerator = static_cast<int>(bpm_n);
-        return true;
-    }
-
-    bool set_bpm_d(JsonObject json_message, long bpm_d) {
-        (void)json_message; // Silence unused parameter warning
-        _bpm_denominator = static_cast<int>(bpm_d);
-        return true;
-    }
-
+    // Static command arrays
+    static JsonTalkie::Set setCommands[];
+    static JsonTalkie::Get getCommands[];
+    
+    // Static member variables (instead of instance variables)
+    static long bpm_n;
+    static long bpm_d;
+    // ... other static state
 
 public:
-    Player1() {
+    // Static JsonTalkie instance
+    static JsonTalkie json_talkie;
+    
+    // Static initialization method
+    static void begin() {
+        json_talkie = JsonTalkie(
+            &device,
+            setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
+            getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get)
+        );
         
-        json_talkie.set_manifesto(&manifesto);
+        // Initialize static state
+        bpm_n = 120;
+        bpm_d = 4;
+        // ... other initialization
     }
-
-    void plug_socket(BroadcastSocket *socket) {
-        json_talkie.plug_socket(socket);
+    
+    // Static methods (no 'this' pointer needed)
+    static bool set_bpm_n(JsonObject json_message, long value) {
+        bpm_n = value;
+        // Add any validation logic here
+        return true;
     }
-
-    void listen(bool receive = false) {
-        json_talkie.listen(receive);
+    
+    static bool set_bpm_d(JsonObject json_message, long value) {
+        bpm_d = value;
+        // Add any validation logic here
+        return true;
     }
+    
+    static bool get_bpm_n(JsonObject json_message, long value) {
+        // Write current value back to JSON
+        json_message["value"] = bpm_n;
+        return true;
+    }
+    
+    static bool get_bpm_d(JsonObject json_message, long value) {
+        // Write current value back to JSON
+        json_message["value"] = bpm_d;
+        return true;
+    }
+    
+    static void listen() {
+        json_talkie.listen();
+    }
+    
+    // Static getters for other parts of your code
+    static long get_current_bpm_n() { return bpm_n; }
+    static long get_current_bpm_d() { return bpm_d; }
+};
 
+// Static definitions (required for C++)
+JsonTalkie Player1::json_talkie;
+
+long Player1::bpm_n = 120;
+long Player1::bpm_d = 4;
+
+JsonTalkie::Set Player1::setCommands[] = {
+    {"bpm_n", &Player1::set_bpm_n},
+    {"bpm_d", &Player1::set_bpm_d}
+    // Add more commands as needed
+};
+
+JsonTalkie::Get Player1::getCommands[] = {
+    {"bpm_n", &Player1::get_bpm_n},
+    {"bpm_d", &Player1::get_bpm_d}
+    // Add more commands as needed
 };
 
 
