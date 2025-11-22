@@ -39,7 +39,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/BroadcastSocket.hpp"      // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH
 
 
-class Player1 {
+class SinglePlayer {
 private:
 
     // 1. JSON_TALKIE INSTANTIATION
@@ -48,6 +48,8 @@ private:
     // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE (NEED TO BE STATIC)
     static int bpm_n;
     static int bpm_d;
+
+    static JsonTalkie::Device device;
 
     static bool set_bpm_n(JsonObject json_message, long bpm_n_value) {
         (void)json_message; // Silence unused parameter warning
@@ -77,7 +79,7 @@ private:
     
 public:
 
-    Player1(BroadcastSocket* socket) {
+    SinglePlayer(BroadcastSocket* socket) {
         // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH
         json_talkie.plug_socket(socket);
     }
@@ -99,24 +101,30 @@ public:
 
 // Static definitions (required for C++)
 
-int Player1::bpm_n = 120;
-int Player1::bpm_d = 1;
+int SinglePlayer::bpm_n = 120;
+int SinglePlayer::bpm_d = 1;
 
-JsonTalkie::Set Player1::setCommands[] = {
-    {"bpm_n", "Sets the Tempo numerator of BPM", &Player1::set_bpm_n},
-    {"bpm_d", "Sets the Tempo denominator of BPM", &Player1::set_bpm_d}
+JsonTalkie::Device SinglePlayer::device = {
+    "player1", "I receive commands from JsonTalkiePlayer"
 };
 
-JsonTalkie::Get Player1::getCommands[] = {
-    {"bpm_n", "Gets the Tempo numerator of BPM", &Player1::get_bpm_n},
-    {"bpm_d", "Gets the Tempo denominator of BPM", &Player1::get_bpm_d}
+JsonTalkie::Set SinglePlayer::setCommands[] = {
+    {"bpm_n", "Sets the Tempo numerator of BPM", &SinglePlayer::set_bpm_n},
+    {"bpm_d", "Sets the Tempo denominator of BPM", &SinglePlayer::set_bpm_d}
 };
 
-// JsonTalkie::Get Player1::getCommands[] = {
-//     {"bpm_n", &Player1::get_bpm_n},
-//     {"bpm_d", &Player1::get_bpm_d}
-//     // Add more commands as needed
-// };
+JsonTalkie::Get SinglePlayer::getCommands[] = {
+    {"bpm_n", "Gets the Tempo numerator of BPM", &SinglePlayer::get_bpm_n},
+    {"bpm_d", "Gets the Tempo denominator of BPM", &SinglePlayer::get_bpm_d}
+};
+
+
+// JsonTalkie::Manifesto manifesto(
+//     &device_1,
+//     setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
+//     getCommands_1, sizeof(getCommands_1)/sizeof(JsonTalkie::Get)
+// );
+
 
 
 #endif // PLAYER_1_HPP
