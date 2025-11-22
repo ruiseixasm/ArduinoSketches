@@ -58,7 +58,6 @@ public:
         #endif
 
         size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(data), size);
-        (void)bytesSent; // Silence unused variable warning
 
         if (!_udp->endPacket()) {
             #ifdef BROADCAST_ETHERNET_DEBUG

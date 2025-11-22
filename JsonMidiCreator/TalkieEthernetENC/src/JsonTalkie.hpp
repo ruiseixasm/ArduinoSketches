@@ -142,7 +142,7 @@ public:
         bool (*error)(JsonObject) = nullptr;
 
         Run* get_run(const char* cmd) {
-            for (size_t index = 0; index < runSize; ++index) {
+            for (int index = 0; index < runSize; ++index) {
                 if (strcmp(cmd, runCommands[index].name) == 0) {
                     return &runCommands[index];  // Returns the function
                 }
@@ -151,7 +151,7 @@ public:
         }
     
         Set* get_set(const char* cmd) {
-            for (size_t index = 0; index < setSize; ++index) {
+            for (int index = 0; index < setSize; ++index) {
                 if (strcmp(cmd, setCommands[index].name) == 0) {
                     return &setCommands[index];  // Returns the function
                 }
@@ -160,7 +160,7 @@ public:
         }
     
         Get* get_get(const char* cmd) {
-            for (size_t index = 0; index < getSize; ++index) {
+            for (int index = 0; index < getSize; ++index) {
                 if (strcmp(cmd, getCommands[index].name) == 0) {
                     return &getCommands[index];  // Returns the function
                 }

@@ -14,90 +14,112 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef PLAYER_1_HPP
 #define PLAYER_1_HPP
 
+// 1. THE PURPOSE OF THE PLAYER HEADER LIBRARY IS TO MANAGE ITS OWN JSON_TALKIE INSTANTIATION
+// 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE MAIN SKETCH THAT IS SHARED AMONG ALL PLAYERS
+// 3. THE PRESENT LIBRARY SHALL BE ABLE TO KEEP AND INSTANTIATE THE OTHER PARAMETERS NEEDED FOR
+//     ITS OWN JSON_TALKIE INSTANTIATION
+
+
+#define SOURCE_LIBRARY_MODE 1   // 1. JSON_TALKIE INSTANTIATION
+//      0 - Arduino Library
+//      1 - Project Library
+//      2 - Arduino Copy Library
+
+
+#if SOURCE_LIBRARY_MODE == 0
 #include <JsonTalkie.hpp>
+
+#elif SOURCE_LIBRARY_MODE == 1
+#include "src/JsonTalkie.hpp"
+
+#elif SOURCE_LIBRARY_MODE == 2
+#include <Copy_JsonTalkie.hpp>
+#endif
 
 
 class Player1 {
 private:
-    // Static command arrays
-    static JsonTalkie::Set setCommands[];
-    static JsonTalkie::Get getCommands[];
+
+
+    // // Static command arrays
+    // static JsonTalkie::Set setCommands[];
+    // static JsonTalkie::Get getCommands[];
     
-    // Static member variables (instead of instance variables)
-    static int bpm_n;
-    static int bpm_d;
-    // ... other static state
+    // // Static member variables (instead of instance variables)
+    // static int bpm_n;
+    // static int bpm_d;
+    // // ... other static state
 
 public:
     // Static JsonTalkie instance
-    static JsonTalkie json_talkie;
+    // static JsonTalkie json_talkie;
     
-    // Static initialization method
-    static void begin() {
-        json_talkie = JsonTalkie(
-            &device,
-            setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
-            getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get)
-        );
+    // // Static initialization method
+    // static void begin() {
+    //     json_talkie = JsonTalkie(
+    //         &device,
+    //         setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
+    //         getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get)
+    //     );
         
-        // Initialize static state
-        bpm_n = 120;
-        bpm_d = 4;
-        // ... other initialization
-    }
+    //     // Initialize static state
+    //     bpm_n = 120;
+    //     bpm_d = 4;
+    //     // ... other initialization
+    // }
     
-    // Static methods (no 'this' pointer needed)
-    static bool set_bpm_n(JsonObject json_message, long value) {
-        bpm_n = value;
-        // Add any validation logic here
-        return true;
-    }
+    // // Static methods (no 'this' pointer needed)
+    // static bool set_bpm_n(JsonObject json_message, long value) {
+    //     bpm_n = value;
+    //     // Add any validation logic here
+    //     return true;
+    // }
     
-    static bool set_bpm_d(JsonObject json_message, long value) {
-        bpm_d = value;
-        // Add any validation logic here
-        return true;
-    }
+    // static bool set_bpm_d(JsonObject json_message, long value) {
+    //     bpm_d = value;
+    //     // Add any validation logic here
+    //     return true;
+    // }
     
-    static bool get_bpm_n(JsonObject json_message, long value) {
-        // Write current value back to JSON
-        json_message["value"] = static_cast<int>(bpm_n);
-        return true;
-    }
+    // static bool get_bpm_n(JsonObject json_message, long value) {
+    //     // Write current value back to JSON
+    //     json_message["value"] = static_cast<int>(bpm_n);
+    //     return true;
+    // }
     
-    static bool get_bpm_d(JsonObject json_message, long value) {
-        // Write current value back to JSON
-        json_message["value"] = static_cast<int>(bpm_d);
-        return true;
-    }
+    // static bool get_bpm_d(JsonObject json_message, long value) {
+    //     // Write current value back to JSON
+    //     json_message["value"] = static_cast<int>(bpm_d);
+    //     return true;
+    // }
     
-    static void listen() {
-        json_talkie.listen();
-    }
+    // static void listen() {
+    //     json_talkie.listen();
+    // }
     
-    // Static getters for other parts of your code
-    static long get_current_bpm_n() { return bpm_n; }
-    static long get_current_bpm_d() { return bpm_d; }
+    // // Static getters for other parts of your code
+    // static long get_current_bpm_n() { return bpm_n; }
+    // static long get_current_bpm_d() { return bpm_d; }
 };
 
 // Static definitions (required for C++)
 
-JsonTalkie Player1::json_talkie;
+// JsonTalkie Player1::json_talkie;
 
-int Player1::bpm_n = 120;
-int Player1::bpm_d = 4;
+// int Player1::bpm_n = 120;
+// int Player1::bpm_d = 4;
 
-JsonTalkie::Set Player1::setCommands[] = {
-    {"bpm_n", &Player1::set_bpm_n},
-    {"bpm_d", &Player1::set_bpm_d}
-    // Add more commands as needed
-};
+// JsonTalkie::Set Player1::setCommands[] = {
+//     {"bpm_n", &Player1::set_bpm_n},
+//     {"bpm_d", &Player1::set_bpm_d}
+//     // Add more commands as needed
+// };
 
-JsonTalkie::Get Player1::getCommands[] = {
-    {"bpm_n", &Player1::get_bpm_n},
-    {"bpm_d", &Player1::get_bpm_d}
-    // Add more commands as needed
-};
+// JsonTalkie::Get Player1::getCommands[] = {
+//     {"bpm_n", &Player1::get_bpm_n},
+//     {"bpm_d", &Player1::get_bpm_d}
+//     // Add more commands as needed
+// };
 
 
 #endif // PLAYER_1_HPP
