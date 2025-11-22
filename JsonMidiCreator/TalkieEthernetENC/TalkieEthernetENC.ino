@@ -229,7 +229,6 @@ void setup() {
     Serial.println("Setting JsonTalkie...");
     json_talkie.set_manifesto(&manifesto);
     json_talkie.plug_socket(&broadcast_socket);
-    // player1.plug_socket(&broadcast_socket);
 
     Serial.println("Talker ready with EthernetENC!");
 
@@ -246,7 +245,7 @@ void loop() {
     Ethernet.maintain();
     
     json_talkie.listen();
-    // player1.listen();
+    player1.listen();
 
     static unsigned long lastSend = 0;
     if (millis() - lastSend > 39000) {
