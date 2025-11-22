@@ -101,7 +101,7 @@ int MultiplePlayer::bpm_n = 120;
 int MultiplePlayer::bpm_d = 1;
 
 JsonTalkie::Device MultiplePlayer::device = {
-    "mp1", "I'm a Multiple Player and I receive commands from JsonTalkiePlayer"
+    "mp1", "Multiple Player receiving commands from JsonTalkiePlayer"
 };
 
 JsonTalkie::Run MultiplePlayer::runCommands[] = {

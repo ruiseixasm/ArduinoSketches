@@ -46,32 +46,21 @@ private:
     JsonTalkie json_talkie;
 
     // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE (NEED TO BE STATIC)
-    static int bpm_n;
-    static int bpm_d;
+    static long bpm;
 
     static JsonTalkie::Device device;
 
-    static bool set_bpm_n(JsonObject json_message, long bpm_n_value) {
+    static bool set_bpm(JsonObject json_message, long bpm) {
         (void)json_message; // Silence unused parameter warning
-        bpm_n = static_cast<int>(bpm_n_value);
+        SinglePlayer::bpm = bpm;
         return true;
     }
     
-    static bool set_bpm_d(JsonObject json_message, long bpm_d_value) {
+    static long get_bpm(JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
-        bpm_d = static_cast<int>(bpm_d_value);
-        return true;
+        return bpm;
     }
     
-    static long get_bpm_n(JsonObject json_message) {
-        (void)json_message; // Silence unused parameter warning
-        return static_cast<long>(bpm_n);
-    }
-    static long get_bpm_d(JsonObject json_message) {
-        (void)json_message; // Silence unused parameter warning
-        return static_cast<long>(bpm_d);
-    }
-
     // Static command arrays (the main reason for being static, due to dynamic size)
     static JsonTalkie::Run runCommands[];
     static JsonTalkie::Set setCommands[];
@@ -97,11 +86,10 @@ public:
 
 // Static definitions (required for C++)
 
-int SinglePlayer::bpm_n = 120;
-int SinglePlayer::bpm_d = 1;
+long SinglePlayer::bpm = 120.0;
 
 JsonTalkie::Device SinglePlayer::device = {
-    "sp1", "I'm a Single Player and I receive commands from JsonTalkiePlayer"
+    "sp1", "Single Player receiving commands from JsonTalkiePlayer"
 };
 
 JsonTalkie::Run SinglePlayer::runCommands[] = {
@@ -109,13 +97,11 @@ JsonTalkie::Run SinglePlayer::runCommands[] = {
 };
 
 JsonTalkie::Set SinglePlayer::setCommands[] = {
-    {"bpm_n", "Sets the Tempo numerator of BPM", &SinglePlayer::set_bpm_n},
-    {"bpm_d", "Sets the Tempo denominator of BPM", &SinglePlayer::set_bpm_d}
+    {"bpm", "Sets the Tempo in BPM", &SinglePlayer::set_bpm}
 };
 
 JsonTalkie::Get SinglePlayer::getCommands[] = {
-    {"bpm_n", "Gets the Tempo numerator of BPM", &SinglePlayer::get_bpm_n},
-    {"bpm_d", "Gets the Tempo denominator of BPM", &SinglePlayer::get_bpm_d}
+    {"bpm", "Gets the Tempo in BPM", &SinglePlayer::get_bpm}
 };
 
 JsonTalkie::Manifesto SinglePlayer::manifesto(
