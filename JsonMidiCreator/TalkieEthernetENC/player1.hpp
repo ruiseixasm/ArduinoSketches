@@ -20,7 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 //     ITS OWN JSON_TALKIE INSTANTIATION
 
 
-#define SOURCE_LIBRARY_MODE 1   // 1. JSON_TALKIE INSTANTIATION
+#define SOURCE_LIBRARY_MODE 1           // 1. JSON_TALKIE INSTANTIATION
 //      0 - Arduino Library
 //      1 - Project Library
 //      2 - Arduino Copy Library
@@ -35,6 +35,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #elif SOURCE_LIBRARY_MODE == 2
 #include <Copy_JsonTalkie.hpp>
 #endif
+
+#include "src/BroadcastSocket.hpp"      // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE MAIN SKETCH
 
 
 class Player1 {
@@ -51,6 +53,11 @@ private:
     // // ... other static state
 
 public:
+    Player1(BroadcastSocket* socket) {  // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE MAIN SKETCH
+        json_talkie.plug_socket(socket);
+    }
+
+
     // Static JsonTalkie instance
     // static JsonTalkie json_talkie;
     
