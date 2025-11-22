@@ -46,19 +46,19 @@ private:
     JsonTalkie json_talkie;
 
     // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE (NEED TO BE STATIC)
-    static long bpm;
+    static long bpm_10;
 
     static JsonTalkie::Device device;
 
-    static bool set_bpm(JsonObject json_message, long bpm) {
+    static bool set_bpm_10(JsonObject json_message, long bpm_10) {
         (void)json_message; // Silence unused parameter warning
-        SinglePlayer::bpm = bpm;
+        SinglePlayer::bpm_10 = bpm_10;
         return true;
     }
     
-    static long get_bpm(JsonObject json_message) {
+    static long get_bpm_10(JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
-        return bpm;
+        return bpm_10;
     }
     
     // Static command arrays (the main reason for being static, due to dynamic size)
@@ -86,7 +86,7 @@ public:
 
 // Static definitions (required for C++)
 
-long SinglePlayer::bpm = 120.0;
+long SinglePlayer::bpm_10 = 1200;
 
 JsonTalkie::Device SinglePlayer::device = {
     "sp1", "Single Player receiving commands from JsonTalkiePlayer"
@@ -97,11 +97,11 @@ JsonTalkie::Run SinglePlayer::runCommands[] = {
 };
 
 JsonTalkie::Set SinglePlayer::setCommands[] = {
-    {"bpm", "Sets the Tempo in BPM", &SinglePlayer::set_bpm}
+    {"bpm_10", "Sets the Tempo in BPM", &SinglePlayer::set_bpm_10}
 };
 
 JsonTalkie::Get SinglePlayer::getCommands[] = {
-    {"bpm", "Gets the Tempo in BPM", &SinglePlayer::get_bpm}
+    {"bpm_10", "Gets the Tempo in BPM", &SinglePlayer::get_bpm_10}
 };
 
 JsonTalkie::Manifesto SinglePlayer::manifesto(
