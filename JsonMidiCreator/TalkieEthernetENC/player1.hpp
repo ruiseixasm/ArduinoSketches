@@ -15,10 +15,13 @@ https://github.com/ruiseixasm/JsonTalkie
 #define PLAYER_1_HPP
 
 #include <JsonTalkie.hpp>
+#include "BroadcastSocket.hpp"
 
 
 class Player1 {
 private:
+    static BroadcastSocket broadcast_socket;
+
     // Static command arrays
     static JsonTalkie::Set setCommands[];
     static JsonTalkie::Get getCommands[];
@@ -81,6 +84,9 @@ public:
 };
 
 // Static definitions (required for C++)
+
+BroadcastSocket Player1::broadcast_socket;
+
 JsonTalkie Player1::json_talkie;
 
 long Player1::bpm_n = 120;
