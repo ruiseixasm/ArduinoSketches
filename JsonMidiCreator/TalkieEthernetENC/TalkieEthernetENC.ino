@@ -38,11 +38,14 @@ https://github.com/ruiseixasm/JsonTalkie
 // #include "MultiplePlayer.hpp"
 
 
+JsonTalker talkers[] = { JsonTalker(), JsonTalker(), JsonTalker() };
+auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
+
+
 // Needed for the SPI module connection
 #include <SPI.h>
 
 
-// auto& broadcast_socket = BroadcastSocket_EthernetENC::instance();
 
 // EthernetUDP udp;
 

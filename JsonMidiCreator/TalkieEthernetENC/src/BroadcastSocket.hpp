@@ -23,7 +23,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 private:
 
-    JsonTalker** _device_talkers = nullptr;   // A list of Talkers (pointers)
+    JsonTalker* _device_talkers = nullptr;   // A list of Talkers (pointers)
     size_t _talker_count = 0;
 
 protected:
@@ -38,8 +38,7 @@ protected:
         if (received_checksum == checksum) {
             // Triggers all Talkers to processes the received data
             for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                JsonTalker* talker = _device_talkers[talker_i];
-                talker->processData(this, buffer, length);
+                _device_talkers[talker_i].processData(this, buffer, length);
             }
         }
         return length;
@@ -49,7 +48,7 @@ protected:
     BroadcastSocket() = default;
     virtual ~BroadcastSocket() = default;
 
-    BroadcastSocket(JsonTalker** device_talkers, size_t talker_count)
+    BroadcastSocket(JsonTalker* device_talkers, size_t talker_count)
         : _device_talkers(device_talkers), _talker_count(talker_count) {}
 
 
@@ -61,7 +60,7 @@ public:
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
 
     // Singleton accessor
-    static BroadcastSocket& instance(JsonTalker** device_talkers, size_t talker_count) {
+    static BroadcastSocket& instance(JsonTalker* device_talkers, size_t talker_count) {
         static BroadcastSocket instance(device_talkers, talker_count);
         return instance;
     }
