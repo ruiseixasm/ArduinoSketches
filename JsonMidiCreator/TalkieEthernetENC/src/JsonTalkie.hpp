@@ -16,7 +16,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "BroadcastSocket.hpp"
 #include "DeviceTalker.hpp"
-#include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
 // Readjust if absolutely necessary
@@ -444,22 +443,6 @@ private:
             #endif
             return false;
         }
-        if (message["t"].is<uint8_t>()) {
-            if (message["t"].as<uint8_t>() != _channel) {
-                #ifdef JSONTALKIE_DEBUG
-                Serial.println(F("Message on different channel!"));
-                #endif
-                return false;
-            }
-        } else if (message["t"].is<String>()) {
-        
-            if (message["t"] != _manifesto->talker->name) {
-                #ifdef JSONTALKIE_DEBUG
-                Serial.println(F("Message NOT for me!"));
-                #endif
-                return false;
-            }
-        }
         if (!message["f"].is<String>()) {
             #ifdef JSONTALKIE_DEBUG
             Serial.println(0);
@@ -511,12 +494,25 @@ private:
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-        
         // Processes the Talkers
         for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
             DeviceTalker* talker = _device_talkers[talker_i];
 
 
+            // if (message["t"].is<uint8_t>()) {
+            //     uint8_t talker_channel = talker->get_channel();
+            //     channel = message["t"].as<uint8_t>();
+            //     if (talker_channel != channel)
+            //         break;
+            // } else if (message["t"].is<String>()) {
+            //     channel = message["t"].as<uint8_t>();
+            //     if (message["t"] != _manifesto->talker->name) {
+            //         #ifdef JSONTALKIE_DEBUG
+            //         Serial.println(F("Message NOT for me!"));
+            //         #endif
+            //     }
+            // }
+        
 
 
             MessageCode message_code = static_cast<MessageCode>(message["m"].as<int>());
