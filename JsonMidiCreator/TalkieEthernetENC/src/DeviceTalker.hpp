@@ -17,8 +17,25 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.hpp"
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
+
+// #define DEVICE_TALKER_DEBUG
+
+
+
 class DeviceTalker {
 public:
+
+    enum class MessageCode {
+        talk,
+        list,
+        run,
+        set,
+        get,
+        sys,
+        echo,
+        error,
+        channel
+    };
 
     struct Talk {
         const char* name;      // Name of the Talker
@@ -50,6 +67,9 @@ private:
     bool (DeviceTalker::*echo)(JsonObject) = nullptr;
     bool (DeviceTalker::*error)(JsonObject) = nullptr;
 
+    uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp
+    String _set_name = "";              // Keeps the talker name
+    bool _check_set_time = false;
 
 public:
 
@@ -71,6 +91,7 @@ public:
     // Explicit default constructor
     DeviceTalker() = default;
     
+
     size_t runs_count() { return sizeof(runCommands)/sizeof(DeviceTalker::Run); }
     const Run* run(const char* cmd) {
         for (size_t index = 0; index < runs_count(); ++index) {
@@ -108,6 +129,55 @@ public:
     }
     void set_channel(uint8_t channel) { this->channel = channel; }
     uint8_t get_channel() { return this->channel; }
+
+
+    
+    static uint32_t generateMessageId() {
+        // Generates a 32-bit wrapped timestamp ID using overflow.
+        return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
+    }
+
+
+    void processReceivedData(const char* received_data, const size_t data_len) {
+        
+        // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+        #if ARDUINOJSON_VERSION_MAJOR >= 7
+        JsonDocument message_doc;
+        #else
+        StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+        #endif
+
+        DeserializationError error = deserializeJson(message_doc, received_data, data_len);
+        if (error) {
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.println(F("Failed to deserialize received data"));
+            #endif
+            return;
+        }
+        JsonObject message = message_doc.as<JsonObject>();
+
+
+        if (true) {
+
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.print(F("Listened: "));
+            serializeJson(message, Serial);
+            Serial.println();  // optional: just to add a newline after the JSON
+            #endif
+
+            // Only set messages are time checked
+            if (message["m"].as<int>() == static_cast<int>(MessageCode::set)) {  // 3 - set
+                _sent_set_time[0] = message["i"].as<uint32_t>();
+                _sent_set_time[1] = generateMessageId();
+                _set_name = message["f"].as<String>(); // Explicit conversion
+                _check_set_time = true;
+            }
+        }
+
+
+    }
+
+
 
 
 };

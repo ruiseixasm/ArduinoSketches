@@ -21,7 +21,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 
-// #define JSONTALKIE_DEBUG
+// #define JSON_TALKIE_DEBUG
 
 
 // Keys:
@@ -233,7 +233,7 @@ public:
         
         // Directly nest the editable message under "m"
         if (message.isNull()) {
-            #ifdef JSONTALKIE_DEBUG
+            #ifdef JSON_TALKIE_DEBUG
             Serial.println(F("Error: Null message received"));
             #endif
             return false;
@@ -251,12 +251,12 @@ public:
 
         size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (len == 0) {
-            #ifdef JSONTALKIE_DEBUG
+            #ifdef JSON_TALKIE_DEBUG
             Serial.println(F("Error: Serialization failed"));
             #endif
         } else {
             
-            #ifdef JSONTALKIE_DEBUG
+            #ifdef JSON_TALKIE_DEBUG
             Serial.print(F("T: "));
             serializeJson(message, Serial);
             Serial.println();  // optional: just to add a newline after the JSON
@@ -277,28 +277,28 @@ public:
 
             if (_data_len > 0) {
             
-                #ifdef JSONTALKIE_DEBUG
+                #ifdef JSON_TALKIE_DEBUG
                 Serial.print(F("L: "));
                 Serial.write(_received_data, _data_len);  // Properly prints raw bytes as characters
                 Serial.println();            // Adds newline after the printed data
                 #endif
 
                 // HERE IS WHERE THE CHECK SUM SHALL BE DONE
-                #ifdef JSONTALKIE_DEBUG
+                #ifdef JSON_TALKIE_DEBUG
                 Serial.print(F("C: "));
                 Serial.print(_data_len);
                 #endif
 
                 uint16_t data_checksum = readChecksum(_received_data, &_data_len);
 
-                #ifdef JSONTALKIE_DEBUG
+                #ifdef JSON_TALKIE_DEBUG
                 Serial.print(" - ");
                 Serial.print(data_checksum);
                 #endif
 
                 uint16_t checksum = getChecksum(_received_data, _data_len);
 
-                #ifdef JSONTALKIE_DEBUG
+                #ifdef JSON_TALKIE_DEBUG
                 Serial.print("  |  ");
                 Serial.print(_data_len);
                 Serial.print(" - ");
@@ -306,9 +306,15 @@ public:
                 Serial.println();            // Adds newline after the printed data
                 #endif
 
-                if (data_checksum != checksum)
+                if (data_checksum != checksum) {
                     _data_len = 0;  // Disables the following processing
-
+                } else {
+                    // Call Talkers to processes the validated received_data
+                    for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                        DeviceTalker* talker = _device_talkers[talker_i];
+                        talker->processReceivedData(_received_data, _data_len);
+                    }
+                }
             }
         }
 
@@ -323,7 +329,7 @@ public:
 
             DeserializationError error = deserializeJson(message_doc, _received_data, _data_len);
             if (error) {
-                #ifdef JSONTALKIE_DEBUG
+                #ifdef JSON_TALKIE_DEBUG
                 Serial.println(F("Failed to deserialize received data"));
                 #endif
                 return;
@@ -332,7 +338,7 @@ public:
 
             if (validateMessage(message)) {
 
-                #ifdef JSONTALKIE_DEBUG
+                #ifdef JSON_TALKIE_DEBUG
                 Serial.print(F("Listened: "));
                 serializeJson(message, Serial);
                 Serial.println();  // optional: just to add a newline after the JSON
@@ -425,7 +431,7 @@ private:
 
     bool validateMessage(JsonObject message) {
         if (_manifesto == nullptr || _manifesto->talker == nullptr) return false;
-        #ifdef JSONTALKIE_DEBUG
+        #ifdef JSON_TALKIE_DEBUG
         Serial.println(F("Validating..."));
         #endif
         
@@ -438,19 +444,19 @@ private:
         //     5 - Set command arrived too late
 
         if (!message["m"].is<int>()) {
-            #ifdef JSONTALKIE_DEBUG
+            #ifdef JSON_TALKIE_DEBUG
             Serial.println(F("Message \"m\" is NOT an integer!"));
             #endif
             return false;
         }
         if (!message["f"].is<String>()) {
-            #ifdef JSONTALKIE_DEBUG
+            #ifdef JSON_TALKIE_DEBUG
             Serial.println(0);
             #endif
             return false;
         }
         if (!message["i"].is<uint32_t>()) {
-            #ifdef JSONTALKIE_DEBUG
+            #ifdef JSON_TALKIE_DEBUG
             Serial.println(4);
             #endif
             message["m"] = 7;   // error
@@ -464,7 +470,7 @@ private:
         if (_check_set_time && message["m"].as<int>() == MessageCode::set && message["f"].as<String>() == _set_name) {   // 3 - set
             uint32_t delta = _sent_set_time[0] - message["i"].as<uint32_t>();
             if (delta < 255 && delta != 0) {
-                #ifdef JSONTALKIE_DEBUG
+                #ifdef JSON_TALKIE_DEBUG
                 Serial.println(5);
                 #endif
                 message["m"] = 7;   // error
@@ -475,7 +481,7 @@ private:
             }
         }
         // NEEDS TO BE COMPLETED
-        #ifdef JSONTALKIE_DEBUG
+        #ifdef JSON_TALKIE_DEBUG
         Serial.println(F("Validated"));
         #endif
         return true;
@@ -488,226 +494,206 @@ private:
         //     1 - UNKNOWN
         //     2 - NONE
 
-        #ifdef JSONTALKIE_DEBUG
+        #ifdef JSON_TALKIE_DEBUG
         Serial.print(F("Process: "));
         serializeJson(message, Serial);
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-        // Processes the Talkers
-        for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-            DeviceTalker* talker = _device_talkers[talker_i];
+    
 
+        MessageCode message_code = static_cast<MessageCode>(message["m"].as<int>());
+        message["t"] = message["f"];
+        message["m"] = 6;   // echo
 
-            // if (message["t"].is<uint8_t>()) {
-            //     uint8_t talker_channel = talker->get_channel();
-            //     channel = message["t"].as<uint8_t>();
-            //     if (talker_channel != channel)
-            //         break;
-            // } else if (message["t"].is<String>()) {
-            //     channel = message["t"].as<uint8_t>();
-            //     if (message["t"] != _manifesto->talker->name) {
-            //         #ifdef JSONTALKIE_DEBUG
-            //         Serial.println(F("Message NOT for me!"));
-            //         #endif
-            //     }
-            // }
+        switch (message_code)
+        {
+        case MessageCode::talk:
+            message["w"] = 0;
+            if (_manifesto != nullptr && _manifesto->talker != nullptr)
+                message["d"] = _manifesto->talker->desc;
+            talk(message, true);
+            break;
         
-
-
-            MessageCode message_code = static_cast<MessageCode>(message["m"].as<int>());
-            message["t"] = message["f"];
-            message["m"] = 6;   // echo
-
-            switch (message_code)
-            {
-            case MessageCode::talk:
-                message["w"] = 0;
-                if (_manifesto != nullptr && _manifesto->talker != nullptr)
-                    message["d"] = _manifesto->talker->desc;
-                talk(message, true);
-                break;
-            
-            case MessageCode::list:
-                {   // Because of none_list !!!
-                    bool none_list = true;
-                    // Processes the Talkers
-                    for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                        DeviceTalker* talker = _device_talkers[talker_i];
-                        message["w"] = 2;
-                        for (size_t run_i = 0; run_i < talker->runs_count(); ++run_i) {
-                            none_list = false;
-                            message["n"] = talker->runCommands[run_i].name;
-                            message["d"] = talker->runCommands[run_i].desc;
-                            talk(message, true);
-                        }
-                        message["w"] = 3;
-                        for (size_t set_i = 0; set_i < talker->sets_count(); ++set_i) {
-                            none_list = false;
-                            message["n"] = talker->setCommands[set_i].name;
-                            message["d"] = talker->setCommands[set_i].desc;
-                            talk(message, true);
-                        }
-                        message["w"] = 4;
-                        for (size_t get_i = 0; get_i < talker->gets_count(); ++get_i) {
-                            none_list = false;
-                            message["n"] = talker->getCommands[get_i].name;
-                            message["d"] = talker->getCommands[get_i].desc;
-                            talk(message, true);
-                        }
+        case MessageCode::list:
+            {   // Because of none_list !!!
+                bool none_list = true;
+                // Processes the Talkers
+                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                    DeviceTalker* talker = _device_talkers[talker_i];
+                    message["w"] = 2;
+                    for (size_t run_i = 0; run_i < talker->runs_count(); ++run_i) {
+                        none_list = false;
+                        message["n"] = talker->runCommands[run_i].name;
+                        message["d"] = talker->runCommands[run_i].desc;
+                        talk(message, true);
                     }
-                    if(none_list) {
-                        message["g"] = 2;       // NONE
+                    message["w"] = 3;
+                    for (size_t set_i = 0; set_i < talker->sets_count(); ++set_i) {
+                        none_list = false;
+                        message["n"] = talker->setCommands[set_i].name;
+                        message["d"] = talker->setCommands[set_i].desc;
+                        talk(message, true);
+                    }
+                    message["w"] = 4;
+                    for (size_t get_i = 0; get_i < talker->gets_count(); ++get_i) {
+                        none_list = false;
+                        message["n"] = talker->getCommands[get_i].name;
+                        message["d"] = talker->getCommands[get_i].desc;
+                        talk(message, true);
                     }
                 }
-                break;
-            
-            case MessageCode::run:
-                message["w"] = 2;
-                if (message["n"].is<String>()) {
+                if(none_list) {
+                    message["g"] = 2;       // NONE
+                }
+            }
+            break;
+        
+        case MessageCode::run:
+            message["w"] = 2;
+            if (message["n"].is<String>()) {
 
-                    for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                        DeviceTalker* talker = _device_talkers[talker_i];
+                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                    DeviceTalker* talker = _device_talkers[talker_i];
 
-                        const DeviceTalker::Run* run = talker->run(message["n"]);
-                        if (run == nullptr) {
-                            message["g"] = 1;   // UNKNOWN
-                            talk(message, true);
-                        } else {
-                            message["g"] = 0;       // ROGER
-                            talk(message, true);
-                            // No memory leaks because message_doc exists in the listen() method stack
-                            message.remove("g");
-                            (talker->*(run->method))(message);
-                        }
+                    const DeviceTalker::Run* run = talker->run(message["n"]);
+                    if (run == nullptr) {
+                        message["g"] = 1;   // UNKNOWN
+                        talk(message, true);
+                    } else {
+                        message["g"] = 0;       // ROGER
+                        talk(message, true);
+                        // No memory leaks because message_doc exists in the listen() method stack
+                        message.remove("g");
+                        (talker->*(run->method))(message);
                     }
                 }
-                break;
-            
-            case MessageCode::set:
-                message["w"] = 3;
-                if (message["n"].is<String>() && message["v"].is<long>()) {
+            }
+            break;
+        
+        case MessageCode::set:
+            message["w"] = 3;
+            if (message["n"].is<String>() && message["v"].is<long>()) {
 
-                    for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                        DeviceTalker* talker = _device_talkers[talker_i];
+                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                    DeviceTalker* talker = _device_talkers[talker_i];
 
-                        const DeviceTalker::Set* set = talker->set(message["n"]);
-                        if (set == nullptr) {
-                            message["g"] = 1;   // UNKNOWN
-                            talk(message, true);
-                        } else {
-                            message["g"] = 0;       // ROGER
-                            talk(message, true);
-                            // No memory leaks because message_doc exists in the listen() method stack
-                            message.remove("g");
-                            (talker->*(set->method))(message, message["v"].as<long>());
-                        }
+                    const DeviceTalker::Set* set = talker->set(message["n"]);
+                    if (set == nullptr) {
+                        message["g"] = 1;   // UNKNOWN
+                        talk(message, true);
+                    } else {
+                        message["g"] = 0;       // ROGER
+                        talk(message, true);
+                        // No memory leaks because message_doc exists in the listen() method stack
+                        message.remove("g");
+                        (talker->*(set->method))(message, message["v"].as<long>());
                     }
                 }
-                break;
-            
-            case MessageCode::get:
-                message["w"] = 4;
-                if (message["n"].is<String>()) {
-                    message["w"] = message_code;
+            }
+            break;
+        
+        case MessageCode::get:
+            message["w"] = 4;
+            if (message["n"].is<String>()) {
+                message["w"] = message_code;
 
-                    for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                        DeviceTalker* talker = _device_talkers[talker_i];
+                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                    DeviceTalker* talker = _device_talkers[talker_i];
 
-                        const DeviceTalker::Get* get = talker->get(message["n"]);
-                        if (get == nullptr) {
-                            message["g"] = 1;   // UNKNOWN
-                            talk(message, true);
-                        } else {
-                            message["g"] = 0;       // ROGER
-                            talk(message, true);
-                            // No memory leaks because message_doc exists in the listen() method stack
-                            message.remove("g");
-                            message["v"] = (talker->*(get->method))(message);
-                            talk(message, true);
-                        }
+                    const DeviceTalker::Get* get = talker->get(message["n"]);
+                    if (get == nullptr) {
+                        message["g"] = 1;   // UNKNOWN
+                        talk(message, true);
+                    } else {
+                        message["g"] = 0;       // ROGER
+                        talk(message, true);
+                        // No memory leaks because message_doc exists in the listen() method stack
+                        message.remove("g");
+                        message["v"] = (talker->*(get->method))(message);
+                        talk(message, true);
                     }
                 }
-                break;
+            }
+            break;
+        
+        case MessageCode::sys:
+            message["w"] = 5;
             
-            case MessageCode::sys:
-                message["w"] = 5;
-                
-                // AVR Boards (Uno, Nano, Mega) - Check RAM size
-                #ifdef __AVR__
-                uint16_t ramSize = RAMEND - RAMSTART + 1;
-                if (ramSize == 2048)
-                    message["d"] = F("Arduino Uno/Nano (ATmega328P)");
-                else if (ramSize == 8192)
-                    message["d"] = F("Arduino Mega (ATmega2560)");
-                else
-                    message["d"] = F("Unknown AVR Board");
-                
-                // ESP8266
-                #elif defined(ESP8266)
-                message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
-                
-                // ESP32
-                #elif defined(ESP32)
-                message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
-                
-                // Teensy Boards
-                #elif defined(TEENSYDUINO)
-                    #if defined(__IMXRT1062__)
-                        message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
-                    #elif defined(__MK66FX1M0__)
-                        message["d"] = F("Teensy 3.6 (MK66FX1M0)");
-                    #elif defined(__MK64FX512__)
-                        message["d"] = F("Teensy 3.5 (MK64FX512)");
-                    #elif defined(__MK20DX256__)
-                        message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
-                    #elif defined(__MKL26Z64__)
-                        message["d"] = F("Teensy LC (MKL26Z64)");
-                    #else
-                        message["d"] = F("Unknown Teensy Board");
-                    #endif
-
-                // ARM (Due, Zero, etc.)
-                #elif defined(__arm__)
-                message["d"] = F("ARM-based Board");
-
-                // Unknown Board
+            // AVR Boards (Uno, Nano, Mega) - Check RAM size
+            #ifdef __AVR__
+            uint16_t ramSize = RAMEND - RAMSTART + 1;
+            if (ramSize == 2048)
+                message["d"] = F("Arduino Uno/Nano (ATmega328P)");
+            else if (ramSize == 8192)
+                message["d"] = F("Arduino Mega (ATmega2560)");
+            else
+                message["d"] = F("Unknown AVR Board");
+            
+            // ESP8266
+            #elif defined(ESP8266)
+            message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
+            
+            // ESP32
+            #elif defined(ESP32)
+            message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
+            
+            // Teensy Boards
+            #elif defined(TEENSYDUINO)
+                #if defined(__IMXRT1062__)
+                    message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
+                #elif defined(__MK66FX1M0__)
+                    message["d"] = F("Teensy 3.6 (MK66FX1M0)");
+                #elif defined(__MK64FX512__)
+                    message["d"] = F("Teensy 3.5 (MK64FX512)");
+                #elif defined(__MK20DX256__)
+                    message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
+                #elif defined(__MKL26Z64__)
+                    message["d"] = F("Teensy LC (MKL26Z64)");
                 #else
-                message["d"] = F("Unknown Board");
-
+                    message["d"] = F("Unknown Teensy Board");
                 #endif
 
-                talk(message, true);
-                break;
-            
-            case MessageCode::echo:
-                if (_manifesto->echo != nullptr)
-                    _manifesto->echo(message);
-                break;
-            
-            case MessageCode::error:
-                if (_manifesto->error != nullptr)
-                    _manifesto->error(message);
-                break;
-            
-            case MessageCode::channel:
-                if (message["b"].is<uint8_t>()) {
+            // ARM (Due, Zero, etc.)
+            #elif defined(__arm__)
+            message["d"] = F("ARM-based Board");
 
-                    #ifdef JSONTALKIE_DEBUG
-                    Serial.print(F("Channel B value is an <uint8_t>: "));
-                    Serial.println(message["b"].is<uint8_t>());
-                    #endif
+            // Unknown Board
+            #else
+            message["d"] = F("Unknown Board");
 
-                    _channel = message["b"].as<uint8_t>();
-                }
-                message["w"] = 8;
-                message["b"] = _channel;
-                talk(message, true);
-                break;
-            
-            default:
-                break;
+            #endif
+
+            talk(message, true);
+            break;
+        
+        case MessageCode::echo:
+            if (_manifesto->echo != nullptr)
+                _manifesto->echo(message);
+            break;
+        
+        case MessageCode::error:
+            if (_manifesto->error != nullptr)
+                _manifesto->error(message);
+            break;
+        
+        case MessageCode::channel:
+            if (message["b"].is<uint8_t>()) {
+
+                #ifdef JSON_TALKIE_DEBUG
+                Serial.print(F("Channel B value is an <uint8_t>: "));
+                Serial.println(message["b"].is<uint8_t>());
+                #endif
+
+                _channel = message["b"].as<uint8_t>();
             }
+            message["w"] = 8;
+            message["b"] = _channel;
+            talk(message, true);
+            break;
+        
+        default:
+            break;
         }
     }
 };
