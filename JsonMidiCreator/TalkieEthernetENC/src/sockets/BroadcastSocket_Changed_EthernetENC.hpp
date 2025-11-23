@@ -93,14 +93,14 @@ public:
     }
 
 
-    size_t receive(char* buffer, size_t size) override {
+    size_t receive() override {
         if (_udp == nullptr) return 0;
         
         // Receive packets
         int packetSize = _udp->parsePacket();
         if (packetSize > 0) {
             // Use std::min instead of min to avoid potential conflicts
-            int length = _udp->read(buffer, std::min(static_cast<size_t>(packetSize), size));
+            int length = _udp->read(_received_data, std::min(static_cast<size_t>(packetSize), sizeof(_received_data)));
             if (length <= 0) return 0;  // Your requested check - handles all error cases
             
             #ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -110,11 +110,11 @@ public:
             Serial.print(F(":"));
             Serial.print(_udp->remotePort());
             Serial.print(F(" -> "));
-            Serial.println(buffer);
+            Serial.println(_received_data);
             #endif
             
             _source_ip = _udp->remoteIP();
-            return triggerTalkers(buffer, static_cast<size_t>(length));
+            return triggerTalkers(_received_data, static_cast<size_t>(length));
         }
         return 0;   // nothing received
     }

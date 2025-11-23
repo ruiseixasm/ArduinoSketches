@@ -69,9 +69,7 @@ public:
         (void)as_reply; // Silence unused parameter warning
         return false;
     }
-    virtual size_t receive(char* buffer, size_t size) {
-        (void)buffer; // Silence unused parameter warning
-        (void)size; // Silence unused parameter warning
+    virtual size_t receive() {
         return 0;
     }
     
