@@ -519,7 +519,7 @@ private:
     }
     
     bool processMessage(JsonObject message) {
-        if (_manifesto == nullptr || _manifesto->talker == nullptr) return false;
+        
         // Echo codes:
         //     0 - ROGER
         //     1 - UNKNOWN
@@ -539,33 +539,35 @@ private:
         {
         case MessageCode::talk:
             message["w"] = 0;
-            message["d"] = _manifesto->talker->desc;
+            if (_manifesto != nullptr && _manifesto->talker != nullptr)
+                message["d"] = _manifesto->talker->desc;
             return talk(message, true);
         
         case MessageCode::list:
             {   // Because of none_list !!!
                 bool none_list = true;
                 message["w"] = 2;
-                for (size_t run_i = 0; run_i < _manifesto->runSize; ++run_i) {
-                    message["n"] = _manifesto->runCommands[run_i].name;
-                    message["d"] = _manifesto->runCommands[run_i].desc;
-                    none_list = false;
-                    talk(message, true);
-                }
-                message["w"] = 3;
-                for (size_t set_i = 0; set_i < _manifesto->setSize; ++set_i) {
-                    message["n"] = _manifesto->setCommands[set_i].name;
-                    message["d"] = _manifesto->setCommands[set_i].desc;
-                    none_list = false;
-                    talk(message, true);
-                }
-                message["w"] = 4;
-                for (size_t get_i = 0; get_i < _manifesto->getSize; ++get_i) {
-                    message["n"] = _manifesto->getCommands[get_i].name;
-                    message["d"] = _manifesto->getCommands[get_i].desc;
-                    none_list = false;
-                    talk(message, true);
-                }
+                if (_manifesto != nullptr)
+                    for (size_t run_i = 0; run_i < _manifesto->runSize; ++run_i) {
+                        message["n"] = _manifesto->runCommands[run_i].name;
+                        message["d"] = _manifesto->runCommands[run_i].desc;
+                        none_list = false;
+                        talk(message, true);
+                    }
+                    message["w"] = 3;
+                    for (size_t set_i = 0; set_i < _manifesto->setSize; ++set_i) {
+                        message["n"] = _manifesto->setCommands[set_i].name;
+                        message["d"] = _manifesto->setCommands[set_i].desc;
+                        none_list = false;
+                        talk(message, true);
+                    }
+                    message["w"] = 4;
+                    for (size_t get_i = 0; get_i < _manifesto->getSize; ++get_i) {
+                        message["n"] = _manifesto->getCommands[get_i].name;
+                        message["d"] = _manifesto->getCommands[get_i].desc;
+                        none_list = false;
+                        talk(message, true);
+                    }
                 if(none_list) {
                     message["g"] = 2;       // NONE
                 }
