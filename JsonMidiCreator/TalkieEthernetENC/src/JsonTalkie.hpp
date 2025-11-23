@@ -193,6 +193,8 @@ private:
 
     // Configuration parameters
     BroadcastSocket* _socket = nullptr;
+    DeviceTalker* _device_talkers = nullptr;    // A list of Talkers
+    size_t _talker_count = 0;
     Manifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
     uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp
@@ -200,6 +202,12 @@ private:
     bool _check_set_time = false;
 
 public:
+
+    void set_talkers(DeviceTalker* device_talkers, size_t count) {
+        _device_talkers = device_talkers;
+        _talker_count = count;
+    }
+
     void set_manifesto(Manifesto* manifesto) {
         _manifesto = manifesto;
     }

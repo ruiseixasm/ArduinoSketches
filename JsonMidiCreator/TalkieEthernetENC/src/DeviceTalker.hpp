@@ -43,6 +43,10 @@ public:
         long (DeviceTalker::*method)(JsonObject);
     };
 
+private:
+
+    bool (DeviceTalker::*echo)(JsonObject) = nullptr;
+    bool (DeviceTalker::*error)(JsonObject) = nullptr;
 
 
 
