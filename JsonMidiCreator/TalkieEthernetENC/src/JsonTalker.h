@@ -116,21 +116,27 @@ private:
         return true;
     }
 
-
     const JsonTalker::Run runCommands[2] = {
         // A list of Run structures
         {"on", "Turns the blue led ON", &JsonTalker::led_on},
         {"off", "Turns the blue led OFF", &JsonTalker::led_off}
     };
 
+
     const JsonTalker::Set setCommands[0] = {
         // A list of Set structures
         // {"bpm_10", "Sets the Tempo in BPM x 10", set_bpm_10}
     };
 
-    const JsonTalker::Get getCommands[0] = {
+
+    long get_total_runs(JsonObject json_message) {
+        (void)json_message; // Silence unused parameter warning
+        return total_runs;
+    }
+
+    const JsonTalker::Get getCommands[1] = {
         // A list of Get structures
-        // {"bpm_10", "Gets the Tempo in BPM x 10", get_bpm_10}
+        {"runs", "Gets the total number of runs", &JsonTalker::get_total_runs}
     };
 
     uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp

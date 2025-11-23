@@ -183,7 +183,7 @@ void setup() {
     Serial.println("Step 2: Initializing EthernetENC...");
     Ethernet.init(CS_PIN);
     Serial.println("Ethernet initialized successfully");
-    delay(1000);
+    delay(500);
 
     // STEP 3: Begin Ethernet connection with DHCP
     Serial.println("Step 3: Starting Ethernet connection with DHCP...");
@@ -203,7 +203,7 @@ void setup() {
     // Serial.println("Broadcast reception enabled");
 
     // Give Ethernet time to stabilize
-    delay(2000);
+    delay(1000);
 
     // STEP 4: Check connection status
     Serial.println("Step 4: Checking Ethernet status...");

@@ -14,8 +14,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_ETHERNETENC_HPP
 #define BROADCAST_SOCKET_ETHERNETENC_HPP
 
-#include "../BroadcastSocket.h"
-
     // writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
 
     // // Pattern matching disabled – not needed for broadcast
@@ -29,7 +27,11 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../Changed_EthernetENC/src/EthernetUdp.h"    // Forces the correct usage of EthernetUdp.h
 
 
-#define BROADCAST_ETHERNETENC_DEBUG
+#include "../BroadcastSocket.h"
+
+// #define BROADCAST_ETHERNETENC_DEBUG
+
+
 #define ENABLE_DIRECT_ADDRESSING
 
 
