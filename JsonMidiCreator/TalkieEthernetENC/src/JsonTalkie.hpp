@@ -256,11 +256,10 @@ public:
 
         // Where the BroadcastSocket data is received
         if (receive) {
-
             _data_len = _socket->receive(_received_data, BROADCAST_SOCKET_BUFFER_SIZE);
 
-            if (_data_len > 0) {    // Shared data length among multiple instantiations of JsonTalkie
-
+            if (_data_len > 0) {
+            
                 #ifdef JSONTALKIE_DEBUG
                 Serial.print(F("L: "));
                 Serial.write(_received_data, _data_len);  // Properly prints raw bytes as characters
@@ -290,49 +289,53 @@ public:
                 Serial.println();            // Adds newline after the printed data
                 #endif
 
-                if (data_checksum == checksum) {
+                if (data_checksum != checksum)
+                    _data_len = 0;  // Disables the following processing
 
-                    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-                    #if ARDUINOJSON_VERSION_MAJOR >= 7
-                    JsonDocument message_doc;
-                    #else
-                    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
-                    #endif
+            }
+        }
 
-                    DeserializationError error = deserializeJson(message_doc, _received_data, _data_len);
-                    if (error) {
-                        #ifdef JSONTALKIE_DEBUG
-                        Serial.println(F("Failed to deserialize received data"));
-                        #endif
-                        return;
-                    }
-                    JsonObject message = message_doc.as<JsonObject>();
+        if (_data_len > 0) {    // Shared data length among multiple instantiations of JsonTalkie
 
-                    if (validateMessage(message)) {
+            // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+            #if ARDUINOJSON_VERSION_MAJOR >= 7
+            JsonDocument message_doc;
+            #else
+            StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+            #endif
 
-                        #ifdef JSONTALKIE_DEBUG
-                        Serial.print(F("Listened: "));
-                        serializeJson(message, Serial);
-                        Serial.println();  // optional: just to add a newline after the JSON
-                        #endif
+            DeserializationError error = deserializeJson(message_doc, _received_data, _data_len);
+            if (error) {
+                #ifdef JSONTALKIE_DEBUG
+                Serial.println(F("Failed to deserialize received data"));
+                #endif
+                return;
+            }
+            JsonObject message = message_doc.as<JsonObject>();
 
-                        // Only set messages are time checked
-                        if (message["m"].as<int>() == 3) {  // 3 - set
-                            _sent_set_time[0] = message["i"].as<uint32_t>();
-                            _sent_set_time[1] = generateMessageId();
-                            _set_name = message["f"].as<String>(); // Explicit conversion
-                            _check_set_time = true;
-                        }
+            if (validateMessage(message)) {
 
-                        processMessage(message);
-                    }
+                #ifdef JSONTALKIE_DEBUG
+                Serial.print(F("Listened: "));
+                serializeJson(message, Serial);
+                Serial.println();  // optional: just to add a newline after the JSON
+                #endif
+
+                // Only set messages are time checked
+                if (message["m"].as<int>() == 3) {  // 3 - set
+                    _sent_set_time[0] = message["i"].as<uint32_t>();
+                    _sent_set_time[1] = generateMessageId();
+                    _set_name = message["f"].as<String>(); // Explicit conversion
+                    _check_set_time = true;
                 }
 
-            // In theory, a UDP packet on a local area network (LAN) could survive
-            // for about 4.25 minutes (255 seconds).
-            } else if (_check_set_time && millis() - _sent_set_time[1] > 255 * 1000) {
-                _check_set_time = false;
+                processMessage(message);
             }
+
+        // In theory, a UDP packet on a local area network (LAN) could survive
+        // for about 4.25 minutes (255 seconds).
+        } else if (_check_set_time && millis() - _sent_set_time[1] > 255 * 1000) {
+            _check_set_time = false;
         }
     }
 
