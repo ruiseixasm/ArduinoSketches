@@ -27,7 +27,7 @@ protected:
     BroadcastSocket() = default;
     virtual ~BroadcastSocket() = default;
 
-    static size_t jsonStrip(char* buffer, size_t length) {
+    static size_t triggerTalkers(char* buffer, size_t length) {
 
         // Find the first '{' (start of JSON)
         size_t json_start = 0;

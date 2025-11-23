@@ -42,7 +42,7 @@ private:
             memcpy(_buffer, data, length);
             memcpy(_source_ip, src_ip, 4);
             return static_cast<size_t>(length);
-            // _data_length = jsonStrip(_buffer, static_cast<size_t>(length));
+            // _data_length = triggerTalkers(_buffer, static_cast<size_t>(length));
         }
     }
 

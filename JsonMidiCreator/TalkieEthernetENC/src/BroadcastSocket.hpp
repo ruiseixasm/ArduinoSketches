@@ -29,7 +29,8 @@ private:
 protected:
     static uint16_t _port;
 
-    static size_t jsonStrip(char* buffer, size_t length) {
+
+    static size_t triggerTalkers(char* buffer, size_t length) {
 
         // Find the first '{' (start of JSON)
         size_t json_start = 0;
