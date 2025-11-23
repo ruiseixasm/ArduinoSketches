@@ -44,12 +44,6 @@ private:
     }
 
 public:
-    // Singleton accessor
-    static BroadcastSocket_EthernetENC& instance() {
-        static BroadcastSocket_EthernetENC instance;
-        return instance;
-    }
-
     
     bool send(const char* data, size_t size, bool as_reply = false) override {
         if (_udp == nullptr) return false;

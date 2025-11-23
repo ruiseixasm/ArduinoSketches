@@ -21,12 +21,13 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCASTSOCKET_DEBUG
 
 class BroadcastSocket {
+private:
+
+    JsonTalker** _device_talkers = nullptr;   // A list of Talkers (pointers)
+    size_t _talker_count = 0;
+
 protected:
     static uint16_t _port;
-
-    // Private constructor
-    BroadcastSocket() = default;
-    virtual ~BroadcastSocket() = default;
 
     static size_t jsonStrip(char* buffer, size_t length) {
 
@@ -85,6 +86,14 @@ protected:
         return json_finish - json_start + 1;
     }
 
+    // Private constructor
+    BroadcastSocket() = default;
+    virtual ~BroadcastSocket() = default;
+
+    BroadcastSocket(JsonTalker** device_talkers, size_t talker_count)
+        : _device_talkers(device_talkers), _talker_count(talker_count) {}
+
+
 public:
     // Delete copy/move operations
     BroadcastSocket(const BroadcastSocket&) = delete;
@@ -92,9 +101,25 @@ public:
     BroadcastSocket(BroadcastSocket&&) = delete;
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
 
-    // Pure virtual methods remain unchanged
-    virtual bool send(const char* data, size_t len, bool as_reply = false) = 0;
-    virtual size_t receive(char* buffer, size_t size) = 0;
+    // Singleton accessor
+    static BroadcastSocket& instance(JsonTalker** device_talkers, size_t talker_count) {
+        static BroadcastSocket instance(device_talkers, talker_count);
+        return instance;
+    }
+
+
+    // NOT Pure virtual methods anymores (= 0;)
+    virtual bool send(const char* data, size_t len, bool as_reply = false) {
+        (void)data; // Silence unused parameter warning
+        (void)len; // Silence unused parameter warning
+        (void)as_reply; // Silence unused parameter warning
+        return false;
+    }
+    virtual size_t receive(char* buffer, size_t size) {
+        (void)buffer; // Silence unused parameter warning
+        (void)size; // Silence unused parameter warning
+        return 0;
+    }
     
     virtual void set_port(uint16_t port) { _port = port; }
     virtual uint16_t get_port() { return _port; }
