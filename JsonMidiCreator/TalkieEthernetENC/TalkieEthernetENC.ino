@@ -92,7 +92,7 @@ MultiplePlayer player_1(&broadcast_socket);
 // MANIFESTO DEFINITION
 
 // Define the commands (stored in RAM)
-JsonTalkie::Device device = {
+JsonTalkie::Talker talker = {
     "ESP32", "I turn my blue light on and off!"
 };
 
@@ -123,7 +123,7 @@ bool process_response(JsonObject json_message);
 // MANIFESTO DECLARATION
 
 JsonTalkie::Manifesto manifesto(
-    &device,
+    &talker,
     runCommands, sizeof(runCommands)/sizeof(JsonTalkie::Run),
     setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
     getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get),

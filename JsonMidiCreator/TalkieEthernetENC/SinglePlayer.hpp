@@ -48,7 +48,7 @@ private:
     // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE (NEED TO BE STATIC)
     static long bpm_10;
 
-    static JsonTalkie::Device device;
+    static JsonTalkie::Talker talker;
 
     static bool set_bpm_10(JsonObject json_message, long bpm_10) {
         (void)json_message; // Silence unused parameter warning
@@ -88,7 +88,7 @@ public:
 
 long SinglePlayer::bpm_10 = 1200;
 
-JsonTalkie::Device SinglePlayer::device = {
+JsonTalkie::Talker SinglePlayer::talker = {
     "sp1", "Single Player receiving commands from JsonTalkiePlayer"
 };
 
@@ -105,7 +105,7 @@ JsonTalkie::Get SinglePlayer::getCommands[] = {
 };
 
 JsonTalkie::Manifesto SinglePlayer::manifesto(
-    &device,
+    &talker,
     runCommands, sizeof(runCommands)/sizeof(JsonTalkie::Run),
     setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
     getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get),

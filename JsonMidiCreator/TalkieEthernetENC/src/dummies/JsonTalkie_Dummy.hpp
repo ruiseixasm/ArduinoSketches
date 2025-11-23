@@ -31,7 +31,7 @@ public:
     // Define JsonObject as void* given that ArduinoJson isn't included!
     typedef void* JsonObject;
 
-    struct Device {
+    struct Talker {
         const char* name;      // Name of the Device (Talker)
         const char* desc;      // Description of the Device
     };
@@ -57,7 +57,7 @@ public:
     // Manifesto Structure Definition
     struct Manifesto {
 
-        Device* device = nullptr;
+        Talker* talker = nullptr;
         Run* runCommands = nullptr;
         size_t runSize = 0;
         Set* setCommands = nullptr;
@@ -68,7 +68,7 @@ public:
         bool (*error)(JsonObject) = nullptr;
 
         Run* get_run(const char* cmd) {
-            for (int index = 0; index < runSize; ++index) {
+            for (size_t index = 0; index < runSize; ++index) {
                 if (strcmp(cmd, runCommands[index].name) == 0) {
                     return &runCommands[index];  // Returns the function
                 }
@@ -77,7 +77,7 @@ public:
         }
     
         Set* get_set(const char* cmd) {
-            for (int index = 0; index < setSize; ++index) {
+            for (size_t index = 0; index < setSize; ++index) {
                 if (strcmp(cmd, setCommands[index].name) == 0) {
                     return &setCommands[index];  // Returns the function
                 }
@@ -86,7 +86,7 @@ public:
         }
     
         Get* get_get(const char* cmd) {
-            for (int index = 0; index < getSize; ++index) {
+            for (size_t index = 0; index < getSize; ++index) {
                 if (strcmp(cmd, getCommands[index].name) == 0) {
                     return &getCommands[index];  // Returns the function
                 }
@@ -96,9 +96,9 @@ public:
 
         // Add this constructor, because Manifesto struct has methods,
         //    so it's not considered an aggregate, and therefore cannot be initialized using a brace-enclosed list like this.
-        Manifesto(Device* d, Run* r, size_t rsz, Set* s, size_t ssz, 
+        Manifesto(Talker* d, Run* r, size_t rsz, Set* s, size_t ssz, 
                 Get* g, size_t gsz, bool (*e)(JsonObject), bool (*err)(JsonObject))
-            : device(d),
+            : talker(d),
             runCommands(r), runSize(rsz),
             setCommands(s), setSize(ssz),
             getCommands(g), getSize(gsz),

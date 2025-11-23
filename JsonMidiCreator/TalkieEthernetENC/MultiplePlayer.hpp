@@ -49,7 +49,7 @@ private:
     static int bpm_n;
     static int bpm_d;
 
-    static JsonTalkie::Device device;
+    static JsonTalkie::Talker talker;
 
     static bool set_bpm_n(JsonObject json_message, long bpm_n_value) {
         (void)json_message; // Silence unused parameter warning
@@ -100,7 +100,7 @@ public:
 int MultiplePlayer::bpm_n = 120;
 int MultiplePlayer::bpm_d = 1;
 
-JsonTalkie::Device MultiplePlayer::device = {
+JsonTalkie::Talker MultiplePlayer::talker = {
     "mp1", "Multiple Player receiving commands from JsonTalkiePlayer"
 };
 
@@ -119,7 +119,7 @@ JsonTalkie::Get MultiplePlayer::getCommands[] = {
 };
 
 JsonTalkie::Manifesto MultiplePlayer::manifesto(
-    &device,
+    &talker,
     runCommands, sizeof(runCommands)/sizeof(JsonTalkie::Run),
     setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
     getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get),
