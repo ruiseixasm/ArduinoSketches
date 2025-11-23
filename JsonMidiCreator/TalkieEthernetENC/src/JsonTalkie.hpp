@@ -603,17 +603,22 @@ private:
         case MessageCode::set:
             message["w"] = 3;
             if (message["n"].is<String>() && message["v"].is<long>()) {
-                const Set* set = _manifesto->get_set(message["n"]);
-                if (set == nullptr) {
-                    message["g"] = 1;   // UNKNOWN
+
+                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                    DeviceTalker* talker = _device_talkers[talker_i];
+
+                    const DeviceTalker::Set* set = talker->set(message["n"]);
+                    if (set == nullptr) {
+                        message["g"] = 1;   // UNKNOWN
+                        talk(message, true);
+                        return false;
+                    }
+                    message["g"] = 0;       // ROGER
                     talk(message, true);
-                    return false;
+                    // No memory leaks because message_doc exists in the listen() method stack
+                    message.remove("g");
+                    (talker->*(set->method))(message, message["v"].as<long>());
                 }
-                message["g"] = 0;       // ROGER
-                talk(message, true);
-                // No memory leaks because message_doc exists in the listen() method stack
-                message.remove("g");
-                set->function(message, message["v"].as<long>());
                 return true;
             }
             break;
