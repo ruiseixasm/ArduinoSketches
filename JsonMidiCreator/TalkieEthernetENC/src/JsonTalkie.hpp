@@ -170,9 +170,9 @@ public:
 
         // Add this constructor, because Manifesto struct has methods,
         //    so it's not considered an aggregate, and therefore cannot be initialized using a brace-enclosed list like this.
-        Manifesto(Talker* d, Run* r, size_t rsz, Set* s, size_t ssz, 
+        Manifesto(Talker* t, Run* r, size_t rsz, Set* s, size_t ssz, 
                 Get* g, size_t gsz, bool (*e)(JsonObject), bool (*err)(JsonObject))
-            : talker(d),
+            : talker(t),
             runCommands(r), runSize(rsz),
             setCommands(s), setSize(ssz),
             getCommands(g), getSize(gsz),
