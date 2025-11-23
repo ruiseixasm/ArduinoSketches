@@ -229,7 +229,8 @@ public:
             message["i"] = generateMessageId();
         }
         message["f"] = _manifesto->device->name;
-        validateChecksum(message);
+
+        setChecksum(message);
 
         size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (len == 0) {
@@ -252,7 +253,7 @@ public:
 
     void listen(bool receive = true) {
         if (_socket == nullptr) return;
-        
+
         // Where the BroadcastSocket data is received
         if (receive) {
 
@@ -501,16 +502,6 @@ private:
             message["m"] = 7;   // error
             message["t"] = message["f"];
             message["e"] = 1;
-            talk(message, true);
-            return false;
-        }
-        if (!validateChecksum(message)) {
-            #ifdef JSONTALKIE_DEBUG
-            Serial.println(2);
-            #endif
-            message["m"] = 7;   // error
-            message["t"] = message["f"];
-            message["e"] = 2;
             talk(message, true);
             return false;
         }
