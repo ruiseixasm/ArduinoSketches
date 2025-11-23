@@ -546,30 +546,6 @@ private:
         case MessageCode::list:
             {   // Because of none_list !!!
                 bool none_list = true;
-                message["w"] = 2;
-                if (_manifesto != nullptr) {
-                    for (size_t run_i = 0; run_i < _manifesto->runSize; ++run_i) {
-                        message["n"] = _manifesto->runCommands[run_i].name;
-                        message["d"] = _manifesto->runCommands[run_i].desc;
-                        none_list = false;
-                        talk(message, true);
-                    }
-                    message["w"] = 3;
-                    for (size_t set_i = 0; set_i < _manifesto->setSize; ++set_i) {
-                        message["n"] = _manifesto->setCommands[set_i].name;
-                        message["d"] = _manifesto->setCommands[set_i].desc;
-                        none_list = false;
-                        talk(message, true);
-                    }
-                    message["w"] = 4;
-                    for (size_t get_i = 0; get_i < _manifesto->getSize; ++get_i) {
-                        message["n"] = _manifesto->getCommands[get_i].name;
-                        message["d"] = _manifesto->getCommands[get_i].desc;
-                        none_list = false;
-                        talk(message, true);
-                    }
-                }
-                
                 // Processes the Talkers
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
                     DeviceTalker* talker = _device_talkers[talker_i];
@@ -595,7 +571,6 @@ private:
                         talk(message, true);
                     }
                 }
-
                 if(none_list) {
                     message["g"] = 2;       // NONE
                 }
@@ -605,17 +580,22 @@ private:
         case MessageCode::run:
             message["w"] = 2;
             if (message["n"].is<String>()) {
-                const Run* run = _manifesto->get_run(message["n"]);
-                if (run == nullptr) {
-                    message["g"] = 1;   // UNKNOWN
+
+                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                    DeviceTalker* talker = _device_talkers[talker_i];
+
+                    const DeviceTalker::Run* run = talker->run(message["n"]);
+                    if (run == nullptr) {
+                        message["g"] = 1;   // UNKNOWN
+                        talk(message, true);
+                        return false;
+                    }
+                    message["g"] = 0;       // ROGER
                     talk(message, true);
-                    return false;
+                    // No memory leaks because message_doc exists in the listen() method stack
+                    message.remove("g");
+                    (talker->*(run->method))(message);
                 }
-                message["g"] = 0;       // ROGER
-                talk(message, true);
-                // No memory leaks because message_doc exists in the listen() method stack
-                message.remove("g");
-                run->function(message);
                 return true;
             }
             break;
