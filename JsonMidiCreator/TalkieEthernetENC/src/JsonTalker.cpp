@@ -128,7 +128,7 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
 
     // In theory, a UDP packet on a local area network (LAN) could survive
     // for about 4.25 minutes (255 seconds).
-    if (_check_set_time && millis() - _sent_set_time[1] > 255 * 1000) {
+    if (_check_set_time && millis() - _sent_set_time[1] > 255000UL) {
         _check_set_time = false;
     }
 
@@ -260,52 +260,53 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
         break;
     
     case MessageCode::sys:
-        
+        {
         // AVR Boards (Uno, Nano, Mega) - Check RAM size
         #ifdef __AVR__
-        uint16_t ramSize = RAMEND - RAMSTART + 1;
-        if (ramSize == 2048)
-            message["d"] = F("Arduino Uno/Nano (ATmega328P)");
-        else if (ramSize == 8192)
-            message["d"] = F("Arduino Mega (ATmega2560)");
-        else
-            message["d"] = F("Unknown AVR Board");
-        
+            uint16_t ramSize = RAMEND - RAMSTART + 1;
+            if (ramSize == 2048)
+                message["d"] = F("Arduino Uno/Nano (ATmega328P)");
+            else if (ramSize == 8192)
+                message["d"] = F("Arduino Mega (ATmega2560)");
+            else
+                message["d"] = F("Unknown AVR Board");
+            
         // ESP8266
         #elif defined(ESP8266)
-        message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
-        
+            message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
+            
         // ESP32
         #elif defined(ESP32)
-        message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
-        
-        // Teensy Boards
-        #elif defined(TEENSYDUINO)
-            #if defined(__IMXRT1062__)
-                message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
-            #elif defined(__MK66FX1M0__)
-                message["d"] = F("Teensy 3.6 (MK66FX1M0)");
-            #elif defined(__MK64FX512__)
-                message["d"] = F("Teensy 3.5 (MK64FX512)");
-            #elif defined(__MK20DX256__)
-                message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
-            #elif defined(__MKL26Z64__)
-                message["d"] = F("Teensy LC (MKL26Z64)");
-            #else
-                message["d"] = F("Unknown Teensy Board");
-            #endif
+            message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
+            
+            // Teensy Boards
+            #elif defined(TEENSYDUINO)
+                #if defined(__IMXRT1062__)
+                    message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
+                #elif defined(__MK66FX1M0__)
+                    message["d"] = F("Teensy 3.6 (MK66FX1M0)");
+                #elif defined(__MK64FX512__)
+                    message["d"] = F("Teensy 3.5 (MK64FX512)");
+                #elif defined(__MK20DX256__)
+                    message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
+                #elif defined(__MKL26Z64__)
+                    message["d"] = F("Teensy LC (MKL26Z64)");
+                #else
+                    message["d"] = F("Unknown Teensy Board");
+                #endif
 
         // ARM (Due, Zero, etc.)
         #elif defined(__arm__)
-        message["d"] = F("ARM-based Board");
+            message["d"] = F("ARM-based Board");
 
         // Unknown Board
         #else
-        message["d"] = F("Unknown Board");
+            message["d"] = F("Unknown Board");
 
         #endif
 
-        sendMessage(socket, message, true);
+            sendMessage(socket, message, true);
+        }
         break;
     
     case MessageCode::echo:
