@@ -21,7 +21,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 
-// #define JSONTALKIE_DEBUG
+#define JSONTALKIE_DEBUG
 
 
 // Keys:
@@ -252,55 +252,86 @@ public:
 
     void listen(bool receive = true) {
         if (_socket == nullptr) return;
+        
         // Where the BroadcastSocket data is received
-        if (receive)
+        if (receive) {
+
             _data_len = _socket->receive(_received_data, BROADCAST_SOCKET_BUFFER_SIZE);
-        if (_data_len > 0) {    // Shared data length among multiple instantiations of JsonTalkie
 
-            #ifdef JSONTALKIE_DEBUG
-            Serial.print(F("L: "));
-            Serial.write(_received_data, _data_len);  // Properly prints raw bytes as characters
-            Serial.println();            // Adds newline after the printed data
-            #endif
-
-            // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-            #if ARDUINOJSON_VERSION_MAJOR >= 7
-            JsonDocument message_doc;
-            #else
-            StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
-            #endif
-
-            DeserializationError error = deserializeJson(message_doc, _received_data, _data_len);
-            if (error) {
-                #ifdef JSONTALKIE_DEBUG
-                Serial.println(F("Failed to deserialize received data"));
-                #endif
-                return;
-            }
-            JsonObject message = message_doc.as<JsonObject>();
-
-            if (validateMessage(message)) {
+            if (_data_len > 0) {    // Shared data length among multiple instantiations of JsonTalkie
 
                 #ifdef JSONTALKIE_DEBUG
-                Serial.print(F("Listened: "));
-                serializeJson(message, Serial);
-                Serial.println();  // optional: just to add a newline after the JSON
+                Serial.print(F("L: "));
+                Serial.write(_received_data, _data_len);  // Properly prints raw bytes as characters
+                Serial.println();            // Adds newline after the printed data
                 #endif
 
-                // Only set messages are time checked
-                if (message["m"].as<int>() == 3) {  // 3 - set
-                    _sent_set_time[0] = message["i"].as<uint32_t>();
-                    _sent_set_time[1] = generateMessageId();
-                    _set_name = message["f"].as<String>(); // Explicit conversion
-                    _check_set_time = true;
+                // HERE IS WHERE THE CHECK SUM SHALL BE DONE
+                #ifdef JSONTALKIE_DEBUG
+                Serial.print(F("C: "));
+                Serial.print(_data_len);
+                #endif
+
+                uint16_t data_checksum = readChecksum(_received_data, &_data_len);
+
+                #ifdef JSONTALKIE_DEBUG
+                Serial.print(" - ");
+                Serial.print(data_checksum);
+                #endif
+
+                uint16_t checksum = getChecksum(_received_data, _data_len);
+
+                #ifdef JSONTALKIE_DEBUG
+                Serial.print("  |  ");
+                Serial.print(_data_len);
+                Serial.print(" - ");
+                Serial.print(checksum);
+                Serial.println();            // Adds newline after the printed data
+                #endif
+
+                if (data_checksum == checksum) {
+
+                    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+                    #if ARDUINOJSON_VERSION_MAJOR >= 7
+                    JsonDocument message_doc;
+                    #else
+                    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+                    #endif
+
+                    DeserializationError error = deserializeJson(message_doc, _received_data, _data_len);
+                    if (error) {
+                        #ifdef JSONTALKIE_DEBUG
+                        Serial.println(F("Failed to deserialize received data"));
+                        #endif
+                        return;
+                    }
+                    JsonObject message = message_doc.as<JsonObject>();
+
+                    if (validateMessage(message)) {
+
+                        #ifdef JSONTALKIE_DEBUG
+                        Serial.print(F("Listened: "));
+                        serializeJson(message, Serial);
+                        Serial.println();  // optional: just to add a newline after the JSON
+                        #endif
+
+                        // Only set messages are time checked
+                        if (message["m"].as<int>() == 3) {  // 3 - set
+                            _sent_set_time[0] = message["i"].as<uint32_t>();
+                            _sent_set_time[1] = generateMessageId();
+                            _set_name = message["f"].as<String>(); // Explicit conversion
+                            _check_set_time = true;
+                        }
+
+                        processMessage(message);
+                    }
                 }
 
-                processMessage(message);
+            // In theory, a UDP packet on a local area network (LAN) could survive
+            // for about 4.25 minutes (255 seconds).
+            } else if (_check_set_time && millis() - _sent_set_time[1] > 255 * 1000) {
+                _check_set_time = false;
             }
-        // In theory, a UDP packet on a local area network (LAN) could survive
-        // for about 4.25 minutes (255 seconds).
-        } else if (_check_set_time && millis() - _sent_set_time[1] > 255 * 1000) {
-            _check_set_time = false;
         }
     }
 
@@ -311,6 +342,65 @@ private:
         return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
     }
 
+
+    uint16_t getChecksum(const char* net_data, const size_t len) {
+        // 16-bit word and XORing
+        uint16_t checksum = 0;
+        for (size_t i = 0; i < len; i += 2) {
+            uint16_t chunk = net_data[i] << 8;
+            if (i + 1 < len) {
+                chunk |= net_data[i + 1];
+            }
+            checksum ^= chunk;
+        }
+        return checksum;
+    }
+
+    
+    uint16_t readChecksum(char* source_data, size_t* source_len) {
+        
+        // ASCII byte values:
+        // 	'c' = 99
+        // 	':' = 58
+        // 	'"' = 34
+        // 	'0' = 48
+        // 	'9' = 57
+
+        uint16_t data_checksum = 0;
+        // Has to be pre processed (linearly)
+        bool at_c0 = false;
+        size_t data_i = 4;
+        for (size_t i = data_i; i < *source_len; ++i) {
+            if (!at_c0 && source_data[i - 3] == 'c' && source_data[i - 1] == ':' && source_data[i - 4] == '"' && source_data[i - 2] == '"') {
+                at_c0 = true;
+                data_checksum = source_data[data_i] - '0';
+                source_data[data_i++] = '0';
+                continue;
+            } else if (at_c0) {
+                if (source_data[i] < '0' || source_data[i] > '9') {
+                    at_c0 = false;
+                } else {
+                    data_checksum *= 10;
+                    data_checksum += source_data[i] - '0';
+                    continue;
+                }
+            }
+            source_data[data_i] = source_data[i]; // Does an offset
+            data_i++;
+        }
+        *source_len = data_i;
+        return data_checksum;
+    }
+
+
+    uint16_t setChecksum(JsonObject message) {
+        message["c"] = 0;   // makes _buffer a net_data buffer
+        size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        uint16_t checksum = getChecksum(_buffer, len);
+        message["c"] = checksum;
+        return checksum;
+    }
+    
 
     bool validateChecksum(JsonObject message) {
         
@@ -331,7 +421,7 @@ private:
         // Has to be pre processed (linearly)
         bool at_c0 = false;
         size_t buffer_i = 4;
-        for (size_t i = 4; i < len; ++i) {
+        for (size_t i = buffer_i; i < len; ++i) {
             if (!at_c0 && _buffer[i - 3] == 'c' && _buffer[i - 1] == ':' && _buffer[i - 4] == '"' && _buffer[i - 2] == '"') {
                 at_c0 = true;
                 _buffer[buffer_i++] = '0';
