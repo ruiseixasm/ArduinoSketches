@@ -37,23 +37,26 @@ protected:
 
     size_t triggerTalkers(char* buffer, size_t length) {
 
-        uint16_t received_checksum = BroadcastSocket::readChecksum(buffer, &length);
-        uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);
+        if (length > 3*4 + 2) {
 
-        if (received_checksum == checksum) {
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("C: Validated Checksum of "));
-            Serial.println(checksum);
-            #endif
-            // Triggers all Talkers to processes the received data
-            for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                _device_talkers[talker_i].processData(this, buffer, length);
+            uint16_t received_checksum = BroadcastSocket::readChecksum(buffer, &length);
+            uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);
+
+            if (received_checksum == checksum) {
+                #ifdef BROADCASTSOCKET_DEBUG
+                Serial.print(F("C: Validated Checksum of "));
+                Serial.println(checksum);
+                #endif
+                // Triggers all Talkers to processes the received data
+                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                    _device_talkers[talker_i].processData(this, buffer, length);
+                }
+            } else {
+                #ifdef BROADCASTSOCKET_DEBUG
+                Serial.print(F("C: Validation of Checksum FAILED!!"));
+                Serial.println(checksum);
+                #endif
             }
-        } else {
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("C: Validation of Checksum FAILED!!"));
-            Serial.println(checksum);
-            #endif
         }
         return length;
     }

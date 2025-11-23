@@ -101,8 +101,11 @@ public:
         // Receive packets
         int packetSize = _udp->parsePacket();
         if (packetSize > 0) {
-            // Use std::min instead of min to avoid potential conflicts
-            int length = _udp->read(_received_data, std::min(static_cast<size_t>(packetSize), sizeof(_received_data)));
+
+            // Avoids overflow
+            if (packetSize > BROADCAST_SOCKET_BUFFER_SIZE) return 0;
+
+            int length = _udp->read(_received_data, static_cast<size_t>(packetSize));
             if (length <= 0) return 0;  // Your requested check - handles all error cases
             
             #ifdef BROADCAST_ETHERNETENC_DEBUG
