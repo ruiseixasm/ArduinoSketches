@@ -247,7 +247,7 @@ public:
         if (_manifesto != nullptr && _manifesto->talker != nullptr)
             message["f"] = _manifesto->talker->name;
 
-        setChecksum(message);
+        DeviceTalker::setChecksum(message);
 
         size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (len == 0) {
@@ -296,7 +296,7 @@ public:
                 Serial.print(data_checksum);
                 #endif
 
-                uint16_t checksum = getChecksum(_received_data, _data_len);
+                uint16_t checksum = DeviceTalker::getChecksum(_received_data, _data_len);
 
                 #ifdef JSON_TALKIE_DEBUG
                 Serial.print("  |  ");
@@ -404,29 +404,7 @@ private:
         *source_len = data_i;
         return data_checksum;
     }
-
-
-    uint16_t getChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
-
-    uint16_t setChecksum(JsonObject message) {
-        message["c"] = 0;   // makes _buffer a net_data buffer
-        size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-        uint16_t checksum = getChecksum(_buffer, len);
-        message["c"] = checksum;
-        return checksum;
-    }
+    
     
 
     bool validateMessage(JsonObject message) {
