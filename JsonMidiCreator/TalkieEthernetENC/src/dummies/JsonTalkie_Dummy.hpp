@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef JSON_TALKIE_DUMMY_HPP
 #define JSON_TALKIE_DUMMY_HPP
 
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 
 
 // Readjust if absolutely necessary

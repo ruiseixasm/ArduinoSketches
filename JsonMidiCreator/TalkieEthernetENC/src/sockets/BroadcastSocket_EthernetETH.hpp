@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_ETH_HPP
 #define BROADCAST_SOCKET_ETH_HPP
 
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 #include <ETH.h>
 #include <WiFiUdp.h>  // Using WiFiUdp for ESP32 native Ethernet
 

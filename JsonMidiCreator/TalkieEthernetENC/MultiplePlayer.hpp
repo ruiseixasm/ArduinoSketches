@@ -36,7 +36,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Copy_JsonTalkie.hpp>
 #endif
 
-#include "src/BroadcastSocket.hpp"      // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH
+#include "src/BroadcastSocket.h"      // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH
 
 
 class MultiplePlayer {

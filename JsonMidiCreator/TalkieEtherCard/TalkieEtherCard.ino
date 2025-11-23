@@ -58,49 +58,12 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x02};
 
 
 
-
-// MANIFESTO DEFINITION
-
-// Define the commands (stored in RAM)
-JsonTalkie::Talker talker = {
-    "Nano", "I do a 500ms buzz!"
-};
-
-bool buzz(JsonObject json_message);
-bool led_on(JsonObject json_message);
-bool led_off(JsonObject json_message);
-JsonTalkie::Run runCommands[] = {
-    {"buzz", "Triggers buzzing", buzz},
-    {"on", "Turns led On", led_on},
-    {"off", "Turns led Off", led_off}
-};
-
-bool set_duration(JsonObject json_message, long duration);
-JsonTalkie::Set setCommands[] = {
-    // {"duration", "Sets duration", set_duration}
-};
-
-long get_total_runs(JsonObject json_message);
-long get_duration(JsonObject json_message);
-JsonTalkie::Get getCommands[] = {
-    {"total_runs", "Gets the total number of runs", get_total_runs}
-    // {"duration", "Gets duration", get_duration}
-};
-
-bool process_response(JsonObject json_message);
-
-
-// MANIFESTO DECLARATION
-
-JsonTalkie::Manifesto manifesto(
-    &talker,
-    runCommands, sizeof(runCommands)/sizeof(JsonTalkie::Run),
-    setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
-    getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get),
-    process_response, nullptr
-);
-
-// END OF MANIFESTO
+const char player1_name[] = "Player1";
+const char player1_desc[] = "I'm the Player1";
+JsonTalker player1 = JsonTalker(player1_name, player1_desc);
+JsonTalker talkers[] = { player1 };
+// Singleton requires the & (to get a reference variable)
+auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
 
 
 

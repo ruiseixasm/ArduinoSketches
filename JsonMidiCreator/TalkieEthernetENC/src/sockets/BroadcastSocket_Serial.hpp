@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_SERIAL_HPP
 #define BROADCAST_SOCKET_SERIAL_HPP
 
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 
 
 // #define BROADCAST_SERIAL_DEBUG

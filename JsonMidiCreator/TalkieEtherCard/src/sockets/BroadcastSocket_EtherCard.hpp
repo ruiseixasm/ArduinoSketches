@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_ETHERCARD_HPP
 #define BROADCAST_SOCKET_ETHERCARD_HPP
 
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 #include <EtherCard.h>
 
 
@@ -45,15 +45,17 @@ private:
         }
     }
 
-    // Private constructor for singleton
-    BroadcastSocket_EtherCard() {
-        ether.udpServerListenOnPort(udpCallback, _port);
-    }
+protected:
+    // Needed for the compiler, the base class is the one being called though
+    // ADD THIS CONSTRUCTOR - it calls the base class constructor
+    BroadcastSocket_EthernetENC(JsonTalker* device_talkers, size_t talker_count)
+        : BroadcastSocket(device_talkers, talker_count) {}
 
 public:
-    // Singleton accessor
-    static BroadcastSocket_EtherCard& instance() {
-        static BroadcastSocket_EtherCard instance;
+
+    // Move ONLY the singleton instance method to subclass
+    static BroadcastSocket_EthernetENC& instance(JsonTalker* device_talkers, size_t talker_count) {
+        static BroadcastSocket_EthernetENC instance(device_talkers, talker_count);
         return instance;
     }
 

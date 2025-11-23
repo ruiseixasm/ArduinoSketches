@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_ESP8266_HPP
 #define BROADCAST_SOCKET_ESP8266_HPP
 
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 

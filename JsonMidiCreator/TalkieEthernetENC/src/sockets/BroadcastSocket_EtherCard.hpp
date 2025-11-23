@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_ETHERCARD_HPP
 #define BROADCAST_SOCKET_ETHERCARD_HPP
 
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 #include <EtherCard.h>
 
 

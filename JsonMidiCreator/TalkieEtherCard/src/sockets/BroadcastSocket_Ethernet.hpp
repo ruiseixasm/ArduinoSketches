@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_UDP_HPP
 #define BROADCAST_SOCKET_UDP_HPP
 
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 

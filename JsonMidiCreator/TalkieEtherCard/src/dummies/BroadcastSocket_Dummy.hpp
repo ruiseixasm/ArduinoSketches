@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_DUMMY_HPP
 #define BROADCAST_SOCKET_DUMMY_HPP
 
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 #include <ArduinoJson.h>
 
 
