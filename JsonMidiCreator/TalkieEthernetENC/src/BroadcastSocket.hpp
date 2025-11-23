@@ -27,64 +27,17 @@ private:
     size_t _talker_count = 0;
 
 protected:
-    static uint16_t _port;
+    uint16_t _port = 5005;
 
 
-    static size_t triggerTalkers(char* buffer, size_t length) {
+    size_t triggerTalkers(char* buffer, size_t length) {
 
-        // Find the first '{' (start of JSON)
-        size_t json_start = 0;
-        while (buffer[json_start] != '{' && json_start < length) {
-            
-            #ifdef BROADCASTSOCKET_DEBUG
-            if (json_start == 0)
-                Serial.println(F("Json LEFT strip"));
-            #endif
-            
-            json_start++;
+        // Triggers all Talkers to processes the received data
+        for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+            JsonTalker* talker = _device_talkers[talker_i];
+            talker->receiveData(this, buffer, length);
         }
-
-        // If no '{', discard
-        if (json_start == length) {
-
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("Json '{' NOT found"));
-            #endif
-            
-            return 0;
-        }
-
-        // Find the first '}' (finish of JSON)
-        size_t json_finish = length - 1;  // json_start and json_finish are indexes, NOT sizes
-        while (buffer[json_finish] != '}' && json_finish > json_start) {
-
-            #ifdef BROADCASTSOCKET_DEBUG
-            if (json_finish == length - 1)
-                Serial.println(F("Json RIGHT strip"));
-            #endif
-            
-            json_finish--;
-        }
-
-        // If no '}', discard
-        if (json_finish == json_start) {
-            
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("Json '}' NOT found"));
-            #endif
-            
-            return 0;
-        }
-
-        // Shift JSON to start of buffer if needed
-        if (json_start > 0) {
-            // Copies "numBytes" bytes from address "from" to address "to"
-            // void * memmove(void *to, const void *from, size_t numBytes);
-            memmove(buffer, buffer + json_start, json_finish - json_start + 1);
-        }
-
-        // Return actual JSON length (including both braces)
-        return json_finish - json_start + 1;
+        return length;
     }
 
     // Private constructor
@@ -125,9 +78,6 @@ public:
     virtual void set_port(uint16_t port) { _port = port; }
     virtual uint16_t get_port() { return _port; }
 };
-
-// Static member initialization
-uint16_t BroadcastSocket::_port = 5005; // The default port
 
 
 #endif // BROADCAST_SOCKET_HPP
