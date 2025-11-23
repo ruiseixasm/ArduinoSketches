@@ -70,6 +70,12 @@ public:
     }
     
 
+    static uint32_t generateMessageId() {
+        // Generates a 32-bit wrapped timestamp ID using overflow.
+        return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
+    }
+
+
 
 
     struct Talk {
@@ -171,12 +177,6 @@ public:
 
 
     
-    static uint32_t generateMessageId() {
-        // Generates a 32-bit wrapped timestamp ID using overflow.
-        return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
-    }
-
-
     void processReceivedData(const char* received_data, const size_t data_len) {
         
 
