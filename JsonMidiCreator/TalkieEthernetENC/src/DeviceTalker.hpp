@@ -14,7 +14,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef DEVICE_TALKER_HPP
 #define DEVICE_TALKER_HPP
 
-#include "BroadcastSocket.hpp"
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
@@ -22,6 +21,9 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
+
+
+class BroadcastSocket;
 
 
 class DeviceTalker {
@@ -176,7 +178,7 @@ public:
 
 
     
-    bool sendMessage(JsonObject message, bool as_reply = false, BroadcastSocket* socket = nullptr) {
+    bool sendMessage(BroadcastSocket* socket, JsonObject message, bool as_reply = false) {
         if (socket == nullptr) return false;
         
         // Directly nest the editable message under "m"
@@ -217,7 +219,7 @@ public:
 
 
     
-    void receiveData(const char* received_data, const size_t data_len) {
+    void receiveData(BroadcastSocket* socket, const char* received_data, const size_t data_len) {
         
 
         // In theory, a UDP packet on a local area network (LAN) could survive

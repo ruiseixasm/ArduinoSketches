@@ -312,7 +312,7 @@ public:
                     // Call Talkers to processes the validated received_data
                     for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
                         DeviceTalker* talker = _device_talkers[talker_i];
-                        talker->receiveData(_received_data, _data_len);
+                        talker->receiveData(_socket, _received_data, _data_len);
                     }
                 }
             }
