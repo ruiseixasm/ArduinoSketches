@@ -46,32 +46,21 @@ private:
     JsonTalkie json_talkie;
 
     // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE (NEED TO BE STATIC)
-    static int bpm_n;
-    static int bpm_d;
+    static long bpm_10;
 
     static JsonTalkie::Talker talker;
 
-    static bool set_bpm_n(JsonObject json_message, long bpm_n_value) {
+    static bool set_bpm_10(JsonObject json_message, long bpm_10) {
         (void)json_message; // Silence unused parameter warning
-        bpm_n = static_cast<int>(bpm_n_value);
+        MultiplePlayer::bpm_10 = bpm_10;
         return true;
     }
     
-    static bool set_bpm_d(JsonObject json_message, long bpm_d_value) {
+    static long get_bpm_10(JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
-        bpm_d = static_cast<int>(bpm_d_value);
-        return true;
+        return bpm_10;
     }
     
-    static long get_bpm_n(JsonObject json_message) {
-        (void)json_message; // Silence unused parameter warning
-        return static_cast<long>(bpm_n);
-    }
-    static long get_bpm_d(JsonObject json_message) {
-        (void)json_message; // Silence unused parameter warning
-        return static_cast<long>(bpm_d);
-    }
-
     // Static command arrays (the main reason for being static, due to dynamic size)
     static JsonTalkie::Run runCommands[];
     static JsonTalkie::Set setCommands[];
@@ -97,8 +86,7 @@ public:
 
 // Static definitions (required for C++)
 
-int MultiplePlayer::bpm_n = 120;
-int MultiplePlayer::bpm_d = 1;
+long MultiplePlayer::bpm_10 = 1200;
 
 JsonTalkie::Talker MultiplePlayer::talker = {
     "mp1", "Multiple Player receiving commands from JsonTalkiePlayer"
@@ -109,13 +97,11 @@ JsonTalkie::Run MultiplePlayer::runCommands[] = {
 };
 
 JsonTalkie::Set MultiplePlayer::setCommands[] = {
-    {"bpm_n", "Sets the Tempo numerator of BPM", &MultiplePlayer::set_bpm_n},
-    {"bpm_d", "Sets the Tempo denominator of BPM", &MultiplePlayer::set_bpm_d}
+    {"bpm_10", "Sets the Tempo in BPM x 10", &MultiplePlayer::set_bpm_10}
 };
 
 JsonTalkie::Get MultiplePlayer::getCommands[] = {
-    {"bpm_n", "Gets the Tempo numerator of BPM", &MultiplePlayer::get_bpm_n},
-    {"bpm_d", "Gets the Tempo denominator of BPM", &MultiplePlayer::get_bpm_d}
+    {"bpm_10", "Gets the Tempo in BPM x 10", &MultiplePlayer::get_bpm_10}
 };
 
 JsonTalkie::Manifesto MultiplePlayer::manifesto(
