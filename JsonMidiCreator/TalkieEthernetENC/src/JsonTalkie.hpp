@@ -466,16 +466,6 @@ private:
             #endif
             return false;
         }
-        if (!message["m"].is<int>()) {
-            #ifdef JSONTALKIE_DEBUG
-            Serial.println(3);
-            #endif
-            message["m"] = 7;   // error
-            message["t"] = message["f"];
-            message["e"] = 3;
-            talk(message, true);
-            return false;
-        }
         if (!message["i"].is<uint32_t>()) {
             #ifdef JSONTALKIE_DEBUG
             Serial.println(4);
