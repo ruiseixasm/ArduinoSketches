@@ -12,9 +12,11 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#include "JsonTalker.h"    // Include ArduinoJson Library
 #include "BroadcastSocket.hpp"  // MUST include the full definition!
+#include "JsonTalker.h"    // Include ArduinoJson Library
 
+
+char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
 
 

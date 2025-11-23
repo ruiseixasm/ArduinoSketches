@@ -30,15 +30,16 @@ https://github.com/ruiseixasm/JsonTalkie
 // #include <Copy_JsonTalkie.hpp>
 // #endif
 
-// // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
-// #include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
+// ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
+#include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
+#include "src/JsonTalker.h"
 
 // #include "SinglePlayer.hpp"
 // #include "MultiplePlayer.hpp"
 
 
-// // Needed for the SPI module connection
-// #include <SPI.h>
+// Needed for the SPI module connection
+#include <SPI.h>
 
 
 // auto& broadcast_socket = BroadcastSocket_EthernetENC::instance();

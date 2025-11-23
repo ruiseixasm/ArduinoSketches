@@ -194,8 +194,6 @@ public:
 };
 
 
-char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-
 
 
 #endif // DEVICE_TALKER_HPP
