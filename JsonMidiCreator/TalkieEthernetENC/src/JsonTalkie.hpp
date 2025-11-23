@@ -344,20 +344,6 @@ private:
     }
 
 
-    uint16_t getChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
-    
     uint16_t readChecksum(char* source_data, size_t* source_len) {
         
         // ASCII byte values:
@@ -391,6 +377,20 @@ private:
         }
         *source_len = data_i;
         return data_checksum;
+    }
+
+
+    uint16_t getChecksum(const char* net_data, const size_t len) {
+        // 16-bit word and XORing
+        uint16_t checksum = 0;
+        for (size_t i = 0; i < len; i += 2) {
+            uint16_t chunk = net_data[i] << 8;
+            if (i + 1 < len) {
+                chunk |= net_data[i + 1];
+            }
+            checksum ^= chunk;
+        }
+        return checksum;
     }
 
 

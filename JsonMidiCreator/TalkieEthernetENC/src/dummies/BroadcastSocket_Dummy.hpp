@@ -32,50 +32,29 @@ private:
         return talk;
     }
 
-    bool validateChecksum(JsonObject message, char* buffer, size_t size) {
-        // Use a static buffer size, large enough for your JSON
-        uint16_t message_checksum = 0;
-        if (message["c"].is<uint16_t>()) {
-            message_checksum = message["c"].as<uint16_t>();
-        }
-        message["c"] = 0;
-        size_t len = serializeJson(message, buffer, size);
 
-        if (len == 0) {
-            #ifdef BROADCAST_DUMMY_DEBUG
-            Serial.println("ERROR: Checksum serialization failed!");
-            #endif
-            return false;
-        }
-
-        #ifdef BROADCAST_DUMMY_DEBUG
-        // DEBUG: Print buffer contents
-        Serial.println("Buffer contents:");
-        for (size_t i = 0; i < len; i++) {
-            Serial.print(buffer[i], HEX);
-            Serial.print(" ");
-        }
-        Serial.println();
-        #endif
-
+    uint16_t getChecksum(const char* net_data, const size_t len) {
         // 16-bit word and XORing
         uint16_t checksum = 0;
         for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = buffer[i] << 8;
+            uint16_t chunk = net_data[i] << 8;
             if (i + 1 < len) {
-                chunk |= buffer[i + 1];
+                chunk |= net_data[i + 1];
             }
             checksum ^= chunk;
         }
-
-        #ifdef BROADCAST_DUMMY_DEBUG
-        Serial.print("Message checksum: ");
-        Serial.println(checksum);  // optional: just to add a newline after the JSON
-        #endif
-
-        message["c"] = checksum;
-        return message_checksum == checksum;
+        return checksum;
     }
+
+
+    uint16_t setChecksum(JsonObject message) {
+        message["c"] = 0;   // makes _buffer a net_data buffer
+        size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        uint16_t checksum = getChecksum(_buffer, len);
+        message["c"] = checksum;
+        return checksum;
+    }
+    
 
 public:
     // Singleton accessor
@@ -141,7 +120,7 @@ public:
                     return;
                 }
                 JsonObject message = message_doc.as<JsonObject>();
-                validateChecksum(message, buffer, size);
+                setChecksum(message);
 
                 size_t message_len = serializeJson(message, buffer, size);
                 if (message_len == 0 || message_len >= size) {
