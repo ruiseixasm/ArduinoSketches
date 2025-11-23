@@ -85,9 +85,8 @@ public:
 
 private:
 
-    Talk _talk =  {
-        "JsonTalker", "I'm the default Arduino Talker!"
-    };
+    const char* _name;      // Name of the Talker
+    const char* _desc;      // Description of the Device
     uint8_t _channel = 0;
     uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp
     String _set_name = "";              // Keeps the talker name
@@ -115,8 +114,12 @@ public:
 
 
     // Explicit default constructor
-    JsonTalker() = default;
+    JsonTalker() = delete;
     
+    
+    JsonTalker(const char* name, const char* desc)
+        : _name(name), _desc(desc) {}
+
 
 
     bool echo(JsonObject json_message) {
@@ -179,7 +182,7 @@ public:
 
     
     const char* get_name() {
-        return _talk.name;
+        return _name;
     }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
