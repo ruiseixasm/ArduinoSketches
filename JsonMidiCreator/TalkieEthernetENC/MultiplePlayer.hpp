@@ -45,37 +45,36 @@ private:
     // 1. JSON_TALKIE INSTANTIATION
     JsonTalkie json_talkie;
 
-    // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE (NEED TO BE STATIC)
-    static long bpm_10;
+    // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE
+    long bpm_10 = 1200;
 
-    static JsonTalkie::Talker talker;
-
-    static bool set_bpm_10(JsonObject json_message, long bpm_10) {
+    JsonTalkie::Talker talker;  // Talker description
+    
+    bool set_bpm_10(JsonObject json_message, long bpm_10) {
         (void)json_message; // Silence unused parameter warning
-        MultiplePlayer::bpm_10 = bpm_10;
+        this->bpm_10 = bpm_10;
         return true;
     }
     
-    static long get_bpm_10(JsonObject json_message) {
+    long get_bpm_10(JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
         return bpm_10;
     }
     
-    // Static command arrays (the main reason for being static, due to dynamic size)
-    static JsonTalkie::Run runCommands[];
-    static JsonTalkie::Set setCommands[];
-    static JsonTalkie::Get getCommands[];
-
-    // The final manifesto
-    static JsonTalkie::Manifesto manifesto;
+    // // Static command arrays (the main reason for being static, due to dynamic size)
+    // static JsonTalkie::Run runCommands[];
+    // static JsonTalkie::Set setCommands[];
+    // static JsonTalkie::Get getCommands[];
+    
+    // JsonTalkie::Manifesto manifesto;
     
 public:
 
     MultiplePlayer(BroadcastSocket* socket) {
         // 2. THE SOCKET IS THE SOLE RESPONSIBILITY OF THE `MAIN` SKETCH
         json_talkie.plug_socket(socket);
-        // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE (NEED TO BE STATIC)
-        json_talkie.set_manifesto(&manifesto);
+        // // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE
+        // json_talkie.set_manifesto(&manifesto);
     }
 
     void listen(bool receive = false) {
@@ -86,31 +85,31 @@ public:
 
 // Static definitions (required for C++)
 
-long MultiplePlayer::bpm_10 = 1200;
+// long MultiplePlayer::bpm_10 = 1200;
 
-JsonTalkie::Talker MultiplePlayer::talker = {
-    "mp1", "Multiple Player receiving commands from JsonTalkiePlayer"
-};
+// JsonTalkie::Talker MultiplePlayer::talker = {
+//     "mp1", "Multiple Player receiving commands from JsonTalkiePlayer"
+// };
 
-JsonTalkie::Run MultiplePlayer::runCommands[] = {
-    // Mandatory parameter
-};
+// JsonTalkie::Run MultiplePlayer::runCommands[] = {
+//     // Mandatory parameter
+// };
 
-JsonTalkie::Set MultiplePlayer::setCommands[] = {
-    {"bpm_10", "Sets the Tempo in BPM x 10", &MultiplePlayer::set_bpm_10}
-};
+// JsonTalkie::Set MultiplePlayer::setCommands[] = {
+//     {"bpm_10", "Sets the Tempo in BPM x 10", &MultiplePlayer::set_bpm_10}
+// };
 
-JsonTalkie::Get MultiplePlayer::getCommands[] = {
-    {"bpm_10", "Gets the Tempo in BPM x 10", &MultiplePlayer::get_bpm_10}
-};
+// JsonTalkie::Get MultiplePlayer::getCommands[] = {
+//     {"bpm_10", "Gets the Tempo in BPM x 10", &MultiplePlayer::get_bpm_10}
+// };
 
-JsonTalkie::Manifesto MultiplePlayer::manifesto(
-    &talker,
-    runCommands, sizeof(runCommands)/sizeof(JsonTalkie::Run),
-    setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
-    getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get),
-    nullptr, nullptr
-);
+// JsonTalkie::Manifesto MultiplePlayer::manifesto(
+//     &talker,
+//     runCommands, sizeof(runCommands)/sizeof(JsonTalkie::Run),
+//     setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
+//     getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get),
+//     nullptr, nullptr
+// );
 
 
 
