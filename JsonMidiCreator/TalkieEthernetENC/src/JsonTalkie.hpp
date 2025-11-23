@@ -15,6 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define JSON_TALKIE_HPP
 
 #include "BroadcastSocket.hpp"
+#include "DeviceTalker.hpp"
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
@@ -701,4 +702,4 @@ size_t JsonTalkie::_data_len = 0;
 char JsonTalkie::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
 
-#endif
+#endif // JSON_TALKIE_HPP
