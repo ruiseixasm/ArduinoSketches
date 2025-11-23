@@ -341,13 +341,13 @@ public:
     
 
         MessageCode message_code = static_cast<MessageCode>(message["m"].as<int>());
+        message["w"] = message["m"].as<int>();
         message["t"] = message["f"];
         message["m"] = 6;   // echo
 
         switch (message_code)
         {
         case MessageCode::talk:
-            message["w"] = message["m"].as<int>();
             if (_talk != nullptr)
                 message["d"] = _talk->desc;
             sendMessage(socket, message, true);
@@ -384,7 +384,6 @@ public:
             break;
         
         case MessageCode::run:
-            message["w"] = message["m"].as<int>();
             if (message["n"].is<String>()) {
 
                 const DeviceTalker::Run* run = this->run(message["n"]);
@@ -402,7 +401,6 @@ public:
             break;
         
         case MessageCode::set:
-            message["w"] = message["m"].as<int>();
             if (message["n"].is<String>() && message["v"].is<long>()) {
 
                 const DeviceTalker::Set* set = this->set(message["n"]);
@@ -420,7 +418,6 @@ public:
             break;
         
         case MessageCode::get:
-            message["w"] = message["m"].as<int>();
             if (message["n"].is<String>()) {
                 const DeviceTalker::Get* get = this->get(message["n"]);
                 if (get == nullptr) {
@@ -438,7 +435,6 @@ public:
             break;
         
         case MessageCode::sys:
-            message["w"] = 5;
             
             // AVR Boards (Uno, Nano, Mega) - Check RAM size
             #ifdef __AVR__
@@ -505,7 +501,6 @@ public:
 
                 _channel = message["b"].as<uint8_t>();
             }
-            message["w"] = 8;
             message["b"] = _channel;
             sendMessage(socket, message, true);
             break;
