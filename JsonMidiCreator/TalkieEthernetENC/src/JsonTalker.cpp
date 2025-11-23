@@ -18,6 +18,15 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
+uint16_t JsonTalker::setChecksum(JsonObject message) {
+    message["c"] = 0;   // makes _buffer a net_data buffer
+    size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+    uint16_t checksum = BroadcastSocket::getChecksum(_buffer, len);
+    message["c"] = checksum;
+    return checksum;
+}
+    
+
 bool JsonTalker::sendMessage(BroadcastSocket* socket, JsonObject message, bool as_reply) {
     if (socket == nullptr) return false;
     

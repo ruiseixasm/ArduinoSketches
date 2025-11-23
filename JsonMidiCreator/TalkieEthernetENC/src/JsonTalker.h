@@ -47,28 +47,9 @@ public:
         channel
     };
 
+    
 
-    static uint16_t getChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
-
-    static uint16_t setChecksum(JsonObject message) {
-        message["c"] = 0;   // makes _buffer a net_data buffer
-        size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-        uint16_t checksum = getChecksum(_buffer, len);
-        message["c"] = checksum;
-        return checksum;
-    }
+    static uint16_t setChecksum(JsonObject message);
     
 
     static uint32_t generateMessageId() {
