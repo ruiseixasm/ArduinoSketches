@@ -35,16 +35,23 @@ https://github.com/ruiseixasm/JsonTalkie
 
 class BroadcastSocket_EthernetENC : public BroadcastSocket {
 private:
-    IPAddress _source_ip;   // By default it's used the broadcast IP
+    IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     EthernetUDP* _udp = nullptr;
 
-    // Private constructor for singleton
-    BroadcastSocket_EthernetENC() {
-        _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
-    }
+protected:
+
+    // ADD THIS CONSTRUCTOR - it calls the base class constructor
+    BroadcastSocket_EthernetENC(JsonTalker* device_talkers, size_t talker_count)
+        : BroadcastSocket(device_talkers, talker_count) {}
 
 public:
-    
+
+    // Move ONLY the singleton instance method to subclass
+    static BroadcastSocket_EthernetENC& instance(JsonTalker* device_talkers, size_t talker_count) {
+        static BroadcastSocket_EthernetENC instance(device_talkers, talker_count);
+        return instance;
+    }
+
     bool send(const char* data, size_t size, bool as_reply = false) override {
         if (_udp == nullptr) return false;
 

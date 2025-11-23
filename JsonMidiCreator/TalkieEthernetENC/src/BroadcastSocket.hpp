@@ -44,9 +44,6 @@ protected:
         return length;
     }
 
-    // Private constructor
-    BroadcastSocket() = default;
-    virtual ~BroadcastSocket() = default;
 
     BroadcastSocket(JsonTalker* device_talkers, size_t talker_count)
         : _device_talkers(device_talkers), _talker_count(talker_count) {}
@@ -58,12 +55,6 @@ public:
     BroadcastSocket& operator=(const BroadcastSocket&) = delete;
     BroadcastSocket(BroadcastSocket&&) = delete;
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
-
-    // Singleton accessor
-    static BroadcastSocket& instance(JsonTalker* device_talkers, size_t talker_count) {
-        static BroadcastSocket instance(device_talkers, talker_count);
-        return instance;
-    }
 
 
     // NOT Pure virtual methods anymores (= 0;)

@@ -39,6 +39,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 JsonTalker talkers[] = { JsonTalker(), JsonTalker(), JsonTalker() };
+// Singleton requires the & (to get a reference variable)
 auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
 
 
@@ -168,69 +169,69 @@ void setup() {
     
     Serial.println("Pins initialized successfully");
 
-    // // STEP 1: Initialize SPI only
-    // const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
+    // STEP 1: Initialize SPI only
+    const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
     
-    // Serial.println("Step 1: Starting SPI...");
-    // SPI.begin();
-    // Serial.println("SPI started successfully");
-    // delay(1000);
+    Serial.println("Step 1: Starting SPI...");
+    SPI.begin();
+    Serial.println("SPI started successfully");
+    delay(1000);
 
-    // // STEP 2: Initialize Ethernet with CS pin
-    // Serial.println("Step 2: Initializing EthernetENC...");
-    // Ethernet.init(CS_PIN);
-    // Serial.println("Ethernet initialized successfully");
-    // delay(1000);
+    // STEP 2: Initialize Ethernet with CS pin
+    Serial.println("Step 2: Initializing EthernetENC...");
+    Ethernet.init(CS_PIN);
+    Serial.println("Ethernet initialized successfully");
+    delay(1000);
 
-    // // STEP 3: Begin Ethernet connection with DHCP
-    // Serial.println("Step 3: Starting Ethernet connection with DHCP...");
-    // if (Ethernet.begin(mac) == 0) {
-    //     Serial.println("Failed to configure Ethernet using DHCP");
-    //     // Optional: Fallback to static IP
-    //     // Ethernet.begin(mac, IPAddress(192, 168, 1, 100));
-    //     // while (Ethernet.localIP() == INADDR_NONE) {
-    //     //     delay(1000);
-    //     // }
+    // STEP 3: Begin Ethernet connection with DHCP
+    Serial.println("Step 3: Starting Ethernet connection with DHCP...");
+    if (Ethernet.begin(mac) == 0) {
+        Serial.println("Failed to configure Ethernet using DHCP");
+        // Optional: Fallback to static IP
+        // Ethernet.begin(mac, IPAddress(192, 168, 1, 100));
+        // while (Ethernet.localIP() == INADDR_NONE) {
+        //     delay(1000);
+        // }
+    } else {
+        Serial.println("DHCP successful!");
+    }
+
+    // // CRITICAL: Enable broadcast reception
+    // Ethernet.setBroadcast(true);
+    // Serial.println("Broadcast reception enabled");
+
+    // Give Ethernet time to stabilize
+    delay(2000);
+
+    // STEP 4: Check connection status
+    Serial.println("Step 4: Checking Ethernet status...");
+    Serial.print("Local IP: ");
+    Serial.println(Ethernet.localIP());
+    Serial.print("Subnet Mask: ");
+    Serial.println(Ethernet.subnetMask());
+    Serial.print("Gateway IP: ");
+    Serial.println(Ethernet.gatewayIP());
+    Serial.print("DNS Server: ");
+    Serial.println(Ethernet.dnsServerIP());
+
+    // Hardware status check (EthernetENC may not have hardwareStatus())
+    // if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+    //     Serial.println("WARNING: Ethernet hardware not detected!");
     // } else {
-    //     Serial.println("DHCP successful!");
+    //     Serial.println("Ethernet hardware detected");
     // }
 
-    // // // CRITICAL: Enable broadcast reception
-    // // Ethernet.setBroadcast(true);
-    // // Serial.println("Broadcast reception enabled");
+    // STEP 5: Initialize UDP and broadcast socket
+    Serial.println("Step 5: Initializing UDP...");
+    if (udp.begin(PORT)) {
+        Serial.println("UDP started successfully on port " + String(PORT));
+    } else {
+        Serial.println("Failed to start UDP!");
+    }
 
-    // // Give Ethernet time to stabilize
-    // delay(2000);
-
-    // // STEP 4: Check connection status
-    // Serial.println("Step 4: Checking Ethernet status...");
-    // Serial.print("Local IP: ");
-    // Serial.println(Ethernet.localIP());
-    // Serial.print("Subnet Mask: ");
-    // Serial.println(Ethernet.subnetMask());
-    // Serial.print("Gateway IP: ");
-    // Serial.println(Ethernet.gatewayIP());
-    // Serial.print("DNS Server: ");
-    // Serial.println(Ethernet.dnsServerIP());
-
-    // // Hardware status check (EthernetENC may not have hardwareStatus())
-    // // if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-    // //     Serial.println("WARNING: Ethernet hardware not detected!");
-    // // } else {
-    // //     Serial.println("Ethernet hardware detected");
-    // // }
-
-    // // STEP 5: Initialize UDP and broadcast socket
-    // Serial.println("Step 5: Initializing UDP...");
-    // if (udp.begin(PORT)) {
-    //     Serial.println("UDP started successfully on port " + String(PORT));
-    // } else {
-    //     Serial.println("Failed to start UDP!");
-    // }
-
-    // Serial.println("Setting up broadcast socket...");
-    // broadcast_socket.set_port(PORT);
-    // broadcast_socket.set_udp(&udp);
+    Serial.println("Setting up broadcast socket...");
+    broadcast_socket.set_port(PORT);
+    broadcast_socket.set_udp(&udp);
 
     // Serial.println("Setting JsonTalkie...");
     // json_talkie.set_manifesto(&manifesto);
