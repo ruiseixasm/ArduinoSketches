@@ -106,9 +106,6 @@ private:
 
     Talk* _talk = nullptr;
     uint8_t _channel = 0;
-    bool (DeviceTalker::*_echo)(JsonObject) = nullptr;
-    bool (DeviceTalker::*_error)(JsonObject) = nullptr;
-
     uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp
     String _set_name = "";              // Keeps the talker name
     bool _check_set_time = false;
@@ -137,6 +134,35 @@ public:
     // Explicit default constructor
     DeviceTalker() = default;
     
+
+
+    bool echo(JsonObject json_message) {
+        Serial.print(json_message["f"].as<String>());
+        Serial.print(" - ");
+        if (json_message["r"].is<String>()) {
+            Serial.println(json_message["r"].as<String>());
+        } else if (json_message["d"].is<String>()) {
+            Serial.println(json_message["d"].as<String>());
+        } else {
+            Serial.println("Empty echo received!");
+        }
+        return false;
+    }
+
+    bool error(JsonObject json_message) {
+        Serial.print(json_message["f"].as<String>());
+        Serial.print(" - ");
+        if (json_message["r"].is<String>()) {
+            Serial.println(json_message["r"].as<String>());
+        } else if (json_message["d"].is<String>()) {
+            Serial.println(json_message["d"].as<String>());
+        } else {
+            Serial.println("Empty error received!");
+        }
+        return false;
+    }
+
+
 
     size_t runs_count() { return sizeof(runCommands)/sizeof(DeviceTalker::Run); }
     const Run* run(const char* cmd) {
@@ -221,14 +247,11 @@ public:
     
     void receiveData(BroadcastSocket* socket, const char* received_data, const size_t data_len) {
         
-
-        // In theory, a UDP packet on a local area network (LAN) could survive
-        // for about 4.25 minutes (255 seconds).
-        if (_check_set_time && millis() - _sent_set_time[1] > 255 * 1000) {
-            _check_set_time = false;
-        }
-
-
+        
+        #ifdef DEVICE_TALKER_DEBUG
+        Serial.println(F("Validating..."));
+        #endif
+        
         // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
         #if ARDUINOJSON_VERSION_MAJOR >= 7
         JsonDocument message_doc;
@@ -244,6 +267,45 @@ public:
             return;
         }
         JsonObject message = message_doc.as<JsonObject>();
+
+        // Error types:
+        //     0 - Unknown sender   // Removed, useless kind of error report that results in UDP flooding
+        //     1 - Message missing the checksum
+        //     2 - Message corrupted
+        //     3 - Wrong message code
+        //     4 - Message NOT identified
+        //     5 - Set command arrived too late
+
+        if (!message["m"].is<int>()) {
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.println(F("Message \"m\" is NOT an integer!"));
+            #endif
+            return;
+        }
+        if (!message["f"].is<String>()) {
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.println(0);
+            #endif
+            return;
+        }
+        if (!message["i"].is<uint32_t>()) {
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.println(4);
+            #endif
+            message["m"] = 7;   // error
+            message["t"] = message["f"];
+            message["e"] = 4;
+            
+            sendMessage(socket, message, true);
+            return;
+        }
+
+        // In theory, a UDP packet on a local area network (LAN) could survive
+        // for about 4.25 minutes (255 seconds).
+        if (_check_set_time && millis() - _sent_set_time[1] > 255 * 1000) {
+            _check_set_time = false;
+        }
+
 
 
         if (true) {
@@ -262,6 +324,204 @@ public:
                 _check_set_time = true;
             }
         }
+
+
+
+        // Echo codes:
+        //     0 - ROGER
+        //     1 - UNKNOWN
+        //     2 - NONE
+
+        #ifdef JSON_TALKIE_DEBUG
+        Serial.print(F("Process: "));
+        serializeJson(message, Serial);
+        Serial.println();  // optional: just to add a newline after the JSON
+        #endif
+
+    
+
+        MessageCode message_code = static_cast<MessageCode>(message["m"].as<int>());
+        message["t"] = message["f"];
+        message["m"] = 6;   // echo
+
+        switch (message_code)
+        {
+        case MessageCode::talk:
+            message["w"] = 0;
+            if (_talk != nullptr)
+                message["d"] = _talk->desc;
+            sendMessage(socket, message, true);
+            break;
+        
+        case MessageCode::list:
+            // {   // Because of none_list !!!
+            //     bool none_list = true;
+            //     message["w"] = 2;
+            //     for (size_t run_i = 0; run_i < this->runs_count(); ++run_i) {
+            //         none_list = false;
+            //         message["n"] = this->runCommands[run_i].name;
+            //         message["d"] = this->runCommands[run_i].desc;
+            //         sendMessage(socket, message, true);
+            //     }
+            //     message["w"] = 3;
+            //     for (size_t set_i = 0; set_i < this->sets_count(); ++set_i) {
+            //         none_list = false;
+            //         message["n"] = this->setCommands[set_i].name;
+            //         message["d"] = this->setCommands[set_i].desc;
+            //         sendMessage(socket, message, true);
+            //     }
+            //     message["w"] = 4;
+            //     for (size_t get_i = 0; get_i < this->gets_count(); ++get_i) {
+            //         none_list = false;
+            //         message["n"] = this->getCommands[get_i].name;
+            //         message["d"] = this->getCommands[get_i].desc;
+            //         sendMessage(socket, message, true);
+            //     }
+            //     if(none_list) {
+            //         message["g"] = 2;       // NONE
+            //     }
+            // }
+            break;
+        
+        case MessageCode::run:
+            // message["w"] = 2;
+            // if (message["n"].is<String>()) {
+
+            //     const DeviceTalker::Run* run = this->run(message["n"]);
+            //     if (run == nullptr) {
+            //         message["g"] = 1;   // UNKNOWN
+            //         sendMessage(socket, message, true);
+            //     } else {
+            //         message["g"] = 0;       // ROGER
+            //         sendMessage(socket, message, true);
+            //         // No memory leaks because message_doc exists in the listen() method stack
+            //         message.remove("g");
+            //         (this->*(run->method))(message);
+            //     }
+            // }
+            break;
+        
+        case MessageCode::set:
+            // message["w"] = 3;
+            // if (message["n"].is<String>() && message["v"].is<long>()) {
+
+            //     const DeviceTalker::Set* set = this->set(message["n"]);
+            //     if (set == nullptr) {
+            //         message["g"] = 1;   // UNKNOWN
+            //         sendMessage(socket, message, true);
+            //     } else {
+            //         message["g"] = 0;       // ROGER
+            //         sendMessage(socket, message, true);
+            //         // No memory leaks because message_doc exists in the listen() method stack
+            //         message.remove("g");
+            //         (this->*(set->method))(message, message["v"].as<long>());
+            //     }
+            // }
+            break;
+        
+        case MessageCode::get:
+            // message["w"] = 4;
+            // if (message["n"].is<String>()) {
+            //     message["w"] = message_code;
+
+            //     const DeviceTalker::Get* get = this->get(message["n"]);
+            //     if (get == nullptr) {
+            //         message["g"] = 1;   // UNKNOWN
+            //         sendMessage(socket, message, true);
+            //     } else {
+            //         message["g"] = 0;       // ROGER
+            //         sendMessage(socket, message, true);
+            //         // No memory leaks because message_doc exists in the listen() method stack
+            //         message.remove("g");
+            //         message["v"] = (this->*(get->method))(message);
+            //         sendMessage(socket, message, true);
+            //     }
+            // }
+            break;
+        
+        case MessageCode::sys:
+            message["w"] = 5;
+            
+            // AVR Boards (Uno, Nano, Mega) - Check RAM size
+            #ifdef __AVR__
+            uint16_t ramSize = RAMEND - RAMSTART + 1;
+            if (ramSize == 2048)
+                message["d"] = F("Arduino Uno/Nano (ATmega328P)");
+            else if (ramSize == 8192)
+                message["d"] = F("Arduino Mega (ATmega2560)");
+            else
+                message["d"] = F("Unknown AVR Board");
+            
+            // ESP8266
+            #elif defined(ESP8266)
+            message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
+            
+            // ESP32
+            #elif defined(ESP32)
+            message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
+            
+            // Teensy Boards
+            #elif defined(TEENSYDUINO)
+                #if defined(__IMXRT1062__)
+                    message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
+                #elif defined(__MK66FX1M0__)
+                    message["d"] = F("Teensy 3.6 (MK66FX1M0)");
+                #elif defined(__MK64FX512__)
+                    message["d"] = F("Teensy 3.5 (MK64FX512)");
+                #elif defined(__MK20DX256__)
+                    message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
+                #elif defined(__MKL26Z64__)
+                    message["d"] = F("Teensy LC (MKL26Z64)");
+                #else
+                    message["d"] = F("Unknown Teensy Board");
+                #endif
+
+            // ARM (Due, Zero, etc.)
+            #elif defined(__arm__)
+            message["d"] = F("ARM-based Board");
+
+            // Unknown Board
+            #else
+            message["d"] = F("Unknown Board");
+
+            #endif
+
+            sendMessage(socket, message, true);
+            break;
+        
+        case MessageCode::echo:
+            this->echo(message);
+            break;
+        
+        case MessageCode::error:
+            this->error(message);
+            break;
+        
+        case MessageCode::channel:
+            if (message["b"].is<uint8_t>()) {
+
+                #ifdef JSON_TALKIE_DEBUG
+                Serial.print(F("Channel B value is an <uint8_t>: "));
+                Serial.println(message["b"].is<uint8_t>());
+                #endif
+
+                _channel = message["b"].as<uint8_t>();
+            }
+            message["w"] = 8;
+            message["b"] = _channel;
+            sendMessage(socket, message, true);
+            break;
+        
+        default:
+            break;
+        }
+
+
+
+
+
+
+
 
 
     }
