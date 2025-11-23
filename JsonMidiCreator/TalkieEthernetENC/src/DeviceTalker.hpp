@@ -179,6 +179,14 @@ public:
 
     void processReceivedData(const char* received_data, const size_t data_len) {
         
+
+        // In theory, a UDP packet on a local area network (LAN) could survive
+        // for about 4.25 minutes (255 seconds).
+        if (_check_set_time && millis() - _sent_set_time[1] > 255 * 1000) {
+            _check_set_time = false;
+        }
+
+
         // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
         #if ARDUINOJSON_VERSION_MAJOR >= 7
         JsonDocument message_doc;
