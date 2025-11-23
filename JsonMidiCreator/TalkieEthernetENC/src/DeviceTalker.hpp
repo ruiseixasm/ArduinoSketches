@@ -45,9 +45,44 @@ public:
 
 private:
 
+    Talk* talk = nullptr;
+    Run* runCommands = nullptr;
+    size_t runSize = 0;
+    Set* setCommands = nullptr;
+    size_t setSize = 0;
+    Get* getCommands = nullptr;
+    size_t getSize = 0;
     bool (DeviceTalker::*echo)(JsonObject) = nullptr;
     bool (DeviceTalker::*error)(JsonObject) = nullptr;
 
+public:
+
+    Run* get_run(const char* cmd) {
+        for (size_t index = 0; index < runSize; ++index) {
+            if (strcmp(cmd, runCommands[index].name) == 0) {
+                return &runCommands[index];  // Returns the function
+            }
+        }
+        return nullptr;
+    }
+
+    Set* get_set(const char* cmd) {
+        for (size_t index = 0; index < setSize; ++index) {
+            if (strcmp(cmd, setCommands[index].name) == 0) {
+                return &setCommands[index];  // Returns the function
+            }
+        }
+        return nullptr;
+    }
+
+    Get* get_get(const char* cmd) {
+        for (size_t index = 0; index < getSize; ++index) {
+            if (strcmp(cmd, getCommands[index].name) == 0) {
+                return &getCommands[index];  // Returns the function
+            }
+        }
+        return nullptr;
+    }
 
 
 
