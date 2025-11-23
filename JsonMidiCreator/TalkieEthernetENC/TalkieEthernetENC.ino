@@ -307,7 +307,6 @@ void loop() {
 // bool is_led_on = false;  // keep track of state yourself, by default it's off
 
 // bool led_on(JsonObject json_message) {
-//     (void)json_message; // Silence unused parameter warning
 //     if (!is_led_on) {
 //         digitalWrite(LED_BUILTIN, HIGH);
 //         is_led_on = true;
@@ -321,7 +320,6 @@ void loop() {
 // }
 
 // bool led_off(JsonObject json_message) {
-//     (void)json_message; // Silence unused parameter warning
 //     if (is_led_on) {
 //         digitalWrite(LED_BUILTIN, LOW);
 //         is_led_on = false;

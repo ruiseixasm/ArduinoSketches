@@ -24,38 +24,46 @@ https://github.com/ruiseixasm/JsonTalkie
 
 class BroadcastSocket_EtherCard : public BroadcastSocket {
 private:
+
+    static BroadcastSocket_EtherCard* _self_instance;
     static uint8_t _source_ip[4];
     static size_t _data_length;
-    static char* _buffer;
-    static size_t _size;
-    
-    // Static callback remains unchanged
-    static void udpCallback(uint16_t src_port, uint8_t* src_ip, uint16_t dst_port, 
+
+    static void staticCallback(uint16_t src_port, uint8_t* src_ip, uint16_t dst_port, 
                           const char* data, uint16_t length) {
+
+        (void)src_port; // Silence unused parameter warning
+        (void)dst_port; // Silence unused parameter warning
+
         #ifdef BROADCAST_ETHERCARD_DEBUG
         Serial.print(F("R: "));
         Serial.write(data, length);
         Serial.println();
         #endif
 
-        if (length <= _size) {
-            memcpy(_buffer, data, length);
+        if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+            memcpy(_received_data, data, length);
             memcpy(_source_ip, src_ip, 4);
-            _data_length = triggerTalkers(_buffer, static_cast<size_t>(length));
+            if (_self_instance) {
+                _data_length = _self_instance->triggerTalkers(_received_data, length);
+            }
         }
     }
+
 
 protected:
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_EthernetENC(JsonTalker* device_talkers, size_t talker_count)
-        : BroadcastSocket(device_talkers, talker_count) {}
+    BroadcastSocket_EtherCard(JsonTalker* device_talkers, size_t talker_count)
+        : BroadcastSocket(device_talkers, talker_count) {
+            _self_instance = this;
+        }
 
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_EthernetENC& instance(JsonTalker* device_talkers, size_t talker_count) {
-        static BroadcastSocket_EthernetENC instance(device_talkers, talker_count);
+    static BroadcastSocket_EtherCard& instance(JsonTalker* device_talkers, size_t talker_count) {
+        static BroadcastSocket_EtherCard instance(device_talkers, talker_count);
         return instance;
     }
 
@@ -66,6 +74,7 @@ public:
         #ifdef ENABLE_DIRECT_ADDRESSING
         ether.sendUdp(data, size, _port, as_reply ? _source_ip : broadcastIp, _port);
         #else
+        (void)as_reply; // Silence unused parameter warning
         ether.sendUdp(data, size, _port, broadcastIp, _port);
         #endif
 
@@ -79,9 +88,7 @@ public:
     }
 
 
-    size_t receive(char* buffer, size_t size) override {
-        _buffer = buffer;
-        _size = size;
+    size_t receive() override {
         _data_length = 0;   // Makes sure it's the Ethernet reading that sets it!
         ether.packetLoop(ether.packetReceive());
         return _data_length;
@@ -91,13 +98,13 @@ public:
     // Modified methods to work with singleton
     void set_port(uint16_t port) override {
         _port = port;
-        ether.udpServerListenOnPort(udpCallback, _port);
+        ether.udpServerListenOnPort(staticCallback, _port);
     }
 };
 
+BroadcastSocket_EtherCard* BroadcastSocket_EtherCard::_self_instance = nullptr;
 uint8_t BroadcastSocket_EtherCard::_source_ip[4] = {0};
 size_t BroadcastSocket_EtherCard::_data_length = 0;
-char* BroadcastSocket_EtherCard::_buffer = nullptr;
-size_t BroadcastSocket_EtherCard::_size = 0;
+
 
 #endif // BROADCAST_SOCKET_ETHERCARD_HPP

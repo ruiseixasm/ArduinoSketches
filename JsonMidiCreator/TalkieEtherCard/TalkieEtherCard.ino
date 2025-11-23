@@ -16,9 +16,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/sockets/BroadcastSocket_EtherCard.hpp"
 #include "src/JsonTalker.h"
 
-JsonTalkie json_talkie;
-auto& broadcast_socket = BroadcastSocket_EtherCard::instance();
-
 
 // Adjust the Ethercard buffer size to the absolutely minimum needed
 // for the DHCP so that it works, but too much and the Json messages
@@ -63,7 +60,7 @@ const char player1_desc[] = "I'm the Player1";
 JsonTalker player1 = JsonTalker(player1_name, player1_desc);
 JsonTalker talkers[] = { player1 };
 // Singleton requires the & (to get a reference variable)
-auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
+auto& broadcast_socket = BroadcastSocket_EtherCard::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
 
 
 
@@ -94,12 +91,9 @@ void setup() {
     // Makes sure it allows broadcast
     ether.enableBroadcast();
 
+
     // By default is already 5005
     broadcast_socket.set_port(5005);
-
-
-    json_talkie.set_manifesto(&manifesto);
-    json_talkie.plug_socket(&broadcast_socket);
 
 
     Serial.println("Talker ready");
@@ -118,34 +112,35 @@ void setup() {
 }
 
 void loop() {
-    json_talkie.listen();
+    broadcast_socket.receive();
 
-    static unsigned long lastSend = 0;
-    if (millis() - lastSend > 39000) {
 
-        // AVOID GLOBAL JSONDOCUMENT VARIABLES, HIGH RISK OF MEMORY LEAKS
-        #if ARDUINOJSON_VERSION_MAJOR >= 7
-        JsonDocument message_doc;
-        if (message_doc.overflowed()) {
-            Serial.println("CRITICAL: Insufficient RAM");
-        } else {
-            JsonObject message = message_doc.to<JsonObject>();
-            message["m"] = 0;   // talk
-            json_talkie.talk(message);
-        }
-        #else
-        StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
-        if (message_doc.capacity() < BROADCAST_SOCKET_BUFFER_SIZE) {  // Absolute minimum
-            Serial.println("CRITICAL: Insufficient RAM");
-        } else {
-            JsonObject message = message_doc.to<JsonObject>();
-            message["m"] = 0;   // talk
-            json_talkie.talk(message);
-        }
-        #endif
+    // static unsigned long lastSend = 0;
+    // if (millis() - lastSend > 39000) {
+
+    //     // AVOID GLOBAL JSONDOCUMENT VARIABLES, HIGH RISK OF MEMORY LEAKS
+    //     #if ARDUINOJSON_VERSION_MAJOR >= 7
+    //     JsonDocument message_doc;
+    //     if (message_doc.overflowed()) {
+    //         Serial.println("CRITICAL: Insufficient RAM");
+    //     } else {
+    //         JsonObject message = message_doc.to<JsonObject>();
+    //         message["m"] = 0;   // talk
+    //         json_talkie.talk(message);
+    //     }
+    //     #else
+    //     StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+    //     if (message_doc.capacity() < BROADCAST_SOCKET_BUFFER_SIZE) {  // Absolute minimum
+    //         Serial.println("CRITICAL: Insufficient RAM");
+    //     } else {
+    //         JsonObject message = message_doc.to<JsonObject>();
+    //         message["m"] = 0;   // talk
+    //         json_talkie.talk(message);
+    //     }
+    //     #endif
         
-        lastSend = millis();
-    }
+    //     lastSend = millis();
+    // }
 }
 
 
@@ -154,6 +149,7 @@ long _duration = 5;  // Example variable
 
 // Command implementations
 bool buzz(JsonObject json_message) {
+    (void)json_message; // Silence unused parameter warning
     #ifndef BROADCASTSOCKET_SERIAL
     digitalWrite(buzzer_pin, HIGH);
     delay(_duration); 
@@ -166,43 +162,46 @@ bool buzz(JsonObject json_message) {
 
 bool is_led_on = false;  // keep track of state yourself, by default it's off
 
-bool led_on(JsonObject json_message) {
-    if (!is_led_on) {
-        digitalWrite(LED_BUILTIN, HIGH);
-        is_led_on = true;
-        total_runs++;
-    } else {
-        json_message["r"] = "Already On!";
-        json_talkie.talk(json_message);
-        return false;
-    }
-    return true;
-}
+// bool led_on(JsonObject json_message) {
+//     if (!is_led_on) {
+//         digitalWrite(LED_BUILTIN, HIGH);
+//         is_led_on = true;
+//         total_runs++;
+//     } else {
+//         json_message["r"] = "Already On!";
+//         json_talkie.talk(json_message);
+//         return false;
+//     }
+//     return true;
+// }
 
-bool led_off(JsonObject json_message) {
-    if (is_led_on) {
-        digitalWrite(LED_BUILTIN, LOW);
-        is_led_on = false;
-        total_runs++;
-    } else {
-        json_message["r"] = "Already Off!";
-        json_talkie.talk(json_message);
-        return false;
-    }
-    return true;
-}
+// bool led_off(JsonObject json_message) {
+//     if (is_led_on) {
+//         digitalWrite(LED_BUILTIN, LOW);
+//         is_led_on = false;
+//         total_runs++;
+//     } else {
+//         json_message["r"] = "Already Off!";
+//         json_talkie.talk(json_message);
+//         return false;
+//     }
+//     return true;
+// }
 
 
 bool set_duration(JsonObject json_message, long duration) {
+    (void)json_message; // Silence unused parameter warning
     _duration = duration;
     return true;
 }
 
 long get_duration(JsonObject json_message) {
+    (void)json_message; // Silence unused parameter warning
     return _duration;
 }
 
 long get_total_runs(JsonObject json_message) {
+    (void)json_message; // Silence unused parameter warning
     return total_runs;
 }
 
