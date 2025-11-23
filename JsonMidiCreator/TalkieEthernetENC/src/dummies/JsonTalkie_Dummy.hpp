@@ -32,7 +32,7 @@ public:
     typedef void* JsonObject;
 
     struct Talker {
-        const char* name;      // Name of the Device (Talker)
+        const char* name;      // Name of the Talker
         const char* desc;      // Description of the Device
     };
 
