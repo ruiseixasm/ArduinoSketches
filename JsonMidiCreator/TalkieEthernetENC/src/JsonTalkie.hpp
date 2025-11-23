@@ -627,18 +627,24 @@ private:
             message["w"] = 4;
             if (message["n"].is<String>()) {
                 message["w"] = message_code;
-                const Get* get = _manifesto->get_get(message["n"]);
-                if (get == nullptr) {
-                    message["g"] = 1;   // UNKNOWN
+
+                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                    DeviceTalker* talker = _device_talkers[talker_i];
+
+                    const DeviceTalker::Get* get = talker->get(message["n"]);
+                    if (get == nullptr) {
+                        message["g"] = 1;   // UNKNOWN
+                        talk(message, true);
+                        return false;
+                    }
+                    message["g"] = 0;       // ROGER
                     talk(message, true);
-                    return false;
+                    // No memory leaks because message_doc exists in the listen() method stack
+                    message.remove("g");
+                    message["v"] = (talker->*(get->method))(message);
+                    talk(message, true);
                 }
-                message["g"] = 0;       // ROGER
-                talk(message, true);
-                // No memory leaks because message_doc exists in the listen() method stack
-                message.remove("g");
-                message["v"] = get->function(message);
-                return talk(message, true);
+                return true;
             }
             break;
         
