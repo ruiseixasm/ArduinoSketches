@@ -194,8 +194,8 @@ private:
     // Configuration parameters
     BroadcastSocket* _socket = nullptr;
 
-    const DeviceTalker* _device_talkers = nullptr;    // A list of Talkers
-    const size_t _talker_count = 0;
+    DeviceTalker** _device_talkers = nullptr;   // A list of Talkers (pointers)
+    size_t _talker_count = 0;
 
     Manifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
@@ -208,7 +208,7 @@ public:
     // Explicit default constructor
     JsonTalkie() = default;
     
-    JsonTalkie(DeviceTalker* device_talkers, size_t talker_count)
+    JsonTalkie(DeviceTalker** device_talkers, size_t talker_count)
         : _device_talkers(device_talkers), _talker_count(talker_count) {}
 
 
@@ -547,7 +547,7 @@ private:
             {   // Because of none_list !!!
                 bool none_list = true;
                 message["w"] = 2;
-                if (_manifesto != nullptr)
+                if (_manifesto != nullptr) {
                     for (size_t run_i = 0; run_i < _manifesto->runSize; ++run_i) {
                         message["n"] = _manifesto->runCommands[run_i].name;
                         message["d"] = _manifesto->runCommands[run_i].desc;
@@ -568,6 +568,34 @@ private:
                         none_list = false;
                         talk(message, true);
                     }
+                }
+                
+                // Processes the Talkers
+                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                    DeviceTalker* talker = _device_talkers[talker_i];
+                    message["w"] = 2;
+                    for (size_t run_i = 0; run_i < talker->runs_count(); ++run_i) {
+                        none_list = false;
+                        message["n"] = talker->runCommands[run_i].name;
+                        message["d"] = talker->runCommands[run_i].desc;
+                        talk(message, true);
+                    }
+                    message["w"] = 3;
+                    for (size_t set_i = 0; set_i < talker->sets_count(); ++set_i) {
+                        none_list = false;
+                        message["n"] = talker->setCommands[set_i].name;
+                        message["d"] = talker->setCommands[set_i].desc;
+                        talk(message, true);
+                    }
+                    message["w"] = 4;
+                    for (size_t get_i = 0; get_i < talker->gets_count(); ++get_i) {
+                        none_list = false;
+                        message["n"] = talker->getCommands[get_i].name;
+                        message["d"] = talker->getCommands[get_i].desc;
+                        talk(message, true);
+                    }
+                }
+
                 if(none_list) {
                     message["g"] = 2;       // NONE
                 }

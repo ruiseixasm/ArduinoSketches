@@ -49,6 +49,9 @@ private:
     bool (DeviceTalker::*echo)(JsonObject) = nullptr;
     bool (DeviceTalker::*error)(JsonObject) = nullptr;
 
+
+public:
+
     const DeviceTalker::Run runCommands[0] = {
         // A list of Run structures
         // {"buzz", "Triggers buzzing", buzz}
@@ -64,13 +67,12 @@ private:
         // {"bpm_10", "Gets the Tempo in BPM x 10", get_bpm_10}
     };
 
-public:
-
     // Explicit default constructor
     DeviceTalker() = default;
     
-    const Run* get_run(const char* cmd) {
-        for (size_t index = 0; index < sizeof(runCommands)/sizeof(DeviceTalker::Run); ++index) {
+    size_t runs_count() { return sizeof(runCommands)/sizeof(DeviceTalker::Run); }
+    const Run* run(const char* cmd) {
+        for (size_t index = 0; index < runs_count(); ++index) {
             if (strcmp(cmd, runCommands[index].name) == 0) {
                 return &runCommands[index];  // Returns the function
             }
@@ -78,8 +80,9 @@ public:
         return nullptr;
     }
 
-    const Set* get_set(const char* cmd) {
-        for (size_t index = 0; index < sizeof(setCommands)/sizeof(DeviceTalker::Set); ++index) {
+    size_t sets_count() { return sizeof(setCommands)/sizeof(DeviceTalker::Set); }
+    const Set* set(const char* cmd) {
+        for (size_t index = 0; index < sets_count(); ++index) {
             if (strcmp(cmd, setCommands[index].name) == 0) {
                 return &setCommands[index];  // Returns the function
             }
@@ -87,8 +90,9 @@ public:
         return nullptr;
     }
 
-    const Get* get_get(const char* cmd) {
-        for (size_t index = 0; index < sizeof(getCommands)/sizeof(DeviceTalker::Get); ++index) {
+    size_t gets_count() { return sizeof(getCommands)/sizeof(DeviceTalker::Get); }
+    const Get* get(const char* cmd) {
+        for (size_t index = 0; index < gets_count(); ++index) {
             if (strcmp(cmd, getCommands[index].name) == 0) {
                 return &getCommands[index];  // Returns the function
             }
