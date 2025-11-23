@@ -312,7 +312,7 @@ public:
                     // Call Talkers to processes the validated received_data
                     for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
                         DeviceTalker* talker = _device_talkers[talker_i];
-                        talker->processReceivedData(_received_data, _data_len);
+                        talker->receiveData(_received_data, _data_len);
                     }
                 }
             }
@@ -405,7 +405,7 @@ private:
         return data_checksum;
     }
     
-    
+
 
     bool validateMessage(JsonObject message) {
         if (_manifesto == nullptr || _manifesto->talker == nullptr) return false;

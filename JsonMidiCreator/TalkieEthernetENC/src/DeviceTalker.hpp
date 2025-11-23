@@ -24,7 +24,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 
 
-
 class DeviceTalker {
 private:
     
@@ -103,10 +102,10 @@ public:
 
 private:
 
-    Talk* talk = nullptr;
-    uint8_t channel = 0;
-    bool (DeviceTalker::*echo)(JsonObject) = nullptr;
-    bool (DeviceTalker::*error)(JsonObject) = nullptr;
+    Talk* _talk = nullptr;
+    uint8_t _channel = 0;
+    bool (DeviceTalker::*_echo)(JsonObject) = nullptr;
+    bool (DeviceTalker::*_error)(JsonObject) = nullptr;
 
     uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp
     String _set_name = "";              // Keeps the talker name
@@ -169,15 +168,56 @@ public:
 
     
     const char* get_name() {
-        if (talk != nullptr) return talk->name;
+        if (_talk != nullptr) return _talk->name;
         return nullptr;
     }
-    void set_channel(uint8_t channel) { this->channel = channel; }
-    uint8_t get_channel() { return this->channel; }
+    void set_channel(uint8_t channel) { _channel = channel; }
+    uint8_t get_channel() { return _channel; }
 
 
     
-    void processReceivedData(const char* received_data, const size_t data_len) {
+    bool sendMessage(JsonObject message, bool as_reply = false, BroadcastSocket* socket = nullptr) {
+        if (socket == nullptr) return false;
+        
+        // Directly nest the editable message under "m"
+        if (message.isNull()) {
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.println(F("Error: Null message received"));
+            #endif
+            return false;
+        }
+
+        // Set default 'id' field if missing
+        if (!message["i"].is<uint32_t>()) {
+            message["i"] = generateMessageId();
+        }
+
+        if (_talk != nullptr)
+            message["f"] = _talk->name;
+
+        DeviceTalker::setChecksum(message);
+
+        size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        if (len == 0) {
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.println(F("Error: Serialization failed"));
+            #endif
+        } else {
+            
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.print(F("T: "));
+            serializeJson(message, Serial);
+            Serial.println();  // optional: just to add a newline after the JSON
+            #endif
+
+            return socket->send(_buffer, len, as_reply);
+        }
+        return false;
+    }
+
+
+    
+    void receiveData(const char* received_data, const size_t data_len) {
         
 
         // In theory, a UDP packet on a local area network (LAN) could survive
