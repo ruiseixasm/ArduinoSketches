@@ -203,6 +203,11 @@ private:
 
 public:
 
+    // Explicit default constructor
+    JsonTalkie() = default;
+    
+
+
     void set_talkers(DeviceTalker* device_talkers, size_t count) {
         _device_talkers = device_talkers;
         _talker_count = count;

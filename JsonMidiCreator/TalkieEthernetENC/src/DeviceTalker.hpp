@@ -57,6 +57,9 @@ private:
 
 public:
 
+    // Explicit default constructor
+    DeviceTalker() = default;
+    
     Run* get_run(const char* cmd) {
         for (size_t index = 0; index < runSize; ++index) {
             if (strcmp(cmd, runCommands[index].name) == 0) {
