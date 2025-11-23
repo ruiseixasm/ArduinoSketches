@@ -12,7 +12,7 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#include "BroadcastSocket.hpp"  // MUST include the full definition!
+#include "BroadcastSocket.h"  // MUST include the full definition!
 #include "JsonTalker.h"    // Include ArduinoJson Library
 
 

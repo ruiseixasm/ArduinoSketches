@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_ETHERNETENC_HPP
 #define BROADCAST_SOCKET_ETHERNETENC_HPP
 
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 
     // writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
 

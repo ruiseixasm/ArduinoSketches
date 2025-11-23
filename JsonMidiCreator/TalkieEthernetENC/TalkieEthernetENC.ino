@@ -248,9 +248,11 @@ void setup() {
 }
 
 void loop() {
-    // // Maintain DHCP lease (important for long-running applications)
-    // Ethernet.maintain();
+    // Maintain DHCP lease (important for long-running applications)
+    Ethernet.maintain();
     
+    // broadcast_socket.receive();
+
     // json_talkie.listen();
     // single_player.listen();
     // player_1.listen();
