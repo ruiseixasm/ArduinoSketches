@@ -45,8 +45,7 @@ bool JsonTalker::sendMessage(BroadcastSocket* socket, JsonObject message, bool a
         message["i"] = generateMessageId();
     }
 
-    if (_talk != nullptr)
-        message["f"] = _talk->name;
+    message["f"] = _talk.name;
 
     JsonTalker::setChecksum(message);
 
@@ -173,8 +172,7 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
     switch (message_code)
     {
     case MessageCode::talk:
-        if (_talk != nullptr)
-            message["d"] = _talk->desc;
+        message["d"] = _talk.desc;
         sendMessage(socket, message, true);
         break;
     

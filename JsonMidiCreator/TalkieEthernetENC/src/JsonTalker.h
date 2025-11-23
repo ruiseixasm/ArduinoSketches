@@ -85,7 +85,9 @@ public:
 
 private:
 
-    Talk* _talk = nullptr;
+    Talk _talk =  {
+        "JsonTalker", "I'm the default Arduino Talker!"
+    };
     uint8_t _channel = 0;
     uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp
     String _set_name = "";              // Keeps the talker name
@@ -177,8 +179,7 @@ public:
 
     
     const char* get_name() {
-        if (_talk != nullptr) return _talk->name;
-        return nullptr;
+        return _talk.name;
     }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }

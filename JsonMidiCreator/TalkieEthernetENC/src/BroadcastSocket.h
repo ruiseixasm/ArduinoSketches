@@ -42,7 +42,8 @@ protected:
 
         if (received_checksum == checksum) {
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("C: Validated Checksum!"));
+            Serial.print(F("C: Validated Checksum of "));
+            Serial.println(checksum);
             #endif
             // Triggers all Talkers to processes the received data
             for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
@@ -50,7 +51,8 @@ protected:
             }
         } else {
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("C: Validation of Checksum FAILED!!"));
+            Serial.print(F("C: Validation of Checksum FAILED!!"));
+            Serial.println(checksum);
             #endif
         }
         return length;
