@@ -35,9 +35,9 @@ bool JsonTalker::sendMessage(BroadcastSocket* socket, JsonObject message, bool a
     
     // Directly nest the editable message under "m"
     if (message.isNull()) {
-        #ifdef DEVICE_TALKER_DEBUG
-        Serial.println(F("Error: Null message received"));
-        #endif
+        // #ifdef DEVICE_TALKER_DEBUG
+        // Serial.println(F("Error: Null message received"));
+        // #endif
         return false;
     }
 
@@ -52,16 +52,16 @@ bool JsonTalker::sendMessage(BroadcastSocket* socket, JsonObject message, bool a
 
     size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
     if (len == 0) {
-        #ifdef DEVICE_TALKER_DEBUG
-        Serial.println(F("Error: Serialization failed"));
-        #endif
+        // #ifdef DEVICE_TALKER_DEBUG
+        // Serial.println(F("Error: Serialization failed"));
+        // #endif
     } else {
         
-        #ifdef DEVICE_TALKER_DEBUG
-        Serial.print(F("T: "));
-        serializeJson(message, Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
-        #endif
+        // #ifdef DEVICE_TALKER_DEBUG
+        // Serial.print(F("T: "));
+        // serializeJson(message, Serial);
+        // Serial.println();  // optional: just to add a newline after the JSON
+        // #endif
 
         return socket->send(_buffer, len, as_reply);
     }
@@ -74,9 +74,9 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
     
     if (socket != nullptr) _socket = socket;
     
-    #ifdef DEVICE_TALKER_DEBUG
-    Serial.println(F("Validating..."));
-    #endif
+    // #ifdef DEVICE_TALKER_DEBUG
+    // Serial.println(F("Validating..."));
+    // #endif
     
     // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
     #if ARDUINOJSON_VERSION_MAJOR >= 7
@@ -103,21 +103,21 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
     //     5 - Set command arrived too late
 
     if (!message["m"].is<int>()) {
-        #ifdef DEVICE_TALKER_DEBUG
-        Serial.println(F("Message \"m\" is NOT an integer!"));
-        #endif
+        // #ifdef DEVICE_TALKER_DEBUG
+        // Serial.println(F("Message \"m\" is NOT an integer!"));
+        // #endif
         return;
     }
     if (!message["f"].is<String>()) {
-        #ifdef DEVICE_TALKER_DEBUG
-        Serial.println(0);
-        #endif
+        // #ifdef DEVICE_TALKER_DEBUG
+        // Serial.println(0);
+        // #endif
         return;
     }
     if (!message["i"].is<uint32_t>()) {
-        #ifdef DEVICE_TALKER_DEBUG
-        Serial.println(4);
-        #endif
+        // #ifdef DEVICE_TALKER_DEBUG
+        // Serial.println(4);
+        // #endif
         message["m"] = 7;   // error
         message["t"] = message["f"];
         message["e"] = 4;
@@ -136,11 +136,11 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
 
     if (true) {
 
-        #ifdef DEVICE_TALKER_DEBUG
-        Serial.print(F("Listened: "));
-        serializeJson(message, Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
-        #endif
+        // #ifdef DEVICE_TALKER_DEBUG
+        // Serial.print(F("Listened: "));
+        // serializeJson(message, Serial);
+        // Serial.println();  // optional: just to add a newline after the JSON
+        // #endif
 
         // Only set messages are time checked
         if (message["m"].as<int>() == static_cast<int>(MessageCode::set)) {  // 3 - set
@@ -152,18 +152,16 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
     }
 
 
-
     // Echo codes:
     //     0 - ROGER
     //     1 - UNKNOWN
     //     2 - NONE
 
-    #ifdef JSON_TALKIE_DEBUG
-    Serial.print(F("Process: "));
-    serializeJson(message, Serial);
-    Serial.println();  // optional: just to add a newline after the JSON
-    #endif
-
+    // #ifdef DEVICE_TALKER_DEBUG
+    // Serial.print(F("Process: "));
+    // serializeJson(message, Serial);
+    // Serial.println();  // optional: just to add a newline after the JSON
+    // #endif
 
 
     MessageCode message_code = static_cast<MessageCode>(message["m"].as<int>());
@@ -320,10 +318,10 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
     case MessageCode::channel:
         if (message["b"].is<uint8_t>()) {
 
-            #ifdef JSON_TALKIE_DEBUG
-            Serial.print(F("Channel B value is an <uint8_t>: "));
-            Serial.println(message["b"].is<uint8_t>());
-            #endif
+            // #ifdef DEVICE_TALKER_DEBUG
+            // Serial.print(F("Channel B value is an <uint8_t>: "));
+            // Serial.println(message["b"].is<uint8_t>());
+            // #endif
 
             _channel = message["b"].as<uint8_t>();
         }

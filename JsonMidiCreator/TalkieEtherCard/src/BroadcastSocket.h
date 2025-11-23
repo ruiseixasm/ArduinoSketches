@@ -38,6 +38,11 @@ protected:
     size_t triggerTalkers(char* buffer, size_t length) {
 
         if (length > 3*4 + 2) {
+            
+            #ifdef BROADCASTSOCKET_DEBUG
+            Serial.print(F("C: Total Talkers count: "));
+            Serial.println(_talker_count);
+            #endif
 
             uint16_t received_checksum = BroadcastSocket::readChecksum(buffer, &length);
             uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);

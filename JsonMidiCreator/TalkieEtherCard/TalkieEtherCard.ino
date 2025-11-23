@@ -75,17 +75,17 @@ void setup() {
     delay(2000);    // Just to give some time to Serial
 
     // Saving string in PROGMEM (flash) to save RAM memory
-    Serial.println("\n\nOpening the Socket...");
+    Serial.println(F("\n\nOpening the Socket..."));
     
     // MAC and CS pin in constructor
     // SS is a macro variable normally equal to 10
     if (!ether.begin(ETHERNET_BUFFER_SIZE, mac, SS)) {
-        Serial.println("Failed to access ENC28J60");
+        Serial.println(F("Failed to access ENC28J60"));
         while (1);
     }
     // Set dynamic IP (via DHCP)
     if (!ether.dhcpSetup()) {
-        Serial.println("DHCP failed");
+        Serial.println(F("DHCP failed"));
         while (1);
     }
     // Makes sure it allows broadcast
@@ -96,7 +96,7 @@ void setup() {
     broadcast_socket.set_port(5005);
 
 
-    Serial.println("Talker ready");
+    Serial.println(F("Socket ready"));
 
     #ifndef BROADCAST_SOCKET_SERIAL_HPP
     pinMode(buzzer_pin, OUTPUT);
@@ -108,7 +108,7 @@ void setup() {
     digitalWrite(LED_BUILTIN, HIGH);
     digitalWrite(LED_BUILTIN, LOW);
 
-    Serial.println("Sending JSON...");
+    Serial.println(F("Sending JSON..."));
 }
 
 void loop() {
@@ -214,7 +214,7 @@ bool process_response(JsonObject json_message) {
     } else if (json_message["d"].is<String>()) {
         Serial.println(json_message["d"].as<String>());
     } else {
-        Serial.println("Empty echo received!");
+        Serial.println(F("Empty echo received!"));
     }
     return false;
 }

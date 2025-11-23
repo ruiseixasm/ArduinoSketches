@@ -19,6 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCAST_ETHERCARD_DEBUG
+
 // #define ENABLE_DIRECT_ADDRESSING
 
 
@@ -46,6 +47,10 @@ private:
             memcpy(_source_ip, src_ip, 4);
             if (_self_instance) {
                 _data_length = _self_instance->triggerTalkers(_received_data, length);
+            } else {
+                #ifdef BROADCAST_ETHERCARD_DEBUG
+                Serial.println(F("Instance is NULL!"));
+                #endif
             }
         }
     }
@@ -71,17 +76,17 @@ public:
     bool send(const char* data, size_t size, bool as_reply = false) override {
         uint8_t broadcastIp[4] = {255, 255, 255, 255};
         
+        #ifdef BROADCAST_ETHERCARD_DEBUG
+        Serial.print(F("S: "));
+        Serial.write(data, size);
+        Serial.println();
+        #endif
+
         #ifdef ENABLE_DIRECT_ADDRESSING
         ether.sendUdp(data, size, _port, as_reply ? _source_ip : broadcastIp, _port);
         #else
         (void)as_reply; // Silence unused parameter warning
         ether.sendUdp(data, size, _port, broadcastIp, _port);
-        #endif
-
-        #ifdef BROADCAST_ETHERCARD_DEBUG
-        Serial.print(F("S: "));
-        Serial.write(data, size);
-        Serial.println();
         #endif
 
         return true;
@@ -98,6 +103,7 @@ public:
     // Modified methods to work with singleton
     void set_port(uint16_t port) override {
         _port = port;
+        _self_instance = this;
         ether.udpServerListenOnPort(staticCallback, _port);
     }
 };
