@@ -193,8 +193,10 @@ private:
 
     // Configuration parameters
     BroadcastSocket* _socket = nullptr;
-    DeviceTalker* _device_talkers = nullptr;    // A list of Talkers
-    size_t _talker_count = 0;
+
+    const DeviceTalker* _device_talkers = nullptr;    // A list of Talkers
+    const size_t _talker_count = 0;
+
     Manifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
     uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp
@@ -206,12 +208,9 @@ public:
     // Explicit default constructor
     JsonTalkie() = default;
     
+    JsonTalkie(DeviceTalker* device_talkers, size_t talker_count)
+        : _device_talkers(device_talkers), _talker_count(talker_count) {}
 
-
-    void set_talkers(DeviceTalker* device_talkers, size_t count) {
-        _device_talkers = device_talkers;
-        _talker_count = count;
-    }
 
     void set_manifesto(Manifesto* manifesto) {
         _manifesto = manifesto;
