@@ -164,7 +164,7 @@ public:
         } else if (json_message["d"].is<String>()) {
             Serial.println(json_message["d"].as<String>());
         } else {
-            Serial.println("Empty echo received!");
+            Serial.println(F("Empty echo received!"));
         }
         return false;
     }
@@ -177,7 +177,7 @@ public:
         } else if (json_message["d"].is<String>()) {
             Serial.println(json_message["d"].as<String>());
         } else {
-            Serial.println("Empty error received!");
+            Serial.println(F("Empty error received!"));
         }
         return false;
     }

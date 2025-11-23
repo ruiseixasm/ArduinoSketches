@@ -152,18 +152,16 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
     }
 
 
-
     // Echo codes:
     //     0 - ROGER
     //     1 - UNKNOWN
     //     2 - NONE
 
-    #ifdef JSON_TALKIE_DEBUG
+    #ifdef DEVICE_TALKER_DEBUG
     Serial.print(F("Process: "));
     serializeJson(message, Serial);
     Serial.println();  // optional: just to add a newline after the JSON
     #endif
-
 
 
     MessageCode message_code = static_cast<MessageCode>(message["m"].as<int>());
@@ -320,7 +318,7 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
     case MessageCode::channel:
         if (message["b"].is<uint8_t>()) {
 
-            #ifdef JSON_TALKIE_DEBUG
+            #ifdef DEVICE_TALKER_DEBUG
             Serial.print(F("Channel B value is an <uint8_t>: "));
             Serial.println(message["b"].is<uint8_t>());
             #endif
