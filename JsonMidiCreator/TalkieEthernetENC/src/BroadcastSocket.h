@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonTalker.h"
 
 
-// #define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -41,10 +41,17 @@ protected:
         uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);
 
         if (received_checksum == checksum) {
+            #ifdef BROADCASTSOCKET_DEBUG
+            Serial.println(F("C: Validated Checksum!"));
+            #endif
             // Triggers all Talkers to processes the received data
             for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
                 _device_talkers[talker_i].processData(this, buffer, length);
             }
+        } else {
+            #ifdef BROADCASTSOCKET_DEBUG
+            Serial.println(F("C: Validation of Checksum FAILED!!"));
+            #endif
         }
         return length;
     }

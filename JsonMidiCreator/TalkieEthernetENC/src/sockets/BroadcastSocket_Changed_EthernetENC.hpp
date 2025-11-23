@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../Changed_EthernetENC/src/EthernetUdp.h"    // Forces the correct usage of EthernetUdp.h
 
 
-// #define BROADCAST_ETHERNETENC_DEBUG
+#define BROADCAST_ETHERNETENC_DEBUG
 #define ENABLE_DIRECT_ADDRESSING
 
 
