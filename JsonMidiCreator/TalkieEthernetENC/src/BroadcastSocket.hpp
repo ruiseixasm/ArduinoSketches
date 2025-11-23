@@ -39,7 +39,7 @@ protected:
             // Triggers all Talkers to processes the received data
             for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
                 JsonTalker* talker = _device_talkers[talker_i];
-                talker->receiveData(this, buffer, length);
+                talker->processData(this, buffer, length);
             }
         }
         return length;

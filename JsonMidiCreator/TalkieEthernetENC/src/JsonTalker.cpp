@@ -59,7 +59,7 @@ bool JsonTalker::sendMessage(BroadcastSocket* socket, JsonObject message, bool a
 
 
     
-void JsonTalker::receiveData(BroadcastSocket* socket, const char* received_data, const size_t data_len) {
+void JsonTalker::processData(BroadcastSocket* socket, const char* received_data, const size_t data_len) {
     
     
     #ifdef DEVICE_TALKER_DEBUG

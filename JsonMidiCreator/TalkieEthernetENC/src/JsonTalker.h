@@ -205,7 +205,7 @@ public:
 
     
     bool sendMessage(BroadcastSocket* socket, JsonObject message, bool as_reply = false);
-    void receiveData(BroadcastSocket* socket, const char* received_data, const size_t data_len);
+    void processData(BroadcastSocket* socket, const char* received_data, const size_t data_len);
 
 
 
