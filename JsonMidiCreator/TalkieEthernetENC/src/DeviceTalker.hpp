@@ -347,96 +347,94 @@ public:
         switch (message_code)
         {
         case MessageCode::talk:
-            message["w"] = 0;
+            message["w"] = message["m"].as<int>();
             if (_talk != nullptr)
                 message["d"] = _talk->desc;
             sendMessage(socket, message, true);
             break;
         
         case MessageCode::list:
-            // {   // Because of none_list !!!
-            //     bool none_list = true;
-            //     message["w"] = 2;
-            //     for (size_t run_i = 0; run_i < this->runs_count(); ++run_i) {
-            //         none_list = false;
-            //         message["n"] = this->runCommands[run_i].name;
-            //         message["d"] = this->runCommands[run_i].desc;
-            //         sendMessage(socket, message, true);
-            //     }
-            //     message["w"] = 3;
-            //     for (size_t set_i = 0; set_i < this->sets_count(); ++set_i) {
-            //         none_list = false;
-            //         message["n"] = this->setCommands[set_i].name;
-            //         message["d"] = this->setCommands[set_i].desc;
-            //         sendMessage(socket, message, true);
-            //     }
-            //     message["w"] = 4;
-            //     for (size_t get_i = 0; get_i < this->gets_count(); ++get_i) {
-            //         none_list = false;
-            //         message["n"] = this->getCommands[get_i].name;
-            //         message["d"] = this->getCommands[get_i].desc;
-            //         sendMessage(socket, message, true);
-            //     }
-            //     if(none_list) {
-            //         message["g"] = 2;       // NONE
-            //     }
-            // }
+            {   // Because of none_list !!!
+                bool none_list = true;
+                message["w"] = static_cast<int>(MessageCode::run);
+                for (size_t run_i = 0; run_i < this->runs_count(); ++run_i) {
+                    none_list = false;
+                    message["n"] = this->runCommands[run_i].name;
+                    message["d"] = this->runCommands[run_i].desc;
+                    sendMessage(socket, message, true);
+                }
+                message["w"] = static_cast<int>(MessageCode::set);
+                for (size_t set_i = 0; set_i < this->sets_count(); ++set_i) {
+                    none_list = false;
+                    message["n"] = this->setCommands[set_i].name;
+                    message["d"] = this->setCommands[set_i].desc;
+                    sendMessage(socket, message, true);
+                }
+                message["w"] = static_cast<int>(MessageCode::get);
+                for (size_t get_i = 0; get_i < this->gets_count(); ++get_i) {
+                    none_list = false;
+                    message["n"] = this->getCommands[get_i].name;
+                    message["d"] = this->getCommands[get_i].desc;
+                    sendMessage(socket, message, true);
+                }
+                if(none_list) {
+                    message["g"] = 2;       // NONE
+                }
+            }
             break;
         
         case MessageCode::run:
-            // message["w"] = 2;
-            // if (message["n"].is<String>()) {
+            message["w"] = message["m"].as<int>();
+            if (message["n"].is<String>()) {
 
-            //     const DeviceTalker::Run* run = this->run(message["n"]);
-            //     if (run == nullptr) {
-            //         message["g"] = 1;   // UNKNOWN
-            //         sendMessage(socket, message, true);
-            //     } else {
-            //         message["g"] = 0;       // ROGER
-            //         sendMessage(socket, message, true);
-            //         // No memory leaks because message_doc exists in the listen() method stack
-            //         message.remove("g");
-            //         (this->*(run->method))(message);
-            //     }
-            // }
+                const DeviceTalker::Run* run = this->run(message["n"]);
+                if (run == nullptr) {
+                    message["g"] = 1;   // UNKNOWN
+                    sendMessage(socket, message, true);
+                } else {
+                    message["g"] = 0;       // ROGER
+                    sendMessage(socket, message, true);
+                    // No memory leaks because message_doc exists in the listen() method stack
+                    message.remove("g");
+                    (this->*(run->method))(message);
+                }
+            }
             break;
         
         case MessageCode::set:
-            // message["w"] = 3;
-            // if (message["n"].is<String>() && message["v"].is<long>()) {
+            message["w"] = message["m"].as<int>();
+            if (message["n"].is<String>() && message["v"].is<long>()) {
 
-            //     const DeviceTalker::Set* set = this->set(message["n"]);
-            //     if (set == nullptr) {
-            //         message["g"] = 1;   // UNKNOWN
-            //         sendMessage(socket, message, true);
-            //     } else {
-            //         message["g"] = 0;       // ROGER
-            //         sendMessage(socket, message, true);
-            //         // No memory leaks because message_doc exists in the listen() method stack
-            //         message.remove("g");
-            //         (this->*(set->method))(message, message["v"].as<long>());
-            //     }
-            // }
+                const DeviceTalker::Set* set = this->set(message["n"]);
+                if (set == nullptr) {
+                    message["g"] = 1;   // UNKNOWN
+                    sendMessage(socket, message, true);
+                } else {
+                    message["g"] = 0;       // ROGER
+                    sendMessage(socket, message, true);
+                    // No memory leaks because message_doc exists in the listen() method stack
+                    message.remove("g");
+                    (this->*(set->method))(message, message["v"].as<long>());
+                }
+            }
             break;
         
         case MessageCode::get:
-            // message["w"] = 4;
-            // if (message["n"].is<String>()) {
-            //     message["w"] = message_code;
-
-            //     const DeviceTalker::Get* get = this->get(message["n"]);
-            //     if (get == nullptr) {
-            //         message["g"] = 1;   // UNKNOWN
-            //         sendMessage(socket, message, true);
-            //     } else {
-            //         message["g"] = 0;       // ROGER
-            //         sendMessage(socket, message, true);
-            //         // No memory leaks because message_doc exists in the listen() method stack
-            //         message.remove("g");
-            //         message["v"] = (this->*(get->method))(message);
-            //         sendMessage(socket, message, true);
-            //     }
-            // }
+            message["w"] = message["m"].as<int>();
+            if (message["n"].is<String>()) {
+                const DeviceTalker::Get* get = this->get(message["n"]);
+                if (get == nullptr) {
+                    message["g"] = 1;   // UNKNOWN
+                    sendMessage(socket, message, true);
+                } else {
+                    message["g"] = 0;       // ROGER
+                    sendMessage(socket, message, true);
+                    // No memory leaks because message_doc exists in the listen() method stack
+                    message.remove("g");
+                    message["v"] = (this->*(get->method))(message);
+                    sendMessage(socket, message, true);
+                }
+            }
             break;
         
         case MessageCode::sys:
