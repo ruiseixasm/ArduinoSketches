@@ -403,56 +403,6 @@ private:
     }
     
 
-    bool validateChecksum(JsonObject message) {
-        
-        uint16_t message_checksum = 0;
-        if (message["c"].is<uint16_t>()) {
-            message_checksum = message["c"].as<uint16_t>();
-        }
-        
-        size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-        
-        // ASCII byte values:
-        // 	'c' = 99
-        // 	':' = 58
-        // 	'"' = 34
-        // 	'0' = 48
-        // 	'9' = 57
-
-        // Has to be pre processed (linearly)
-        bool at_c0 = false;
-        size_t buffer_i = 4;
-        for (size_t i = buffer_i; i < len; ++i) {
-            if (!at_c0 && _buffer[i - 3] == 'c' && _buffer[i - 1] == ':' && _buffer[i - 4] == '"' && _buffer[i - 2] == '"') {
-                at_c0 = true;
-                _buffer[buffer_i++] = '0';
-                continue;
-            } else if (at_c0) {
-                if (_buffer[i] < '0' || _buffer[i] > '9') {
-                    at_c0 = false;
-                } else {
-                    continue;
-                }
-            }
-            _buffer[buffer_i] = _buffer[i]; // Does an offset
-            buffer_i++;
-        }
-        len = buffer_i;
-
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = _buffer[i] << 8;
-            if (i + 1 < len) {
-                chunk |= _buffer[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        message["c"] = checksum;
-        return message_checksum == checksum;
-    }
-
-
     bool validateMessage(JsonObject message) {
         if (_manifesto == nullptr || _manifesto->device == nullptr) return false;
         #ifdef JSONTALKIE_DEBUG
