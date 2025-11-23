@@ -21,7 +21,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 
-#define JSONTALKIE_DEBUG
+// #define JSONTALKIE_DEBUG
 
 
 // Keys:
