@@ -96,8 +96,7 @@ public:
             #endif
             
             _source_ip = _udp->remoteIP();
-            return static_cast<size_t>(length);
-            // return triggerTalkers(buffer, static_cast<size_t>(length));
+            return triggerTalkers(buffer, static_cast<size_t>(length));
         }
         return 0;   // nothing received
     }
