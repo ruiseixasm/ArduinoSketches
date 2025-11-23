@@ -340,7 +340,7 @@ public:
                 #endif
 
                 // Only set messages are time checked
-                if (message["m"].as<int>() == 3) {  // 3 - set
+                if (message["m"].as<int>() == MessageCode::set) {  // 3 - set
                     _sent_set_time[0] = message["i"].as<uint32_t>();
                     _sent_set_time[1] = generateMessageId();
                     _set_name = message["f"].as<String>(); // Explicit conversion
@@ -466,16 +466,6 @@ private:
             #endif
             return false;
         }
-        if (!message["c"].is<uint16_t>()) {
-            #ifdef JSONTALKIE_DEBUG
-            Serial.println(1);
-            #endif
-            message["m"] = 7;   // error
-            message["t"] = message["f"];
-            message["e"] = 1;
-            talk(message, true);
-            return false;
-        }
         if (!message["m"].is<int>()) {
             #ifdef JSONTALKIE_DEBUG
             Serial.println(3);
@@ -498,7 +488,7 @@ private:
         }
         // Only set messages are time checked
         // In theory, a UDP packet on a local area network (LAN) could survive for about 4.25 minutes (255 seconds).
-        if (_check_set_time && message["m"].as<int>() == 3 && message["f"].as<String>() == _set_name) {   // 3 - set
+        if (_check_set_time && message["m"].as<int>() == MessageCode::set && message["f"].as<String>() == _set_name) {   // 3 - set
             uint32_t delta = _sent_set_time[0] - message["i"].as<uint32_t>();
             if (delta < 255 && delta != 0) {
                 #ifdef JSONTALKIE_DEBUG
