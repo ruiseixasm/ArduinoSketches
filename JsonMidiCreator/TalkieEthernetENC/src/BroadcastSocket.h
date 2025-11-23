@@ -60,7 +60,13 @@ protected:
 
 
     BroadcastSocket(JsonTalker* device_talkers, size_t talker_count)
-        : _device_talkers(device_talkers), _talker_count(talker_count) {}
+        : _device_talkers(device_talkers), _talker_count(talker_count) {
+            
+            // Sets this socket on all Talkers to processes the received data
+            for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                _device_talkers[talker_i].setSocket(this);
+            }
+        }
 
 
 public:

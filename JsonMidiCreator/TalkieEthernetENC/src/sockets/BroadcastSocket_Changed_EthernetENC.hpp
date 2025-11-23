@@ -39,7 +39,7 @@ private:
     EthernetUDP* _udp = nullptr;
 
 protected:
-
+    // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
     BroadcastSocket_EthernetENC(JsonTalker* device_talkers, size_t talker_count)
         : BroadcastSocket(device_talkers, talker_count) {}

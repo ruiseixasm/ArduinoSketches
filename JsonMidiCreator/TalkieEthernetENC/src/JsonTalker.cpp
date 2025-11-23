@@ -31,6 +31,7 @@ uint16_t JsonTalker::setChecksum(JsonObject message) {
 
 bool JsonTalker::sendMessage(BroadcastSocket* socket, JsonObject message, bool as_reply) {
     if (socket == nullptr) return false;
+    _socket = socket;
     
     // Directly nest the editable message under "m"
     if (message.isNull()) {
@@ -71,6 +72,7 @@ bool JsonTalker::sendMessage(BroadcastSocket* socket, JsonObject message, bool a
     
 void JsonTalker::processData(BroadcastSocket* socket, const char* received_data, const size_t data_len) {
     
+    if (socket != nullptr) _socket = socket;
     
     #ifdef DEVICE_TALKER_DEBUG
     Serial.println(F("Validating..."));

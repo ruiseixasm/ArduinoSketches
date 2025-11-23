@@ -30,6 +30,12 @@ https://github.com/ruiseixasm/JsonTalkie
 // #include <Copy_JsonTalkie.hpp>
 // #endif
 
+// LED_BUILTIN is already defined by ESP32 platform
+// Typically GPIO2 for most ESP32 boards
+#ifndef LED_BUILTIN
+  #define LED_BUILTIN 2  // Fallback definition if not already defined
+#endif
+
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
 #include "src/JsonTalker.h"
@@ -87,12 +93,6 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01};
 
 // Network settings
 #define PORT 5005   // UDP port
-
-// LED_BUILTIN is already defined by ESP32 platform
-// Typically GPIO2 for most ESP32 boards
-#ifndef LED_BUILTIN
-  #define LED_BUILTIN 2  // Fallback definition if not already defined
-#endif
 
 
 

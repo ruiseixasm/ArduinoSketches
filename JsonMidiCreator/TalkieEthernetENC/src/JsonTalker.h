@@ -75,13 +75,52 @@ public:
 
 private:
 
+    BroadcastSocket* _socket = nullptr;
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
     uint8_t _channel = 0;
 
-    const JsonTalker::Run runCommands[0] = {
+    
+    long total_runs = 0;
+    bool is_led_on = false;  // keep track of state yourself, by default it's off
+
+    bool led_on(JsonObject json_message) {
+        if (!is_led_on) {
+        #ifdef LED_BUILTIN
+            digitalWrite(LED_BUILTIN, HIGH);
+        #endif
+            is_led_on = true;
+            total_runs++;
+        } else {
+            json_message["r"] = "Already On!";
+            if (_socket != nullptr)
+                this->sendMessage(_socket, json_message);
+            return false;
+        }
+        return true;
+    }
+
+    bool led_off(JsonObject json_message) {
+        if (is_led_on) {
+        #ifdef LED_BUILTIN
+            digitalWrite(LED_BUILTIN, LOW);
+        #endif
+            is_led_on = false;
+            total_runs++;
+        } else {
+            json_message["r"] = "Already Off!";
+            if (_socket != nullptr)
+                this->sendMessage(_socket, json_message);
+            return false;
+        }
+        return true;
+    }
+
+
+    const JsonTalker::Run runCommands[2] = {
         // A list of Run structures
-        // {"buzz", "Triggers buzzing", buzz}
+        {"on", "Turns the blue led ON", &JsonTalker::led_on},
+        {"off", "Turns the blue led OFF", &JsonTalker::led_off}
     };
 
     const JsonTalker::Set setCommands[0] = {
@@ -107,6 +146,9 @@ public:
     JsonTalker(const char* name, const char* desc)
         : _name(name), _desc(desc) {}
 
+    void setSocket(BroadcastSocket* socket) {
+        _socket = socket;
+    }
 
     bool echo(JsonObject json_message) {
         Serial.print(json_message["f"].as<String>());
