@@ -47,23 +47,13 @@ public:
         channel
     };
 
-    
-
     static uint16_t setChecksum(JsonObject message);
     
-
     static uint32_t generateMessageId() {
         // Generates a 32-bit wrapped timestamp ID using overflow.
         return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
     }
 
-
-
-
-    struct Talk {
-        const char* name;      // Name of the Talker
-        const char* desc;      // Description of the Device
-    };
 
     struct Run {
         const char* name;      // "buzz", "print", etc.
@@ -88,11 +78,6 @@ private:
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
     uint8_t _channel = 0;
-    uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp
-    String _set_name = "";              // Keeps the talker name
-    bool _check_set_time = false;
-
-public:
 
     const JsonTalker::Run runCommands[0] = {
         // A list of Run structures
@@ -109,17 +94,18 @@ public:
         // {"bpm_10", "Gets the Tempo in BPM x 10", get_bpm_10}
     };
 
+    uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp
+    String _set_name = "";              // Keeps the talker name
+    bool _check_set_time = false;
 
 
-
+public:
 
     // Explicit default constructor
     JsonTalker() = delete;
-    
-    
+        
     JsonTalker(const char* name, const char* desc)
         : _name(name), _desc(desc) {}
-
 
 
     bool echo(JsonObject json_message) {
