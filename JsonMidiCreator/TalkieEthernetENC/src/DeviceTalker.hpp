@@ -46,6 +46,7 @@ public:
 private:
 
     Talk* talk = nullptr;
+    uint8_t channel = 0;
     bool (DeviceTalker::*echo)(JsonObject) = nullptr;
     bool (DeviceTalker::*error)(JsonObject) = nullptr;
 
@@ -100,6 +101,13 @@ public:
         return nullptr;
     }
 
+    
+    const char* get_name() {
+        if (talk != nullptr) return talk->name;
+        return nullptr;
+    }
+    void set_channel(uint8_t channel) { this->channel = channel; }
+    uint8_t get_channel() { return this->channel; }
 
 
 };
