@@ -15,7 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define JSON_TALKIE_HPP
 
 #include "BroadcastSocket.hpp"
-#include "JsonTalker.hpp"
+#include "JsonTalker.h"
 
 
 // Readjust if absolutely necessary
