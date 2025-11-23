@@ -15,7 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define JSON_TALKIE_HPP
 
 #include "BroadcastSocket.hpp"
-#include "DeviceTalker.hpp"
+#include "JsonTalker.hpp"
 
 
 // Readjust if absolutely necessary
@@ -193,7 +193,7 @@ private:
     // Configuration parameters
     BroadcastSocket* _socket = nullptr;
 
-    DeviceTalker** _device_talkers = nullptr;   // A list of Talkers (pointers)
+    JsonTalker** _device_talkers = nullptr;   // A list of Talkers (pointers)
     size_t _talker_count = 0;
 
     Manifesto* _manifesto = nullptr;
@@ -207,7 +207,7 @@ public:
     // Explicit default constructor
     JsonTalkie() = default;
     
-    JsonTalkie(DeviceTalker** device_talkers, size_t talker_count)
+    JsonTalkie(JsonTalker** device_talkers, size_t talker_count)
         : _device_talkers(device_talkers), _talker_count(talker_count) {}
 
 
@@ -247,7 +247,7 @@ public:
         if (_manifesto != nullptr && _manifesto->talker != nullptr)
             message["f"] = _manifesto->talker->name;
 
-        DeviceTalker::setChecksum(message);
+        JsonTalker::setChecksum(message);
 
         size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (len == 0) {
@@ -296,7 +296,7 @@ public:
                 Serial.print(data_checksum);
                 #endif
 
-                uint16_t checksum = DeviceTalker::getChecksum(_received_data, _data_len);
+                uint16_t checksum = JsonTalker::getChecksum(_received_data, _data_len);
 
                 #ifdef JSON_TALKIE_DEBUG
                 Serial.print("  |  ");
@@ -311,7 +311,7 @@ public:
                 } else {
                     // Call Talkers to processes the validated received_data
                     for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                        DeviceTalker* talker = _device_talkers[talker_i];
+                        JsonTalker* talker = _device_talkers[talker_i];
                         talker->receiveData(_socket, _received_data, _data_len);
                     }
                 }
@@ -498,7 +498,7 @@ private:
                 bool none_list = true;
                 // Processes the Talkers
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                    DeviceTalker* talker = _device_talkers[talker_i];
+                    JsonTalker* talker = _device_talkers[talker_i];
                     message["w"] = 2;
                     for (size_t run_i = 0; run_i < talker->runs_count(); ++run_i) {
                         none_list = false;
@@ -532,9 +532,9 @@ private:
             if (message["n"].is<String>()) {
 
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                    DeviceTalker* talker = _device_talkers[talker_i];
+                    JsonTalker* talker = _device_talkers[talker_i];
 
-                    const DeviceTalker::Run* run = talker->run(message["n"]);
+                    const JsonTalker::Run* run = talker->run(message["n"]);
                     if (run == nullptr) {
                         message["g"] = 1;   // UNKNOWN
                         talk(message, true);
@@ -554,9 +554,9 @@ private:
             if (message["n"].is<String>() && message["v"].is<long>()) {
 
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                    DeviceTalker* talker = _device_talkers[talker_i];
+                    JsonTalker* talker = _device_talkers[talker_i];
 
-                    const DeviceTalker::Set* set = talker->set(message["n"]);
+                    const JsonTalker::Set* set = talker->set(message["n"]);
                     if (set == nullptr) {
                         message["g"] = 1;   // UNKNOWN
                         talk(message, true);
@@ -577,9 +577,9 @@ private:
                 message["w"] = message_code;
 
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                    DeviceTalker* talker = _device_talkers[talker_i];
+                    JsonTalker* talker = _device_talkers[talker_i];
 
-                    const DeviceTalker::Get* get = talker->get(message["n"]);
+                    const JsonTalker::Get* get = talker->get(message["n"]);
                     if (get == nullptr) {
                         message["g"] = 1;   // UNKNOWN
                         talk(message, true);

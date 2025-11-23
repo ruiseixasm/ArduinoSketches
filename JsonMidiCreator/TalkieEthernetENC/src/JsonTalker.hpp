@@ -26,7 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket;
 
 
-class DeviceTalker {
+class JsonTalker {
 private:
     
     // Shared processing data buffer Not reentrant, received data unaffected
@@ -87,19 +87,19 @@ public:
     struct Run {
         const char* name;      // "buzz", "print", etc.
         const char* desc;      // Description
-        bool (DeviceTalker::*method)(JsonObject);
+        bool (JsonTalker::*method)(JsonObject);
     };
 
     struct Set {
         const char* name;      // "buzz", "print", etc.
         const char* desc;      // Description
-        bool (DeviceTalker::*method)(JsonObject, long);
+        bool (JsonTalker::*method)(JsonObject, long);
     };
 
     struct Get {
         const char* name;      // "buzz", "print", etc.
         const char* desc;      // Description
-        long (DeviceTalker::*method)(JsonObject);
+        long (JsonTalker::*method)(JsonObject);
     };
 
 private:
@@ -112,17 +112,17 @@ private:
 
 public:
 
-    const DeviceTalker::Run runCommands[0] = {
+    const JsonTalker::Run runCommands[0] = {
         // A list of Run structures
         // {"buzz", "Triggers buzzing", buzz}
     };
 
-    const DeviceTalker::Set setCommands[0] = {
+    const JsonTalker::Set setCommands[0] = {
         // A list of Set structures
         // {"bpm_10", "Sets the Tempo in BPM x 10", set_bpm_10}
     };
 
-    const DeviceTalker::Get getCommands[0] = {
+    const JsonTalker::Get getCommands[0] = {
         // A list of Get structures
         // {"bpm_10", "Gets the Tempo in BPM x 10", get_bpm_10}
     };
@@ -132,7 +132,7 @@ public:
 
 
     // Explicit default constructor
-    DeviceTalker() = default;
+    JsonTalker() = default;
     
 
 
@@ -164,7 +164,7 @@ public:
 
 
 
-    size_t runs_count() { return sizeof(runCommands)/sizeof(DeviceTalker::Run); }
+    size_t runs_count() { return sizeof(runCommands)/sizeof(JsonTalker::Run); }
     const Run* run(const char* cmd) {
         for (size_t index = 0; index < runs_count(); ++index) {
             if (strcmp(cmd, runCommands[index].name) == 0) {
@@ -174,7 +174,7 @@ public:
         return nullptr;
     }
 
-    size_t sets_count() { return sizeof(setCommands)/sizeof(DeviceTalker::Set); }
+    size_t sets_count() { return sizeof(setCommands)/sizeof(JsonTalker::Set); }
     const Set* set(const char* cmd) {
         for (size_t index = 0; index < sets_count(); ++index) {
             if (strcmp(cmd, setCommands[index].name) == 0) {
@@ -184,7 +184,7 @@ public:
         return nullptr;
     }
 
-    size_t gets_count() { return sizeof(getCommands)/sizeof(DeviceTalker::Get); }
+    size_t gets_count() { return sizeof(getCommands)/sizeof(JsonTalker::Get); }
     const Get* get(const char* cmd) {
         for (size_t index = 0; index < gets_count(); ++index) {
             if (strcmp(cmd, getCommands[index].name) == 0) {
@@ -223,7 +223,7 @@ public:
         if (_talk != nullptr)
             message["f"] = _talk->name;
 
-        DeviceTalker::setChecksum(message);
+        JsonTalker::setChecksum(message);
 
         size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (len == 0) {
@@ -386,7 +386,7 @@ public:
         case MessageCode::run:
             if (message["n"].is<String>()) {
 
-                const DeviceTalker::Run* run = this->run(message["n"]);
+                const JsonTalker::Run* run = this->run(message["n"]);
                 if (run == nullptr) {
                     message["g"] = 1;   // UNKNOWN
                     sendMessage(socket, message, true);
@@ -403,7 +403,7 @@ public:
         case MessageCode::set:
             if (message["n"].is<String>() && message["v"].is<long>()) {
 
-                const DeviceTalker::Set* set = this->set(message["n"]);
+                const JsonTalker::Set* set = this->set(message["n"]);
                 if (set == nullptr) {
                     message["g"] = 1;   // UNKNOWN
                     sendMessage(socket, message, true);
@@ -419,7 +419,7 @@ public:
         
         case MessageCode::get:
             if (message["n"].is<String>()) {
-                const DeviceTalker::Get* get = this->get(message["n"]);
+                const JsonTalker::Get* get = this->get(message["n"]);
                 if (get == nullptr) {
                     message["g"] = 1;   // UNKNOWN
                     sendMessage(socket, message, true);
@@ -525,7 +525,7 @@ public:
 };
 
 
-char DeviceTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
 
 
