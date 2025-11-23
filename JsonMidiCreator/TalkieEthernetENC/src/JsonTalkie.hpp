@@ -168,6 +168,9 @@ public:
             return nullptr;
         }
 
+        // Explicit default constructor
+        Manifesto() = default;
+    
         // Add this constructor, because Manifesto struct has methods,
         //    so it's not considered an aggregate, and therefore cannot be initialized using a brace-enclosed list like this.
         Manifesto(Talker* t, Run* r, size_t rsz, Set* s, size_t ssz, 

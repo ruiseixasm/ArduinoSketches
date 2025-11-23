@@ -48,6 +48,7 @@ private:
     // 3. SELF KEPT PARAMETERS FOR JSON_TALKIE
     long bpm_10 = 1200;
 
+    JsonTalkie::Manifesto manifesto;
     JsonTalkie::Talker talker;  // Talker description
     
     bool set_bpm_10(JsonObject json_message, long bpm_10) {
@@ -66,8 +67,7 @@ private:
     // static JsonTalkie::Set setCommands[];
     // static JsonTalkie::Get getCommands[];
     
-    // JsonTalkie::Manifesto manifesto;
-    
+
 public:
 
     MultiplePlayer(BroadcastSocket* socket) {
