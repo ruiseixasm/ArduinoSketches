@@ -230,7 +230,7 @@ public:
 
 
     bool talk(JsonObject message, bool as_reply = false) {
-        if (_socket == nullptr || _manifesto == nullptr || _manifesto->talker == nullptr) return false;
+        if (_socket == nullptr) return false;
         
         // Directly nest the editable message under "m"
         if (message.isNull()) {
@@ -244,7 +244,9 @@ public:
         if (!message["i"].is<uint32_t>()) {
             message["i"] = generateMessageId();
         }
-        message["f"] = _manifesto->talker->name;
+
+        if (_manifesto != nullptr && _manifesto->talker != nullptr)
+            message["f"] = _manifesto->talker->name;
 
         setChecksum(message);
 
