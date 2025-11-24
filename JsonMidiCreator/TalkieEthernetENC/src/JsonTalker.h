@@ -54,6 +54,18 @@ public:
         return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
     }
 
+    struct Command {
+        const char* name;
+        const char* desc;
+    };
+
+    struct Manifesto {
+        const Command* runs;
+        const Command* sets;
+        const Command* gets;
+    };
+
+    
 
     struct Run {
         const char* name;      // "buzz", "print", etc.
@@ -85,6 +97,16 @@ protected:
     long _total_runs = 0;
     // static becaus it's a shared state among all other talkers, device (board) parameter
     static bool _is_led_on;  // keep track of state yourself, by default it's off
+
+
+    
+    const Manifesto _manifesto = {
+        (const Command[]){{"on", "Turns led ON"}, {"off", "Turns led OFF"}},      // runs
+        (const Command[]){{"duration", "Sets the duration"}},                     // sets  
+        (const Command[]){{"totals", "Gets the totals"}}                          // gets
+    };
+
+
 
 
     // Let subclasses override these
