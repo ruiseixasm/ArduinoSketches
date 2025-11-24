@@ -121,8 +121,7 @@ public:
     virtual size_t receive() {
         // In theory, a UDP packet on a local area network (LAN) could survive
         // for about 4.25 minutes (255 seconds).
-        // But for this application 5 seconds is the controlling time window
-        if (_max_delay_ms > 0 && millis() - _last_local_time > 5000UL) {
+        if (_max_delay_ms > 0 && millis() - _last_local_time > 255000UL) {
             _control_timing = false;
         }
         return 0;
