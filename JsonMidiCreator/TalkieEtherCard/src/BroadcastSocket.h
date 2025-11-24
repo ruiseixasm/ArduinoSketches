@@ -123,9 +123,9 @@ public:
         bool at_i = false;
         size_t data_i = 3;
         for (size_t i = data_i; i < *source_len; ++i) {
-            if (!at_c && source_data[i] == ':' && source_data[i - 2] == 'c' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+            if (source_data[i] == ':' && source_data[i - 2] == 'c' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
                 at_c = true;
-            } else if (!at_i && source_data[i] == ':' && source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+            } else if (source_data[i] == ':' && source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
                 at_i = true;
                 _package_time = 0;
             } else if (at_c) {
