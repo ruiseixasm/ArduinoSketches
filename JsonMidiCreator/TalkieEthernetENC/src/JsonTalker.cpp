@@ -128,6 +128,25 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
         }
     }
 
+    
+    bool dont_interrupt = true;   // Doesn't interrupt next talkers process
+
+    // Is it for me?
+    if (message["t"].is<uint8_t>()) {
+        if (message["t"].as<uint8_t>() != _channel)
+            return true;    // It's still validated (just not for me as a target)
+    } else if (message["t"].is<String>()) {
+        if (message["t"] != _name) {
+            #ifdef JSON_TALKER_DEBUG
+            Serial.println(F("Message NOT for me!"));
+            #endif
+            return true;    // It's still validated (just not for me as a target)
+        } else {
+            dont_interrupt = false; // Found by name, interrupts next Talkers process
+        }
+    }   // else: If it has no "t" it means for every Talkers
+
+
     // In theory, a UDP packet on a local area network (LAN) could survive
     // for about 4.25 minutes (255 seconds).
     if (_check_set_time && millis() - _sent_set_time[1] > 255000UL) {
@@ -335,7 +354,7 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
         break;
     }
 
-    return true;
+    return dont_interrupt;
 }
 
 
