@@ -74,8 +74,8 @@ public:
 
     
     bool send(const char* data, size_t size, bool as_reply = false) override {
+        
         uint8_t broadcastIp[4] = {255, 255, 255, 255};
-        uint16_t port = get_port();
         
         #ifdef BROADCAST_ETHERCARD_DEBUG
         Serial.print(F("S: "));
@@ -84,10 +84,10 @@ public:
         #endif
 
         #ifdef ENABLE_DIRECT_ADDRESSING
-        ether.sendUdp(data, size, port, as_reply ? _source_ip : broadcastIp, port);
+        ether.sendUdp(data, size, _port, as_reply ? _source_ip : broadcastIp, _port);
         #else
         (void)as_reply; // Silence unused parameter warning
-        ether.sendUdp(data, size, port, broadcastIp, port);
+        ether.sendUdp(data, size, _port, broadcastIp, _port);
         #endif
 
         return true;

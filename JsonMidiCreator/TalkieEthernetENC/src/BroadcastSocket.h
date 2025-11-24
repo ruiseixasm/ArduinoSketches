@@ -27,7 +27,6 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 private:
 
-    uint16_t _port = 5005;
     JsonTalker* _json_talkers = nullptr;   // A list of Talkers (objects)
     size_t _talker_count = 0;
     uint8_t _max_delay_ms = 5;
@@ -38,6 +37,7 @@ private:
 
 protected:
 
+    uint16_t _port = 5005;
     // Shared _received_data along all JsonTalkie instantiations
     static char _received_data[BROADCAST_SOCKET_BUFFER_SIZE];
 

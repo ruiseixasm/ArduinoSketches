@@ -58,17 +58,16 @@ public:
         if (_udp == nullptr) return false;
 
         IPAddress broadcastIP(255, 255, 255, 255);
-        uint16_t port = get_port();
         
         #ifdef ENABLE_DIRECT_ADDRESSING
-        if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, port)) {
+        if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
             #ifdef BROADCAST_ETHERNETENC_DEBUG
             Serial.println(F("Failed to begin packet"));
             #endif
             return false;
         }
         #else
-        if (!_udp->beginPacket(broadcastIP, port)) {
+        if (!_udp->beginPacket(broadcastIP, _port)) {
             #ifdef BROADCAST_ETHERNETENC_DEBUG
             Serial.println(F("Failed to begin packet"));
             #endif
@@ -100,7 +99,7 @@ public:
         if (_udp == nullptr) return 0;
 
         // Need to call homologous method in super class first
-        BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+        BroadcastSocket::receive(); // Very im_portant to do or else it may stop receiving !!
 
         // Receive packets
         int packetSize = _udp->parsePacket();
