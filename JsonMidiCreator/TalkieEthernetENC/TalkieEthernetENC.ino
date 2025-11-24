@@ -39,7 +39,6 @@ https://github.com/ruiseixasm/JsonTalkie
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
 #include "src/JsonTalker.h"
-#include "src/MultiPlayer.hpp"
 
 // #include "SinglePlayer.hpp"
 // #include "MultiplePlayer.hpp"
@@ -47,10 +46,7 @@ https://github.com/ruiseixasm/JsonTalkie
 const char talker_name[] = "talker";
 const char talker_desc[] = "I'm a talker";
 JsonTalker talker = JsonTalker(talker_name, talker_desc);
-const char player_name[] = "player";
-const char player_desc[] = "I'm a player";
-MultiPlayer player = MultiPlayer(player_name, player_desc);
-JsonTalker talkers[] = { talker, player };
+JsonTalker talkers[] = { talker };
 // Singleton requires the & (to get a reference variable)
 auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
 
