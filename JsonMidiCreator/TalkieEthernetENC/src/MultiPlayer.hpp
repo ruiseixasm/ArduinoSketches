@@ -31,6 +31,12 @@ public:
         // MultiPlayer-specific initialization here
     }
 
+protected:
+    // Let subclasses override these
+    virtual const Set* get_set_commands() { return _setCommands; }
+    virtual size_t get_set_commands_count() { return sizeof(_setCommands)/sizeof(Set); }
+
+
 private:
 
     // const MultiPlayer::Run runCommands[2] = {

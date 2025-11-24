@@ -75,12 +75,6 @@ public:
 
 
 protected:
-    // Let subclasses override these
-    virtual const Set* get_set_commands() { return _setCommands; }
-    virtual size_t get_set_commands_count() { return sizeof(_setCommands)/sizeof(Set); }
-
-
-private:
 
     BroadcastSocket* _socket = nullptr;
     const char* _name;      // Name of the Talker
@@ -91,6 +85,29 @@ private:
     long _total_runs = 0;
     // static becaus it's a shared state among all other talkers, device (board) parameter
     static bool _is_led_on;  // keep track of state yourself, by default it's off
+
+
+    // Let subclasses override these
+    virtual const Set* get_set_commands() { return _setCommands; }
+    virtual size_t get_set_commands_count() { return sizeof(_setCommands)/sizeof(Set); }
+
+    const Run _runCommands[2] = {
+        // A list of Run structures
+        {"on", "Turns led ON", &JsonTalker::led_on},
+        {"off", "Turns led OFF", &JsonTalker::led_off}
+    };
+
+    const Set _setCommands[0] = {
+        // A list of Set structures
+        // {"bpm_10", "Sets the Tempo in BPM x 10", set_bpm_10}
+    };
+
+    const Get _getCommands[2] = {
+        // A list of Get structures
+        {"runs", "Gets total runs", &JsonTalker::get_total_runs},
+        {"drops", "Gets total drops count", &JsonTalker::get_total_drops}
+    };
+
 
     bool led_on(JsonObject json_message) {
         if (!_is_led_on) {
@@ -124,18 +141,6 @@ private:
         return true;
     }
 
-    const Run _runCommands[2] = {
-        // A list of Run structures
-        {"on", "Turns led ON", &JsonTalker::led_on},
-        {"off", "Turns led OFF", &JsonTalker::led_off}
-    };
-
-
-    const Set _setCommands[0] = {
-        // A list of Set structures
-        // {"bpm_10", "Sets the Tempo in BPM x 10", set_bpm_10}
-    };
-
 
     long get_total_runs(JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
@@ -143,12 +148,6 @@ private:
     }
 
     long get_total_drops(JsonObject json_message);
-
-    const Get _getCommands[2] = {
-        // A list of Get structures
-        {"runs", "Gets total runs", &JsonTalker::get_total_runs},
-        {"drops", "Gets total drops count", &JsonTalker::get_total_drops}
-    };
 
 
 public:
