@@ -85,7 +85,7 @@ protected:
                                 Serial.print(F("C: Out of time package (remote delay): "));
                                 Serial.println(remote_delay);
                                 #endif
-                                return length;  // Out fo time package (too late)
+                                return length;  // Out of time package (too late)
                             }
                         }
                     }
