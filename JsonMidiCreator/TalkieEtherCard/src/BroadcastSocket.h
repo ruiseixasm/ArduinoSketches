@@ -130,7 +130,7 @@ public:
             } else if (at_c) {
                 if (source_data[i] < '0' || source_data[i] > '9') {
                     at_c = false;
-                } else if (source_data[i - 1] == '"') { // First number in the row
+                } else if (source_data[i - 1] == ':') { // First number in the row
                     data_checksum = source_data[i] - '0';
                     source_data[i] = '0';
                 } else {
