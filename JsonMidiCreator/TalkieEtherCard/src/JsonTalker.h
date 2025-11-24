@@ -139,10 +139,6 @@ private:
         {"runs", "Gets the total number of runs", &JsonTalker::get_total_runs}
     };
 
-    uint32_t _sent_set_time[2] = {0};   // Keeps two time stamp
-    String _set_name = "";              // Keeps the talker name
-    bool _check_set_time = false;
-
 
 public:
 

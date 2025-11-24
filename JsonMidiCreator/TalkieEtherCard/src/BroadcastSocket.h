@@ -58,10 +58,20 @@ protected:
                 Serial.println(checksum);
                 #endif
 
-                if (_control_timing) {
-                    
-
+                // In theory, a UDP packet on a local area network (LAN) could survive
+                // for about 4.25 minutes (255 seconds).
+                // But for this application 5 seconds is the controlling time window
+                if (millis() - _last_package_time > 5000UL) {
+                    _control_timing = false;
                 }
+
+                if (_control_timing) {
+                    if (_last_package_time - _package_time > static_cast<uint32_t>(_max_delay_ms)) {
+
+
+                    }
+                }
+                _last_package_time = _package_time;
                 _control_timing = true;
 
                 // Triggers all Talkers to processes the received data
