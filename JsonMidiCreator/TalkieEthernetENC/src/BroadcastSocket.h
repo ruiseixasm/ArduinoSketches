@@ -31,9 +31,8 @@ private:
     size_t _talker_count = 0;
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
-    uint32_t _last_package_time = 0;
     uint32_t _last_local_time = 0;
-    uint32_t _package_time = 0;
+    uint32_t _last_remote_time = 0;
 
 protected:
 
@@ -50,30 +49,38 @@ protected:
             Serial.println(_talker_count);
             #endif
 
-            uint16_t received_checksum = BroadcastSocket::readChecksum(buffer, &length);
+            uint32_t remote_time = 0;
+            uint16_t received_checksum = this->processData(buffer, &length, &remote_time);
             uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);
-
+            
             if (received_checksum == checksum) {
                 #ifdef BROADCASTSOCKET_DEBUG
                 Serial.print(F("C: Validated Checksum of "));
                 Serial.println(checksum);
                 #endif
-
+                
                 if (_max_delay_ms > 0) {
 
+                    const uint32_t local_time = millis();
+                    
                     if (_control_timing) {
-                        const uint32_t actual_delay = _last_package_time - _package_time;
-                        const uint32_t allowed_delay = static_cast<uint32_t>(_max_delay_ms);
-                        if (actual_delay > allowed_delay && actual_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {
-                            #ifdef BROADCASTSOCKET_DEBUG
-                            Serial.print(F("C: Out of time package (too late): "));
-                            Serial.println(_last_package_time - _package_time);
-                            #endif
-                            return length;  // Out fo time package (too late)
+                        
+                        const uint32_t remote_delay = _last_remote_time - remote_time;  // Package received after
+
+                        if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
+                            const uint32_t allowed_delay = static_cast<uint32_t>(_max_delay_ms);
+                            const uint32_t local_delay = local_time - _last_local_time;
+                            if (remote_delay > allowed_delay || local_delay > allowed_delay) {
+                                #ifdef BROADCASTSOCKET_DEBUG
+                                Serial.print(F("C: Out of time package (too late): "));
+                                Serial.println(_last_package_time - _package_time);
+                                #endif
+                                return length;  // Out fo time package (too late)
+                            }
                         }
                     }
-                    _last_package_time = _package_time;
-                    _last_local_time = millis();
+                    _last_local_time = local_time;
+                    _last_remote_time = remote_time;
                     _control_timing = true;
                 }
 
@@ -124,7 +131,7 @@ public:
         // In theory, a UDP packet on a local area network (LAN) could survive
         // for about 4.25 minutes (255 seconds).
         // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
-        if (_max_delay_ms > 0 && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
+        if (_max_delay_ms > 0 && _control_timing && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
             _control_timing = false;
         }
         return 0;
@@ -138,7 +145,7 @@ public:
 
 
 
-    uint16_t readChecksum(char* source_data, size_t* source_len) {
+    uint16_t processData(char* source_data, size_t* source_len, uint32_t* remote_time) {
         
         // ASCII byte values:
         // 	'c' = 99
@@ -158,15 +165,14 @@ public:
                     at_c = true;
                 } else if (source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
                     at_i = true;
-                    _package_time = 0;
                 }
             } else {
                 if (at_i) {
                     if (source_data[i] < '0' || source_data[i] > '9') {
                         at_i = false;
                     } else {
-                        _package_time *= 10;
-                        _package_time += source_data[i] - '0';
+                        *remote_time *= 10;
+                        *remote_time += source_data[i] - '0';
                     }
                 } else if (at_c) {
                     if (source_data[i] < '0' || source_data[i] > '9') {
