@@ -54,6 +54,7 @@ public:
         return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
     }
 
+    // Now without a method reference `bool (JsonTalker::*method)(JsonObject, long)`
     struct Command {
         const char* name;
         const char* desc;
@@ -67,6 +68,8 @@ public:
         const uint8_t sets_count;
         const uint8_t gets_count;
     };
+
+
     
 
     struct Run {
@@ -107,12 +110,21 @@ protected:
     // a following switch case sequence that picks the respective method and calls it directly.
 
     const Manifesto _manifesto = {
-        (const Command[]){{"on", "Turns led ON"}, {"off", "Turns led OFF"}},      // runs
-        (const Command[]){{"duration", "Sets the duration"}},                     // sets  
-        (const Command[]){{"totals", "Gets the totals"}},                         // gets
+        (const Command[]){  // runs
+            {"on", "Turns led ON"},
+            {"off", "Turns led OFF"}
+        },
+        (const Command[]){  // sets 
+            {"delay", "Sets the socket max delay"}
+        },
+        (const Command[]){  // gets
+            {"delay", "Gets the socket max delay"},
+            {"drops", "Gets total drops count"},
+            {"runs", "Gets total runs"}
+        },
         2,
         1,
-        1
+        3
     };
 
 
