@@ -21,10 +21,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 class MultiPlayer : public JsonTalker {
-private:
-    long _bpm_10 = 1200; // 120bpm x 10
-
-    
 public:
     MultiPlayer(const char* name, const char* desc) 
         : JsonTalker(name, desc) {  // Calls base class constructor
@@ -32,18 +28,12 @@ public:
     }
 
 protected:
+
+    long _bpm_10 = 1200; // 120bpm x 10
+
     // Let subclasses override these
     virtual const Set* get_set_commands() { return _setCommands; }
     virtual size_t get_set_commands_count() { return sizeof(_setCommands)/sizeof(Set); }
-
-
-private:
-
-    // const MultiPlayer::Run runCommands[2] = {
-    //     // A list of Run structures
-    //     {"on", "Turns led ON", &MultiPlayer::led_on},
-    //     {"off", "Turns led OFF", &MultiPlayer::led_off}
-    // };
 
 
     bool set_bpm_10(JsonObject json_message, long bpm_10) {
@@ -54,25 +44,9 @@ private:
 
     // const MultiPlayer::Set _setCommands[1] = {
     //     // A list of Set structures
-    //     {"bpm_10", "Sets the Tempo in BPM x 10", set_bpm_10}
+    //     {"bpm_10", "Sets the Tempo in BPM x 10", &MultiPlayer::set_bpm_10}
     // };
-
-
-    // long get_bpm_10(JsonObject json_message) {
-    //     (void)json_message; // Silence unused parameter warning
-    //     return _bpm_10;
-    // }
-
-    // const MultiPlayer::Get getCommands[3] = {
-    //     // A list of Get structures
-    //     {"runs", "Gets total runs", &MultiPlayer::get_total_runs},
-    //     {"drops", "Gets total drops count", &MultiPlayer::get_total_drops},
-    //     {"bpm_10", "Gets the Tempo in BPM x 10", &MultiPlayer::get_bpm_10}
-    // };
-
-
-public:
-
+    
 };
 
 
