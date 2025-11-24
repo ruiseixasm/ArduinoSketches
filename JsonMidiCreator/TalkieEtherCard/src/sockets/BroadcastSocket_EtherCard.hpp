@@ -95,7 +95,7 @@ public:
 
 
     size_t receive() override {
-        _data_length = 0;   // Makes sure it's the Ethernet reading that sets it!
+        _data_length = BroadcastSocket::receive();  // Makes sure it's the Ethernet reading that sets it! (always returns 0)
         ether.packetLoop(ether.packetReceive());
         return _data_length;
     }

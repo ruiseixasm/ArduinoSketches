@@ -32,6 +32,7 @@ private:
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
     uint32_t _last_package_time = 0;
+    uint32_t _last_local_time = 0;
     uint32_t _package_time = 0;
 
 protected:
@@ -59,13 +60,6 @@ protected:
 
                 if (_max_delay_ms > 0) {
 
-                    // In theory, a UDP packet on a local area network (LAN) could survive
-                    // for about 4.25 minutes (255 seconds).
-                    // But for this application 5 seconds is the controlling time window
-                    if (_package_time - _last_package_time > 5000UL) {
-                        _control_timing = false;
-                    }
-
                     if (_control_timing && _package_time < _last_package_time) {
                         if (_last_package_time - _package_time > static_cast<uint32_t>(_max_delay_ms)) {
                             #ifdef BROADCASTSOCKET_DEBUG
@@ -76,6 +70,7 @@ protected:
                         }
                     }
                     _last_package_time = _package_time;
+                    _last_local_time = millis();
                     _control_timing = true;
 
                 }
@@ -122,7 +117,14 @@ public:
         (void)as_reply; // Silence unused parameter warning
         return false;
     }
+    
     virtual size_t receive() {
+        // In theory, a UDP packet on a local area network (LAN) could survive
+        // for about 4.25 minutes (255 seconds).
+        // But for this application 5 seconds is the controlling time window
+        if (millis() - _last_local_time > 5000UL) {
+            _control_timing = false;
+        }
         return 0;
     }
     
