@@ -164,7 +164,7 @@ public:
     }
 
 
-    size_t runs_count() { return sizeof(_runCommands)/sizeof(JsonTalker::Run); }
+    size_t runs_count() { return sizeof(_runCommands)/sizeof(Run); }
     const Run* run(const char* cmd) {
         for (size_t index = 0; index < runs_count(); ++index) {
             if (strcmp(cmd, _runCommands[index].name) == 0) {
@@ -174,7 +174,7 @@ public:
         return nullptr;
     }
 
-    size_t sets_count() { return sizeof(_setCommands)/sizeof(JsonTalker::Set); }
+    size_t sets_count() { return sizeof(_setCommands)/sizeof(Set); }
     const Set* set(const char* cmd) {
         for (size_t index = 0; index < sets_count(); ++index) {
             if (strcmp(cmd, _setCommands[index].name) == 0) {
@@ -184,7 +184,7 @@ public:
         return nullptr;
     }
 
-    size_t gets_count() { return sizeof(_getCommands)/sizeof(JsonTalker::Get); }
+    size_t gets_count() { return sizeof(_getCommands)/sizeof(Get); }
     const Get* get(const char* cmd) {
         for (size_t index = 0; index < gets_count(); ++index) {
             if (strcmp(cmd, _getCommands[index].name) == 0) {
