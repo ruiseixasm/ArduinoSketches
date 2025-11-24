@@ -29,9 +29,8 @@ uint16_t JsonTalker::setChecksum(JsonObject message) {
 }
     
 
-bool JsonTalker::sendMessage(BroadcastSocket* socket, JsonObject message, bool as_reply) {
-    if (socket == nullptr) return false;
-    _socket = socket;
+bool JsonTalker::sendMessage(JsonObject message, bool as_reply) {
+    if (_socket == nullptr) return false;
     
     // Directly nest the editable message under "m"
     if (message.isNull()) {
@@ -63,16 +62,16 @@ bool JsonTalker::sendMessage(BroadcastSocket* socket, JsonObject message, bool a
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-        return socket->send(_buffer, len, as_reply);
+        return _socket->send(_buffer, len, as_reply);
     }
     return false;
 }
 
 
     
-void JsonTalker::processData(BroadcastSocket* socket, const char* received_data, const size_t data_len) {
-    
-    if (socket != nullptr) _socket = socket;
+bool JsonTalker::processData(const char* received_data, const size_t data_len, bool pre_validated) {
+
+    if (_socket == nullptr) return false;
     
     #ifdef DEVICE_TALKER_DEBUG
     Serial.println(F("Validating..."));
@@ -90,7 +89,7 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
         #ifdef DEVICE_TALKER_DEBUG
         Serial.println(F("Failed to deserialize received data"));
         #endif
-        return;
+        return false;
     }
     JsonObject message = message_doc.as<JsonObject>();
 
@@ -102,28 +101,31 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
     //     4 - Message NOT identified
     //     5 - Set command arrived too late
 
-    if (!message["m"].is<int>()) {
-        #ifdef DEVICE_TALKER_DEBUG
-        Serial.println(F("Message \"m\" is NOT an integer!"));
-        #endif
-        return;
-    }
-    if (!message["f"].is<String>()) {
-        #ifdef DEVICE_TALKER_DEBUG
-        Serial.println(0);
-        #endif
-        return;
-    }
-    if (!message["i"].is<uint32_t>()) {
-        #ifdef DEVICE_TALKER_DEBUG
-        Serial.println(4);
-        #endif
-        message["m"] = 7;   // error
-        message["t"] = message["f"];
-        message["e"] = 4;
-        
-        sendMessage(socket, message, true);
-        return;
+    if (!pre_validated) {
+
+        if (!message["m"].is<int>()) {
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.println(F("Message \"m\" is NOT an integer!"));
+            #endif
+            return false;
+        }
+        if (!message["f"].is<String>()) {
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.println(0);
+            #endif
+            return false;
+        }
+        if (!message["i"].is<uint32_t>()) {
+            #ifdef DEVICE_TALKER_DEBUG
+            Serial.println(4);
+            #endif
+            message["m"] = 7;   // error
+            message["t"] = message["f"];
+            message["e"] = 4;
+            
+            sendMessage(message, true);
+            return false;
+        }
     }
 
     // In theory, a UDP packet on a local area network (LAN) could survive
@@ -131,8 +133,6 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
     if (_check_set_time && millis() - _sent_set_time[1] > 255000UL) {
         _check_set_time = false;
     }
-
-
 
     if (true) {
 
@@ -173,7 +173,7 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
     {
     case MessageCode::talk:
         message["d"] = _desc;
-        sendMessage(socket, message, true);
+        sendMessage(message, true);
         break;
     
     case MessageCode::list:
@@ -184,21 +184,21 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
                 none_list = false;
                 message["n"] = this->runCommands[run_i].name;
                 message["d"] = this->runCommands[run_i].desc;
-                sendMessage(socket, message, true);
+                sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::set);
             for (size_t set_i = 0; set_i < this->sets_count(); ++set_i) {
                 none_list = false;
                 message["n"] = this->setCommands[set_i].name;
                 message["d"] = this->setCommands[set_i].desc;
-                sendMessage(socket, message, true);
+                sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::get);
             for (size_t get_i = 0; get_i < this->gets_count(); ++get_i) {
                 none_list = false;
                 message["n"] = this->getCommands[get_i].name;
                 message["d"] = this->getCommands[get_i].desc;
-                sendMessage(socket, message, true);
+                sendMessage(message, true);
             }
             if(none_list) {
                 message["g"] = 2;       // NONE
@@ -212,10 +212,10 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
             const JsonTalker::Run* run = this->run(message["n"]);
             if (run == nullptr) {
                 message["g"] = 1;   // UNKNOWN
-                sendMessage(socket, message, true);
+                sendMessage(message, true);
             } else {
                 message["g"] = 0;       // ROGER
-                sendMessage(socket, message, true);
+                sendMessage(message, true);
                 // No memory leaks because message_doc exists in the listen() method stack
                 message.remove("g");
                 (this->*(run->method))(message);
@@ -229,10 +229,10 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
             const JsonTalker::Set* set = this->set(message["n"]);
             if (set == nullptr) {
                 message["g"] = 1;   // UNKNOWN
-                sendMessage(socket, message, true);
+                sendMessage(message, true);
             } else {
                 message["g"] = 0;       // ROGER
-                sendMessage(socket, message, true);
+                sendMessage(message, true);
                 // No memory leaks because message_doc exists in the listen() method stack
                 message.remove("g");
                 (this->*(set->method))(message, message["v"].as<long>());
@@ -245,14 +245,14 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
             const JsonTalker::Get* get = this->get(message["n"]);
             if (get == nullptr) {
                 message["g"] = 1;   // UNKNOWN
-                sendMessage(socket, message, true);
+                sendMessage(message, true);
             } else {
                 message["g"] = 0;       // ROGER
-                sendMessage(socket, message, true);
+                sendMessage(message, true);
                 // No memory leaks because message_doc exists in the listen() method stack
                 message.remove("g");
                 message["v"] = (this->*(get->method))(message);
-                sendMessage(socket, message, true);
+                sendMessage(message, true);
             }
         }
         break;
@@ -303,7 +303,7 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
 
         #endif
 
-            sendMessage(socket, message, true);
+            sendMessage(message, true);
         }
         break;
     
@@ -326,21 +326,14 @@ void JsonTalker::processData(BroadcastSocket* socket, const char* received_data,
             _channel = message["b"].as<uint8_t>();
         }
         message["b"] = _channel;
-        sendMessage(socket, message, true);
+        sendMessage(message, true);
         break;
     
     default:
         break;
     }
 
-
-
-
-
-
-
-
-
+    return true;
 }
 
 
