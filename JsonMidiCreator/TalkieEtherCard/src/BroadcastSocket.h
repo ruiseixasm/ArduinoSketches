@@ -26,7 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 private:
 
-    JsonTalker* _device_talkers = nullptr;   // A list of Talkers (pointers)
+    JsonTalker* _device_talkers = nullptr;   // A list of Talkers (objects)
     size_t _talker_count = 0;
 
 protected:
