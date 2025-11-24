@@ -55,10 +55,13 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x02};
 
 
 
-const char player1_name[] = "nano";
-const char player1_desc[] = "Arduino nano board (black box)";
-JsonTalker player1 = JsonTalker(player1_name, player1_desc);
-JsonTalker talkers[] = { player1 };
+const char nano_name[] = "nano";
+const char nano_desc[] = "Arduino nano board (black box)";
+JsonTalker nano = JsonTalker(nano_name, nano_desc);
+const char uno_name[] = "uno";
+const char uno_desc[] = "Arduino uno board (alike)";
+JsonTalker uno = JsonTalker(uno_name, uno_desc);
+JsonTalker talkers[] = { nano, uno };
 // Singleton requires the & (to get a reference variable)
 auto& broadcast_socket = BroadcastSocket_EtherCard::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
 

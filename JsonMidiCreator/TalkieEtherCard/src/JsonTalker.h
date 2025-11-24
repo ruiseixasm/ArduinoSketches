@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
-// #define DEVICE_TALKER_DEBUG
+// #define JSON_TALKER_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -116,10 +116,10 @@ private:
         return true;
     }
 
-    const JsonTalker::Run runCommands[2] = {
+    const JsonTalker::Run runCommands[0] = {
         // A list of Run structures
-        {"on", "Turns the blue led ON", &JsonTalker::led_on},
-        {"off", "Turns the blue led OFF", &JsonTalker::led_off}
+        // {"on", "Turns the blue led ON", &JsonTalker::led_on},
+        // {"off", "Turns the blue led OFF", &JsonTalker::led_off}
     };
 
 
