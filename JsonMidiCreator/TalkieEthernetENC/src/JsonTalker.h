@@ -174,12 +174,11 @@ public:
         return nullptr;
     }
 
-    size_t sets_count() { return sizeof(_setCommands)/sizeof(Set); }
     const Set* set(const char* cmd) {
-        for (size_t index = 0; index < sets_count(); ++index) {
-            if (strcmp(cmd, _setCommands[index].name) == 0) {
-                return &_setCommands[index];  // Returns the function
-            }
+        const Set* commands = get_set_commands();
+        size_t count = get_set_commands_count();
+        for (size_t i = 0; i < count; ++i) {
+            if (strcmp(cmd, commands[i].name) == 0) return &commands[i];
         }
         return nullptr;
     }

@@ -184,24 +184,26 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
         {   // Because of none_list !!!
             bool none_list = true;
             message["w"] = static_cast<int>(MessageCode::run);
-            for (size_t run_i = 0; run_i < this->runs_count(); ++run_i) {
+            for (size_t i = 0; i < this->runs_count(); ++i) {
                 none_list = false;
-                message["n"] = this->_runCommands[run_i].name;
-                message["d"] = this->_runCommands[run_i].desc;
+                message["n"] = this->_runCommands[i].name;
+                message["d"] = this->_runCommands[i].desc;
                 sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::set);
-            for (size_t set_i = 0; set_i < this->sets_count(); ++set_i) {
+            const Set* commands = get_set_commands();
+            size_t count = get_set_commands_count();
+            for (size_t i = 0; i < count; ++i) {
                 none_list = false;
-                message["n"] = this->_setCommands[set_i].name;
-                message["d"] = this->_setCommands[set_i].desc;
+                message["n"] = commands[i].name;
+                message["d"] = commands[i].desc;
                 sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::get);
-            for (size_t get_i = 0; get_i < this->gets_count(); ++get_i) {
+            for (size_t i = 0; i < this->gets_count(); ++i) {
                 none_list = false;
-                message["n"] = this->_getCommands[get_i].name;
-                message["d"] = this->_getCommands[get_i].desc;
+                message["n"] = this->_getCommands[i].name;
+                message["d"] = this->_getCommands[i].desc;
                 sendMessage(message, true);
             }
             if(none_list) {
