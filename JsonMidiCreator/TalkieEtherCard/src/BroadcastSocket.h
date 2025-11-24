@@ -118,20 +118,21 @@ public:
 
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
-        bool at_c0 = false;
+        bool at_c = false;
         bool at_i = false;
-        size_t data_i = 4;
+        size_t data_i = 3;
         for (size_t i = data_i; i < *source_len; ++i) {
-            if (!at_c0 && source_data[i - 1] == ':' && source_data[i - 3] == 'c' && source_data[i - 4] == '"' && source_data[i - 2] == '"') {
-                at_c0 = true;
-                data_checksum = source_data[data_i] - '0';
-                source_data[data_i] = '0';
+            if (!at_c && source_data[i] == ':' && source_data[i - 2] == 'c' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                at_c = true;
             } else if (!at_i && source_data[i] == ':' && source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
                 at_i = true;
                 _package_time = 0;
-            } else if (at_c0) {
+            } else if (at_c) {
                 if (source_data[i] < '0' || source_data[i] > '9') {
-                    at_c0 = false;
+                    at_c = false;
+                } else if (source_data[i - 1] == '"') { // First number in the row
+                    data_checksum = source_data[i] - '0';
+                    source_data[i] = '0';
                 } else {
                     data_checksum *= 10;
                     data_checksum += source_data[i] - '0';
