@@ -54,9 +54,6 @@ public:
         return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
     }
 
-
-
-
     // Now without a method reference `bool (JsonTalker::*method)(JsonObject, long)`
     struct Command {
         const char* name;
@@ -72,28 +69,6 @@ public:
         const uint8_t gets_count;
     };
 
-
-    
-
-    struct Run {
-        const char* name;      // "buzz", "print", etc.
-        const char* desc;      // Description
-        bool (JsonTalker::*method)(JsonObject);
-    };
-
-    struct Set {
-        const char* name;      // "buzz", "print", etc.
-        const char* desc;      // Description
-        bool (JsonTalker::*method)(JsonObject, long);
-    };
-
-    struct Get {
-        const char* name;      // "buzz", "print", etc.
-        const char* desc;      // Description
-        long (JsonTalker::*method)(JsonObject);
-    };
-
-
 protected:
 
     BroadcastSocket* _socket = nullptr;
@@ -105,10 +80,6 @@ protected:
     long _total_runs = 0;
     // static becaus it's a shared state among all other talkers, device (board) parameter
     static bool _is_led_on;  // keep track of state yourself, by default it's off
-
-
-
-
 
 
     // Can't use method reference because these type of references are class designation dependent,
@@ -135,87 +106,9 @@ protected:
     };
 
 
-
-    // Let subclasses override these
-    virtual const Set* get_set_commands() { return _setCommands; }
-    virtual size_t get_set_commands_count() { return sizeof(_setCommands)/sizeof(Set); }
-
-    const Run _runCommands[2] = {
-        // A list of Run structures
-        {"on", "Turns led ON", &JsonTalker::led_on},
-        {"off", "Turns led OFF", &JsonTalker::led_off}
-    };
-
-    const Set _setCommands[0] = {
-        // A list of Set structures
-        // {"bpm_10", "Sets the Tempo in BPM x 10", set_bpm_10}
-    };
-
-    const Get _getCommands[2] = {
-        // A list of Get structures
-        {"runs", "Gets total runs", &JsonTalker::get_total_runs},
-        {"drops", "Gets total drops count", &JsonTalker::get_total_drops}
-    };
-
-
-    bool led_on(JsonObject json_message) {
-        if (!_is_led_on) {
-        #ifdef LED_BUILTIN
-            digitalWrite(LED_BUILTIN, HIGH);
-        #endif
-            _is_led_on = true;
-            _total_runs++;
-        } else {
-            json_message["r"] = "Already On!";
-            if (_socket != nullptr)
-                this->sendMessage(json_message);
-            return false;
-        }
-        return true;
-    }
-
-    bool led_off(JsonObject json_message) {
-        if (_is_led_on) {
-        #ifdef LED_BUILTIN
-            digitalWrite(LED_BUILTIN, LOW);
-        #endif
-            _is_led_on = false;
-            _total_runs++;
-        } else {
-            json_message["r"] = "Already Off!";
-            if (_socket != nullptr)
-                this->sendMessage(json_message);
-            return false;
-        }
-        return true;
-    }
-
-
-    long get_total_runs(JsonObject json_message) {
-        (void)json_message; // Silence unused parameter warning
-        return _total_runs;
-    }
-
-    long get_total_drops(JsonObject json_message);
-
-
-public:
-
-    // Explicit default constructor
-    JsonTalker() = delete;
-        
-    JsonTalker(const char* name, const char* desc)
-        : _name(name), _desc(desc) {
-            Serial.println(sizeof(_manifesto.runs));
-        }
-
-    void setSocket(BroadcastSocket* socket) {
-        _socket = socket;
-    }
-
     uint8_t command_index(const MessageCode message_code, const char* command_name) {
         const Command* command = nullptr;
-        uint8_t count = 0;
+        uint8_t count = 255;    // 255 means not found!
         switch (message_code)
         {
         case MessageCode::run:
@@ -230,7 +123,7 @@ public:
             command = _manifesto.gets;
             count = _manifesto.gets_count;
             break;
-        default: return 0;
+        default: return count;
         }
         uint8_t i = 0;
         for (; i < count; i++) {
@@ -241,36 +134,112 @@ public:
     }
 
 
-
-
-
-    size_t runs_count() { return sizeof(_runCommands)/sizeof(Run); }
-    const Run* run(const char* cmd) {
-        for (size_t index = 0; index < runs_count(); ++index) {
-            if (strcmp(cmd, _runCommands[index].name) == 0) {
-                return &_runCommands[index];  // Returns the function
+    bool command_run(const uint8_t command_index, JsonObject json_message) {
+        (void)json_message; // Silence unused parameter warning
+        switch (command_index)
+        {
+        case 0:
+            {
+                if (!_is_led_on) {
+                #ifdef LED_BUILTIN
+                    digitalWrite(LED_BUILTIN, HIGH);
+                #endif
+                    _is_led_on = true;
+                    _total_runs++;
+                } else {
+                    json_message["r"] = "Already On!";
+                    if (_socket != nullptr)
+                        this->sendMessage(json_message);
+                    return false;
+                }
+                return true;
             }
+            break;
+        
+        case 1:
+            {
+                if (_is_led_on) {
+                #ifdef LED_BUILTIN
+                    digitalWrite(LED_BUILTIN, LOW);
+                #endif
+                    _is_led_on = false;
+                    _total_runs++;
+                } else {
+                    json_message["r"] = "Already Off!";
+                    if (_socket != nullptr)
+                        this->sendMessage(json_message);
+                    return false;
+                }
+                return true;
+            }
+            break;
+        
+        default: return false;  // Nothing done
         }
-        return nullptr;
     }
 
-    const Set* set(const char* cmd) {
-        const Set* commands = get_set_commands();
-        size_t count = get_set_commands_count();
-        for (size_t i = 0; i < count; ++i) {
-            if (strcmp(cmd, commands[i].name) == 0) return &commands[i];
+    
+    bool command_set(const uint8_t command_index, JsonObject json_message) {
+        long json_value = json_message["v"].as<long>();
+        switch (command_index)
+        {
+        case 0:
+            {
+                this->set_delay(static_cast<uint8_t>(json_value));
+                return true;
+            }
+            break;
+        
+        default: return false;
         }
-        return nullptr;
     }
 
-    size_t gets_count() { return sizeof(_getCommands)/sizeof(Get); }
-    const Get* get(const char* cmd) {
-        for (size_t index = 0; index < gets_count(); ++index) {
-            if (strcmp(cmd, _getCommands[index].name) == 0) {
-                return &_getCommands[index];  // Returns the function
+    
+    long command_get(const uint8_t command_index, JsonObject json_message) {
+        (void)json_message; // Silence unused parameter warning
+        switch (command_index)
+        {
+        case 0:
+            {
+                return static_cast<long>(this->get_delay());
             }
+            break;
+
+        case 1:
+            {
+                return this->get_total_drops();
+            }
+            break;
+
+        case 2:
+            {
+                return _total_runs;
+            }
+            break;
+        
+        default: return 0;  // Has to return something
         }
-        return nullptr;
+    }
+
+
+    void set_delay(uint8_t delay);
+    uint8_t get_delay();
+    long get_total_drops();
+    long get_total_runs() { return _total_runs; }
+
+
+public:
+
+    // Explicit default constructor
+    JsonTalker() = delete;
+        
+    JsonTalker(const char* name, const char* desc)
+        : _name(name), _desc(desc) {
+            Serial.println(sizeof(_manifesto.runs));
+        }
+
+    void setSocket(BroadcastSocket* socket) {
+        _socket = socket;
     }
 
 
@@ -302,9 +271,7 @@ public:
 
 
     
-    const char* get_name() {
-        return _name;
-    }
+    const char* get_name() { return _name; }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
     

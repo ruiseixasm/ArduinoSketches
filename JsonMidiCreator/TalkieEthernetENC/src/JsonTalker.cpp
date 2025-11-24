@@ -21,8 +21,15 @@ char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 bool JsonTalker::_is_led_on = false;
 
 
-long JsonTalker::get_total_drops(JsonObject json_message) {
-    (void)json_message; // Silence unused parameter warning
+void JsonTalker::set_delay(uint8_t delay) {
+    return _socket->set_max_delay(delay);
+}
+
+uint8_t JsonTalker::get_delay() {
+    return _socket->get_max_delay();
+}
+
+long JsonTalker::get_total_drops() {
     return _socket->get_drops_count();
 }
 
