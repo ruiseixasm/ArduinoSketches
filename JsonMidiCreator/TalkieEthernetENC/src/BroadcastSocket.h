@@ -33,6 +33,7 @@ private:
     bool _control_timing = false;
     uint32_t _last_local_time = 0;
     uint32_t _last_remote_time = 0;
+    uint16_t _drops_count = 0;
 
 protected:
 
@@ -90,6 +91,7 @@ protected:
                                 Serial.print(F("C: Out of time package (remote delay): "));
                                 Serial.println(remote_delay);
                                 #endif
+                                _drops_count++;
                                 return length;  // Out of time package (too late)
                             }
                         }
@@ -155,9 +157,10 @@ public:
     virtual void set_port(uint16_t port) { _port = port; }
     virtual uint16_t get_port() { return _port; }
 
-    virtual void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
-    virtual uint8_t get_max_delay() { return _max_delay_ms; }
 
+    void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
+    uint8_t get_max_delay() { return _max_delay_ms; }
+    uint16_t get_drops_count() { return _drops_count; }
 
 
     uint16_t processData(char* source_data, size_t* source_len, uint32_t* remote_time) {
