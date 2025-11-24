@@ -28,7 +28,8 @@ private:
 
     JsonTalker* _json_talkers = nullptr;   // A list of Talkers (objects)
     size_t _talker_count = 0;
-    bool _first_package = true;
+    uint32_t _max_delay_ms = 5;
+    bool _control_timing = false;
     uint32_t _last_package_time = 0;
     uint32_t _package_time = 0;
     
