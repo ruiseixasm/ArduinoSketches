@@ -57,6 +57,13 @@ protected:
                 Serial.print(F("C: Validated Checksum of "));
                 Serial.println(checksum);
                 #endif
+
+                if (_control_timing) {
+                    
+
+                }
+                _control_timing = true;
+
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
