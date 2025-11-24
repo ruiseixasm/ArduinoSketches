@@ -308,6 +308,8 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
         #endif
 
             sendMessage(message, true);
+
+            // TO INSERT HERE EXTRA DATA !!
         }
         break;
     
