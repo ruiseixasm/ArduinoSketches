@@ -63,8 +63,10 @@ public:
         const Command* runs;
         const Command* sets;
         const Command* gets;
+        const uint8_t runs_count;
+        const uint8_t sets_count;
+        const uint8_t gets_count;
     };
-
     
 
     struct Run {
@@ -99,13 +101,15 @@ protected:
     static bool _is_led_on;  // keep track of state yourself, by default it's off
 
 
-    
+
     const Manifesto _manifesto = {
         (const Command[]){{"on", "Turns led ON"}, {"off", "Turns led OFF"}},      // runs
         (const Command[]){{"duration", "Sets the duration"}},                     // sets  
-        (const Command[]){{"totals", "Gets the totals"}}                          // gets
+        (const Command[]){{"totals", "Gets the totals"}},                         // gets
+        2,
+        1,
+        1
     };
-
 
 
 
@@ -178,7 +182,9 @@ public:
     JsonTalker() = delete;
         
     JsonTalker(const char* name, const char* desc)
-        : _name(name), _desc(desc) {}
+        : _name(name), _desc(desc) {
+            Serial.println(sizeof(_manifesto.runs));
+        }
 
     void setSocket(BroadcastSocket* socket) {
         _socket = socket;
