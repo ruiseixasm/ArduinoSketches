@@ -19,6 +19,13 @@ https://github.com/ruiseixasm/JsonTalkie
 char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
 
+long JsonTalker::get_total_drops(JsonObject json_message) {
+    (void)json_message; // Silence unused parameter warning
+    return _socket->get_drops_count();
+}
+
+
+
 
 uint16_t JsonTalker::setChecksum(JsonObject message) {
     message["c"] = 0;   // makes _buffer a net_data buffer
@@ -27,7 +34,7 @@ uint16_t JsonTalker::setChecksum(JsonObject message) {
     message["c"] = checksum;
     return checksum;
 }
-    
+
 
 bool JsonTalker::sendMessage(JsonObject message, bool as_reply) {
     if (_socket == nullptr) return false;

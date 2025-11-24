@@ -134,9 +134,12 @@ private:
         return total_runs;
     }
 
-    const JsonTalker::Get getCommands[1] = {
+    long get_total_drops(JsonObject json_message);
+
+    const JsonTalker::Get getCommands[2] = {
         // A list of Get structures
-        {"runs", "Gets total runs", &JsonTalker::get_total_runs}
+        {"runs", "Gets total runs", &JsonTalker::get_total_runs},
+        {"drops", "Gets total drops count", &JsonTalker::get_total_drops}
     };
 
 
