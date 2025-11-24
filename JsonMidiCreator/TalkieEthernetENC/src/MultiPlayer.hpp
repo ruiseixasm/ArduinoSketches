@@ -22,7 +22,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 class MultiPlayer : public JsonTalker {
 private:
-
+    long _bpm_10 = 1200; // 120bpm x 10
 
     
 public:
@@ -33,30 +33,35 @@ public:
 
 private:
 
-    // const JsonTalker::Run runCommands[2] = {
+    // const MultiPlayer::Run runCommands[2] = {
     //     // A list of Run structures
-    //     {"on", "Turns led ON", &JsonTalker::led_on},
-    //     {"off", "Turns led OFF", &JsonTalker::led_off}
+    //     {"on", "Turns led ON", &MultiPlayer::led_on},
+    //     {"off", "Turns led OFF", &MultiPlayer::led_off}
     // };
 
 
-    // const JsonTalker::Set setCommands[0] = {
+    bool set_bpm_10(JsonObject json_message, long bpm_10) {
+        (void)json_message; // Silence unused parameter warning
+        _bpm_10 = bpm_10;
+        return true;
+    }
+
+    // const MultiPlayer::Set _setCommands[1] = {
     //     // A list of Set structures
-    //     // {"bpm_10", "Sets the Tempo in BPM x 10", set_bpm_10}
+    //     {"bpm_10", "Sets the Tempo in BPM x 10", set_bpm_10}
     // };
 
 
-    // long get_total_runs(JsonObject json_message) {
+    // long get_bpm_10(JsonObject json_message) {
     //     (void)json_message; // Silence unused parameter warning
-    //     return total_runs;
+    //     return _bpm_10;
     // }
 
-    // long get_total_drops(JsonObject json_message);
-
-    // const JsonTalker::Get getCommands[2] = {
+    // const MultiPlayer::Get getCommands[3] = {
     //     // A list of Get structures
-    //     {"runs", "Gets total runs", &JsonTalker::get_total_runs},
-    //     {"drops", "Gets total drops count", &JsonTalker::get_total_drops}
+    //     {"runs", "Gets total runs", &MultiPlayer::get_total_runs},
+    //     {"drops", "Gets total drops count", &MultiPlayer::get_total_drops},
+    //     {"bpm_10", "Gets the Tempo in BPM x 10", &MultiPlayer::get_bpm_10}
     // };
 
 

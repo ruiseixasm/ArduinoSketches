@@ -177,15 +177,15 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
             message["w"] = static_cast<int>(MessageCode::run);
             for (size_t run_i = 0; run_i < this->runs_count(); ++run_i) {
                 none_list = false;
-                message["n"] = this->runCommands[run_i].name;
-                message["d"] = this->runCommands[run_i].desc;
+                message["n"] = this->_runCommands[run_i].name;
+                message["d"] = this->_runCommands[run_i].desc;
                 sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::set);
             for (size_t set_i = 0; set_i < this->sets_count(); ++set_i) {
                 none_list = false;
-                message["n"] = this->setCommands[set_i].name;
-                message["d"] = this->setCommands[set_i].desc;
+                message["n"] = this->_setCommands[set_i].name;
+                message["d"] = this->_setCommands[set_i].desc;
                 sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::get);

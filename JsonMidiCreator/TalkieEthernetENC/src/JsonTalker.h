@@ -81,17 +81,17 @@ private:
     uint8_t _channel = 0;
 
     
-    long total_runs = 0;
+    long _total_runs = 0;
     // static becaus it's a shared state among all other talkers, device (board) parameter
-    static bool is_led_on;  // keep track of state yourself, by default it's off
+    static bool _is_led_on;  // keep track of state yourself, by default it's off
 
     bool led_on(JsonObject json_message) {
-        if (!is_led_on) {
+        if (!_is_led_on) {
         #ifdef LED_BUILTIN
             digitalWrite(LED_BUILTIN, HIGH);
         #endif
-            is_led_on = true;
-            total_runs++;
+            _is_led_on = true;
+            _total_runs++;
         } else {
             json_message["r"] = "Already On!";
             if (_socket != nullptr)
@@ -102,12 +102,12 @@ private:
     }
 
     bool led_off(JsonObject json_message) {
-        if (is_led_on) {
+        if (_is_led_on) {
         #ifdef LED_BUILTIN
             digitalWrite(LED_BUILTIN, LOW);
         #endif
-            is_led_on = false;
-            total_runs++;
+            _is_led_on = false;
+            _total_runs++;
         } else {
             json_message["r"] = "Already Off!";
             if (_socket != nullptr)
@@ -117,14 +117,14 @@ private:
         return true;
     }
 
-    const JsonTalker::Run runCommands[2] = {
+    const JsonTalker::Run _runCommands[2] = {
         // A list of Run structures
         {"on", "Turns led ON", &JsonTalker::led_on},
         {"off", "Turns led OFF", &JsonTalker::led_off}
     };
 
 
-    const JsonTalker::Set setCommands[0] = {
+    const JsonTalker::Set _setCommands[0] = {
         // A list of Set structures
         // {"bpm_10", "Sets the Tempo in BPM x 10", set_bpm_10}
     };
@@ -132,12 +132,12 @@ private:
 
     long get_total_runs(JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
-        return total_runs;
+        return _total_runs;
     }
 
     long get_total_drops(JsonObject json_message);
 
-    const JsonTalker::Get getCommands[2] = {
+    const JsonTalker::Get _getCommands[2] = {
         // A list of Get structures
         {"runs", "Gets total runs", &JsonTalker::get_total_runs},
         {"drops", "Gets total drops count", &JsonTalker::get_total_drops}
@@ -184,31 +184,31 @@ public:
 
 
 
-    size_t runs_count() { return sizeof(runCommands)/sizeof(JsonTalker::Run); }
+    size_t runs_count() { return sizeof(_runCommands)/sizeof(JsonTalker::Run); }
     const Run* run(const char* cmd) {
         for (size_t index = 0; index < runs_count(); ++index) {
-            if (strcmp(cmd, runCommands[index].name) == 0) {
-                return &runCommands[index];  // Returns the function
+            if (strcmp(cmd, _runCommands[index].name) == 0) {
+                return &_runCommands[index];  // Returns the function
             }
         }
         return nullptr;
     }
 
-    size_t sets_count() { return sizeof(setCommands)/sizeof(JsonTalker::Set); }
+    size_t sets_count() { return sizeof(_setCommands)/sizeof(JsonTalker::Set); }
     const Set* set(const char* cmd) {
         for (size_t index = 0; index < sets_count(); ++index) {
-            if (strcmp(cmd, setCommands[index].name) == 0) {
-                return &setCommands[index];  // Returns the function
+            if (strcmp(cmd, _setCommands[index].name) == 0) {
+                return &_setCommands[index];  // Returns the function
             }
         }
         return nullptr;
     }
 
-    size_t gets_count() { return sizeof(getCommands)/sizeof(JsonTalker::Get); }
+    size_t gets_count() { return sizeof(_getCommands)/sizeof(JsonTalker::Get); }
     const Get* get(const char* cmd) {
         for (size_t index = 0; index < gets_count(); ++index) {
-            if (strcmp(cmd, getCommands[index].name) == 0) {
-                return &getCommands[index];  // Returns the function
+            if (strcmp(cmd, _getCommands[index].name) == 0) {
+                return &_getCommands[index];  // Returns the function
             }
         }
         return nullptr;
