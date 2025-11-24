@@ -54,6 +54,9 @@ public:
         return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
     }
 
+
+
+
     // Now without a method reference `bool (JsonTalker::*method)(JsonObject, long)`
     struct Command {
         const char* name;
@@ -102,6 +105,10 @@ protected:
     long _total_runs = 0;
     // static becaus it's a shared state among all other talkers, device (board) parameter
     static bool _is_led_on;  // keep track of state yourself, by default it's off
+
+
+
+
 
 
     // Can't use method reference because these type of references are class designation dependent,
@@ -205,6 +212,36 @@ public:
     void setSocket(BroadcastSocket* socket) {
         _socket = socket;
     }
+
+    uint8_t command_index(const MessageCode message_code, const char* command_name) {
+        const Command* command = nullptr;
+        uint8_t count = 0;
+        switch (message_code)
+        {
+        case MessageCode::run:
+            command = _manifesto.runs;
+            count = _manifesto.runs_count;
+            break;
+        case MessageCode::set:
+            command = _manifesto.sets;
+            count = _manifesto.sets_count;
+            break;
+        case MessageCode::get:
+            command = _manifesto.gets;
+            count = _manifesto.gets_count;
+            break;
+        default: return 0;
+        }
+        uint8_t i = 0;
+        for (; i < count; i++) {
+            if (strcmp(command_name, command[i].name) == 0)
+                return i;
+        }
+        return i;
+    }
+
+
+
 
 
     size_t runs_count() { return sizeof(_runCommands)/sizeof(Run); }
