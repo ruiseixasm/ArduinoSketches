@@ -73,6 +73,13 @@ public:
         long (JsonTalker::*method)(JsonObject);
     };
 
+
+protected:
+    // Let subclasses override these
+    virtual const Set* get_set_commands() { return _setCommands; }
+    virtual size_t get_set_commands_count() { return sizeof(_setCommands)/sizeof(Set); }
+
+    
 private:
 
     BroadcastSocket* _socket = nullptr;
@@ -187,7 +194,7 @@ public:
         return nullptr;
     }
 
-    
+
     bool echo(JsonObject json_message) {
         Serial.print(json_message["f"].as<String>());
         Serial.print(" - ");
