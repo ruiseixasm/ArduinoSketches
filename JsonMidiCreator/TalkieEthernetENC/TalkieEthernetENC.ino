@@ -39,6 +39,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
 #include "src/JsonTalker.h"
+#include "src/MultiPlayer.hpp"
 
 // #include "SinglePlayer.hpp"
 // #include "MultiplePlayer.hpp"
