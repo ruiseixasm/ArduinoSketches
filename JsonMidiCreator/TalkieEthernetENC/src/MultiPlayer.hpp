@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef MULTI_PLAYER_HPP
 #define MULTI_PLAYER_HPP
 
-#include "JsonTalker.h"    // Include ArduinoJson Library
+#include "JsonTalker.h"    // Includes the ArduinoJson Library
 
 
 // #define MULTI_PLAYER_DEBUG

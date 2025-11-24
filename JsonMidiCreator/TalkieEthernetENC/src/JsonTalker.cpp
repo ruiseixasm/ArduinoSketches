@@ -13,7 +13,7 @@ https://github.com/ruiseixasm/JsonTalkie
 */
 
 #include "BroadcastSocket.h"  // MUST include the full definition!
-#include "JsonTalker.h"    // Include ArduinoJson Library
+#include "JsonTalker.h"    // Includes the ArduinoJson Library
 
 
 char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
