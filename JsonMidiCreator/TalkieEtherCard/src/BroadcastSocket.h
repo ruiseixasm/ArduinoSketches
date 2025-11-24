@@ -28,6 +28,10 @@ private:
 
     JsonTalker* _json_talkers = nullptr;   // A list of Talkers (objects)
     size_t _talker_count = 0;
+    bool _first_package = true;
+    uint32_t _last_package_time = 0;
+    uint32_t _package_time = 0;
+    
 
 protected:
     uint16_t _port = 5005;
@@ -103,7 +107,7 @@ public:
 
 
 
-    static uint16_t readChecksum(char* source_data, size_t* source_len) {
+    uint16_t readChecksum(char* source_data, size_t* source_len) {
         
         // ASCII byte values:
         // 	'c' = 99
@@ -115,20 +119,30 @@ public:
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
         bool at_c0 = false;
+        bool at_i = false;
         size_t data_i = 4;
         for (size_t i = data_i; i < *source_len; ++i) {
-            if (!at_c0 && source_data[i - 3] == 'c' && source_data[i - 1] == ':' && source_data[i - 4] == '"' && source_data[i - 2] == '"') {
+            if (!at_c0 && source_data[i - 1] == ':' && source_data[i - 3] == 'c' && source_data[i - 4] == '"' && source_data[i - 2] == '"') {
                 at_c0 = true;
                 data_checksum = source_data[data_i] - '0';
-                source_data[data_i++] = '0';
-                continue;
+                source_data[data_i] = '0';
+            } else if (!at_i && source_data[i] == ':' && source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                at_i = true;
+                _package_time = 0;
             } else if (at_c0) {
                 if (source_data[i] < '0' || source_data[i] > '9') {
                     at_c0 = false;
                 } else {
                     data_checksum *= 10;
                     data_checksum += source_data[i] - '0';
-                    continue;
+                    continue;   // Avoids the copy of the char
+                }
+            } else if (at_i) {
+                if (source_data[i] < '0' || source_data[i] > '9') {
+                    at_i = false;
+                } else {
+                    _package_time *= 10;
+                    _package_time += source_data[i] - '0';
                 }
             }
             source_data[data_i] = source_data[i]; // Does an offset
