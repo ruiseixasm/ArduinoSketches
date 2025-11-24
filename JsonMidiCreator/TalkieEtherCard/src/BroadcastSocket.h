@@ -53,8 +53,10 @@ protected:
                 Serial.println(checksum);
                 #endif
                 // Triggers all Talkers to processes the received data
+                bool pre_validated = false;
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                    _device_talkers[talker_i].processData(buffer, length);
+                    pre_validated = _device_talkers[talker_i].processData(buffer, length, pre_validated);
+                    if (!pre_validated) break;
                 }
             } else {
                 #ifdef BROADCASTSOCKET_DEBUG
