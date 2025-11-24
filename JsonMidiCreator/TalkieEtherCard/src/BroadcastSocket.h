@@ -123,11 +123,25 @@ public:
         bool at_i = false;
         size_t data_i = 3;
         for (size_t i = data_i; i < *source_len; ++i) {
-            if (source_data[i] == ':' && source_data[i - 2] == 'c' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
-                at_c = true;
-            } else if (source_data[i] == ':' && source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
-                at_i = true;
-                _package_time = 0;
+            if (source_data[i] == ':') {
+                if (source_data[i - 2] == 'c' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                    at_c = true;
+                    data_i++;
+                    continue;
+                } else if (source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                    at_i = true;
+                    _package_time = 0;
+                    data_i++;
+                    continue;
+                }
+            }
+            if (at_i) {
+                if (source_data[i] < '0' || source_data[i] > '9') {
+                    at_i = false;
+                } else {
+                    _package_time *= 10;
+                    _package_time += source_data[i] - '0';
+                }
             } else if (at_c) {
                 if (source_data[i] < '0' || source_data[i] > '9') {
                     at_c = false;
@@ -138,13 +152,6 @@ public:
                     data_checksum *= 10;
                     data_checksum += source_data[i] - '0';
                     continue;   // Avoids the copy of the char
-                }
-            } else if (at_i) {
-                if (source_data[i] < '0' || source_data[i] > '9') {
-                    at_i = false;
-                } else {
-                    _package_time *= 10;
-                    _package_time += source_data[i] - '0';
                 }
             }
             source_data[data_i] = source_data[i]; // Does an offset
