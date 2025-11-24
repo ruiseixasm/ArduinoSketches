@@ -18,6 +18,8 @@ https://github.com/ruiseixasm/JsonTalkie
 
 char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
+bool JsonTalker::is_led_on = false;
+
 
 long JsonTalker::get_total_drops(JsonObject json_message) {
     (void)json_message; // Silence unused parameter warning

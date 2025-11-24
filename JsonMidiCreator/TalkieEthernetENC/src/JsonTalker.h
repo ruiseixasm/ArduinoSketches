@@ -82,7 +82,8 @@ private:
 
     
     long total_runs = 0;
-    bool is_led_on = false;  // keep track of state yourself, by default it's off
+    // static becaus it's a shared state among all other talkers, device (board) parameter
+    static bool is_led_on;  // keep track of state yourself, by default it's off
 
     bool led_on(JsonObject json_message) {
         if (!is_led_on) {
