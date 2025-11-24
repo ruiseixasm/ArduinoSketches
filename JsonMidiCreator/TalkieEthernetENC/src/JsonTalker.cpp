@@ -147,30 +147,6 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     }   // else: If it has no "t" it means for every Talkers
 
 
-    // In theory, a UDP packet on a local area network (LAN) could survive
-    // for about 4.25 minutes (255 seconds).
-    if (_check_set_time && millis() - _sent_set_time[1] > 255000UL) {
-        _check_set_time = false;
-    }
-
-    if (true) {
-
-        #ifdef JSON_TALKER_DEBUG
-        Serial.print(F("Listened: "));
-        serializeJson(message, Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
-        #endif
-
-        // Only set messages are time checked
-        if (message["m"].as<int>() == static_cast<int>(MessageCode::set)) {  // 3 - set
-            _sent_set_time[0] = message["i"].as<uint32_t>();
-            _sent_set_time[1] = generateMessageId();
-            _set_name = message["f"].as<String>(); // Explicit conversion
-            _check_set_time = true;
-        }
-    }
-
-
     // Echo codes:
     //     0 - ROGER
     //     1 - UNKNOWN

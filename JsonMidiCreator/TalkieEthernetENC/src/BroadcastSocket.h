@@ -26,11 +26,16 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 private:
 
+    uint16_t _port = 5005;
     JsonTalker* _json_talkers = nullptr;   // A list of Talkers (objects)
     size_t _talker_count = 0;
+    uint8_t _max_delay_ms = 5;
+    bool _control_timing = false;
+    uint32_t _last_package_time = 0;
+    uint32_t _last_local_time = 0;
+    uint32_t _package_time = 0;
 
 protected:
-    uint16_t _port = 5005;
 
     // Shared _received_data along all JsonTalkie instantiations
     static char _received_data[BROADCAST_SOCKET_BUFFER_SIZE];
@@ -52,6 +57,24 @@ protected:
                 Serial.print(F("C: Validated Checksum of "));
                 Serial.println(checksum);
                 #endif
+
+                if (_max_delay_ms > 0) {
+
+                    if (_control_timing && _package_time < _last_package_time) {
+                        if (_last_package_time - _package_time > static_cast<uint32_t>(_max_delay_ms)) {
+                            #ifdef BROADCASTSOCKET_DEBUG
+                            Serial.print(F("C: Out of time package (too late): "));
+                            Serial.println(_last_package_time - _package_time);
+                            #endif
+                            return length;  // Out fo time package (too late)
+                        }
+                    }
+                    _last_package_time = _package_time;
+                    _last_local_time = millis();
+                    _control_timing = true;
+
+                }
+
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
@@ -94,16 +117,25 @@ public:
         (void)as_reply; // Silence unused parameter warning
         return false;
     }
+
     virtual size_t receive() {
+        // In theory, a UDP packet on a local area network (LAN) could survive
+        // for about 4.25 minutes (255 seconds).
+        if (_max_delay_ms > 0 && millis() - _last_local_time > 255000UL) {
+            _control_timing = false;
+        }
         return 0;
     }
     
     virtual void set_port(uint16_t port) { _port = port; }
     virtual uint16_t get_port() { return _port; }
 
+    virtual void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
+    virtual uint8_t get_max_delay() { return _max_delay_ms; }
 
 
-    static uint16_t readChecksum(char* source_data, size_t* source_len) {
+
+    uint16_t readChecksum(char* source_data, size_t* source_len) {
         
         // ASCII byte values:
         // 	'c' = 99
@@ -114,21 +146,36 @@ public:
 
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
-        bool at_c0 = false;
-        size_t data_i = 4;
+        bool at_c = false;
+        bool at_i = false;
+        size_t data_i = 3;
         for (size_t i = data_i; i < *source_len; ++i) {
-            if (!at_c0 && source_data[i - 3] == 'c' && source_data[i - 1] == ':' && source_data[i - 4] == '"' && source_data[i - 2] == '"') {
-                at_c0 = true;
-                data_checksum = source_data[data_i] - '0';
-                source_data[data_i++] = '0';
-                continue;
-            } else if (at_c0) {
-                if (source_data[i] < '0' || source_data[i] > '9') {
-                    at_c0 = false;
-                } else {
-                    data_checksum *= 10;
-                    data_checksum += source_data[i] - '0';
-                    continue;
+            if (source_data[i] == ':') {
+                if (source_data[i - 2] == 'c' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                    at_c = true;
+                } else if (source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                    at_i = true;
+                    _package_time = 0;
+                }
+            } else {
+                if (at_i) {
+                    if (source_data[i] < '0' || source_data[i] > '9') {
+                        at_i = false;
+                    } else {
+                        _package_time *= 10;
+                        _package_time += source_data[i] - '0';
+                    }
+                } else if (at_c) {
+                    if (source_data[i] < '0' || source_data[i] > '9') {
+                        at_c = false;
+                    } else if (source_data[i - 1] == ':') { // First number in the row
+                        data_checksum = source_data[i] - '0';
+                        source_data[i] = '0';
+                    } else {
+                        data_checksum *= 10;
+                        data_checksum += source_data[i] - '0';
+                        continue;   // Avoids the copy of the char
+                    }
                 }
             }
             source_data[data_i] = source_data[i]; // Does an offset
@@ -151,9 +198,6 @@ public:
         }
         return checksum;
     }
-
-
-
 
 };
 

@@ -75,6 +75,7 @@ public:
     
     bool send(const char* data, size_t size, bool as_reply = false) override {
         uint8_t broadcastIp[4] = {255, 255, 255, 255};
+        uint16_t port = get_port();
         
         #ifdef BROADCAST_ETHERCARD_DEBUG
         Serial.print(F("S: "));
@@ -83,10 +84,10 @@ public:
         #endif
 
         #ifdef ENABLE_DIRECT_ADDRESSING
-        ether.sendUdp(data, size, _port, as_reply ? _source_ip : broadcastIp, _port);
+        ether.sendUdp(data, size, port, as_reply ? _source_ip : broadcastIp, port);
         #else
         (void)as_reply; // Silence unused parameter warning
-        ether.sendUdp(data, size, _port, broadcastIp, _port);
+        ether.sendUdp(data, size, port, broadcastIp, port);
         #endif
 
         return true;
@@ -94,7 +95,7 @@ public:
 
 
     size_t receive() override {
-        _data_length = 0;   // Makes sure it's the Ethernet reading that sets it!
+        _data_length = BroadcastSocket::receive();  // Makes sure it's the Ethernet reading that sets it! (always returns 0)
         ether.packetLoop(ether.packetReceive());
         return _data_length;
     }
@@ -102,8 +103,8 @@ public:
 
     // Modified methods to work with singleton
     void set_port(uint16_t port) override {
-        _port = port;
-        ether.udpServerListenOnPort(staticCallback, _port);
+        BroadcastSocket::set_port(port);
+        ether.udpServerListenOnPort(staticCallback, port);
     }
 };
 
