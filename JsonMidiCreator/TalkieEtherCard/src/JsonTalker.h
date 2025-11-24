@@ -220,18 +220,11 @@ public:
     }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
-
-
     
     bool sendMessage(JsonObject message, bool as_reply = false);
     bool processData(const char* received_data, const size_t data_len, bool pre_validated = false);
 
-
-
-
 };
-
-
 
 
 #endif // DEVICE_TALKER_HPP

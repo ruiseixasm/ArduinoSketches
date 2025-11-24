@@ -103,7 +103,6 @@ public:
     // Modified methods to work with singleton
     void set_port(uint16_t port) override {
         _port = port;
-        _self_instance = this;
         ether.udpServerListenOnPort(staticCallback, _port);
     }
 };
