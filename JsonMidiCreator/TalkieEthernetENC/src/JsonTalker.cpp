@@ -324,6 +324,8 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
             #endif
 
             _channel = message["b"].as<uint8_t>();
+        } else {
+            return false;
         }
         message["b"] = _channel;
         sendMessage(message, true);
