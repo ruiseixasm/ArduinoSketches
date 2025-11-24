@@ -26,7 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 private:
 
-    JsonTalker* _device_talkers = nullptr;   // A list of Talkers (objects)
+    JsonTalker* _json_talkers = nullptr;   // A list of Talkers (objects)
     size_t _talker_count = 0;
 
 protected:
@@ -55,7 +55,7 @@ protected:
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                    pre_validated = _device_talkers[talker_i].processData(buffer, length, pre_validated);
+                    pre_validated = _json_talkers[talker_i].processData(buffer, length, pre_validated);
                     if (!pre_validated) break;
                 }
             } else {
@@ -70,11 +70,11 @@ protected:
 
 
     BroadcastSocket(JsonTalker* device_talkers, size_t talker_count)
-        : _device_talkers(device_talkers), _talker_count(talker_count) {
+        : _json_talkers(device_talkers), _talker_count(talker_count) {
             
             // Sets this socket on all Talkers to processes the received data
             for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                _device_talkers[talker_i].setSocket(this);
+                _json_talkers[talker_i].setSocket(this);
             }
         }
 
