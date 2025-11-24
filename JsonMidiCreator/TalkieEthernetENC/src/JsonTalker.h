@@ -101,6 +101,10 @@ protected:
     static bool _is_led_on;  // keep track of state yourself, by default it's off
 
 
+    // Can't use method reference because these type of references are class designation dependent,
+    // so, they will prevent any possibility of inheritance, this way the only alternative is to
+    // do an indirect reference based on the command position with only a pair of strings and
+    // a following switch case sequence that picks the respective method and calls it directly.
 
     const Manifesto _manifesto = {
         (const Command[]){{"on", "Turns led ON"}, {"off", "Turns led OFF"}},      // runs
