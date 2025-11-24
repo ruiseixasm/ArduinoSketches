@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonTalker.h"
 
 
-// #define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -70,10 +70,14 @@ protected:
                         if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
                             const uint32_t allowed_delay = static_cast<uint32_t>(_max_delay_ms);
                             const uint32_t local_delay = local_time - _last_local_time;
+                            #ifdef BROADCASTSOCKET_DEBUG
+                            Serial.print(F("C: Local delay: "));
+                            Serial.println(local_delay);
+                            #endif
                             if (remote_delay > allowed_delay || local_delay > allowed_delay) {
                                 #ifdef BROADCASTSOCKET_DEBUG
                                 Serial.print(F("C: Out of time package (too late): "));
-                                Serial.println(_last_package_time - _package_time);
+                                Serial.println(remote_delay);
                                 #endif
                                 return length;  // Out fo time package (too late)
                             }
