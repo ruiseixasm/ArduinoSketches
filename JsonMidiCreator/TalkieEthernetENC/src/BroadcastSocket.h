@@ -59,6 +59,11 @@ protected:
             uint16_t received_checksum = this->processData(buffer, &length, &remote_time);
             uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);
             
+            #ifdef BROADCASTSOCKET_DEBUG
+            Serial.print(F("C: Remote time: "));
+            Serial.println(remote_time);
+            #endif
+
             if (received_checksum == checksum) {
                 #ifdef BROADCASTSOCKET_DEBUG
                 Serial.print(F("C: Validated Checksum of "));
