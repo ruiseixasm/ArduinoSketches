@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SOCKET_HPP
-#define BROADCAST_SOCKET_HPP
+#ifndef BROADCAST_SOCKET_H
+#define BROADCAST_SOCKET_H
 
 #include <Arduino.h>    // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "JsonTalker.h"
@@ -228,4 +228,4 @@ public:
 
 };
 
-#endif // BROADCAST_SOCKET_HPP
+#endif // BROADCAST_SOCKET_H

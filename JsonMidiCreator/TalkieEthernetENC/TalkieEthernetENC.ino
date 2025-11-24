@@ -43,10 +43,13 @@ https://github.com/ruiseixasm/JsonTalkie
 // #include "SinglePlayer.hpp"
 // #include "MultiplePlayer.hpp"
 
-const char player1_name[] = "player1";
-const char player1_desc[] = "I'm the Player1";
-JsonTalker player1 = JsonTalker(player1_name, player1_desc);
-JsonTalker talkers[] = { player1 };
+const char talker_name[] = "talker";
+const char talker_desc[] = "I'm a talker";
+JsonTalker talker = JsonTalker(talker_name, talker_desc);
+const char player_name[] = "player";
+const char player_desc[] = "I'm a player";
+JsonTalker player = JsonTalker(player_name, player_desc);
+JsonTalker talkers[] = { talker, player };
 // Singleton requires the & (to get a reference variable)
 auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
 
