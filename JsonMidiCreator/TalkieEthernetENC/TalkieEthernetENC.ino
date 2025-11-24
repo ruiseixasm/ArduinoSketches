@@ -49,7 +49,7 @@ const char talker_desc[] = "I'm a talker";
 JsonTalker talker = JsonTalker(talker_name, talker_desc);
 const char player_name[] = "player";
 const char player_desc[] = "I'm a player";
-JsonTalker player = JsonTalker(player_name, player_desc);
+MultiPlayer player = MultiPlayer(player_name, player_desc);
 JsonTalker talkers[] = { talker, player };
 // Singleton requires the & (to get a reference variable)
 auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));

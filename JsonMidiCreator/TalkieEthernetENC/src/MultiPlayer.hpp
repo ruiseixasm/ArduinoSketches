@@ -17,13 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonTalker.h"    // Include ArduinoJson Library
 
 
-// #define JSON_TALKER_DEBUG
-
-// Readjust if absolutely necessary
-#define BROADCAST_SOCKET_BUFFER_SIZE 128
-
-
-class BroadcastSocket;
+// #define MULTI_PLAYER_DEBUG
 
 
 class MultiPlayer : public JsonTalker {
@@ -32,6 +26,10 @@ private:
 
     
 public:
+    MultiPlayer(const char* name, const char* desc) 
+        : JsonTalker(name, desc) {  // Calls base class constructor
+        // MultiPlayer-specific initialization here
+    }
 
 private:
 
