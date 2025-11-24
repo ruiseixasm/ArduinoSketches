@@ -11,6 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+// #include <avr/pgmspace.h>
+
 
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_EtherCard.hpp"
@@ -56,10 +58,10 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x02};
 
 
 const char nano_name[] = "nano";
-const char nano_desc[] = "Arduino nano board (black box)";
+const char nano_desc[] = "Arduino Nano";
 JsonTalker nano = JsonTalker(nano_name, nano_desc);
 const char uno_name[] = "uno";
-const char uno_desc[] = "Arduino uno board (alike)";
+const char uno_desc[] = "Arduino Uno";
 JsonTalker uno = JsonTalker(uno_name, uno_desc);
 JsonTalker talkers[] = { nano, uno };
 // Singleton requires the & (to get a reference variable)

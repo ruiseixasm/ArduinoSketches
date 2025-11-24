@@ -116,10 +116,10 @@ private:
         return true;
     }
 
-    const JsonTalker::Run runCommands[0] = {
+    const JsonTalker::Run runCommands[2] = {
         // A list of Run structures
-        // {"on", "Turns the blue led ON", &JsonTalker::led_on},
-        // {"off", "Turns the blue led OFF", &JsonTalker::led_off}
+        {"on", "Turns led ON", &JsonTalker::led_on},
+        {"off", "Turns led OFF", &JsonTalker::led_off}
     };
 
 
@@ -136,7 +136,7 @@ private:
 
     const JsonTalker::Get getCommands[1] = {
         // A list of Get structures
-        {"runs", "Gets the total number of runs", &JsonTalker::get_total_runs}
+        {"runs", "Gets total runs", &JsonTalker::get_total_runs}
     };
 
 

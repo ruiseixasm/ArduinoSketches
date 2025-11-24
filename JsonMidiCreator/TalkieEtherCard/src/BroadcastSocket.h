@@ -33,7 +33,7 @@ private:
     uint32_t _last_package_time = 0;
     uint32_t _package_time = 0;
     
-
+    
 protected:
     uint16_t _port = 5005;
 
@@ -58,21 +58,28 @@ protected:
                 Serial.println(checksum);
                 #endif
 
-                // In theory, a UDP packet on a local area network (LAN) could survive
-                // for about 4.25 minutes (255 seconds).
-                // But for this application 5 seconds is the controlling time window
-                if (millis() - _last_package_time > 5000UL) {
-                    _control_timing = false;
-                }
+                if (_max_delay_ms > 0) {
 
-                if (_control_timing) {
-                    if (_last_package_time - _package_time > static_cast<uint32_t>(_max_delay_ms)) {
-
-
+                    // In theory, a UDP packet on a local area network (LAN) could survive
+                    // for about 4.25 minutes (255 seconds).
+                    // But for this application 5 seconds is the controlling time window
+                    if (_package_time - _last_package_time > 5000UL) {
+                        _control_timing = false;
                     }
+
+                    if (_control_timing && _package_time < _last_package_time) {
+                        if (_last_package_time - _package_time > static_cast<uint32_t>(_max_delay_ms)) {
+                            #ifdef BROADCASTSOCKET_DEBUG
+                            Serial.print(F("C: Out of time package (too late): "));
+                            Serial.println(_last_package_time - _package_time);
+                            #endif
+                            return length;  // Out fo time package (too late)
+                        }
+                    }
+                    _last_package_time = _package_time;
+                    _control_timing = true;
+
                 }
-                _last_package_time = _package_time;
-                _control_timing = true;
 
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
@@ -122,6 +129,9 @@ public:
     
     virtual void set_port(uint16_t port) { _port = port; }
     virtual uint16_t get_port() { return _port; }
+
+    virtual void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
+    virtual uint8_t get_max_delay() { return _max_delay_ms; }
 
 
 
