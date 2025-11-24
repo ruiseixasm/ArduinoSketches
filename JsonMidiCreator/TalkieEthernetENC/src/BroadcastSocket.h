@@ -22,6 +22,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
+#define MAX_NETWORK_PACKET_LIFETIME_MS 255000UL  // 255 seconds
 
 class BroadcastSocket {
 private:
@@ -60,8 +61,10 @@ protected:
 
                 if (_max_delay_ms > 0) {
 
-                    if (_control_timing && _package_time < _last_package_time) {
-                        if (_last_package_time - _package_time > static_cast<uint32_t>(_max_delay_ms)) {
+                    if (_control_timing) {
+                        const uint32_t actual_delay = _last_package_time - _package_time;
+                        const uint32_t allowed_delay = static_cast<uint32_t>(_max_delay_ms);
+                        if (actual_delay > allowed_delay && actual_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {
                             #ifdef BROADCASTSOCKET_DEBUG
                             Serial.print(F("C: Out of time package (too late): "));
                             Serial.println(_last_package_time - _package_time);
@@ -72,7 +75,6 @@ protected:
                     _last_package_time = _package_time;
                     _last_local_time = millis();
                     _control_timing = true;
-
                 }
 
                 // Triggers all Talkers to processes the received data
@@ -121,7 +123,7 @@ public:
     virtual size_t receive() {
         // In theory, a UDP packet on a local area network (LAN) could survive
         // for about 4.25 minutes (255 seconds).
-        if (_max_delay_ms > 0 && millis() - _last_local_time > 255000UL) {
+        if (_max_delay_ms > 0 && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
             _control_timing = false;
         }
         return 0;
