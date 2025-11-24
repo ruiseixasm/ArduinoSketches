@@ -281,21 +281,21 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
         #elif defined(ESP32)
             message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
             
-            // Teensy Boards
-            #elif defined(TEENSYDUINO)
-                #if defined(__IMXRT1062__)
-                    message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
-                #elif defined(__MK66FX1M0__)
-                    message["d"] = F("Teensy 3.6 (MK66FX1M0)");
-                #elif defined(__MK64FX512__)
-                    message["d"] = F("Teensy 3.5 (MK64FX512)");
-                #elif defined(__MK20DX256__)
-                    message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
-                #elif defined(__MKL26Z64__)
-                    message["d"] = F("Teensy LC (MKL26Z64)");
-                #else
-                    message["d"] = F("Unknown Teensy Board");
-                #endif
+        // Teensy Boards
+        #elif defined(TEENSYDUINO)
+            #if defined(__IMXRT1062__)
+                message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
+            #elif defined(__MK66FX1M0__)
+                message["d"] = F("Teensy 3.6 (MK66FX1M0)");
+            #elif defined(__MK64FX512__)
+                message["d"] = F("Teensy 3.5 (MK64FX512)");
+            #elif defined(__MK20DX256__)
+                message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
+            #elif defined(__MKL26Z64__)
+                message["d"] = F("Teensy LC (MKL26Z64)");
+            #else
+                message["d"] = F("Unknown Teensy Board");
+            #endif
 
         // ARM (Due, Zero, etc.)
         #elif defined(__arm__)
