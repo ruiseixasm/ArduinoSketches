@@ -42,6 +42,12 @@ protected:
 
     size_t triggerTalkers(char* buffer, size_t length) {
 
+        #ifdef BROADCASTSOCKET_DEBUG
+        Serial.print(F("T: "));
+        Serial.write(buffer, length);
+        Serial.println();
+        #endif
+
         if (length > 3*4 + 2) {
             
             #ifdef BROADCASTSOCKET_DEBUG
@@ -76,7 +82,7 @@ protected:
                             #endif
                             if (remote_delay > allowed_delay || local_delay > allowed_delay) {
                                 #ifdef BROADCASTSOCKET_DEBUG
-                                Serial.print(F("C: Out of time package (too late): "));
+                                Serial.print(F("C: Out of time package (remote delay): "));
                                 Serial.println(remote_delay);
                                 #endif
                                 return length;  // Out fo time package (too late)
