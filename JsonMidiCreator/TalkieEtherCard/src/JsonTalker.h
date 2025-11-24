@@ -94,7 +94,7 @@ private:
         } else {
             json_message["r"] = "Already On!";
             if (_socket != nullptr)
-                this->sendMessage(_socket, json_message);
+                this->sendMessage(json_message);
             return false;
         }
         return true;
@@ -110,7 +110,7 @@ private:
         } else {
             json_message["r"] = "Already Off!";
             if (_socket != nullptr)
-                this->sendMessage(_socket, json_message);
+                this->sendMessage(json_message);
             return false;
         }
         return true;
@@ -223,8 +223,8 @@ public:
 
 
     
-    bool sendMessage(BroadcastSocket* socket, JsonObject message, bool as_reply = false);
-    void processData(BroadcastSocket* socket, const char* received_data, const size_t data_len);
+    bool sendMessage(JsonObject message, bool as_reply = false);
+    bool processData(const char* received_data, const size_t data_len, bool pre_validated = false);
 
 
 

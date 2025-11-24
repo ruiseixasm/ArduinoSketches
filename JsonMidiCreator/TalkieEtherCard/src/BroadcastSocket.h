@@ -54,7 +54,7 @@ protected:
                 #endif
                 // Triggers all Talkers to processes the received data
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                    _device_talkers[talker_i].processData(this, buffer, length);
+                    _device_talkers[talker_i].processData(buffer, length);
                 }
             } else {
                 #ifdef BROADCASTSOCKET_DEBUG
