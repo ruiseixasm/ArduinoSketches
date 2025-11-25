@@ -43,10 +43,10 @@ private:
         #endif
 
         if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-            memcpy(_received_data, data, length);
+            memcpy(_receiving_buffer, data, length);
             memcpy(_source_ip, src_ip, 4);
             if (_self_instance) {
-                _data_length = _self_instance->triggerTalkers(_received_data, length);
+                _data_length = _self_instance->triggerTalkers(_receiving_buffer, length);
             } else {
                 #ifdef BROADCAST_ETHERCARD_DEBUG
                 Serial.println(F("Instance is NULL!"));

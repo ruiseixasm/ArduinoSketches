@@ -108,7 +108,7 @@ public:
             // Avoids overflow
             if (packetSize > BROADCAST_SOCKET_BUFFER_SIZE) return 0;
 
-            int length = _udp->read(_received_data, static_cast<size_t>(packetSize));
+            int length = _udp->read(_receiving_buffer, static_cast<size_t>(packetSize));
             if (length <= 0) return 0;  // Your requested check - handles all error cases
             
             #ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -122,7 +122,7 @@ public:
             #endif
             
             _source_ip = _udp->remoteIP();
-            return triggerTalkers(_received_data, static_cast<size_t>(length));
+            return triggerTalkers(_receiving_buffer, static_cast<size_t>(length));
         }
         return 0;   // nothing received
     }

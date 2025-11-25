@@ -16,5 +16,5 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.h"  // MUST include the full definition!
 
 
-char BroadcastSocket::_received_data[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+char BroadcastSocket::_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 

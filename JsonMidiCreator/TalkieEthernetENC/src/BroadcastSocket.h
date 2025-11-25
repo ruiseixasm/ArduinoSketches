@@ -103,7 +103,7 @@ protected:
 
     uint16_t _port = 5005;
     // Shared _received_data along all JsonTalkie instantiations
-    static char _received_data[BROADCAST_SOCKET_BUFFER_SIZE];
+    static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 
     
     size_t triggerTalkers(char* buffer, size_t length) {
