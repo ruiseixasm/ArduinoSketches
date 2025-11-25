@@ -325,9 +325,18 @@ public:
     bool remoteSend(JsonObject json_message, bool as_reply = false) {
 
         JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
-        if (!json_message["i"].is<uint32_t>() || 
-                (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error))    // Skips response messages
+        if (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error) {
             json_message["i"] = (uint32_t)millis();
+
+        } else if (!json_message["i"].is<uint32_t>()) {// Mekes sure response messages has na "i"
+
+            #ifdef BROADCASTSOCKET_DEBUG
+            Serial.print(F("R: Response message without an indentifier (i)"));
+            serializeJson(json_message, Serial);
+            Serial.println();  // optional: just to add a newline after the JSON
+            #endif
+
+        }
 
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
