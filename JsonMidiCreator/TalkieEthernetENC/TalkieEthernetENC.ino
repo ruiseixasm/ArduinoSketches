@@ -15,6 +15,9 @@ https://github.com/ruiseixasm/JsonTalkie
 // To upload a sketch to an ESP32, when the "......." appears press the button BOOT for a while
 
 
+// Needed for the SPI module connection
+#include <SPI.h>
+
 // ESP32 wiring with the ENC28J60 (SPI)
 
 //     MOSI (D23)  =   SI
@@ -76,9 +79,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef LED_BUILTIN
   #define LED_BUILTIN 2  // Fallback definition if not already defined
 #endif
-
-// Needed for the SPI module connection
-#include <SPI.h>
 
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
