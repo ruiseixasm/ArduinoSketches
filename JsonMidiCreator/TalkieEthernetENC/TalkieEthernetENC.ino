@@ -59,7 +59,6 @@ auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(t
 
 
 
-
 EthernetUDP udp;
 
 // uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};   // DEFAULT
@@ -198,6 +197,10 @@ void setup() {
     // json_talkie.plug_socket(&broadcast_socket);
 
     Serial.println("Talker ready with EthernetENC!");
+    Serial.println("Connecting Talkers with each other");
+
+    // Connect the talkers with each other (static variable)
+    JsonTalker::setTalkers(talkers, sizeof(talkers)/sizeof(JsonTalker*));
 
     // Final startup indication
     digitalWrite(LED_BUILTIN, HIGH);
