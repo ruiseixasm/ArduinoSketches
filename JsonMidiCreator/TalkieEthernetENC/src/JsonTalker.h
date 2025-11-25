@@ -106,7 +106,8 @@ protected:
     };
 
 
-    uint8_t command_index(const MessageCode message_code, const char* command_name) {
+    uint8_t command_index(const MessageCode message_code, JsonObject json_message) {
+        const char* command_name = json_message["n"].as<const char*>();
         const Command* command = nullptr;
         uint8_t count = 255;    // 255 means not found!
         switch (message_code)

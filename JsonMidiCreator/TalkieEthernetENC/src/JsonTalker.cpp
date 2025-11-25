@@ -191,26 +191,25 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
         {   // Because of none_list !!!
             bool none_list = true;
             message["w"] = static_cast<int>(MessageCode::run);
-            for (size_t i = 0; i < this->runs_count(); ++i) {
+
+            for (size_t i = 0; i < _manifesto.runs_count; ++i) {
                 none_list = false;
-                message["n"] = this->_runCommands[i].name;
-                message["d"] = this->_runCommands[i].desc;
+                message["n"] = _manifesto.runs[i].name;
+                message["d"] = _manifesto.runs[i].desc;
                 sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::set);
-            const Set* commands = get_set_commands();
-            size_t count = get_set_commands_count();
-            for (size_t i = 0; i < count; ++i) {
+            for (size_t i = 0; i < _manifesto.sets_count; ++i) {
                 none_list = false;
-                message["n"] = commands[i].name;
-                message["d"] = commands[i].desc;
+                message["n"] = _manifesto.sets[i].name;
+                message["d"] = _manifesto.sets[i].desc;
                 sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::get);
-            for (size_t i = 0; i < this->gets_count(); ++i) {
+            for (size_t i = 0; i < _manifesto.gets_count; ++i) {
                 none_list = false;
-                message["n"] = this->_getCommands[i].name;
-                message["d"] = this->_getCommands[i].desc;
+                message["n"] = _manifesto.gets[i].name;
+                message["d"] = _manifesto.gets[i].desc;
                 sendMessage(message, true);
             }
             if(none_list) {
@@ -222,16 +221,16 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     case MessageCode::run:
         if (message["n"].is<String>()) {
 
-            const JsonTalker::Run* run = this->run(message["n"]);
-            if (run == nullptr) {
-                message["g"] = 1;   // UNKNOWN
-                sendMessage(message, true);
-            } else {
+            const uint8_t command_found_i = command_index(MessageCode::run, message);
+            if (command_found_i < 255) {
                 message["g"] = 0;       // ROGER
                 sendMessage(message, true);
                 // No memory leaks because message_doc exists in the listen() method stack
                 message.remove("g");
-                (this->*(run->method))(message);
+                command_run(command_found_i, message);
+            } else {
+                message["g"] = 1;   // UNKNOWN
+                sendMessage(message, true);
             }
         }
         break;
@@ -239,32 +238,33 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     case MessageCode::set:
         if (message["n"].is<String>() && message["v"].is<long>()) {
 
-            const JsonTalker::Set* set = this->set(message["n"]);
-            if (set == nullptr) {
-                message["g"] = 1;   // UNKNOWN
-                sendMessage(message, true);
-            } else {
+            const uint8_t command_found_i = command_index(MessageCode::set, message);
+            if (command_found_i < 255) {
                 message["g"] = 0;       // ROGER
                 sendMessage(message, true);
                 // No memory leaks because message_doc exists in the listen() method stack
                 message.remove("g");
-                (this->*(set->method))(message, message["v"].as<long>());
+                command_set(command_found_i, message);
+            } else {
+                message["g"] = 1;   // UNKNOWN
+                sendMessage(message, true);
             }
         }
         break;
     
     case MessageCode::get:
         if (message["n"].is<String>()) {
-            const JsonTalker::Get* get = this->get(message["n"]);
-            if (get == nullptr) {
-                message["g"] = 1;   // UNKNOWN
-                sendMessage(message, true);
-            } else {
+
+            const uint8_t command_found_i = command_index(MessageCode::get, message);
+            if (command_found_i < 255) {
                 message["g"] = 0;       // ROGER
                 sendMessage(message, true);
                 // No memory leaks because message_doc exists in the listen() method stack
                 message.remove("g");
-                message["v"] = (this->*(get->method))(message);
+                message["v"] = command_get(command_found_i, message);
+                sendMessage(message, true);
+            } else {
+                message["g"] = 1;   // UNKNOWN
                 sendMessage(message, true);
             }
         }
