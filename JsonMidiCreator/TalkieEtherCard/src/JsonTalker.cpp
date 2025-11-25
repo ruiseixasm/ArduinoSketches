@@ -12,11 +12,27 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#include "BroadcastSocket.h"  // MUST include the full definition!
-#include "JsonTalker.h"    // Include ArduinoJson Library
+#include "JsonTalker.h"         // Includes the ArduinoJson Library
+#include "BroadcastSocket.h"    // MUST include the full definition!
 
 
 char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+
+bool JsonTalker::_is_led_on = false;
+
+
+void JsonTalker::set_delay(uint8_t delay) {
+    return _socket->set_max_delay(delay);
+}
+
+uint8_t JsonTalker::get_delay() {
+    return _socket->get_max_delay();
+}
+
+long JsonTalker::get_total_drops() {
+    return _socket->get_drops_count();
+}
+
 
 
 
@@ -27,7 +43,7 @@ uint16_t JsonTalker::setChecksum(JsonObject message) {
     message["c"] = checksum;
     return checksum;
 }
-    
+
 
 bool JsonTalker::sendMessage(JsonObject message, bool as_reply) {
     if (_socket == nullptr) return false;
@@ -74,7 +90,7 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     if (_socket == nullptr) return false;
     
     #ifdef JSON_TALKER_DEBUG
-    Serial.println(F("Validating..."));
+    Serial.println(F("Processing..."));
     #endif
     
     // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
@@ -103,12 +119,6 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
 
     if (!pre_validated) {
 
-        if (!message["m"].is<int>()) {
-            #ifdef JSON_TALKER_DEBUG
-            Serial.println(F("Message \"m\" is NOT an integer!"));
-            #endif
-            return false;
-        }
         if (!message["f"].is<String>()) {
             #ifdef JSON_TALKER_DEBUG
             Serial.println(0);
@@ -162,7 +172,7 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     MessageCode message_code = static_cast<MessageCode>(message["m"].as<int>());
     message["w"] = message["m"].as<int>();
     message["t"] = message["f"];
-    message["m"] = 6;   // echo
+    message["m"] = static_cast<int>(MessageCode::echo);
 
     switch (message_code)
     {
@@ -174,25 +184,35 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     case MessageCode::list:
         {   // Because of none_list !!!
             bool none_list = true;
+
+            // In your list handler:
+            
+            #ifdef JSON_TALKER_DEBUG
+            Serial.print("=== This object is: ");
+            Serial.println(class_name());
+            #endif
+        
+            const Manifesto& my_manifesto = get_manifesto();
+
             message["w"] = static_cast<int>(MessageCode::run);
-            for (size_t run_i = 0; run_i < this->runs_count(); ++run_i) {
+            for (size_t i = 0; i < my_manifesto.runs_count; ++i) {
                 none_list = false;
-                message["n"] = this->_runCommands[run_i].name;
-                message["d"] = this->_runCommands[run_i].desc;
+                message["n"] = my_manifesto.runs[i].name;
+                message["d"] = my_manifesto.runs[i].desc;
                 sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::set);
-            for (size_t set_i = 0; set_i < this->sets_count(); ++set_i) {
+            for (size_t i = 0; i < my_manifesto.sets_count; ++i) {
                 none_list = false;
-                message["n"] = this->_setCommands[set_i].name;
-                message["d"] = this->_setCommands[set_i].desc;
+                message["n"] = my_manifesto.sets[i].name;
+                message["d"] = my_manifesto.sets[i].desc;
                 sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::get);
-            for (size_t get_i = 0; get_i < this->gets_count(); ++get_i) {
+            for (size_t i = 0; i < my_manifesto.gets_count; ++i) {
                 none_list = false;
-                message["n"] = this->getCommands[get_i].name;
-                message["d"] = this->getCommands[get_i].desc;
+                message["n"] = my_manifesto.gets[i].name;
+                message["d"] = my_manifesto.gets[i].desc;
                 sendMessage(message, true);
             }
             if(none_list) {
@@ -204,16 +224,21 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     case MessageCode::run:
         if (message["n"].is<String>()) {
 
-            const JsonTalker::Run* run = this->run(message["n"]);
-            if (run == nullptr) {
-                message["g"] = 1;   // UNKNOWN
-                sendMessage(message, true);
-            } else {
+            const uint8_t command_found_i = command_index(MessageCode::run, message);
+            if (command_found_i < 255) {
+
+                #ifdef JSON_TALKER_DEBUG
+                Serial.println(F("RUN found, now being processed..."));
+                #endif
+        
                 message["g"] = 0;       // ROGER
                 sendMessage(message, true);
                 // No memory leaks because message_doc exists in the listen() method stack
                 message.remove("g");
-                (this->*(run->method))(message);
+                command_run(command_found_i, message);
+            } else {
+                message["g"] = 1;   // UNKNOWN
+                sendMessage(message, true);
             }
         }
         break;
@@ -221,32 +246,33 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     case MessageCode::set:
         if (message["n"].is<String>() && message["v"].is<long>()) {
 
-            const JsonTalker::Set* set = this->set(message["n"]);
-            if (set == nullptr) {
-                message["g"] = 1;   // UNKNOWN
-                sendMessage(message, true);
-            } else {
+            const uint8_t command_found_i = command_index(MessageCode::set, message);
+            if (command_found_i < 255) {
                 message["g"] = 0;       // ROGER
                 sendMessage(message, true);
                 // No memory leaks because message_doc exists in the listen() method stack
                 message.remove("g");
-                (this->*(set->method))(message, message["v"].as<long>());
+                command_set(command_found_i, message);
+            } else {
+                message["g"] = 1;   // UNKNOWN
+                sendMessage(message, true);
             }
         }
         break;
     
     case MessageCode::get:
         if (message["n"].is<String>()) {
-            const JsonTalker::Get* get = this->get(message["n"]);
-            if (get == nullptr) {
-                message["g"] = 1;   // UNKNOWN
-                sendMessage(message, true);
-            } else {
+
+            const uint8_t command_found_i = command_index(MessageCode::get, message);
+            if (command_found_i < 255) {
                 message["g"] = 0;       // ROGER
                 sendMessage(message, true);
                 // No memory leaks because message_doc exists in the listen() method stack
                 message.remove("g");
-                message["v"] = (this->*(get->method))(message);
+                message["v"] = command_get(command_found_i, message);
+                sendMessage(message, true);
+            } else {
+                message["g"] = 1;   // UNKNOWN
                 sendMessage(message, true);
             }
         }
@@ -272,21 +298,21 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
         #elif defined(ESP32)
             message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
             
-            // Teensy Boards
-            #elif defined(TEENSYDUINO)
-                #if defined(__IMXRT1062__)
-                    message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
-                #elif defined(__MK66FX1M0__)
-                    message["d"] = F("Teensy 3.6 (MK66FX1M0)");
-                #elif defined(__MK64FX512__)
-                    message["d"] = F("Teensy 3.5 (MK64FX512)");
-                #elif defined(__MK20DX256__)
-                    message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
-                #elif defined(__MKL26Z64__)
-                    message["d"] = F("Teensy LC (MKL26Z64)");
-                #else
-                    message["d"] = F("Unknown Teensy Board");
-                #endif
+        // Teensy Boards
+        #elif defined(TEENSYDUINO)
+            #if defined(__IMXRT1062__)
+                message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
+            #elif defined(__MK66FX1M0__)
+                message["d"] = F("Teensy 3.6 (MK66FX1M0)");
+            #elif defined(__MK64FX512__)
+                message["d"] = F("Teensy 3.5 (MK64FX512)");
+            #elif defined(__MK20DX256__)
+                message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
+            #elif defined(__MKL26Z64__)
+                message["d"] = F("Teensy LC (MKL26Z64)");
+            #else
+                message["d"] = F("Unknown Teensy Board");
+            #endif
 
         // ARM (Due, Zero, etc.)
         #elif defined(__arm__)
@@ -299,6 +325,8 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
         #endif
 
             sendMessage(message, true);
+
+            // TO INSERT HERE EXTRA DATA !!
         }
         break;
     

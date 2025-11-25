@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SOCKET_HPP
-#define BROADCAST_SOCKET_HPP
+#ifndef BROADCAST_SOCKET_H
+#define BROADCAST_SOCKET_H
 
 #include <Arduino.h>    // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "JsonTalker.h"
@@ -22,25 +22,33 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
+#define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
 class BroadcastSocket {
 private:
 
-    uint16_t _port = 5005;
-    JsonTalker* _json_talkers = nullptr;   // A list of Talkers (objects)
+    // Pointer PRESERVE the polymorphism while objects don't!
+    JsonTalker** _json_talkers = nullptr;   // Change to pointer-to-pointer
     size_t _talker_count = 0;
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
-    uint32_t _last_package_time = 0;
     uint32_t _last_local_time = 0;
-    uint32_t _package_time = 0;
+    uint32_t _last_remote_time = 0;
+    long _drops_count = 0;
 
 protected:
 
+    uint16_t _port = 5005;
     // Shared _received_data along all JsonTalkie instantiations
     static char _received_data[BROADCAST_SOCKET_BUFFER_SIZE];
 
     size_t triggerTalkers(char* buffer, size_t length) {
+
+        #ifdef BROADCASTSOCKET_DEBUG
+        Serial.print(F("T: "));
+        Serial.write(buffer, length);
+        Serial.println();
+        #endif
 
         if (length > 3*4 + 2) {
             
@@ -49,8 +57,15 @@ protected:
             Serial.println(_talker_count);
             #endif
 
-            uint16_t received_checksum = BroadcastSocket::readChecksum(buffer, &length);
+            int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
+            uint32_t remote_time = 0;
+            uint16_t received_checksum = this->processData(buffer, &length, &message_code_int, &remote_time);
             uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);
+            
+            #ifdef BROADCASTSOCKET_DEBUG
+            Serial.print(F("C: Remote time: "));
+            Serial.println(remote_time);
+            #endif
 
             if (received_checksum == checksum) {
                 #ifdef BROADCASTSOCKET_DEBUG
@@ -58,27 +73,58 @@ protected:
                 Serial.println(checksum);
                 #endif
 
+                if (message_code_int == 1000) { // Found no message code!
+                    #ifdef BROADCASTSOCKET_DEBUG
+                    Serial.println(F("C: No message code!"));
+                    #endif
+
+                    return length;
+                }
+                
                 if (_max_delay_ms > 0) {
 
-                    if (_control_timing && _package_time < _last_package_time) {
-                        if (_last_package_time - _package_time > static_cast<uint32_t>(_max_delay_ms)) {
-                            #ifdef BROADCASTSOCKET_DEBUG
-                            Serial.print(F("C: Out of time package (too late): "));
-                            Serial.println(_last_package_time - _package_time);
-                            #endif
-                            return length;  // Out fo time package (too late)
-                        }
-                    }
-                    _last_package_time = _package_time;
-                    _last_local_time = millis();
-                    _control_timing = true;
+                    JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(message_code_int);
 
+                    if (!(message_code < JsonTalker::MessageCode::run || message_code > JsonTalker::MessageCode::get)) {
+
+                        #ifdef BROADCASTSOCKET_DEBUG
+                        Serial.print(F("C: Message code requires delay check: "));
+                        Serial.println(message_code_int);
+                        #endif
+
+                        const uint32_t local_time = millis();
+                        
+                        if (_control_timing) {
+                            
+                            const uint32_t remote_delay = _last_remote_time - remote_time;  // Package received after
+
+                            if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
+                                const uint32_t allowed_delay = static_cast<uint32_t>(_max_delay_ms);
+                                const uint32_t local_delay = local_time - _last_local_time;
+                                #ifdef BROADCASTSOCKET_DEBUG
+                                Serial.print(F("C: Local delay: "));
+                                Serial.println(local_delay);
+                                #endif
+                                if (remote_delay > allowed_delay || local_delay > allowed_delay) {
+                                    #ifdef BROADCASTSOCKET_DEBUG
+                                    Serial.print(F("C: Out of time package (remote delay): "));
+                                    Serial.println(remote_delay);
+                                    #endif
+                                    _drops_count++;
+                                    return length;  // Out of time package (too late)
+                                }
+                            }
+                        }
+                        _last_local_time = local_time;
+                        _last_remote_time = remote_time;
+                        _control_timing = true;
+                    }
                 }
 
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                    pre_validated = _json_talkers[talker_i].processData(buffer, length, pre_validated);
+                    pre_validated = _json_talkers[talker_i]->processData(buffer, length, pre_validated);
                     if (!pre_validated) break;
                 }
             } else {
@@ -92,12 +138,12 @@ protected:
     }
 
 
-    BroadcastSocket(JsonTalker* json_talkers, size_t talker_count)
+    BroadcastSocket(JsonTalker** json_talkers, size_t talker_count)
         : _json_talkers(json_talkers), _talker_count(talker_count) {
             
             // Sets this socket on all Talkers to processes the received data
             for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                _json_talkers[talker_i].setSocket(this);
+                _json_talkers[talker_i]->setSocket(this);
             }
         }
 
@@ -121,7 +167,8 @@ public:
     virtual size_t receive() {
         // In theory, a UDP packet on a local area network (LAN) could survive
         // for about 4.25 minutes (255 seconds).
-        if (_max_delay_ms > 0 && millis() - _last_local_time > 255000UL) {
+        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
+        if (_control_timing && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
             _control_timing = false;
         }
         return 0;
@@ -130,12 +177,13 @@ public:
     virtual void set_port(uint16_t port) { _port = port; }
     virtual uint16_t get_port() { return _port; }
 
-    virtual void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
-    virtual uint8_t get_max_delay() { return _max_delay_ms; }
+
+    void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
+    uint8_t get_max_delay() { return _max_delay_ms; }
+    long get_drops_count() { return _drops_count; }
 
 
-
-    uint16_t readChecksum(char* source_data, size_t* source_len) {
+    uint16_t processData(char* source_data, size_t* source_len, int* message_code_int, uint32_t* remote_time) {
         
         // ASCII byte values:
         // 	'c' = 99
@@ -146,6 +194,7 @@ public:
 
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
+        bool at_m = false;
         bool at_c = false;
         bool at_i = false;
         size_t data_i = 3;
@@ -155,15 +204,16 @@ public:
                     at_c = true;
                 } else if (source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
                     at_i = true;
-                    _package_time = 0;
+                } else if (source_data[i - 2] == 'm' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                    at_m = true;
                 }
             } else {
                 if (at_i) {
                     if (source_data[i] < '0' || source_data[i] > '9') {
                         at_i = false;
                     } else {
-                        _package_time *= 10;
-                        _package_time += source_data[i] - '0';
+                        *remote_time *= 10;
+                        *remote_time += source_data[i] - '0';
                     }
                 } else if (at_c) {
                     if (source_data[i] < '0' || source_data[i] > '9') {
@@ -175,6 +225,15 @@ public:
                         data_checksum *= 10;
                         data_checksum += source_data[i] - '0';
                         continue;   // Avoids the copy of the char
+                    }
+                } else if (at_m) {
+                    if (source_data[i] < '0' || source_data[i] > '9') {
+                        at_m = false;
+                    } else if (source_data[i - 1] == ':') { // First number in the row
+                        *message_code_int = source_data[i] - '0';   // Message code found and it's a number
+                    } else {
+                        *message_code_int *= 10;
+                        *message_code_int += source_data[i] - '0';
                     }
                 }
             }
@@ -201,4 +260,4 @@ public:
 
 };
 
-#endif // BROADCAST_SOCKET_HPP
+#endif // BROADCAST_SOCKET_H

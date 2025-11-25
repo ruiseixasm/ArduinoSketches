@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef DEVICE_TALKER_HPP
-#define DEVICE_TALKER_HPP
+#ifndef JSON_TALKER_H
+#define JSON_TALKER_H
 
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
@@ -35,6 +35,8 @@ private:
 
 public:
 
+    virtual const char* class_name() const { return "JsonTalker"; }
+
     enum class MessageCode {
         talk,
         list,
@@ -54,26 +56,22 @@ public:
         return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
     }
 
-
-    struct Run {
-        const char* name;      // "buzz", "print", etc.
-        const char* desc;      // Description
-        bool (JsonTalker::*method)(JsonObject);
+    // Now without a method reference `bool (JsonTalker::*method)(JsonObject, long)`
+    struct Command {
+        const char* name;
+        const char* desc;
     };
 
-    struct Set {
-        const char* name;      // "buzz", "print", etc.
-        const char* desc;      // Description
-        bool (JsonTalker::*method)(JsonObject, long);
+    struct Manifesto {
+        const Command* runs;
+        const Command* sets;
+        const Command* gets;
+        const uint8_t runs_count;
+        const uint8_t sets_count;
+        const uint8_t gets_count;
     };
 
-    struct Get {
-        const char* name;      // "buzz", "print", etc.
-        const char* desc;      // Description
-        long (JsonTalker::*method)(JsonObject);
-    };
-
-private:
+protected:
 
     BroadcastSocket* _socket = nullptr;
     const char* _name;      // Name of the Talker
@@ -82,62 +80,177 @@ private:
 
     
     long _total_runs = 0;
-    bool _is_led_on = false;  // keep track of state yourself, by default it's off
+    // static becaus it's a shared state among all other talkers, device (board) parameter
+    static bool _is_led_on;  // keep track of state yourself, by default it's off
 
-    bool led_on(JsonObject json_message) {
-        if (!_is_led_on) {
-        #ifdef LED_BUILTIN
-            digitalWrite(LED_BUILTIN, HIGH);
-        #endif
-            _is_led_on = true;
-            _total_runs++;
-        } else {
-            json_message["r"] = "Already On!";
-            if (_socket != nullptr)
-                this->sendMessage(json_message);
-            return false;
-        }
-        return true;
+
+    // Can't use method reference because these type of references are class designation dependent,
+    // so, they will prevent any possibility of inheritance, this way the only alternative is to
+    // do an indirect reference based on the command position with only a pair of strings and
+    // a following switch case sequence that picks the respective method and calls it directly.
+
+    // Virtual method that returns static manifesto (can't override class member variables)
+    virtual const Manifesto& get_manifesto() const {
+
+        static const Manifesto _manifesto = {
+            (const Command[]){  // runs
+                {"on", "Turns led ON"},
+                {"off", "Turns led OFF"}
+            },
+            (const Command[]){  // sets 
+                {"delay", "Sets the socket max delay"}
+            },
+            (const Command[]){  // gets
+                {"delay", "Gets the socket max delay"},
+                {"drops", "Gets total drops count"},
+                {"runs", "Gets total runs"}
+            },
+            2,
+            1,
+            3
+        };
+
+        return _manifesto;
     }
 
-    bool led_off(JsonObject json_message) {
-        if (_is_led_on) {
-        #ifdef LED_BUILTIN
-            digitalWrite(LED_BUILTIN, LOW);
-        #endif
-            _is_led_on = false;
-            _total_runs++;
-        } else {
-            json_message["r"] = "Already Off!";
-            if (_socket != nullptr)
-                this->sendMessage(json_message);
-            return false;
+
+    uint8_t command_index(const MessageCode message_code, JsonObject json_message) {
+        const char* command_name = json_message["n"].as<const char*>();
+        const Command* command = nullptr;
+        uint8_t count = 0;
+        const Manifesto& my_manifesto = get_manifesto();
+        switch (message_code)
+        {
+        case MessageCode::run:
+            command = my_manifesto.runs;
+            count = my_manifesto.runs_count;
+            break;
+        case MessageCode::set:
+            command = my_manifesto.sets;
+            count = my_manifesto.sets_count;
+            break;
+        case MessageCode::get:
+            command = my_manifesto.gets;
+            count = my_manifesto.gets_count;
+            break;
+        default: return 255;    // 255 means not found!
         }
-        return true;
+        for (uint8_t i = 0; i < count; i++) {
+            if (strcmp(command_name, command[i].name) == 0)
+                return i;
+        }
+        return 255; // 255 means not found!
     }
 
-    const JsonTalker::Run _runCommands[2] = {
-        // A list of Run structures
-        {"on", "Turns led ON", &JsonTalker::led_on},
-        {"off", "Turns led OFF", &JsonTalker::led_off}
-    };
 
-
-    const JsonTalker::Set _setCommands[0] = {
-        // A list of Set structures
-        // {"bpm_10", "Sets the Tempo in BPM x 10", set_bpm_10}
-    };
-
-
-    long get_total_runs(JsonObject json_message) {
+    virtual bool command_run(const uint8_t command_index, JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
-        return _total_runs;
+        switch (command_index)
+        {
+        case 0:
+            {
+                #ifdef JSON_TALKER_DEBUG
+                Serial.println(F("Case 0 - Turning LED ON"));
+                #endif
+        
+                if (!_is_led_on) {
+                #ifdef LED_BUILTIN
+                    #ifdef JSON_TALKER_DEBUG
+                        Serial.print(F("LED_BUILTIN IS DEFINED as: "));
+                        Serial.println(LED_BUILTIN);
+                    #endif
+                    digitalWrite(LED_BUILTIN, HIGH);
+                #else
+                    #ifdef JSON_TALKER_DEBUG
+                        Serial.println(F("LED_BUILTIN IS NOT DEFINED in this context!"));
+                    #endif
+                #endif
+                    _is_led_on = true;
+                    _total_runs++;
+                } else {
+                    json_message["r"] = "Already On!";
+                    if (_socket != nullptr)
+                        this->sendMessage(json_message);
+                    return false;
+                }
+                return true;
+            }
+            break;
+        
+        case 1:
+            {
+                #ifdef JSON_TALKER_DEBUG
+                Serial.println(F("Case 1 - Turning LED OFF"));
+                #endif
+        
+                if (_is_led_on) {
+                #ifdef LED_BUILTIN
+                    digitalWrite(LED_BUILTIN, LOW);
+                #endif
+                    _is_led_on = false;
+                    _total_runs++;
+                } else {
+                    json_message["r"] = "Already Off!";
+                    if (_socket != nullptr)
+                        this->sendMessage(json_message);
+                    return false;
+                }
+                return true;
+            }
+            break;
+        
+        default: return false;  // Nothing done
+        }
     }
 
-    const JsonTalker::Get getCommands[1] = {
-        // A list of Get structures
-        {"runs", "Gets total runs", &JsonTalker::get_total_runs}
-    };
+    
+    virtual bool command_set(const uint8_t command_index, JsonObject json_message) {
+        long json_value = json_message["v"].as<long>();
+        switch (command_index)
+        {
+        case 0:
+            {
+                this->set_delay(static_cast<uint8_t>(json_value));
+                return true;
+            }
+            break;
+        
+        default: return false;
+        }
+    }
+
+    
+    virtual long command_get(const uint8_t command_index, JsonObject json_message) {
+        (void)json_message; // Silence unused parameter warning
+        switch (command_index)
+        {
+        case 0:
+            {
+                return static_cast<long>(this->get_delay());
+            }
+            break;
+
+        case 1:
+            {
+                return this->get_total_drops();
+            }
+            break;
+
+        case 2:
+            {
+                return _total_runs;
+            }
+            break;
+        
+        default: return 0;  // Has to return something
+        }
+    }
+
+
+    void set_delay(uint8_t delay);
+    uint8_t get_delay();
+    long get_total_drops();
+    long get_total_runs() { return _total_runs; }
 
 
 public:
@@ -146,11 +259,14 @@ public:
     JsonTalker() = delete;
         
     JsonTalker(const char* name, const char* desc)
-        : _name(name), _desc(desc) {}
+        : _name(name), _desc(desc) {
+            // Nothing to see here
+        }
 
     void setSocket(BroadcastSocket* socket) {
         _socket = socket;
     }
+
 
     bool echo(JsonObject json_message) {
         Serial.print(json_message["f"].as<String>());
@@ -179,41 +295,8 @@ public:
     }
 
 
-
-    size_t runs_count() { return sizeof(_runCommands)/sizeof(JsonTalker::Run); }
-    const Run* run(const char* cmd) {
-        for (size_t index = 0; index < runs_count(); ++index) {
-            if (strcmp(cmd, _runCommands[index].name) == 0) {
-                return &_runCommands[index];  // Returns the function
-            }
-        }
-        return nullptr;
-    }
-
-    size_t sets_count() { return sizeof(_setCommands)/sizeof(JsonTalker::Set); }
-    const Set* set(const char* cmd) {
-        for (size_t index = 0; index < sets_count(); ++index) {
-            if (strcmp(cmd, _setCommands[index].name) == 0) {
-                return &_setCommands[index];  // Returns the function
-            }
-        }
-        return nullptr;
-    }
-
-    size_t gets_count() { return sizeof(getCommands)/sizeof(JsonTalker::Get); }
-    const Get* get(const char* cmd) {
-        for (size_t index = 0; index < gets_count(); ++index) {
-            if (strcmp(cmd, getCommands[index].name) == 0) {
-                return &getCommands[index];  // Returns the function
-            }
-        }
-        return nullptr;
-    }
-
     
-    const char* get_name() {
-        return _name;
-    }
+    const char* get_name() { return _name; }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
     
@@ -223,4 +306,4 @@ public:
 };
 
 
-#endif // DEVICE_TALKER_HPP
+#endif // JSON_TALKER_H
