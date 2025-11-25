@@ -90,7 +90,7 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     if (_socket == nullptr) return false;
     
     #ifdef JSON_TALKER_DEBUG
-    Serial.println(F("Validating..."));
+    Serial.println(F("Processing..."));
     #endif
     
     // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
@@ -223,6 +223,11 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
 
             const uint8_t command_found_i = command_index(MessageCode::run, message);
             if (command_found_i < 255) {
+
+                #ifdef JSON_TALKER_DEBUG
+                Serial.println(F("RUN found, now being processed..."));
+                #endif
+        
                 message["g"] = 0;       // ROGER
                 sendMessage(message, true);
                 // No memory leaks because message_doc exists in the listen() method stack

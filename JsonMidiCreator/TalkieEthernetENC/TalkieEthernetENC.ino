@@ -157,7 +157,7 @@ void setup() {
     // Serial.println("Broadcast reception enabled");
 
     // Give Ethernet time to stabilize
-    delay(1000);
+    delay(1500);
 
     // STEP 4: Check connection status
     Serial.println("Step 4: Checking Ethernet status...");

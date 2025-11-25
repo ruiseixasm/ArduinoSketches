@@ -147,9 +147,14 @@ protected:
                 if (!_is_led_on) {
                 #ifdef LED_BUILTIN
                     #ifdef JSON_TALKER_DEBUG
-                    Serial.println(F("LED_BUILTIN"));
+                        Serial.print(F("LED_BUILTIN IS DEFINED as: "));
+                        Serial.println(LED_BUILTIN);
                     #endif
                     digitalWrite(LED_BUILTIN, HIGH);
+                #else
+                    #ifdef JSON_TALKER_DEBUG
+                        Serial.println(F("LED_BUILTIN IS NOT DEFINED in this context!"));
+                    #endif
                 #endif
                     _is_led_on = true;
                     _total_runs++;
@@ -165,6 +170,10 @@ protected:
         
         case 1:
             {
+                #ifdef JSON_TALKER_DEBUG
+                Serial.println(F("Case 1 - Turning LED OFF"));
+                #endif
+        
                 if (_is_led_on) {
                 #ifdef LED_BUILTIN
                     digitalWrite(LED_BUILTIN, LOW);
