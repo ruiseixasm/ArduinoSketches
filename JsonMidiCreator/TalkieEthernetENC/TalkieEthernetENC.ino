@@ -34,7 +34,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // ─────────────────────────────────────────────────────
 // ESP32 MOSI (D13)    →   Nano MOSI (D11)    SAFE (Nano input)
 // ESP32 MISO (D12)    ←   Nano MISO (D12)    DANGEROUS! (Nano output=5V)
-// ESP32 SCK  (D14)    →   Nano SCK  (D13)    SAFE (Nano input)  
+// ESP32 SCK  (D14)    →   Nano SCK  (D13)    SAFE (Nano input) (Also DANGEROUS due to LED_BUILTIN on pin 13)
 // ESP32 SS   (D15)    →   Nano SS   (D10)    SAFE (Nano input)
 
 // Use level shifter or resistors
@@ -43,7 +43,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // Direct connection often works:
 //     ESP32 MOSI (3.3V) → Nano D11 (5V input)  // SAFE
-//     ESP32 SCK  (3.3V) → Nano D13 (5V input)  // SAFE  
+//     ESP32 SCK  (3.3V) → Nano D13 (5V input)  // RISKY due to LED_BUILTIN on pin 13 
 //     ESP32 SS   (3.3V) → Nano D10 (5V input)  // SAFE
 //     Nano MISO  (5V)   → ESP32 MISO (3.3V)    // RISKY but usually survives
 
