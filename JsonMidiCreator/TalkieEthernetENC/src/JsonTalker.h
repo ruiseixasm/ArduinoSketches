@@ -140,6 +140,10 @@ protected:
         {
         case 0:
             {
+                #ifdef JSON_TALKER_DEBUG
+                Serial.println(F("Case 0 - Turning LED ON"));
+                #endif
+        
                 if (!_is_led_on) {
                 #ifdef LED_BUILTIN
                     #ifdef JSON_TALKER_DEBUG

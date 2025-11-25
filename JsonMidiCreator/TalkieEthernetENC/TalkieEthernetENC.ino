@@ -95,52 +95,6 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01};
 #define PORT 5005   // UDP port
 
 
-
-// // MANIFESTO DEFINITION
-
-// // Define the commands (stored in RAM)
-// JsonTalkie::Talker talker = {
-//     "ESP32", "I turn my blue light on and off!"
-// };
-
-// bool buzz(JsonObject json_message);
-// bool led_on(JsonObject json_message);
-// bool led_off(JsonObject json_message);
-// JsonTalkie::Run runCommands[] = {
-//     {"buzz", "Triggers buzzing", buzz},
-//     {"on", "Turns led On", led_on},
-//     {"off", "Turns led Off", led_off}
-// };
-
-// bool set_duration(JsonObject json_message, long duration);
-// JsonTalkie::Set setCommands[] = {
-//     {"duration", "Sets duration", set_duration}
-// };
-
-// long get_total_runs(JsonObject json_message);
-// long get_duration(JsonObject json_message);
-// JsonTalkie::Get getCommands[] = {
-//     {"total_runs", "Gets the total number of runs", get_total_runs},
-//     {"duration", "Gets duration", get_duration}
-// };
-
-// bool process_response(JsonObject json_message);
-
-
-// // MANIFESTO DECLARATION
-
-// JsonTalkie::Manifesto manifesto(
-//     &talker,
-//     runCommands, sizeof(runCommands)/sizeof(JsonTalkie::Run),
-//     setCommands, sizeof(setCommands)/sizeof(JsonTalkie::Set),
-//     getCommands, sizeof(getCommands)/sizeof(JsonTalkie::Get),
-//     process_response, nullptr
-// );
-
-// // END OF MANIFESTO
-
-
-
 // Buzzer pin
 #define buzzer_pin 3
 
@@ -248,6 +202,8 @@ void setup() {
 
     Serial.println("Setup completed - Ready for JSON communication!");
 }
+
+
 
 void loop() {
     // Maintain DHCP lease (important for long-running applications)
