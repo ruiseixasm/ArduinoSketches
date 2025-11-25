@@ -336,6 +336,7 @@ public:
             Serial.println();  // optional: just to add a newline after the JSON
             #endif
 
+            return false;
         }
 
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
