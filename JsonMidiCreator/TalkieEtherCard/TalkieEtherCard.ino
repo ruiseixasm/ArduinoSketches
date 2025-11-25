@@ -63,9 +63,9 @@ JsonTalker nano = JsonTalker(nano_name, nano_desc);
 const char uno_name[] = "uno";
 const char uno_desc[] = "Arduino Uno";
 JsonTalker uno = JsonTalker(uno_name, uno_desc);
-JsonTalker talkers[] = { nano, uno };
+JsonTalker* talkers[] = { &nano, &uno };    // Only an array of pointers preserves polymorphism!!
 // Singleton requires the & (to get a reference variable)
-auto& broadcast_socket = BroadcastSocket_EtherCard::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
+auto& broadcast_socket = BroadcastSocket_EtherCard::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
 
 
 
