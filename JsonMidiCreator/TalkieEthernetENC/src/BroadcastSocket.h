@@ -136,7 +136,7 @@ private:
             length += num_digits - 1;      // Discount the digit '0' already placed
             
             if (length > BROADCAST_SOCKET_BUFFER_SIZE)
-                return length;  // buffer overglow
+                return length;  // buffer overflow
 
             bool at_c = false;
             for (size_t i = length - 1; data_i > 5; --i) {
