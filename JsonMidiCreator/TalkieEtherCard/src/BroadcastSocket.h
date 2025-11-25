@@ -133,24 +133,11 @@ private:
             size_t data_i = length - 1;    // Old length (shorter)
             length += num_digits - 1;      // Discount the digit '0' already placed
             
-            // // Extract digits from right to left
-            // uint16_t temp = checksum;
-            // do {
-            //     uint8_t digit = temp % 10;           // Get rightmost digit
-            //     char ascii_char = '0' + digit;       // Convert to ASCII
-            //     Serial.println(ascii_char);          // Prints: '5', '4', '3', '2', '1'
-                
-            //     temp /= 10;                          // Remove rightmost digit
-            // } while (temp > 0);
-
-
-            // Needs to be improved to process the buffer directly
-
             bool at_c = false;
-            for (size_t i = length - 1; data_i > 4; --i) {
+            for (size_t i = length - 1; data_i > 5; --i) {
                 
-                if (_sending_buffer[data_i - 1] == ':') {
-                    if (_sending_buffer[data_i - 3] == 'c' && _sending_buffer[data_i - 4] == '"' && _sending_buffer[data_i - 2] == '"') {
+                if (_sending_buffer[data_i - 2] == ':') {
+                    if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
                         at_c = true;
                     }
                 } else if (at_c) {
