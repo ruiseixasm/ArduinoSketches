@@ -36,12 +36,76 @@ private:
     uint32_t _last_remote_time = 0;
     long _drops_count = 0;
 
+
+    uint16_t processData(char* source_data, size_t* source_len, int* message_code_int, uint32_t* remote_time) {
+        
+        // ASCII byte values:
+        // 	'c' = 99
+        // 	':' = 58
+        // 	'"' = 34
+        // 	'0' = 48
+        // 	'9' = 57
+
+        uint16_t data_checksum = 0;
+        // Has to be pre processed (linearly)
+        bool at_m = false;
+        bool at_c = false;
+        bool at_i = false;
+        size_t data_i = 3;
+        for (size_t i = data_i; i < *source_len; ++i) {
+            if (source_data[i] == ':') {
+                if (source_data[i - 2] == 'c' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                    at_c = true;
+                } else if (source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                    at_i = true;
+                } else if (source_data[i - 2] == 'm' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                    at_m = true;
+                }
+            } else {
+                if (at_i) {
+                    if (source_data[i] < '0' || source_data[i] > '9') {
+                        at_i = false;
+                    } else {
+                        *remote_time *= 10;
+                        *remote_time += source_data[i] - '0';
+                    }
+                } else if (at_c) {
+                    if (source_data[i] < '0' || source_data[i] > '9') {
+                        at_c = false;
+                    } else if (source_data[i - 1] == ':') { // First number in the row
+                        data_checksum = source_data[i] - '0';
+                        source_data[i] = '0';
+                    } else {
+                        data_checksum *= 10;
+                        data_checksum += source_data[i] - '0';
+                        continue;   // Avoids the copy of the char
+                    }
+                } else if (at_m) {
+                    if (source_data[i] < '0' || source_data[i] > '9') {
+                        at_m = false;
+                    } else if (source_data[i - 1] == ':') { // First number in the row
+                        *message_code_int = source_data[i] - '0';   // Message code found and it's a number
+                    } else {
+                        *message_code_int *= 10;
+                        *message_code_int += source_data[i] - '0';
+                    }
+                }
+            }
+            source_data[data_i] = source_data[i]; // Does an offset
+            data_i++;
+        }
+        *source_len = data_i;
+        return data_checksum;
+    }
+
+    
 protected:
 
     uint16_t _port = 5005;
     // Shared _received_data along all JsonTalkie instantiations
     static char _received_data[BROADCAST_SOCKET_BUFFER_SIZE];
 
+    
     size_t triggerTalkers(char* buffer, size_t length) {
 
         #ifdef BROADCASTSOCKET_DEBUG
@@ -60,7 +124,7 @@ protected:
             int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
             uint32_t remote_time = 0;
             uint16_t received_checksum = this->processData(buffer, &length, &message_code_int, &remote_time);
-            uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);
+            uint16_t checksum = JsonTalker::getChecksum(buffer, length);
             
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.print(F("C: Remote time: "));
@@ -182,81 +246,6 @@ public:
     uint8_t get_max_delay() { return _max_delay_ms; }
     long get_drops_count() { return _drops_count; }
 
-
-    uint16_t processData(char* source_data, size_t* source_len, int* message_code_int, uint32_t* remote_time) {
-        
-        // ASCII byte values:
-        // 	'c' = 99
-        // 	':' = 58
-        // 	'"' = 34
-        // 	'0' = 48
-        // 	'9' = 57
-
-        uint16_t data_checksum = 0;
-        // Has to be pre processed (linearly)
-        bool at_m = false;
-        bool at_c = false;
-        bool at_i = false;
-        size_t data_i = 3;
-        for (size_t i = data_i; i < *source_len; ++i) {
-            if (source_data[i] == ':') {
-                if (source_data[i - 2] == 'c' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
-                    at_c = true;
-                } else if (source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
-                    at_i = true;
-                } else if (source_data[i - 2] == 'm' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
-                    at_m = true;
-                }
-            } else {
-                if (at_i) {
-                    if (source_data[i] < '0' || source_data[i] > '9') {
-                        at_i = false;
-                    } else {
-                        *remote_time *= 10;
-                        *remote_time += source_data[i] - '0';
-                    }
-                } else if (at_c) {
-                    if (source_data[i] < '0' || source_data[i] > '9') {
-                        at_c = false;
-                    } else if (source_data[i - 1] == ':') { // First number in the row
-                        data_checksum = source_data[i] - '0';
-                        source_data[i] = '0';
-                    } else {
-                        data_checksum *= 10;
-                        data_checksum += source_data[i] - '0';
-                        continue;   // Avoids the copy of the char
-                    }
-                } else if (at_m) {
-                    if (source_data[i] < '0' || source_data[i] > '9') {
-                        at_m = false;
-                    } else if (source_data[i - 1] == ':') { // First number in the row
-                        *message_code_int = source_data[i] - '0';   // Message code found and it's a number
-                    } else {
-                        *message_code_int *= 10;
-                        *message_code_int += source_data[i] - '0';
-                    }
-                }
-            }
-            source_data[data_i] = source_data[i]; // Does an offset
-            data_i++;
-        }
-        *source_len = data_i;
-        return data_checksum;
-    }
-    
-
-    static uint16_t getChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
 
 };
 
