@@ -11,13 +11,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef DEVICE_TALKER_H
-#define DEVICE_TALKER_H
+#ifndef JSON_TALKER_H
+#define JSON_TALKER_H
 
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
-#define JSON_TALKER_DEBUG
+// #define JSON_TALKER_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -297,4 +297,4 @@ public:
 };
 
 
-#endif // DEVICE_TALKER_H
+#endif // JSON_TALKER_H
