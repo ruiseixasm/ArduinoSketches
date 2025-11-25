@@ -15,17 +15,24 @@ https://github.com/ruiseixasm/JsonTalkie
 // To upload a sketch to an ESP32, when the "......." appears press the button BOOT for a while
 
 
-// ESP32 wiring with the ENC28J60
+// ESP32 wiring with the ENC28J60 (SPI)
 
-//     MOSI(D23)   =   SI
-//     MISO(D19)   =   SO
-//     SCK(D18)    =   SCK
-//     SS(D5)      =   CS
+//     MOSI (D23)  =   SI
+//     MISO (D19)  =   SO
+//     SCK  (D18)  =   SCK
+//     SS   (D5)   =   CS
 //     GND         =   GND
 //     MUTUAL EXCLUSIVE:
 //         VIN     =   5V
 //         3V3     =   Q3
 
+
+// ESP32 (3.3V)        →   Nano (5V)          Risk Level
+// ─────────────────────────────────────────────────────
+// ESP32 MOSI (D13)    →   Nano MOSI (D11)    SAFE (Nano input)
+// ESP32 MISO (D12)    ←   Nano MISO (D12)    DANGEROUS! (Nano output=5V)
+// ESP32 SCK  (D14)    →   Nano SCK  (D13)    SAFE (Nano input)  
+// ESP32 SS   (D15)    →   Nano SS   (D10)    SAFE (Nano input)
 
 // Use level shifter or resistors
 //     ESP32 → Nano: Direct (3.3V → 5V input is fine)
