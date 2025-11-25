@@ -17,4 +17,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 char BroadcastSocket::_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+char BroadcastSocket::_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+
 

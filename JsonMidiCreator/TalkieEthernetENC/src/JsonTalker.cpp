@@ -16,8 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.h"    // MUST include the full definition!
 
 
-char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-
+BroadcastSocket* JsonTalker::_socket = nullptr;
 bool JsonTalker::_is_led_on = false;
 
 
@@ -35,42 +34,10 @@ long JsonTalker::get_total_drops() {
 
 
 
-bool JsonTalker::sendMessage(JsonObject message, bool as_reply) {
+bool JsonTalker::sendMessage(JsonObject json_message, bool as_reply) {
     if (_socket == nullptr) return false;
-    
-    // Directly nest the editable message under "m"
-    if (message.isNull()) {
-        #ifdef JSON_TALKER_DEBUG
-        Serial.println(F("Error: Null message received"));
-        #endif
-        return false;
-    }
-
-    // Set default 'id' field if missing
-    if (!message["i"].is<uint32_t>()) {
-        message["i"] = generateMessageId();
-    }
-
-    message["f"] = _name;
-
-    JsonTalker::setChecksum(message);
-
-    size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-    if (len == 0) {
-        #ifdef JSON_TALKER_DEBUG
-        Serial.println(F("Error: Serialization failed"));
-        #endif
-    } else {
-        
-        #ifdef JSON_TALKER_DEBUG
-        Serial.print(F("T: "));
-        serializeJson(message, Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
-        #endif
-
-        return _socket->send(_buffer, len, as_reply);
-    }
-    return false;
+    json_message["f"] = _name;
+    return _socket->sendMessage(json_message, as_reply);
 }
 
 

@@ -27,6 +27,7 @@ class BroadcastSocket_EtherCard : public BroadcastSocket {
 private:
 
     static BroadcastSocket_EtherCard* _self_instance;
+    uint16_t _port = 5005;
     static uint8_t _source_ip[4];
     static size_t _data_length;
 
@@ -46,7 +47,7 @@ private:
             memcpy(_receiving_buffer, data, length);
             memcpy(_source_ip, src_ip, 4);
             if (_self_instance) {
-                _data_length = _self_instance->triggerTalkers(_receiving_buffer, length);
+                _data_length = _self_instance->triggerTalkers(length);
             } else {
                 #ifdef BROADCAST_ETHERCARD_DEBUG
                 Serial.println(F("Instance is NULL!"));
@@ -72,22 +73,27 @@ public:
         return instance;
     }
 
+    void set_port(uint16_t port) {
+        _port = port;
+        ether.udpServerListenOnPort(staticCallback, port);
+    }
+
     
-    bool send(const char* data, size_t size, bool as_reply = false) override {
+    bool send(size_t length, bool as_reply = false) override {
         
         uint8_t broadcastIp[4] = {255, 255, 255, 255};
         
         #ifdef BROADCAST_ETHERCARD_DEBUG
         Serial.print(F("S: "));
-        Serial.write(data, size);
+        Serial.write(_sending_buffer, length);
         Serial.println();
         #endif
 
         #ifdef ENABLE_DIRECT_ADDRESSING
-        ether.sendUdp(data, size, _port, as_reply ? _source_ip : broadcastIp, _port);
+        ether.sendUdp(_sending_buffer, length, _port, as_reply ? _source_ip : broadcastIp, _port);
         #else
         (void)as_reply; // Silence unused parameter warning
-        ether.sendUdp(data, size, _port, broadcastIp, _port);
+        ether.sendUdp(_sending_buffer, length, _port, broadcastIp, _port);
         #endif
 
         return true;
@@ -100,12 +106,6 @@ public:
         return _data_length;
     }
 
-
-    // Modified methods to work with singleton
-    void set_port(uint16_t port) override {
-        BroadcastSocket::set_port(port);
-        ether.udpServerListenOnPort(staticCallback, port);
-    }
 };
 
 BroadcastSocket_EtherCard* BroadcastSocket_EtherCard::_self_instance = nullptr;

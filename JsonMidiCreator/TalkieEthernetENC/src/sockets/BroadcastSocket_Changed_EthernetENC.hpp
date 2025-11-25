@@ -37,6 +37,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 class BroadcastSocket_EthernetENC : public BroadcastSocket {
 private:
+    uint16_t _port = 5005;
     IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     EthernetUDP* _udp = nullptr;
 
@@ -54,7 +55,12 @@ public:
         return instance;
     }
 
-    bool send(const char* data, size_t size, bool as_reply = false) override {
+    void set_port(uint16_t port) {
+        _port = port;
+    }
+    
+
+    bool send(size_t length, bool as_reply = false) override {
         if (_udp == nullptr) return false;
 
         IPAddress broadcastIP(255, 255, 255, 255);
@@ -75,7 +81,7 @@ public:
         }
         #endif
 
-        size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(data), size);
+        size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(_sending_buffer), length);
         (void)bytesSent; // Silence unused variable warning
 
         if (!_udp->endPacket()) {
@@ -87,7 +93,7 @@ public:
 
         #ifdef BROADCAST_ETHERNETENC_DEBUG
         Serial.print(F("S: "));
-        Serial.write(data, size);
+        Serial.write(_sending_buffer, length);
         Serial.println();
         #endif
 
@@ -122,7 +128,7 @@ public:
             #endif
             
             _source_ip = _udp->remoteIP();
-            return triggerTalkers(_receiving_buffer, static_cast<size_t>(length));
+            return triggerTalkers(static_cast<size_t>(length));
         }
         return 0;   // nothing received
     }
