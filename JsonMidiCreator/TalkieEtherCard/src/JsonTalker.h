@@ -98,11 +98,6 @@ protected:
     const char* _desc;      // Description of the Device
     uint8_t _channel = 0;
 
-    
-    long _total_runs = 0;
-    // static becaus it's a shared state among all other talkers, device (board) parameter
-    static bool _is_led_on;  // keep track of state yourself, by default it's off
-
 
     // Can't use method reference because these type of references are class designation dependent,
     // so, they will prevent any possibility of inheritance, this way the only alternative is to
@@ -132,6 +127,11 @@ protected:
 
         return _manifesto;
     }
+
+    
+    long _total_runs = 0;
+    // static becaus it's a shared state among all other talkers, device (board) parameter
+    static bool _is_led_on;  // keep track of state yourself, by default it's off
 
 
     uint8_t command_index(const MessageCode message_code, JsonObject json_message) {
