@@ -17,6 +17,8 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 BroadcastSocket* JsonTalker::_socket = nullptr;
+JsonTalker** JsonTalker::_json_talkers = nullptr;
+uint8_t JsonTalker::_talker_count = 0;
 bool JsonTalker::_is_led_on = false;
 
 
