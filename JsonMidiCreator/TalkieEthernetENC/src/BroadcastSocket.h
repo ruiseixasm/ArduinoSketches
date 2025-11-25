@@ -323,7 +323,6 @@ public:
         if (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error)    // Skips response messages
             json_message["i"] = (uint32_t)millis();
 
-        json_message["c"] = 0;
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
 

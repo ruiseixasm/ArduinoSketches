@@ -22,6 +22,15 @@ uint8_t JsonTalker::_talker_count = 0;
 bool JsonTalker::_is_led_on = false;
 
 
+
+bool JsonTalker::sendMessage(JsonObject json_message, bool as_reply) {
+    if (_socket == nullptr) return false;
+    json_message["f"] = _name;
+    json_message["c"] = 0;  // 'c' = 0 means remote communication
+    return _socket->sendMessage(json_message, as_reply);
+}
+
+
 void JsonTalker::set_delay(uint8_t delay) {
     return _socket->set_max_delay(delay);
 }
@@ -32,14 +41,6 @@ uint8_t JsonTalker::get_delay() {
 
 long JsonTalker::get_total_drops() {
     return _socket->get_drops_count();
-}
-
-
-
-bool JsonTalker::sendMessage(JsonObject json_message, bool as_reply) {
-    if (_socket == nullptr) return false;
-    json_message["f"] = _name;
-    return _socket->sendMessage(json_message, as_reply);
 }
 
 
