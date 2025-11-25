@@ -14,6 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef JSON_TALKER_H
 #define JSON_TALKER_H
 
+#include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
