@@ -53,9 +53,9 @@ JsonTalker talker = JsonTalker(talker_name, talker_desc);
 const char player_name[] = "player";
 const char player_desc[] = "I'm a player";
 MultiPlayer player = MultiPlayer(player_name, player_desc);
-JsonTalker talkers[] = { talker, player };
+JsonTalker* talkers[] = { &talker, &player };   // It's an array of pointers
 // Singleton requires the & (to get a reference variable)
-auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
+auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
 
 
 

@@ -22,6 +22,8 @@ https://github.com/ruiseixasm/JsonTalkie
 class MultiPlayer : public JsonTalker {
 public:
 
+    const char* class_name() const override { return "MultiPlayer"; }
+
     MultiPlayer(const char* name, const char* desc)
         : JsonTalker(name, desc) {}
 
@@ -34,7 +36,7 @@ protected:
     // a following switch case sequence that picks the respective method and calls it directly.
 
     // Virtual method that returns static manifesto (can't override class member variables)
-    const Manifesto& get_manifesto() const {
+    const Manifesto& get_manifesto() const override {
 
         static const Manifesto _manifesto = {
             (const Command[]){  // runs
@@ -122,7 +124,7 @@ protected:
     // }
 
     
-    bool command_set(const uint8_t command_index, JsonObject json_message) {
+    bool command_set(const uint8_t command_index, JsonObject json_message) override {
         long json_value = json_message["v"].as<long>();
         switch (command_index)
         {

@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
-// #define JSON_TALKER_DEBUG
+#define JSON_TALKER_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -34,6 +34,8 @@ private:
 
 
 public:
+
+    virtual const char* class_name() const { return "JsonTalker"; }
 
     enum class MessageCode {
         talk,
@@ -110,7 +112,7 @@ protected:
 
         return _manifesto;
     }
-    
+
 
     uint8_t command_index(const MessageCode message_code, JsonObject json_message) {
         const char* command_name = json_message["n"].as<const char*>();

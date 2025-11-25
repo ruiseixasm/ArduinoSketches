@@ -43,13 +43,13 @@ private:
 protected:
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_EthernetENC(JsonTalker* json_talkers, size_t talker_count)
+    BroadcastSocket_EthernetENC(JsonTalker** json_talkers, size_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {}
 
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_EthernetENC& instance(JsonTalker* json_talkers, size_t talker_count) {
+    static BroadcastSocket_EthernetENC& instance(JsonTalker** json_talkers, size_t talker_count) {
         static BroadcastSocket_EthernetENC instance(json_talkers, talker_count);
         return instance;
     }

@@ -184,7 +184,14 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     case MessageCode::list:
         {   // Because of none_list !!!
             bool none_list = true;
+
+            // In your list handler:
             
+            #ifdef JSON_TALKER_DEBUG
+            Serial.print("=== This object is: ");
+            Serial.println(class_name());
+            #endif
+        
             const Manifesto& my_manifesto = get_manifesto();
 
             message["w"] = static_cast<int>(MessageCode::run);

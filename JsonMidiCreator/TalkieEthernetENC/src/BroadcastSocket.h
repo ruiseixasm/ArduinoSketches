@@ -27,7 +27,8 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 private:
 
-    JsonTalker* _json_talkers = nullptr;   // A list of Talkers (objects)
+    // Pointer PRESERVE the polymorphism while objects don't!
+    JsonTalker** _json_talkers = nullptr;   // Change to pointer-to-pointer
     size_t _talker_count = 0;
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
@@ -123,7 +124,7 @@ protected:
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                    pre_validated = _json_talkers[talker_i].processData(buffer, length, pre_validated);
+                    pre_validated = _json_talkers[talker_i]->processData(buffer, length, pre_validated);
                     if (!pre_validated) break;
                 }
             } else {
@@ -137,12 +138,12 @@ protected:
     }
 
 
-    BroadcastSocket(JsonTalker* json_talkers, size_t talker_count)
+    BroadcastSocket(JsonTalker** json_talkers, size_t talker_count)
         : _json_talkers(json_talkers), _talker_count(talker_count) {
             
             // Sets this socket on all Talkers to processes the received data
             for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                _json_talkers[talker_i].setSocket(this);
+                _json_talkers[talker_i]->setSocket(this);
             }
         }
 
