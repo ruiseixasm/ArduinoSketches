@@ -118,8 +118,10 @@ private:
 
         uint16_t checksum = generateChecksum(_sending_buffer, length);
 
+        #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("S: Checksum is: "));
         Serial.println(checksum);
+        #endif
 
         if (checksum > 0) {
 
@@ -322,15 +324,19 @@ public:
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
 
+        #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("S1: "));
         Serial.write(_sending_buffer, length);
         Serial.println();
+        #endif
 
         length = insertChecksum(length);
         
+        #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("S2: "));
         Serial.write(_sending_buffer, length);
         Serial.println();
+        #endif
 
         if (length == 0) {
 
