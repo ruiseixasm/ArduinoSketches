@@ -188,7 +188,30 @@ protected:
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                    pre_validated = _json_talkers[talker_i]->processData(buffer, length, pre_validated);
+
+                    #ifdef JSON_TALKER_DEBUG
+                    Serial.print(F("Creating new JsonObject for talker: "));
+                    Serial.println(_json_talkers[talker_i]->get_name());
+                    #endif
+                    
+                    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+                    #if ARDUINOJSON_VERSION_MAJOR >= 7
+                    JsonDocument message_doc;
+                    #else
+                    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+                    #endif
+
+                    DeserializationError error = deserializeJson(message_doc, buffer, length);
+                    if (error) {
+                        #ifdef JSON_TALKER_DEBUG
+                        Serial.println(F("Failed to deserialize received data"));
+                        #endif
+                        return false;
+                    }
+                    JsonObject json_message = message_doc.as<JsonObject>();
+
+
+                    pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
                     if (!pre_validated) break;
                 }
             } else {
