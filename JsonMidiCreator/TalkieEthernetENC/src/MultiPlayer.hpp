@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "JsonTalker.h"         // Includes the ArduinoJson Library
 
-#define MULTI_PLAYER_DEBUG
+// #define MULTI_PLAYER_DEBUG
 
 
 class MultiPlayer : public JsonTalker {
@@ -50,11 +50,12 @@ protected:
             (const Command[]){  // gets
                 {"delay", "Gets the socket max delay"},
                 {"drops", "Gets total drops count"},
-                {"runs", "Gets total runs"}
+                {"runs", "Gets total runs"},
+                {"bpm_10", "Gets the Tempo in BPM x 10"}
             },
             2,
             2,
-            3
+            4
         };
 
         return _manifesto;
@@ -63,65 +64,14 @@ protected:
 
     long _bpm_10 = 1200;
 
-    // virtual bool command_run(const uint8_t command_index, JsonObject json_message) {
-    //     (void)json_message; // Silence unused parameter warning
-    //     switch (command_index)
-    //     {
-    //     case 0:
-    //         {
-    //             #ifdef MULTI_PLAYER_DEBUG
-    //             Serial.println(F("Case 0 - Turning LED ON"));
-    //             #endif
+    virtual bool command_run(const uint8_t command_index, JsonObject json_message) {
+        (void)json_message; // Silence unused parameter warning
+        switch (command_index)
+        {
         
-    //             if (!_is_led_on) {
-    //             #ifdef LED_BUILTIN
-    //                 #ifdef MULTI_PLAYER_DEBUG
-    //                     Serial.print(F("LED_BUILTIN IS DEFINED as: "));
-    //                     Serial.println(LED_BUILTIN);
-    //                 #endif
-    //                 digitalWrite(LED_BUILTIN, HIGH);
-    //             #else
-    //                 #ifdef MULTI_PLAYER_DEBUG
-    //                     Serial.println(F("LED_BUILTIN IS NOT DEFINED in this context!"));
-    //                 #endif
-    //             #endif
-    //                 _is_led_on = true;
-    //                 _total_runs++;
-    //             } else {
-    //                 json_message["r"] = "Already On!";
-    //                 if (_socket != nullptr)
-    //                     this->sendMessage(json_message);
-    //                 return false;
-    //             }
-    //             return true;
-    //         }
-    //         break;
-        
-    //     case 1:
-    //         {
-    //             #ifdef MULTI_PLAYER_DEBUG
-    //             Serial.println(F("Case 1 - Turning LED OFF"));
-    //             #endif
-        
-    //             if (_is_led_on) {
-    //             #ifdef LED_BUILTIN
-    //                 digitalWrite(LED_BUILTIN, LOW);
-    //             #endif
-    //                 _is_led_on = false;
-    //                 _total_runs++;
-    //             } else {
-    //                 json_message["r"] = "Already Off!";
-    //                 if (_socket != nullptr)
-    //                     this->sendMessage(json_message);
-    //                 return false;
-    //             }
-    //             return true;
-    //         }
-    //         break;
-        
-    //     default: return false;  // Nothing done
-    //     }
-    // }
+        default: return JsonTalker::command_run(command_index, json_message);
+        }
+    }
 
     
     bool command_set(const uint8_t command_index, JsonObject json_message) override {
@@ -140,31 +90,19 @@ protected:
     }
 
     
-    // virtual long command_get(const uint8_t command_index, JsonObject json_message) {
-    //     (void)json_message; // Silence unused parameter warning
-    //     switch (command_index)
-    //     {
-    //     case 0:
-    //         {
-    //             return static_cast<long>(this->get_delay());
-    //         }
-    //         break;
-
-    //     case 1:
-    //         {
-    //             return this->get_total_drops();
-    //         }
-    //         break;
-
-    //     case 2:
-    //         {
-    //             return _total_runs;
-    //         }
-    //         break;
+    virtual long command_get(const uint8_t command_index, JsonObject json_message) {
+        (void)json_message; // Silence unused parameter warning
+        switch (command_index)
+        {
+        case 3:
+            {
+                return _bpm_10;
+            }
+            break;
         
-    //     default: return 0;  // Has to return something
-    //     }
-    // }
+        default: return JsonTalker::command_get(command_index, json_message);
+        }
+    }
 
 
 };
