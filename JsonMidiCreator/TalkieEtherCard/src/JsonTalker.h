@@ -29,8 +29,6 @@ class BroadcastSocket;
 class JsonTalker {
 private:
     
-    // Shared processing data buffer Not reentrant, received data unaffected
-    static char _buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     static BroadcastSocket* _socket;
 
 public:
@@ -49,33 +47,7 @@ public:
         channel
     };
 
-    static uint16_t getChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
-    static uint16_t setChecksum(JsonObject json_message) {
-        json_message["c"] = 0;   // makes _buffer a net_data buffer
-        size_t len = serializeJson(json_message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-        uint16_t checksum = getChecksum(_buffer, len);
-        json_message["c"] = checksum;
-        return checksum;
-    }
-
     
-    static uint32_t generateMessageId() {
-        // Generates a 32-bit wrapped timestamp ID using overflow.
-        return (uint32_t)millis();  // millis() is already an unit32_t (unsigned long int) data return
-    }
-
     // Now without a method reference `bool (JsonTalker::*method)(JsonObject, long)`
     struct Command {
         const char* name;

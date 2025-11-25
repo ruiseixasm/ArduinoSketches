@@ -27,6 +27,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 private:
 
+
     // Pointer PRESERVE the polymorphism while objects don't!
     JsonTalker** _json_talkers = nullptr;   // Change to pointer-to-pointer
     size_t _talker_count = 0;
@@ -35,6 +36,28 @@ private:
     uint32_t _last_local_time = 0;
     uint32_t _last_remote_time = 0;
     long _drops_count = 0;
+
+
+    static uint16_t getChecksum(const char* net_data, const size_t len) {
+        // 16-bit word and XORing
+        uint16_t checksum = 0;
+        for (size_t i = 0; i < len; i += 2) {
+            uint16_t chunk = net_data[i] << 8;
+            if (i + 1 < len) {
+                chunk |= net_data[i + 1];
+            }
+            checksum ^= chunk;
+        }
+        return checksum;
+    }
+
+    static uint16_t setChecksum(JsonObject json_message) {
+        json_message["c"] = 0;   // makes _sending_buffer a net_data buffer
+        size_t len = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        uint16_t checksum = getChecksum(_sending_buffer, len);
+        json_message["c"] = checksum;
+        return checksum;
+    }
 
 
     uint16_t processData(char* source_data, size_t* source_len, int* message_code_int, uint32_t* remote_time) {
@@ -102,8 +125,8 @@ private:
 protected:
 
     uint16_t _port = 5005;
-    // Shared _received_data along all JsonTalkie instantiations
     static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 
     
     size_t triggerTalkers(char* buffer, size_t length) {
@@ -124,7 +147,7 @@ protected:
             int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
             uint32_t remote_time = 0;
             uint16_t received_checksum = this->processData(buffer, &length, &message_code_int, &remote_time);
-            uint16_t checksum = JsonTalker::getChecksum(buffer, length);
+            uint16_t checksum = getChecksum(buffer, length);
             
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.print(F("C: Remote time: "));
@@ -256,6 +279,37 @@ public:
             _control_timing = false;
         }
         return 0;
+    }
+
+    bool sendMessage(JsonObject json_message, bool as_reply = false) {
+
+        // Directly nest the editable json_message under "m"
+        if (json_message.isNull()) {
+            #ifdef JSON_TALKER_DEBUG
+            Serial.println(F("Error: Null json_message received"));
+            #endif
+            return false;
+        }
+        
+        json_message["i"] = (uint32_t)millis();
+        setChecksum(json_message);
+
+        size_t len = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        if (len == 0) {
+            #ifdef JSON_TALKER_DEBUG
+            Serial.println(F("Error: Serialization failed"));
+            #endif
+        } else {
+            
+            #ifdef JSON_TALKER_DEBUG
+            Serial.print(F("T: "));
+            serializeJson(json_message, Serial);
+            Serial.println();  // optional: just to add a newline after the JSON
+            #endif
+
+            return send(_sending_buffer, len, as_reply);
+        }
+        return true;
     }
     
     virtual void set_port(uint16_t port) { _port = port; }
