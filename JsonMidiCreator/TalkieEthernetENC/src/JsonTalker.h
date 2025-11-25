@@ -30,10 +30,10 @@ class BroadcastSocket;
 class JsonTalker {
 private:
     
-    // The socket can't be static becaus different talkers may use different sockets
+    // The socket can't be static becaus different talkers may use different sockets (remote)
     BroadcastSocket* _socket = nullptr;
     // Pointer PRESERVE the polymorphism while objects don't!
-    static JsonTalker** _json_talkers;  // It's capable of communicate with other talkers
+    static JsonTalker** _json_talkers;  // It's capable of communicate with other talkers (local)
     static uint8_t _talker_count;
 
 public:
@@ -302,6 +302,16 @@ public:
     
 
     bool remoteSend(JsonObject json_message, bool as_reply = false);
+
+
+    bool localSend(JsonObject json_message) {
+        if (_talker_count == 0) return false;
+
+        json_message["f"] = _name;
+        json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
+        return true;
+    }
+
     
     bool processData(JsonObject json_message, bool pre_validated) {
 
