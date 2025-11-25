@@ -14,6 +14,21 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // To upload a sketch to an ESP32, when the "......." appears press the button BOOT for a while
 
+
+// ESP32 wiring with the ENC28J60
+
+//     MOSI(D23)   =   SI
+//     MISO(D19)   =   SO
+//     SCK(D18)    =   SCK
+//     SS(D5)      =   CS
+//     GND         =   GND
+//     MUTUAL EXCLUSIVE:
+//         VIN     =   5V
+//         3V3     =   Q3
+
+
+
+
 // #define SOURCE_LIBRARY_MODE 1
 // //      0 - Arduino Library
 // //      1 - Project Library
