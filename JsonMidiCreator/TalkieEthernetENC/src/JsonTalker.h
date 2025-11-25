@@ -305,7 +305,6 @@ public:
 
 
     bool localSend(JsonObject json_message) {
-        if (_talker_count == 0) return false;
         json_message["f"] = _name;
         json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
         // Triggers all local Talkers to processes the json_message
