@@ -53,7 +53,7 @@ bool JsonTalker::sendMessage(JsonObject json_message, bool as_reply) {
 
     json_message["f"] = _name;
 
-    JsonTalker::setChecksum(json_message);
+    setChecksum(json_message);
 
     size_t len = serializeJson(json_message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
     if (len == 0) {
