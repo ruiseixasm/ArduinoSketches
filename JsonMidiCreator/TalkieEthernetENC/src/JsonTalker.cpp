@@ -184,26 +184,28 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     case MessageCode::list:
         {   // Because of none_list !!!
             bool none_list = true;
-            message["w"] = static_cast<int>(MessageCode::run);
+            
+            const Manifesto& my_manifesto = get_manifesto();
 
-            for (size_t i = 0; i < _manifesto.runs_count; ++i) {
+            message["w"] = static_cast<int>(MessageCode::run);
+            for (size_t i = 0; i < my_manifesto.runs_count; ++i) {
                 none_list = false;
-                message["n"] = _manifesto.runs[i].name;
-                message["d"] = _manifesto.runs[i].desc;
+                message["n"] = my_manifesto.runs[i].name;
+                message["d"] = my_manifesto.runs[i].desc;
                 sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::set);
-            for (size_t i = 0; i < _manifesto.sets_count; ++i) {
+            for (size_t i = 0; i < my_manifesto.sets_count; ++i) {
                 none_list = false;
-                message["n"] = _manifesto.sets[i].name;
-                message["d"] = _manifesto.sets[i].desc;
+                message["n"] = my_manifesto.sets[i].name;
+                message["d"] = my_manifesto.sets[i].desc;
                 sendMessage(message, true);
             }
             message["w"] = static_cast<int>(MessageCode::get);
-            for (size_t i = 0; i < _manifesto.gets_count; ++i) {
+            for (size_t i = 0; i < my_manifesto.gets_count; ++i) {
                 none_list = false;
-                message["n"] = _manifesto.gets[i].name;
-                message["d"] = _manifesto.gets[i].desc;
+                message["n"] = my_manifesto.gets[i].name;
+                message["d"] = my_manifesto.gets[i].desc;
                 sendMessage(message, true);
             }
             if(none_list) {

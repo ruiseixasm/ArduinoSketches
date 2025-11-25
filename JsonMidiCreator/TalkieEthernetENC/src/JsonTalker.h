@@ -87,6 +87,31 @@ protected:
     // do an indirect reference based on the command position with only a pair of strings and
     // a following switch case sequence that picks the respective method and calls it directly.
 
+    // Virtual method that returns static manifesto (can't override class member variables)
+    virtual const Manifesto& get_manifesto() const {
+
+        static const Manifesto _manifesto = {
+            (const Command[]){  // runs
+                {"on", "Turns led ON"},
+                {"off", "Turns led OFF"}
+            },
+            (const Command[]){  // sets 
+                {"delay", "Sets the socket max delay"}
+            },
+            (const Command[]){  // gets
+                {"delay", "Gets the socket max delay"},
+                {"drops", "Gets total drops count"},
+                {"runs", "Gets total runs"}
+            },
+            2,
+            1,
+            3
+        };
+
+        return _manifesto;
+    }
+
+
     const Manifesto _manifesto = {
         (const Command[]){  // runs
             {"on", "Turns led ON"},
@@ -109,20 +134,21 @@ protected:
     uint8_t command_index(const MessageCode message_code, JsonObject json_message) {
         const char* command_name = json_message["n"].as<const char*>();
         const Command* command = nullptr;
-        uint8_t count = 0;    
+        uint8_t count = 0;
+        const Manifesto& my_manifesto = get_manifesto();
         switch (message_code)
         {
         case MessageCode::run:
-            command = _manifesto.runs;
-            count = _manifesto.runs_count;
+            command = my_manifesto.runs;
+            count = my_manifesto.runs_count;
             break;
         case MessageCode::set:
-            command = _manifesto.sets;
-            count = _manifesto.sets_count;
+            command = my_manifesto.sets;
+            count = my_manifesto.sets_count;
             break;
         case MessageCode::get:
-            command = _manifesto.gets;
-            count = _manifesto.gets_count;
+            command = my_manifesto.gets;
+            count = my_manifesto.gets_count;
             break;
         default: return 255;    // 255 means not found!
         }
@@ -251,7 +277,7 @@ public:
         
     JsonTalker(const char* name, const char* desc)
         : _name(name), _desc(desc) {
-            Serial.println(sizeof(_manifesto.runs));
+            // Nothing to see here
         }
 
     void setSocket(BroadcastSocket* socket) {
