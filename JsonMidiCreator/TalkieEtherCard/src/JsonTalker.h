@@ -320,7 +320,7 @@ public:
 
 
 
-    bool sendMessage(JsonObject message, bool as_reply = false);
+    bool sendMessage(JsonObject json_message, bool as_reply = false);
 
     
     bool processData(JsonObject json_message, bool pre_validated) {

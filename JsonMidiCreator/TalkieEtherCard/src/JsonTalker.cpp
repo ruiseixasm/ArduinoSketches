@@ -35,27 +35,27 @@ long JsonTalker::get_total_drops() {
 
 
 
-bool JsonTalker::sendMessage(JsonObject message, bool as_reply) {
+bool JsonTalker::sendMessage(JsonObject json_message, bool as_reply) {
     if (_socket == nullptr) return false;
     
-    // Directly nest the editable message under "m"
-    if (message.isNull()) {
+    // Directly nest the editable json_message under "m"
+    if (json_message.isNull()) {
         #ifdef JSON_TALKER_DEBUG
-        Serial.println(F("Error: Null message received"));
+        Serial.println(F("Error: Null json_message received"));
         #endif
         return false;
     }
 
     // Set default 'id' field if missing
-    if (!message["i"].is<uint32_t>()) {
-        message["i"] = generateMessageId();
+    if (!json_message["i"].is<uint32_t>()) {
+        json_message["i"] = generateMessageId();
     }
 
-    message["f"] = _name;
+    json_message["f"] = _name;
 
-    JsonTalker::setChecksum(message);
+    JsonTalker::setChecksum(json_message);
 
-    size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+    size_t len = serializeJson(json_message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
     if (len == 0) {
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("Error: Serialization failed"));
@@ -64,7 +64,7 @@ bool JsonTalker::sendMessage(JsonObject message, bool as_reply) {
         
         #ifdef JSON_TALKER_DEBUG
         Serial.print(F("T: "));
-        serializeJson(message, Serial);
+        serializeJson(json_message, Serial);
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
