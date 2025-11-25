@@ -285,8 +285,10 @@ protected:
 
     BroadcastSocket(JsonTalker** json_talkers, uint8_t talker_count)
         : _json_talkers(json_talkers), _talker_count(talker_count) {
-            // Talker socket is static, shared by all talkers, so, only one needs to be set
-            if (_talker_count > 0) _json_talkers[0]->setSocket(this);
+            // Each talker has its remote connections, ONLY local connections are static
+            for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                _json_talkers[talker_i]->setSocket(this);
+            }
         }
 
 

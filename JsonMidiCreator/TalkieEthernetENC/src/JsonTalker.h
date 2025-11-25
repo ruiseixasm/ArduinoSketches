@@ -30,7 +30,8 @@ class BroadcastSocket;
 class JsonTalker {
 private:
     
-    static BroadcastSocket* _socket;
+    // The socket can't be static becaus different talkers may use different sockets
+    BroadcastSocket* _socket = nullptr;
     // Pointer PRESERVE the polymorphism while objects don't!
     static JsonTalker** _json_talkers;  // It's capable of communicate with other talkers
     static uint8_t _talker_count;
@@ -285,7 +286,7 @@ public:
         }
 
 
-    static void setSocket(BroadcastSocket* socket) {
+    void setSocket(BroadcastSocket* socket) {
         _socket = socket;
     }
 
