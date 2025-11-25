@@ -266,6 +266,32 @@ protected:
         }
     }
 
+    bool echo(JsonObject json_message) {
+        Serial.print(json_message["f"].as<String>());
+        Serial.print(" - ");
+        if (json_message["r"].is<String>()) {
+            Serial.println(json_message["r"].as<String>());
+        } else if (json_message["d"].is<String>()) {
+            Serial.println(json_message["d"].as<String>());
+        } else {
+            Serial.println(F("Empty echo received!"));
+        }
+        return false;
+    }
+
+    bool error(JsonObject json_message) {
+        Serial.print(json_message["f"].as<String>());
+        Serial.print(" - ");
+        if (json_message["r"].is<String>()) {
+            Serial.println(json_message["r"].as<String>());
+        } else if (json_message["d"].is<String>()) {
+            Serial.println(json_message["d"].as<String>());
+        } else {
+            Serial.println(F("Empty error received!"));
+        }
+        return false;
+    }
+
 
     void set_delay(uint8_t delay);
     uint8_t get_delay();
@@ -292,32 +318,6 @@ public:
     uint8_t get_channel() { return _channel; }
     
 
-
-    bool echo(JsonObject json_message) {
-        Serial.print(json_message["f"].as<String>());
-        Serial.print(" - ");
-        if (json_message["r"].is<String>()) {
-            Serial.println(json_message["r"].as<String>());
-        } else if (json_message["d"].is<String>()) {
-            Serial.println(json_message["d"].as<String>());
-        } else {
-            Serial.println(F("Empty echo received!"));
-        }
-        return false;
-    }
-
-    bool error(JsonObject json_message) {
-        Serial.print(json_message["f"].as<String>());
-        Serial.print(" - ");
-        if (json_message["r"].is<String>()) {
-            Serial.println(json_message["r"].as<String>());
-        } else if (json_message["d"].is<String>()) {
-            Serial.println(json_message["d"].as<String>());
-        } else {
-            Serial.println(F("Empty error received!"));
-        }
-        return false;
-    }
 
 
 
