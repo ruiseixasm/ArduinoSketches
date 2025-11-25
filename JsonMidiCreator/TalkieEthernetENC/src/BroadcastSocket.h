@@ -328,10 +328,10 @@ public:
         if (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error) {
             json_message["i"] = (uint32_t)millis();
 
-        } else if (!json_message["i"].is<uint32_t>()) {// Mekes sure response messages has na "i"
+        } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
 
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("R: Response message without an indentifier (i)"));
+            Serial.print(F("R: Response message without an identifier (i)"));
             serializeJson(json_message, Serial);
             Serial.println();  // optional: just to add a newline after the JSON
             #endif
