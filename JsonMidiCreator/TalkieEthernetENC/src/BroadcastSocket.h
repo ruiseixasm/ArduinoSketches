@@ -123,7 +123,7 @@ private:
         Serial.println(checksum);
         #endif
 
-        if (checksum > 0) {
+        if (checksum > 0) { // It's already 0
 
             // First, find how many digits
             uint16_t temp = checksum;
@@ -135,6 +135,9 @@ private:
             size_t data_i = length - 1;    // Old length (shorter)
             length += num_digits - 1;      // Discount the digit '0' already placed
             
+            if (length > BROADCAST_SOCKET_BUFFER_SIZE)
+                return length;  // buffer overglow
+
             bool at_c = false;
             for (size_t i = length - 1; data_i > 5; --i) {
                 
