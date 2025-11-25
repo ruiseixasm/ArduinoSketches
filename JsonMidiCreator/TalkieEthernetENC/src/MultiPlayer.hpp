@@ -39,7 +39,8 @@ protected:
             {"off", "Turns led OFF"}
         },
         (const Command[]){  // sets 
-            {"delay", "Sets the socket max delay"}
+            {"delay", "Sets the socket max delay"},
+            {"bpm_10", "Sets the Tempo in BPM x 10"}
         },
         (const Command[]){  // gets
             {"delay", "Gets the socket max delay"},
@@ -47,10 +48,11 @@ protected:
             {"runs", "Gets total runs"}
         },
         2,
-        1,
+        2,
         3
     };
 
+    long _bpm_10 = 1200;
 
     // virtual bool command_run(const uint8_t command_index, JsonObject json_message) {
     //     (void)json_message; // Silence unused parameter warning
@@ -113,20 +115,26 @@ protected:
     // }
 
     
-    // virtual bool command_set(const uint8_t command_index, JsonObject json_message) {
-    //     long json_value = json_message["v"].as<long>();
-    //     switch (command_index)
-    //     {
-    //     case 0:
-    //         {
-    //             this->set_delay(static_cast<uint8_t>(json_value));
-    //             return true;
-    //         }
-    //         break;
+    bool command_set(const uint8_t command_index, JsonObject json_message) {
+        long json_value = json_message["v"].as<long>();
+        switch (command_index)
+        {
+        case 0:
+            {
+                return JsonTalker::command_set(command_index, json_message);
+            }
+            break;
+            
+        case 1:
+            {
+                _bpm_10 = json_value;
+                return true;
+            }
+            break;
         
-    //     default: return false;
-    //     }
-    // }
+        default: return false;
+        }
+    }
 
     
     // virtual long command_get(const uint8_t command_index, JsonObject json_message) {
