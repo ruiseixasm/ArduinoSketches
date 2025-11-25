@@ -200,7 +200,7 @@ void setup() {
     Serial.println("Connecting Talkers with each other");
 
     // Connect the talkers with each other (static variable)
-    JsonTalker::setTalkers(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+    JsonTalker::connectTalkers(talkers, sizeof(talkers)/sizeof(JsonTalker*));
 
     // Final startup indication
     digitalWrite(LED_BUILTIN, HIGH);

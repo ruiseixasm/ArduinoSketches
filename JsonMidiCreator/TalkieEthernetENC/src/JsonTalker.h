@@ -290,7 +290,7 @@ public:
         _socket = socket;
     }
 
-    static void setTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
+    static void connectTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
         _json_talkers = json_talkers;
         _talker_count = talker_count;
     }
