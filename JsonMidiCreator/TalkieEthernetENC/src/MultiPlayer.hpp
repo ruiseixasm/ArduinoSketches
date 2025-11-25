@@ -64,7 +64,7 @@ protected:
 
     long _bpm_10 = 1200;
 
-    virtual bool command_run(const uint8_t command_index, JsonObject json_message) override {
+    bool command_run(const uint8_t command_index, JsonObject json_message) override {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
@@ -90,7 +90,7 @@ protected:
     }
 
     
-    virtual long command_get(const uint8_t command_index, JsonObject json_message) override {
+    long command_get(const uint8_t command_index, JsonObject json_message) override {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
@@ -103,7 +103,6 @@ protected:
         default: return JsonTalker::command_get(command_index, json_message);
         }
     }
-
 
 };
 
