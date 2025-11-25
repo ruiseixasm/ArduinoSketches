@@ -306,10 +306,17 @@ public:
 
     bool localSend(JsonObject json_message) {
         if (_talker_count == 0) return false;
-
         json_message["f"] = _name;
         json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
-        return true;
+        // Triggers all Talkers to processes the received data
+        bool pre_validated = false;
+        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+            if (_json_talkers[talker_i] != this) {  // Can't send to myself
+                pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+                if (!pre_validated) break;
+            }
+        }
+        return pre_validated;
     }
 
     
