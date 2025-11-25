@@ -51,12 +51,18 @@ private:
         return checksum;
     }
 
-    static uint16_t setChecksum(JsonObject json_message) {
-        json_message["c"] = 0;   // makes _sending_buffer a net_data buffer
+    static size_t setChecksum(JsonObject json_message) {
+        json_message["c"] = 0;  // makes _sending_buffer a net_data buffer
         size_t len = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-        uint16_t checksum = getChecksum(_sending_buffer, len);
-        json_message["c"] = checksum;
-        return checksum;
+        json_message["c"] = getChecksum(_sending_buffer, len);
+
+
+
+        // Needs to be improved to process the buffer directly
+
+
+
+        return len;
     }
 
 
@@ -282,22 +288,17 @@ public:
 
     bool sendMessage(JsonObject json_message, bool as_reply = false) {
 
-        // Directly nest the editable json_message under "m"
-        if (json_message.isNull()) {
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("Error: Null json_message received"));
-            #endif
-            return false;
-        }
-        
         json_message["i"] = (uint32_t)millis();
         setChecksum(json_message);
 
         size_t len = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (len == 0) {
+
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.println(F("Error: Serialization failed"));
             #endif
+
+            return false;
         } else {
             
             #ifdef BROADCASTSOCKET_DEBUG
@@ -308,7 +309,6 @@ public:
 
             return send(_sending_buffer, len, as_reply);
         }
-        return true;
     }
     
 
