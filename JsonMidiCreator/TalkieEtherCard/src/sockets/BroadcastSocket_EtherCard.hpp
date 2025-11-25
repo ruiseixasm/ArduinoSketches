@@ -27,6 +27,7 @@ class BroadcastSocket_EtherCard : public BroadcastSocket {
 private:
 
     static BroadcastSocket_EtherCard* _self_instance;
+    uint16_t _port = 5005;
     static uint8_t _source_ip[4];
     static size_t _data_length;
 
@@ -102,8 +103,8 @@ public:
 
 
     // Modified methods to work with singleton
-    void set_port(uint16_t port) override {
-        BroadcastSocket::set_port(port);
+    void set_port(uint16_t port) {
+        _port = port;
         ether.udpServerListenOnPort(staticCallback, port);
     }
 };

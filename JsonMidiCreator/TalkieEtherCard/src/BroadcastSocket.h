@@ -124,7 +124,6 @@ private:
     
 protected:
 
-    uint16_t _port = 5005;
     static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 
@@ -312,14 +311,10 @@ public:
         return true;
     }
     
-    virtual void set_port(uint16_t port) { _port = port; }
-    virtual uint16_t get_port() { return _port; }
-
 
     void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
     uint8_t get_max_delay() { return _max_delay_ms; }
     long get_drops_count() { return _drops_count; }
-
 
 };
 
