@@ -325,7 +325,8 @@ public:
     bool remoteSend(JsonObject json_message, bool as_reply = false) {
 
         JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
-        if (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error)    // Skips response messages
+        if (!json_message["i"].is<uint32_t>() || 
+                (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error))    // Skips response messages
             json_message["i"] = (uint32_t)millis();
 
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
