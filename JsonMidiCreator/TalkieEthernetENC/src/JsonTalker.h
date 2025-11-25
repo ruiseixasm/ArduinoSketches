@@ -289,7 +289,8 @@ public:
     }
 
     void setTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
-
+        _json_talkers = json_talkers;
+        _talker_count = talker_count;
     }
 
     const char* get_name() { return _name; }
@@ -297,11 +298,7 @@ public:
     uint8_t get_channel() { return _channel; }
     
 
-
-
-
     bool sendMessage(JsonObject json_message, bool as_reply = false);
-
     
     bool processData(JsonObject json_message, bool pre_validated) {
 
