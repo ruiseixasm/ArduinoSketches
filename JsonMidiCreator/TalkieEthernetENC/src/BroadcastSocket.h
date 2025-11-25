@@ -327,38 +327,45 @@ public:
 
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
-
         #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("S1: "));
-        Serial.write(_sending_buffer, length);
-        Serial.println();
+        Serial.print(F("R: "));
+        serializeJson(json_message, Serial);
+        Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-        length = insertChecksum(length);
-        
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("S2: "));
-        Serial.write(_sending_buffer, length);
-        Serial.println();
-        #endif
-
-        if (length == 0) {
+        if (length < 3*4 + 2) {
 
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.println(F("Error: Serialization failed"));
             #endif
 
             return false;
-        } else {
-            
+        }
+
+        #ifdef BROADCASTSOCKET_DEBUG
+        Serial.print(F("S: "));
+        Serial.write(_sending_buffer, length);
+        Serial.println();
+        #endif
+
+        length = insertChecksum(length);
+        
+        if (length > BROADCAST_SOCKET_BUFFER_SIZE) {
+
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("T: "));
-            serializeJson(json_message, Serial);
-            Serial.println();  // optional: just to add a newline after the JSON
+            Serial.println(F("Error: Message too big"));
             #endif
 
-            return send(length, as_reply);
+            return false;
         }
+
+        #ifdef BROADCASTSOCKET_DEBUG
+        Serial.print(F("T: "));
+        Serial.write(_sending_buffer, length);
+        Serial.println();
+        #endif
+        
+        return send(length, as_reply);
     }
     
 
