@@ -33,23 +33,23 @@ protected:
     // do an indirect reference based on the command position with only a pair of strings and
     // a following switch case sequence that picks the respective method and calls it directly.
 
-    // const Manifesto _manifesto = {
-    //     (const Command[]){  // runs
-    //         {"on", "Turns led ON"},
-    //         {"off", "Turns led OFF"}
-    //     },
-    //     (const Command[]){  // sets 
-    //         {"delay", "Sets the socket max delay"}
-    //     },
-    //     (const Command[]){  // gets
-    //         {"delay", "Gets the socket max delay"},
-    //         {"drops", "Gets total drops count"},
-    //         {"runs", "Gets total runs"}
-    //     },
-    //     2,
-    //     1,
-    //     3
-    // };
+    const Manifesto _manifesto = {
+        (const Command[]){  // runs
+            {"on", "Turns led ON"},
+            {"off", "Turns led OFF"}
+        },
+        (const Command[]){  // sets 
+            {"delay", "Sets the socket max delay"}
+        },
+        (const Command[]){  // gets
+            {"delay", "Gets the socket max delay"},
+            {"drops", "Gets total drops count"},
+            {"runs", "Gets total runs"}
+        },
+        2,
+        1,
+        3
+    };
 
 
     // virtual bool command_run(const uint8_t command_index, JsonObject json_message) {
