@@ -29,6 +29,10 @@ bool ledAvailable = true;
 void setup() {
   // Initialize Serial for debugging
   Serial.begin(115200);
+
+  delay(500);
+  Serial.print("\n\nDefault Board LED_BUILTIN pin number: ");
+  Serial.println(LED_BUILTIN);
   
   // Check if LED pin conflicts with SPI pins
   ledAvailable = true;
