@@ -20,6 +20,11 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 class MultiPlayer : public JsonTalker {
+public:
+
+    MultiPlayer(const char* name, const char* desc)
+        : JsonTalker(name, desc) {}
+
 
 protected:
 
