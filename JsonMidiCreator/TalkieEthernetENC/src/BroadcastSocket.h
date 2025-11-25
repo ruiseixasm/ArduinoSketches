@@ -319,7 +319,10 @@ public:
     
     bool sendMessage(JsonObject json_message, bool as_reply = false) {
 
-        json_message["i"] = (uint32_t)millis();
+        JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
+        if (!(message_code == JsonTalker::MessageCode::echo || message_code == JsonTalker::MessageCode::error)) // Not response messages
+            json_message["i"] = (uint32_t)millis();
+
         json_message["c"] = 0;
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
