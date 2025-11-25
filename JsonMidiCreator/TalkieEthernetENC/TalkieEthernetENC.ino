@@ -27,6 +27,17 @@ https://github.com/ruiseixasm/JsonTalkie
 //         3V3     =   Q3
 
 
+// Use level shifter or resistors
+//     ESP32 → Nano: Direct (3.3V → 5V input is fine)
+//     Nano → ESP32: 1K series resistor (limits current to safe level)
+
+// Direct connection often works:
+//     ESP32 MOSI (3.3V) → Nano D11 (5V input)  // SAFE
+//     ESP32 SCK  (3.3V) → Nano D13 (5V input)  // SAFE  
+//     ESP32 SS   (3.3V) → Nano D10 (5V input)  // SAFE
+//     Nano MISO  (5V)   → ESP32 MISO (3.3V)    // RISKY but usually survives
+
+
 
 
 // #define SOURCE_LIBRARY_MODE 1
