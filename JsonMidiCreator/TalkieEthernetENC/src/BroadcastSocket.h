@@ -14,8 +14,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_H
 #define BROADCAST_SOCKET_H
 
-#include <Arduino.h>    // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "JsonTalker.h"
+#include <Arduino.h>    // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 
 
 #define BROADCASTSOCKET_DEBUG
@@ -56,7 +56,7 @@ protected:
             Serial.println(_talker_count);
             #endif
 
-            int message_code_int = 0;
+            int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
             uint32_t remote_time = 0;
             uint16_t received_checksum = this->processData(buffer, &length, &message_code_int, &remote_time);
             uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);
@@ -71,6 +71,14 @@ protected:
                 Serial.print(F("C: Validated Checksum of "));
                 Serial.println(checksum);
                 #endif
+
+                if (message_code_int == 1000) { // Found no message code!
+                    #ifdef BROADCASTSOCKET_DEBUG
+                    Serial.println(F("C: No message code!"));
+                    #endif
+
+                    return length;
+                }
                 
                 if (_max_delay_ms > 0) {
 
@@ -220,6 +228,8 @@ public:
                 } else if (at_m) {
                     if (source_data[i] < '0' || source_data[i] > '9') {
                         at_m = false;
+                    } else if (source_data[i - 1] == ':') { // First number in the row
+                        *message_code_int = source_data[i] - '0';   // Message code found and it's a number
                     } else {
                         *message_code_int *= 10;
                         *message_code_int += source_data[i] - '0';

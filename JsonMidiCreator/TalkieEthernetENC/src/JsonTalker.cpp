@@ -12,8 +12,8 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#include "BroadcastSocket.h"    // MUST include the full definition!
 #include "JsonTalker.h"         // Includes the ArduinoJson Library
+#include "BroadcastSocket.h"    // MUST include the full definition!
 
 
 char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
@@ -119,12 +119,6 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
 
     if (!pre_validated) {
 
-        if (!message["m"].is<int>()) {
-            #ifdef JSON_TALKER_DEBUG
-            Serial.println(F("Message \"m\" is NOT an integer!"));
-            #endif
-            return false;
-        }
         if (!message["f"].is<String>()) {
             #ifdef JSON_TALKER_DEBUG
             Serial.println(0);
