@@ -37,7 +37,7 @@ private:
     long _drops_count = 0;
 
 
-    uint16_t processData(char* source_data, size_t* source_len, int* message_code_int, uint32_t* remote_time) {
+    uint16_t extractChecksum(char* source_data, size_t* source_len, int* message_code_int, uint32_t* remote_time) {
         
         // ASCII byte values:
         // 	'c' = 99
@@ -123,7 +123,7 @@ protected:
 
             int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
             uint32_t remote_time = 0;
-            uint16_t received_checksum = this->processData(buffer, &length, &message_code_int, &remote_time);
+            uint16_t received_checksum = this->extractChecksum(buffer, &length, &message_code_int, &remote_time);
             uint16_t checksum = JsonTalker::getChecksum(buffer, length);
             
             #ifdef BROADCASTSOCKET_DEBUG

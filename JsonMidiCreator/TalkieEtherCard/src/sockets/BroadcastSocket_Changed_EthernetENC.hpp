@@ -60,7 +60,7 @@ public:
     }
     
 
-    bool send(const char* data, size_t size, bool as_reply = false) override {
+    bool send(size_t length, bool as_reply = false) override {
         if (_udp == nullptr) return false;
 
         IPAddress broadcastIP(255, 255, 255, 255);
@@ -81,7 +81,7 @@ public:
         }
         #endif
 
-        size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(data), size);
+        size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(_sending_buffer), length);
         (void)bytesSent; // Silence unused variable warning
 
         if (!_udp->endPacket()) {
@@ -93,7 +93,7 @@ public:
 
         #ifdef BROADCAST_ETHERNETENC_DEBUG
         Serial.print(F("S: "));
-        Serial.write(data, size);
+        Serial.write(_sending_buffer, length);
         Serial.println();
         #endif
 
@@ -128,7 +128,7 @@ public:
             #endif
             
             _source_ip = _udp->remoteIP();
-            return triggerTalkers(_receiving_buffer, static_cast<size_t>(length));
+            return triggerTalkers(static_cast<size_t>(length));
         }
         return 0;   // nothing received
     }

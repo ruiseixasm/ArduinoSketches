@@ -38,7 +38,7 @@ private:
     long _drops_count = 0;
 
 
-    static uint16_t getChecksum(const char* net_data, const size_t len) {
+    static uint16_t generateChecksum(const char* net_data, const size_t len) {
         // 16-bit word and XORing
         uint16_t checksum = 0;
         for (size_t i = 0; i < len; i += 2) {
@@ -51,30 +51,17 @@ private:
         return checksum;
     }
 
-    static size_t setChecksum(JsonObject json_message) {
-        json_message["c"] = 0;  // makes _sending_buffer a net_data buffer
-        size_t len = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-        json_message["c"] = getChecksum(_sending_buffer, len);
+
+    // ASCII byte values:
+    // 	'c' = 99
+    // 	':' = 58
+    // 	'"' = 34
+    // 	'0' = 48
+    // 	'9' = 57
 
 
-
-        // Needs to be improved to process the buffer directly
-
-
-
-        return len;
-    }
-
-
-    uint16_t processData(char* source_data, size_t* source_len, int* message_code_int, uint32_t* remote_time) {
+    uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
         
-        // ASCII byte values:
-        // 	'c' = 99
-        // 	':' = 58
-        // 	'"' = 34
-        // 	'0' = 48
-        // 	'9' = 57
-
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
         bool at_m = false;
@@ -82,49 +69,103 @@ private:
         bool at_i = false;
         size_t data_i = 3;
         for (size_t i = data_i; i < *source_len; ++i) {
-            if (source_data[i] == ':') {
-                if (source_data[i - 2] == 'c' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+            if (_receiving_buffer[i] == ':') {
+                if (_receiving_buffer[i - 2] == 'c' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
                     at_c = true;
-                } else if (source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                } else if (_receiving_buffer[i - 2] == 'i' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
                     at_i = true;
-                } else if (source_data[i - 2] == 'm' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                } else if (_receiving_buffer[i - 2] == 'm' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
                     at_m = true;
                 }
             } else {
                 if (at_i) {
-                    if (source_data[i] < '0' || source_data[i] > '9') {
+                    if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
                         at_i = false;
                     } else {
                         *remote_time *= 10;
-                        *remote_time += source_data[i] - '0';
+                        *remote_time += _receiving_buffer[i] - '0';
                     }
                 } else if (at_c) {
-                    if (source_data[i] < '0' || source_data[i] > '9') {
+                    if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
                         at_c = false;
-                    } else if (source_data[i - 1] == ':') { // First number in the row
-                        data_checksum = source_data[i] - '0';
-                        source_data[i] = '0';
+                    } else if (_receiving_buffer[i - 1] == ':') { // First number in the row
+                        data_checksum = _receiving_buffer[i] - '0';
+                        _receiving_buffer[i] = '0';
                     } else {
                         data_checksum *= 10;
-                        data_checksum += source_data[i] - '0';
+                        data_checksum += _receiving_buffer[i] - '0';
                         continue;   // Avoids the copy of the char
                     }
                 } else if (at_m) {
-                    if (source_data[i] < '0' || source_data[i] > '9') {
+                    if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
                         at_m = false;
-                    } else if (source_data[i - 1] == ':') { // First number in the row
-                        *message_code_int = source_data[i] - '0';   // Message code found and it's a number
+                    } else if (_receiving_buffer[i - 1] == ':') { // First number in the row
+                        *message_code_int = _receiving_buffer[i] - '0';   // Message code found and it's a number
                     } else {
                         *message_code_int *= 10;
-                        *message_code_int += source_data[i] - '0';
+                        *message_code_int += _receiving_buffer[i] - '0';
                     }
                 }
             }
-            source_data[data_i] = source_data[i]; // Does an offset
-            data_i++;
+            _receiving_buffer[data_i++] = _receiving_buffer[i]; // Does a left offset
         }
         *source_len = data_i;
         return data_checksum;
+    }
+
+
+    static size_t insertChecksum(size_t length) {
+
+        uint16_t checksum = generateChecksum(_sending_buffer, length);
+
+        Serial.print(F("S: Checksum is: "));
+        Serial.println(checksum);
+
+        if (checksum > 0) {
+
+            // First, find how many digits
+            uint16_t temp = checksum;
+            uint8_t num_digits = 0;
+            while (temp > 0) {
+                temp /= 10;
+                num_digits++;
+            }
+            size_t data_i = length - 1;    // Old length (shorter)
+            length += num_digits - 1;      // Discount the digit '0' already placed
+            
+            // // Extract digits from right to left
+            // uint16_t temp = checksum;
+            // do {
+            //     uint8_t digit = temp % 10;           // Get rightmost digit
+            //     char ascii_char = '0' + digit;       // Convert to ASCII
+            //     Serial.println(ascii_char);          // Prints: '5', '4', '3', '2', '1'
+                
+            //     temp /= 10;                          // Remove rightmost digit
+            // } while (temp > 0);
+
+
+            // Needs to be improved to process the buffer directly
+
+            bool at_c = false;
+            for (size_t i = length - 1; data_i > 4; --i) {
+                
+                if (_sending_buffer[data_i - 1] == ':') {
+                    if (_sending_buffer[data_i - 3] == 'c' && _sending_buffer[data_i - 4] == '"' && _sending_buffer[data_i - 2] == '"') {
+                        at_c = true;
+                    }
+                } else if (at_c) {
+                    if (checksum == 0) {
+                        return length;
+                    } else {
+                        _sending_buffer[i] = '0' + checksum % 10;
+                        checksum /= 10; // Truncates the number (does a floor)
+                        continue;       // Avoids the copy of the char
+                    }
+                }
+                _sending_buffer[i] = _sending_buffer[data_i--]; // Does an offset
+            }
+        }
+        return length;
     }
 
     
@@ -134,11 +175,11 @@ protected:
     static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 
     
-    size_t triggerTalkers(char* buffer, size_t length) {
+    size_t triggerTalkers(size_t length) {
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("T: "));
-        Serial.write(buffer, length);
+        Serial.write(_receiving_buffer, length);
         Serial.println();
         #endif
 
@@ -151,8 +192,8 @@ protected:
 
             int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
             uint32_t remote_time = 0;
-            uint16_t received_checksum = this->processData(buffer, &length, &message_code_int, &remote_time);
-            uint16_t checksum = getChecksum(buffer, length);
+            uint16_t received_checksum = extractChecksum(&length, &message_code_int, &remote_time);
+            uint16_t checksum = generateChecksum(_receiving_buffer, length);
             
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.print(F("C: Remote time: "));
@@ -229,7 +270,7 @@ protected:
                     StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
                     #endif
 
-                    DeserializationError error = deserializeJson(message_doc, buffer, length);
+                    DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
                     if (error) {
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.println(F("Failed to deserialize received data"));
@@ -269,12 +310,12 @@ public:
 
 
     // NOT Pure virtual methods anymores (= 0;)
-    virtual bool send(const char* data, size_t len, bool as_reply = false) {
-        (void)data; // Silence unused parameter warning
-        (void)len; // Silence unused parameter warning
+    virtual bool send(size_t length, bool as_reply = false) {
+        (void)length; // Silence unused parameter warning
         (void)as_reply; // Silence unused parameter warning
         return false;
     }
+
 
     virtual size_t receive() {
         // In theory, a UDP packet on a local area network (LAN) could survive
@@ -286,13 +327,25 @@ public:
         return 0;
     }
 
+    
     bool sendMessage(JsonObject json_message, bool as_reply = false) {
 
         json_message["i"] = (uint32_t)millis();
-        setChecksum(json_message);
+        json_message["c"] = 0;
+        size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
-        size_t len = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-        if (len == 0) {
+
+        Serial.print(F("S1: "));
+        Serial.write(_sending_buffer, length);
+        Serial.println();
+
+        length = insertChecksum(length);
+        
+        Serial.print(F("S2: "));
+        Serial.write(_sending_buffer, length);
+        Serial.println();
+
+        if (length == 0) {
 
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.println(F("Error: Serialization failed"));
@@ -307,7 +360,7 @@ public:
             Serial.println();  // optional: just to add a newline after the JSON
             #endif
 
-            return send(_sending_buffer, len, as_reply);
+            return send(length, as_reply);
         }
     }
     
