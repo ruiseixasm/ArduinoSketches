@@ -62,11 +62,11 @@ public:
         return checksum;
     }
 
-    static uint16_t setChecksum(JsonObject message) {
-        message["c"] = 0;   // makes _buffer a net_data buffer
-        size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+    static uint16_t setChecksum(JsonObject json_message) {
+        json_message["c"] = 0;   // makes _buffer a net_data buffer
+        size_t len = serializeJson(json_message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         uint16_t checksum = getChecksum(_buffer, len);
-        message["c"] = checksum;
+        json_message["c"] = checksum;
         return checksum;
     }
 
