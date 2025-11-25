@@ -29,8 +29,8 @@ private:
 
 
     // Pointer PRESERVE the polymorphism while objects don't!
-    JsonTalker** _json_talkers = nullptr;   // Change to pointer-to-pointer
-    size_t _talker_count = 0;
+    JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
+    uint8_t _talker_count = 0;
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
     uint32_t _last_local_time = 0;
@@ -245,7 +245,7 @@ protected:
 
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
-                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
 
                     #ifdef BROADCASTSOCKET_DEBUG
                     Serial.print(F("Creating new JsonObject for talker: "));
