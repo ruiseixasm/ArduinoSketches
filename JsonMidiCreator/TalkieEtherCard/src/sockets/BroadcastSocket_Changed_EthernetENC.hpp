@@ -37,6 +37,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 class BroadcastSocket_EthernetENC : public BroadcastSocket {
 private:
+    uint16_t _port = 5005;
     IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     EthernetUDP* _udp = nullptr;
 
@@ -53,6 +54,11 @@ public:
         static BroadcastSocket_EthernetENC instance(json_talkers, talker_count);
         return instance;
     }
+
+    void set_port(uint16_t port) {
+        _port = port;
+    }
+    
 
     bool send(const char* data, size_t size, bool as_reply = false) override {
         if (_udp == nullptr) return false;

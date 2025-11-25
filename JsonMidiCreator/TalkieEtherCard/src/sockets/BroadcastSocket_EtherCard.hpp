@@ -73,6 +73,11 @@ public:
         return instance;
     }
 
+    void set_port(uint16_t port) {
+        _port = port;
+        ether.udpServerListenOnPort(staticCallback, port);
+    }
+    
     
     bool send(const char* data, size_t size, bool as_reply = false) override {
         
@@ -101,12 +106,6 @@ public:
         return _data_length;
     }
 
-
-    // Modified methods to work with singleton
-    void set_port(uint16_t port) {
-        _port = port;
-        ether.udpServerListenOnPort(staticCallback, port);
-    }
 };
 
 BroadcastSocket_EtherCard* BroadcastSocket_EtherCard::_self_instance = nullptr;
