@@ -33,24 +33,31 @@ protected:
     // do an indirect reference based on the command position with only a pair of strings and
     // a following switch case sequence that picks the respective method and calls it directly.
 
-    // const Manifesto _manifesto = {
-    //     (const Command[]){  // runs
-    //         {"on", "Turns led ON"},
-    //         {"off", "Turns led OFF"}
-    //     },
-    //     (const Command[]){  // sets 
-    //         {"delay", "Sets the socket max delay"},
-    //         {"bpm_10", "Sets the Tempo in BPM x 10"}
-    //     },
-    //     (const Command[]){  // gets
-    //         {"delay", "Gets the socket max delay"},
-    //         {"drops", "Gets total drops count"},
-    //         {"runs", "Gets total runs"}
-    //     },
-    //     2,
-    //     2,
-    //     3
-    // };
+    // Virtual method that returns static manifesto (can't override class member variables)
+    const Manifesto& get_manifesto() const {
+
+        static const Manifesto _manifesto = {
+            (const Command[]){  // runs
+                {"on", "Turns led ON"},
+                {"off", "Turns led OFF"}
+            },
+            (const Command[]){  // sets 
+                {"delay", "Sets the socket max delay"},
+                {"bpm_10", "Sets the Tempo in BPM x 10"}
+            },
+            (const Command[]){  // gets
+                {"delay", "Gets the socket max delay"},
+                {"drops", "Gets total drops count"},
+                {"runs", "Gets total runs"}
+            },
+            2,
+            2,
+            3
+        };
+
+        return _manifesto;
+    }
+    
 
     long _bpm_10 = 1200;
 
@@ -115,26 +122,20 @@ protected:
     // }
 
     
-    // bool command_set(const uint8_t command_index, JsonObject json_message) {
-    //     long json_value = json_message["v"].as<long>();
-    //     switch (command_index)
-    //     {
-    //     case 0:
-    //         {
-    //             return JsonTalker::command_set(command_index, json_message);
-    //         }
-    //         break;
-            
-    //     case 1:
-    //         {
-    //             _bpm_10 = json_value;
-    //             return true;
-    //         }
-    //         break;
+    bool command_set(const uint8_t command_index, JsonObject json_message) {
+        long json_value = json_message["v"].as<long>();
+        switch (command_index)
+        {
+        case 1:
+            {
+                _bpm_10 = json_value;
+                return true;
+            }
+            break;
         
-    //     default: return false;
-    //     }
-    // }
+        default: return JsonTalker::command_set(command_index, json_message);
+        }
+    }
 
     
     // virtual long command_get(const uint8_t command_index, JsonObject json_message) {

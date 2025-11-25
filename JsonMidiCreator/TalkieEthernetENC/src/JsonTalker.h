@@ -110,26 +110,7 @@ protected:
 
         return _manifesto;
     }
-
-
-    const Manifesto _manifesto = {
-        (const Command[]){  // runs
-            {"on", "Turns led ON"},
-            {"off", "Turns led OFF"}
-        },
-        (const Command[]){  // sets 
-            {"delay", "Sets the socket max delay"}
-        },
-        (const Command[]){  // gets
-            {"delay", "Gets the socket max delay"},
-            {"drops", "Gets total drops count"},
-            {"runs", "Gets total runs"}
-        },
-        2,
-        1,
-        3
-    };
-
+    
 
     uint8_t command_index(const MessageCode message_code, JsonObject json_message) {
         const char* command_name = json_message["n"].as<const char*>();
