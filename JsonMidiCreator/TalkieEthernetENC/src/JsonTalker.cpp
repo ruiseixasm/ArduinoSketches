@@ -178,7 +178,7 @@ bool JsonTalker::processData(const char* received_data, const size_t data_len, b
     MessageCode message_code = static_cast<MessageCode>(message["m"].as<int>());
     message["w"] = message["m"].as<int>();
     message["t"] = message["f"];
-    message["m"] = 6;   // echo
+    message["m"] = static_cast<int>(MessageCode::echo);
 
     switch (message_code)
     {
