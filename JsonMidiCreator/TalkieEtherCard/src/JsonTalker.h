@@ -31,8 +31,7 @@ private:
     
     // Shared processing data buffer Not reentrant, received data unaffected
     static char _buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-
-    BroadcastSocket* _socket = nullptr;
+    static BroadcastSocket* _socket;
 
 public:
 
@@ -326,8 +325,6 @@ public:
     
     bool processData(const char* received_data, const size_t data_len, bool pre_validated) {
 
-        if (_socket == nullptr) return false;
-        
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("Processing..."));
         #endif

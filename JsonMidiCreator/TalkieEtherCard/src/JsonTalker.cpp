@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 char JsonTalker::_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-
+BroadcastSocket* JsonTalker::_socket = nullptr;
 bool JsonTalker::_is_led_on = false;
 
 
