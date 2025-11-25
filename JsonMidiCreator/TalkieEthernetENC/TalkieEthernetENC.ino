@@ -36,6 +36,9 @@ https://github.com/ruiseixasm/JsonTalkie
   #define LED_BUILTIN 2  // Fallback definition if not already defined
 #endif
 
+// Needed for the SPI module connection
+#include <SPI.h>
+
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
 #include "src/JsonTalker.h"
@@ -50,9 +53,6 @@ JsonTalker talkers[] = { talker };
 // Singleton requires the & (to get a reference variable)
 auto& broadcast_socket = BroadcastSocket_EthernetENC::instance(talkers, sizeof(talkers)/sizeof(JsonTalker));
 
-
-// Needed for the SPI module connection
-#include <SPI.h>
 
 
 

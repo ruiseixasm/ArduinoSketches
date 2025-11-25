@@ -56,8 +56,9 @@ protected:
             Serial.println(_talker_count);
             #endif
 
+            int message_code_int = 0;
             uint32_t remote_time = 0;
-            uint16_t received_checksum = this->processData(buffer, &length, &remote_time);
+            uint16_t received_checksum = this->processData(buffer, &length, &message_code_int, &remote_time);
             uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);
             
             #ifdef BROADCASTSOCKET_DEBUG
@@ -73,32 +74,42 @@ protected:
                 
                 if (_max_delay_ms > 0) {
 
-                    const uint32_t local_time = millis();
-                    
-                    if (_control_timing) {
-                        
-                        const uint32_t remote_delay = _last_remote_time - remote_time;  // Package received after
+                    JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(message_code_int);
 
-                        if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
-                            const uint32_t allowed_delay = static_cast<uint32_t>(_max_delay_ms);
-                            const uint32_t local_delay = local_time - _last_local_time;
-                            #ifdef BROADCASTSOCKET_DEBUG
-                            Serial.print(F("C: Local delay: "));
-                            Serial.println(local_delay);
-                            #endif
-                            if (remote_delay > allowed_delay || local_delay > allowed_delay) {
+                    if (!(message_code < JsonTalker::MessageCode::run || message_code > JsonTalker::MessageCode::get)) {
+
+                        #ifdef BROADCASTSOCKET_DEBUG
+                        Serial.print(F("C: Message code requires delay check: "));
+                        Serial.println(message_code_int);
+                        #endif
+
+                        const uint32_t local_time = millis();
+                        
+                        if (_control_timing) {
+                            
+                            const uint32_t remote_delay = _last_remote_time - remote_time;  // Package received after
+
+                            if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
+                                const uint32_t allowed_delay = static_cast<uint32_t>(_max_delay_ms);
+                                const uint32_t local_delay = local_time - _last_local_time;
                                 #ifdef BROADCASTSOCKET_DEBUG
-                                Serial.print(F("C: Out of time package (remote delay): "));
-                                Serial.println(remote_delay);
+                                Serial.print(F("C: Local delay: "));
+                                Serial.println(local_delay);
                                 #endif
-                                _drops_count++;
-                                return length;  // Out of time package (too late)
+                                if (remote_delay > allowed_delay || local_delay > allowed_delay) {
+                                    #ifdef BROADCASTSOCKET_DEBUG
+                                    Serial.print(F("C: Out of time package (remote delay): "));
+                                    Serial.println(remote_delay);
+                                    #endif
+                                    _drops_count++;
+                                    return length;  // Out of time package (too late)
+                                }
                             }
                         }
+                        _last_local_time = local_time;
+                        _last_remote_time = remote_time;
+                        _control_timing = true;
                     }
-                    _last_local_time = local_time;
-                    _last_remote_time = remote_time;
-                    _control_timing = true;
                 }
 
                 // Triggers all Talkers to processes the received data
@@ -163,7 +174,7 @@ public:
     long get_drops_count() { return _drops_count; }
 
 
-    uint16_t processData(char* source_data, size_t* source_len, uint32_t* remote_time) {
+    uint16_t processData(char* source_data, size_t* source_len, int* message_code_int, uint32_t* remote_time) {
         
         // ASCII byte values:
         // 	'c' = 99
@@ -174,6 +185,7 @@ public:
 
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
+        bool at_m = false;
         bool at_c = false;
         bool at_i = false;
         size_t data_i = 3;
@@ -183,6 +195,8 @@ public:
                     at_c = true;
                 } else if (source_data[i - 2] == 'i' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
                     at_i = true;
+                } else if (source_data[i - 2] == 'm' && source_data[i - 3] == '"' && source_data[i - 1] == '"') {
+                    at_m = true;
                 }
             } else {
                 if (at_i) {
@@ -202,6 +216,13 @@ public:
                         data_checksum *= 10;
                         data_checksum += source_data[i] - '0';
                         continue;   // Avoids the copy of the char
+                    }
+                } else if (at_m) {
+                    if (source_data[i] < '0' || source_data[i] > '9') {
+                        at_m = false;
+                    } else {
+                        *message_code_int *= 10;
+                        *message_code_int += source_data[i] - '0';
                     }
                 }
             }
