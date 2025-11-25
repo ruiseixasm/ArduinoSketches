@@ -211,7 +211,7 @@ protected:
                 bool pre_validated = false;
                 for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
 
-                    #ifdef JSON_TALKER_DEBUG
+                    #ifdef BROADCASTSOCKET_DEBUG
                     Serial.print(F("Creating new JsonObject for talker: "));
                     Serial.println(_json_talkers[talker_i]->get_name());
                     #endif
@@ -225,7 +225,7 @@ protected:
 
                     DeserializationError error = deserializeJson(message_doc, buffer, length);
                     if (error) {
-                        #ifdef JSON_TALKER_DEBUG
+                        #ifdef BROADCASTSOCKET_DEBUG
                         Serial.println(F("Failed to deserialize received data"));
                         #endif
                         return false;
@@ -284,7 +284,7 @@ public:
 
         // Directly nest the editable json_message under "m"
         if (json_message.isNull()) {
-            #ifdef JSON_TALKER_DEBUG
+            #ifdef BROADCASTSOCKET_DEBUG
             Serial.println(F("Error: Null json_message received"));
             #endif
             return false;
@@ -295,12 +295,12 @@ public:
 
         size_t len = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (len == 0) {
-            #ifdef JSON_TALKER_DEBUG
+            #ifdef BROADCASTSOCKET_DEBUG
             Serial.println(F("Error: Serialization failed"));
             #endif
         } else {
             
-            #ifdef JSON_TALKER_DEBUG
+            #ifdef BROADCASTSOCKET_DEBUG
             Serial.print(F("T: "));
             serializeJson(json_message, Serial);
             Serial.println();  // optional: just to add a newline after the JSON
