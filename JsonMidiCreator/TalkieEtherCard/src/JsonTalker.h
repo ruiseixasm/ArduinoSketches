@@ -586,8 +586,6 @@ public:
                 #endif
 
                 _channel = message["b"].as<uint8_t>();
-            } else {
-                return false;
             }
             message["b"] = _channel;
             sendMessage(message, true);
