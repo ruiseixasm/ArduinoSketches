@@ -134,7 +134,7 @@ protected:
     }
 
 
-    bool command_run(const uint8_t command_index, JsonObject json_message) {
+    virtual bool command_run(const uint8_t command_index, JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
@@ -195,7 +195,7 @@ protected:
     }
 
     
-    bool command_set(const uint8_t command_index, JsonObject json_message) {
+    virtual bool command_set(const uint8_t command_index, JsonObject json_message) {
         long json_value = json_message["v"].as<long>();
         switch (command_index)
         {
@@ -211,7 +211,7 @@ protected:
     }
 
     
-    long command_get(const uint8_t command_index, JsonObject json_message) {
+    virtual long command_get(const uint8_t command_index, JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
