@@ -284,15 +284,17 @@ public:
             // Nothing to see here
         }
 
-    void setSocket(BroadcastSocket* socket) {
+
+    static void setSocket(BroadcastSocket* socket) {
         _socket = socket;
     }
 
-    void setTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
+    static void setTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
         _json_talkers = json_talkers;
         _talker_count = talker_count;
     }
 
+    
     const char* get_name() { return _name; }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
