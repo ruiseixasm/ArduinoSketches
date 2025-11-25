@@ -60,7 +60,7 @@ protected:
             int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
             uint32_t remote_time = 0;
             uint16_t received_checksum = this->processData(buffer, &length, &message_code_int, &remote_time);
-            uint16_t checksum = BroadcastSocket::getChecksum(buffer, length);
+            uint16_t checksum = JsonTalker::getChecksum(buffer, length);
             
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.print(F("C: Remote time: "));
@@ -244,20 +244,6 @@ public:
         return data_checksum;
     }
     
-
-    static uint16_t getChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
 };
 
 #endif // BROADCAST_SOCKET_H

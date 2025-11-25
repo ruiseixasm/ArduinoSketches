@@ -35,16 +35,6 @@ long JsonTalker::get_total_drops() {
 
 
 
-
-uint16_t JsonTalker::setChecksum(JsonObject message) {
-    message["c"] = 0;   // makes _buffer a net_data buffer
-    size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-    uint16_t checksum = BroadcastSocket::getChecksum(_buffer, len);
-    message["c"] = checksum;
-    return checksum;
-}
-
-
 bool JsonTalker::sendMessage(JsonObject message, bool as_reply) {
     if (_socket == nullptr) return false;
     
