@@ -32,6 +32,7 @@ private:
     // Shared processing data buffer Not reentrant, received data unaffected
     static char _buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 
+    BroadcastSocket* _socket = nullptr;
 
 public:
 
@@ -93,7 +94,6 @@ public:
 
 protected:
 
-    BroadcastSocket* _socket = nullptr;
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
     uint8_t _channel = 0;
