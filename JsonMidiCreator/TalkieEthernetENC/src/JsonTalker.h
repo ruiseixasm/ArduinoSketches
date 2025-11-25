@@ -308,7 +308,7 @@ public:
         if (_talker_count == 0) return false;
         json_message["f"] = _name;
         json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
-        // Triggers all Talkers to processes the received data
+        // Triggers all local Talkers to processes the json_message
         bool pre_validated = false;
         bool sent_message = false;
         for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
