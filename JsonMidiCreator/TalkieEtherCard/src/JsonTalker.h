@@ -287,6 +287,11 @@ public:
         _socket = socket;
     }
 
+    const char* get_name() { return _name; }
+    void set_channel(uint8_t channel) { _channel = channel; }
+    uint8_t get_channel() { return _channel; }
+    
+
 
     bool echo(JsonObject json_message) {
         Serial.print(json_message["f"].as<String>());
@@ -314,11 +319,6 @@ public:
         return false;
     }
 
-
-    const char* get_name() { return _name; }
-    void set_channel(uint8_t channel) { _channel = channel; }
-    uint8_t get_channel() { return _channel; }
-    
 
 
     bool sendMessage(JsonObject message, bool as_reply = false);
