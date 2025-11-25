@@ -161,7 +161,7 @@ protected:
                 } else {
                     json_message["r"] = "Already On!";
                     if (_socket != nullptr)
-                        this->sendMessage(json_message);
+                        this->remoteSend(json_message);
                     return false;
                 }
                 return true;
@@ -183,7 +183,7 @@ protected:
                 } else {
                     json_message["r"] = "Already Off!";
                     if (_socket != nullptr)
-                        this->sendMessage(json_message);
+                        this->remoteSend(json_message);
                     return false;
                 }
                 return true;
@@ -292,7 +292,7 @@ public:
 
 
 
-    bool sendMessage(JsonObject json_message, bool as_reply = false);
+    bool remoteSend(JsonObject json_message, bool as_reply = false);
 
     
     bool processData(JsonObject json_message, bool pre_validated) {
@@ -325,7 +325,7 @@ public:
                 json_message["t"] = json_message["f"];
                 json_message["e"] = 4;
                 
-                sendMessage(json_message, true);
+                remoteSend(json_message, true);
                 return false;
             }
         }
@@ -370,7 +370,7 @@ public:
         {
         case MessageCode::talk:
             json_message["d"] = _desc;
-            sendMessage(json_message, true);
+            remoteSend(json_message, true);
             break;
         
         case MessageCode::list:
@@ -391,21 +391,21 @@ public:
                     none_list = false;
                     json_message["n"] = my_manifesto.runs[i].name;
                     json_message["d"] = my_manifesto.runs[i].desc;
-                    sendMessage(json_message, true);
+                    remoteSend(json_message, true);
                 }
                 json_message["w"] = static_cast<int>(MessageCode::set);
                 for (size_t i = 0; i < my_manifesto.sets_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.sets[i].name;
                     json_message["d"] = my_manifesto.sets[i].desc;
-                    sendMessage(json_message, true);
+                    remoteSend(json_message, true);
                 }
                 json_message["w"] = static_cast<int>(MessageCode::get);
                 for (size_t i = 0; i < my_manifesto.gets_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.gets[i].name;
                     json_message["d"] = my_manifesto.gets[i].desc;
-                    sendMessage(json_message, true);
+                    remoteSend(json_message, true);
                 }
                 if(none_list) {
                     json_message["g"] = 2;       // NONE
@@ -424,13 +424,13 @@ public:
                     #endif
             
                     json_message["g"] = 0;       // ROGER
-                    sendMessage(json_message, true);
+                    remoteSend(json_message, true);
                     // No memory leaks because message_doc exists in the listen() method stack
                     json_message.remove("g");
                     command_run(command_found_i, json_message);
                 } else {
                     json_message["g"] = 1;   // UNKNOWN
-                    sendMessage(json_message, true);
+                    remoteSend(json_message, true);
                 }
             }
             break;
@@ -441,13 +441,13 @@ public:
                 const uint8_t command_found_i = command_index(MessageCode::set, json_message);
                 if (command_found_i < 255) {
                     json_message["g"] = 0;       // ROGER
-                    sendMessage(json_message, true);
+                    remoteSend(json_message, true);
                     // No memory leaks because message_doc exists in the listen() method stack
                     json_message.remove("g");
                     command_set(command_found_i, json_message);
                 } else {
                     json_message["g"] = 1;   // UNKNOWN
-                    sendMessage(json_message, true);
+                    remoteSend(json_message, true);
                 }
             }
             break;
@@ -458,14 +458,14 @@ public:
                 const uint8_t command_found_i = command_index(MessageCode::get, json_message);
                 if (command_found_i < 255) {
                     json_message["g"] = 0;       // ROGER
-                    sendMessage(json_message, true);
+                    remoteSend(json_message, true);
                     // No memory leaks because message_doc exists in the listen() method stack
                     json_message.remove("g");
                     json_message["v"] = command_get(command_found_i, json_message);
-                    sendMessage(json_message, true);
+                    remoteSend(json_message, true);
                 } else {
                     json_message["g"] = 1;   // UNKNOWN
-                    sendMessage(json_message, true);
+                    remoteSend(json_message, true);
                 }
             }
             break;
@@ -516,7 +516,7 @@ public:
 
             #endif
 
-                sendMessage(json_message, true);
+                remoteSend(json_message, true);
 
                 // TO INSERT HERE EXTRA DATA !!
             }
@@ -541,7 +541,7 @@ public:
                 _channel = json_message["b"].as<uint8_t>();
             }
             json_message["b"] = _channel;
-            sendMessage(json_message, true);
+            remoteSend(json_message, true);
             break;
         
         default:
