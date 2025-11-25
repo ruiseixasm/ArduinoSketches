@@ -37,6 +37,14 @@ https://github.com/ruiseixasm/JsonTalkie
 //     ESP32 SS   (3.3V) → Nano D10 (5V input)  // SAFE
 //     Nano MISO  (5V)   → ESP32 MISO (3.3V)    // RISKY but usually survives
 
+// Key Parameters:
+//     Nano output: 5V, can source ~20mA max
+//     ESP32 input: Has ESD protection diodes to 3.3V rail
+//     Diode forward voltage: ~0.6V each
+
+// Calculations:
+//     V_resistor = V_nano - V_esp32 = 5V - 3.9V = 1.1V
+//     I = V_resistor / R = 1.1V / 1000Ω = 1.1mA
 
 
 
