@@ -109,7 +109,7 @@ protected:
     uint8_t command_index(const MessageCode message_code, JsonObject json_message) {
         const char* command_name = json_message["n"].as<const char*>();
         const Command* command = nullptr;
-        uint8_t count = 255;    // 255 means not found!
+        uint8_t count = 0;    
         switch (message_code)
         {
         case MessageCode::run:
@@ -124,14 +124,13 @@ protected:
             command = _manifesto.gets;
             count = _manifesto.gets_count;
             break;
-        default: return count;
+        default: return 255;    // 255 means not found!
         }
-        uint8_t i = 0;
-        for (; i < count; i++) {
+        for (uint8_t i = 0; i < count; i++) {
             if (strcmp(command_name, command[i].name) == 0)
                 return i;
         }
-        return i;
+        return 255; // 255 means not found!
     }
 
 
@@ -143,6 +142,9 @@ protected:
             {
                 if (!_is_led_on) {
                 #ifdef LED_BUILTIN
+                    #ifdef JSON_TALKER_DEBUG
+                    Serial.println(F("LED_BUILTIN"));
+                    #endif
                     digitalWrite(LED_BUILTIN, HIGH);
                 #endif
                     _is_led_on = true;
