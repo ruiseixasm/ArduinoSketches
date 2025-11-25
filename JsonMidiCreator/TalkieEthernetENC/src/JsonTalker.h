@@ -310,13 +310,15 @@ public:
         json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
         // Triggers all Talkers to processes the received data
         bool pre_validated = false;
+        bool sent_message = false;
         for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
             if (_json_talkers[talker_i] != this) {  // Can't send to myself
                 pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+                sent_message = true;
                 if (!pre_validated) break;
             }
         }
-        return pre_validated;
+        return sent_message;
     }
 
     
