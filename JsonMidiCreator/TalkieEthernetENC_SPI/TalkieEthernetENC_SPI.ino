@@ -196,7 +196,6 @@ void setup() {
 
 
     // STEP 1: Initialize SPI only
-    const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
     
     Serial.println("Step 1: Starting SPI...");
     // SPI.begin();
@@ -204,6 +203,7 @@ void setup() {
     delay(1000);
 
     // STEP 2: Initialize Ethernet with CS pin
+    const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
     Serial.println("Step 2: Initializing EthernetENC...");
     Ethernet.init(CS_PIN);
     Serial.println("Ethernet initialized successfully");
