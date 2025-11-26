@@ -143,6 +143,22 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01};
 #define buzzer_pin 3
 
 
+// ========== NANO SPI CONTROL ADDITIONS ==========
+SPIClass hspi(HSPI);  // Second SPI for Arduino Nanos
+
+// HSPI pins for Nanos
+#define HSPI_MOSI 13
+#define HSPI_MISO 12  
+#define HSPI_SCK  14
+#define NANO_SS   4     // SS pin for the first Nano
+
+// Command timing
+unsigned long lastNanoCommand = 0;
+const unsigned long NANO_COMMAND_INTERVAL = 5000; // Send command every 5 seconds
+bool ledState = false;
+// ========== END NANO SPI CONTROL ADDITIONS ==========
+
+
 void setup() {
     // Initialize pins FIRST before anything else
     pinMode(LED_BUILTIN, OUTPUT);
@@ -169,11 +185,21 @@ void setup() {
     
     Serial.println("Pins initialized successfully");
 
+
+    // ========== NANO SPI INITIALIZATION ==========
+    Serial.println("Initializing HSPI for Arduino Nano...");
+    hspi.begin(HSPI_SCK, HSPI_MISO, HSPI_MOSI);
+    pinMode(NANO_SS, OUTPUT);
+    digitalWrite(NANO_SS, HIGH);  // Start with Nano deselected
+    Serial.println("HSPI for Nano initialized successfully");
+    // ========== END NANO SPI INITIALIZATION ==========
+
+
     // STEP 1: Initialize SPI only
     const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
     
     Serial.println("Step 1: Starting SPI...");
-    SPI.begin();
+    // SPI.begin();
     Serial.println("SPI started successfully");
     delay(1000);
 
@@ -252,12 +278,75 @@ void setup() {
 }
 
 
+// ========== NANO SPI CONTROL FUNCTIONS ==========
+void sendToNano(const char* command) {
+    digitalWrite(NANO_SS, LOW);
+    
+    hspi.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));  // 4MHz
+    
+    // Send command followed by newline
+    for (int i = 0; command[i] != 0; i++) {
+        hspi.transfer(command[i]);
+    }
+    hspi.transfer('\n');  // End of command marker
+    
+    hspi.endTransaction();
+    digitalWrite(NANO_SS, HIGH);
+    
+    Serial.print("Sent to Nano: ");
+    Serial.println(command);
+}
+
+void controlNanoLED() {
+    if (millis() - lastNanoCommand >= NANO_COMMAND_INTERVAL) {
+        if (ledState) {
+            sendToNano("LED_ON");
+            Serial.println("Command: Turn Nano LED ON");
+        } else {
+            sendToNano("LED_OFF"); 
+            Serial.println("Command: Turn Nano LED OFF");
+        }
+        
+        ledState = !ledState;  // Toggle for next time
+        lastNanoCommand = millis();
+    }
+}
+// ========== END NANO SPI CONTROL FUNCTIONS ==========
+
 
 void loop() {
     // Maintain DHCP lease (important for long-running applications)
     Ethernet.maintain();
     
     broadcast_socket.receive();
+
+
+    // ========== NANO CONTROL ==========
+    controlNanoLED();  // Automatically toggle Nano LED every 5 seconds
+    // ========== END NANO CONTROL ==========
+
+    // Manual control via Serial input
+    if (Serial.available()) {
+        String input = Serial.readStringUntil('\n');
+        input.trim();
+        
+        if (input.length() > 0) {
+            if (input == "nano on") {
+                sendToNano("LED_ON");
+            } else if (input == "nano off") {
+                sendToNano("LED_OFF");
+            } else if (input == "nano toggle") {
+                sendToNano("LED_TOGGLE");
+            } else if (input == "nano blink") {
+                sendToNano("LED_BLINK");
+            } else if (input == "nano status") {
+                sendToNano("LED_STATUS");
+            } else if (input == "nano ping") {
+                sendToNano("PING");
+            }
+        }
+    }
+
 
     // json_talkie.listen();
     // single_player.listen();
