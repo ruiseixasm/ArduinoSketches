@@ -59,24 +59,24 @@ void setup() {
   
   // Initialize SPI as SLAVE (always done, regardless of LED)
   pinMode(MISO, OUTPUT);
-//   SPCR |= _BV(SPE);
+  SPCR |= _BV(SPE);
 
-  // SET SPI MODE EXPLICITLY - CRITICAL!
-  SPCR = 0;  // Clear SPI settings
+//   // SET SPI MODE EXPLICITLY - CRITICAL!
+//   SPCR = 0;  // Clear SPI settings
   
-  // Configure for SPI Mode 0 (most common)
-  SPCR |= _BV(SPE);    // SPI Enable
-  SPCR |= _BV(SPIE);   // SPI Interrupt Enable
-  // Mode 0: CPOL=0, CPHA=0
-  SPCR &= ~_BV(CPOL);  // Clock polarity 0
-  SPCR &= ~_BV(CPHA);  // Clock phase 0
+//   // Configure for SPI Mode 0 (most common)
+//   SPCR |= _BV(SPE);    // SPI Enable
+//   SPCR |= _BV(SPIE);   // SPI Interrupt Enable
+//   // Mode 0: CPOL=0, CPHA=0
+//   SPCR &= ~_BV(CPOL);  // Clock polarity 0
+//   SPCR &= ~_BV(CPHA);  // Clock phase 0
   
 //   // Optional: Set clock rate (though slave ignores this)
 //   SPCR &= ~_BV(SPR1);  // Clear rate bits
 //   SPCR &= ~_BV(SPR0);  // Clear rate bits
 
 
-//   SPI.attachInterrupt();
+  SPI.attachInterrupt();
   
   Serial.println("Nano SPI Slave Ready");
 }
