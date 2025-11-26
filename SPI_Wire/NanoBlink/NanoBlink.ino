@@ -15,7 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <SPI.h>
 
 // Define LED pin with safety check
-#define LED_PIN 8  // Change this to test different pins
+#define LED_PIN 2  // Change this to test different pins
 
 // SPI pins on Arduino Nano
 #define SPI_PINS_COUNT 4
@@ -46,6 +46,8 @@ void setup() {
   // Initialize LED pin if safe
   if (ledAvailable) {
     pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, HIGH);
+    delay(2000);
     digitalWrite(LED_PIN, LOW);
     Serial.print("LED initialized on pin ");
     Serial.println(LED_PIN);
