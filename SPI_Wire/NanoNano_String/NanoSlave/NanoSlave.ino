@@ -55,7 +55,7 @@ void processCommand(const char* command) {
     Serial.println("LED turned OFF");
   }
   else {
-    Serial.println("Unknown command");
+    Serial.println("\t\t\t\t\t\tUnknown command");
   }
 }
 
