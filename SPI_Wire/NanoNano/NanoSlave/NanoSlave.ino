@@ -26,7 +26,8 @@ void setup() {
   SPCR |= _BV(SPIE);       // Enable SPI interrupt
   
   // Initialize serial for debugging
-  Serial.begin(9600);
+  Serial.begin(115200);
+  delay(500);   // Give some time to serial port start up
   Serial.println("SPI Slave Initialized - Waiting for commands...");
   
   // Turn on SPI interrupt

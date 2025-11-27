@@ -20,7 +20,8 @@ void setup() {
   digitalWrite(SS_PIN, HIGH);  // Start with slave deselected
   
   // Initialize serial for debugging
-  Serial.begin(9600);
+  Serial.begin(115200);
+  delay(500);   // Give some time to serial port start up
   Serial.println("SPI Master Initialized");
 }
 
