@@ -6,6 +6,7 @@
 #define LED_OFF 0x00
 
 // Pin definitions
+const int BUZZ_PIN = 2; // External BUZZER pin
 const int SS_PIN = 10;  // Slave Select pin
 
 void setup() {
@@ -21,9 +22,6 @@ void setup() {
   // Initialize serial for debugging
   Serial.begin(9600);
   Serial.println("SPI Master Initialized");
-  
-  // Blink built-in LED to indicate master is ready
-  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop() {
@@ -54,10 +52,5 @@ void sendCommand(byte command) {
   // Print response for debugging
   Serial.print("Slave response: ");
   Serial.println(response, HEX);
-  
-  // Blink master LED to indicate communication
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(100);
-  digitalWrite(LED_BUILTIN, LOW);
 }
 

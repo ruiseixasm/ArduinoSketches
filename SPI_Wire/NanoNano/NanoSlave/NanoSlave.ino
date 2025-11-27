@@ -6,7 +6,7 @@
 #define LED_OFF 0x00
 
 // Pin definitions
-const int LED_PIN = 7;     // External LED pin
+const int LED_PIN = 2;     // External LED pin
 const int SS_PIN = 10;     // Slave Select pin
 
 // Response codes
@@ -19,7 +19,6 @@ volatile bool commandReceived = false;
 void setup() {
   // Initialize pins
   pinMode(LED_PIN, OUTPUT);
-  pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
   
   // Initialize SPI as slave
@@ -44,11 +43,6 @@ void loop() {
   if (commandReceived) {
     processCommand(receivedCommand);
     commandReceived = false;
-    
-    // Blink built-in LED to indicate command processed
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(50);
-    digitalWrite(LED_BUILTIN, LOW);
   }
 }
 
