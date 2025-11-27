@@ -20,7 +20,7 @@ void setup() {
   // Initialize serial
   Serial.begin(115200);
   delay(500);
-  Serial.println("/n/nSPI Master Initialized - String Mode");
+  Serial.println("\n\nSPI Master Initialized - String Mode");
 }
 
 void loop() {

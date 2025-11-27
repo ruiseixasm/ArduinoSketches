@@ -20,7 +20,7 @@ void setup() {
   
   Serial.begin(115200);
   delay(500);
-  Serial.println("/n/nSPI Slave Ready - String Mode");
+  Serial.println("\n\nSPI Slave Ready - String Mode");
 }
 
 // SPI interrupt - receive characters
