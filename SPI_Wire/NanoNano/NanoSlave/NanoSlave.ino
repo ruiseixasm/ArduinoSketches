@@ -28,7 +28,7 @@ void setup() {
   // Initialize serial for debugging
   Serial.begin(115200);
   delay(500);   // Give some time to serial port start up
-  Serial.println("SPI Slave Initialized - Waiting for commands...");
+  Serial.println("\n\n\nSPI Slave Initialized - Waiting for commands...");
   
   // Turn on SPI interrupt
   SPI.attachInterrupt();

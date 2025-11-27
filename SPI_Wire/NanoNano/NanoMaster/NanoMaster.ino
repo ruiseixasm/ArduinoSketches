@@ -22,7 +22,7 @@ void setup() {
   // Initialize serial for debugging
   Serial.begin(115200);
   delay(500);   // Give some time to serial port start up
-  Serial.println("SPI Master Initialized");
+  Serial.println("\n\n\nSPI Master Initialized");
 }
 
 void loop() {
