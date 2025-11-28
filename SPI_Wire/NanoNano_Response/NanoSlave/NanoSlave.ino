@@ -51,6 +51,7 @@ ISR(SPI_STC_vect) {
         }
     } else {    // overflow
         receiving_index = 0;
+        receiving_buffer[receiving_index] = '/0';   // Makes sure receiving Buffer is clean
     }
     SPDR = '/0';    // Always empty the sending buffer
 
@@ -68,12 +69,11 @@ ISR(SPI_STC_vect) {
         SPDR = c;
     } else if (!receiving_state) {  // Has something in the receiving Buffer
         Serial.println("2: Processing commands!");
-        processCommand();
+        processCommand();   // The ONLY one that writes on sending Buffer
         sending_state = true;
         sending_index = 0;
     } else {    // Nothing to be sent
         Serial.println("0: Nothing to be SENT!");
-        receiving_state = true; // Back to receiving state
     }
 }
 
