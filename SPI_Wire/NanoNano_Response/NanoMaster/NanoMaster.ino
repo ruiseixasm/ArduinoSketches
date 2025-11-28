@@ -71,7 +71,7 @@ void sendString(const char* command) {
   // NEW CODE: Check if response is "BUZZ" and activate buzzer
   if (strcmp(receiving_buffer, "BUZZ") == 0) {
     digitalWrite(BUZZ_PIN, HIGH);
-    delay(200);  // Buzzer on for 200ms
+    delay(100);  // Buzzer on for 200ms
     digitalWrite(BUZZ_PIN, LOW);
     Serial.println("BUZZER activated for 200ms!");
   }

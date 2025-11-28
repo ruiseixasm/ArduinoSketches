@@ -8,6 +8,9 @@
         "RAMEND",
         "RAMSTART",
         "Seixas",
-        "TEENSYDUINO"
+        "SPCR",
+        "SPDR",
+        "TEENSYDUINO",
+        "vect"
     ]
 }
