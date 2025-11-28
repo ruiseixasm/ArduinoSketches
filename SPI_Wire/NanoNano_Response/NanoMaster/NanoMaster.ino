@@ -5,6 +5,9 @@
 const int BUZZ_PIN = 2; // External BUZZER pin
 const int SS_PIN = 10;  // Slave Select pin
 
+#define BUFFER_SIZE 128
+char receiving_buffer[BUFFER_SIZE];
+
 void setup() {
   // Initialize SPI
   SPI.begin();
@@ -33,11 +36,10 @@ void loop() {
 }
 
 
-String sendString(const char* command) {
-  String response = "";
+void sendString(const char* command) {
   
   digitalWrite(SS_PIN, LOW);
-  delayMicroseconds(1000); // Increase to 1000μs
+  delayMicroseconds(20);
   
   // Send command
   int i = 0;
@@ -48,30 +50,31 @@ String sendString(const char* command) {
   }
   SPI.transfer('\0');
   
+  delayMicroseconds(50);
+
   // Receive response
-  char received;
-  do {
-    received = SPI.transfer(0xFF);
-    if (received != '\0' && received != 0) {
-      response += received;
-    }
-  } while (received != '\0' && received != 0);
+  char c;
+  for(size_t i = 0; i < BUFFER_SIZE; i++) {
+
+    c = SPI.transfer(0xFF);  // Reads char by char
+    receiving_buffer[i] = c;
+    if (c == '\0') break;
+  }
   
   digitalWrite(SS_PIN, HIGH);
   
   Serial.print("Sent: ");
   Serial.print(command);
   Serial.print(" | Received: ");
-  Serial.println(response);
+  Serial.println(receiving_buffer);
   
   // NEW CODE: Check if response is "BUZZ" and activate buzzer
-  if (response == "BUZZ") {
+  if (strcmp(receiving_buffer, "BUZZ") == 0) {
     digitalWrite(BUZZ_PIN, HIGH);
     delay(200);  // Buzzer on for 200ms
     digitalWrite(BUZZ_PIN, LOW);
     Serial.println("BUZZER activated for 200ms!");
   }
   
-  return response;
 }
 

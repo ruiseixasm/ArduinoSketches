@@ -5,15 +5,16 @@
 const int LED_PIN = 2;
 const int SS_PIN = 10;
 
-#define BUFFER_SIZE 32
-char commandBuffer[BUFFER_SIZE];
-byte bufferIndex = 0;
+#define BUFFER_SIZE 128
+char receiving_buffer[BUFFER_SIZE];
+char sending_buffer[BUFFER_SIZE];
 
-// Response handling
-char responseBuffer[BUFFER_SIZE];
-bool responseReady = false;
-byte responseIndex = 0;
-bool isReceivingCommand = true;  // Track if we're receiving command or sending response
+volatile byte receiving_index = 0;
+volatile byte sending_index = 0;
+
+volatile bool receiving_complete = false;
+volatile bool sending_ready = false;
+
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
@@ -30,83 +31,81 @@ void setup() {
 }
 
 
-// SPI interrupt - receive characters
-ISR (SPI_STC_vect) {
-  char receivedChar = SPDR;
-  
-  if (isReceivingCommand) {
-    // We're receiving a command from Master
-    if (receivedChar == '\0') {
-      // End of command - process it
-      commandBuffer[bufferIndex] = '\0';
-      bufferIndex = 0;
-      isReceivingCommand = false;
-      
-      // Process command and prepare response
-      if (strlen(commandBuffer) > 0) {
-        processCommand(commandBuffer);
-      }
-      
-      // Send first character of response
-      if (responseReady && responseBuffer[0] != '\0') {
-        SPDR = responseBuffer[0];
-        responseIndex = 1;
+// ------------------------------
+// SPI Interrupt
+// ------------------------------
+ISR(SPI_STC_vect) {
+  char c = SPDR;    // The most important line!!
+
+  // If we are still receiving a command
+  if (!receiving_complete) {
+
+    if (receiving_index < BUFFER_SIZE - 1) {
+      receiving_buffer[receiving_index++] = c;
+      if (c == '\0') {
+        receiving_index = 0;
+        receiving_complete = true;
+
+        // Prepare complete response BEFORE sending anything
+        processCommand();
+
+        // When master clocks next byte, we start sending
+        sending_index = 0;
+        SPDR = sending_ready ? sending_buffer[sending_index++] : '\0';
+
       } else {
-        SPDR = '\0';
+          SPDR = '\0'; // nothing to send yet
       }
-    } else if (bufferIndex < BUFFER_SIZE - 1) {
-      // Store character in buffer
-      commandBuffer[bufferIndex++] = receivedChar;
-      SPDR = 0; // Send 0 while receiving command
+
     } else {
-      // Buffer full - reset
-      bufferIndex = 0;
-      SPDR = 0;
+      // overflow
+      receiving_index = 0;
+      SPDR = '\0';
     }
+
   } else {
-    
-    // We're sending response to Master
-    if (responseReady && responseIndex < strlen(responseBuffer)) {
-        SPDR = responseBuffer[responseIndex++];
+    // Send phase
+    if (sending_ready) {
+      SPDR = sending_buffer[sending_index++];
+      if (SPDR == '\0') {
+        sending_ready = false;
+        receiving_complete = false;
+        sending_index = 0;
+      }
     } else {
-        // End of response - reset everything for next command
-        SPDR = '\0';
-        responseReady = false;
-        responseIndex = 0;
-        isReceivingCommand = true;
-        bufferIndex = 0;  // ADD THIS: Reset command buffer
+      // End of response
+      SPDR = '\0';
+      receiving_complete = false;
+      sending_index = 0;
     }
   }
 }
 
 
-void processCommand(const char* command) {
+void processCommand() {
+
   Serial.print("Received: ");
-  Serial.println(command);
-  
-  if (strcmp(command, "LED_ON") == 0) {
+  Serial.println(receiving_buffer);
+
+  if (strcmp(receiving_buffer, "LED_ON") == 0) {
     digitalWrite(LED_PIN, HIGH);
-    Serial.println("LED turned ON");
-    strcpy(responseBuffer, "OK_ON");
-    responseReady = true;
-    responseIndex = 0;
+    Serial.println("LED is ON");
+    strcpy(sending_buffer, "OK_ON");
   }
-  else if (strcmp(command, "LED_OFF") == 0) {
+  else if (strcmp(receiving_buffer, "LED_OFF") == 0) {
     digitalWrite(LED_PIN, LOW);
-    Serial.println("LED turned OFF");
-    strcpy(responseBuffer, "OK_OFF");
-    responseReady = true;
-    responseIndex = 0;
+    Serial.println("LED is OFF");
+    strcpy(sending_buffer, "OK_OFF");
   }
   else {
     Serial.println("Unknown command");
-    strcpy(responseBuffer, "BUZZ");
-    responseReady = true;
-    responseIndex = 0;
+    strcpy(sending_buffer, "BUZZ");
   }
+
+  sending_ready = true;
 }
 
 void loop() {
-  // Nothing needed here - everything happens in ISR
+  // Nothing here – all work done inside ISR
 }
 
