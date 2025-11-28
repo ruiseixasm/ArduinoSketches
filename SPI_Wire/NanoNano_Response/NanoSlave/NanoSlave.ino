@@ -51,10 +51,7 @@ ISR(SPI_STC_vect) {
         } else {    // overflow
             receiving_state = false;        // End of receiving
         }
-    }
-
-    // THE SLAVE HAS THE OPORTUNITY TO SEND SOMETHING (FULL DUPLEX)
-    if (sending_state) {
+    } else if (sending_state) {    // THE SLAVE HAS THE OPPORTUNITY TO SEND SOMETHING (FULL DUPLEX)
         c = sending_buffer[sending_index++];
         if (c == '\0') {
             sending_state = false;
@@ -65,11 +62,11 @@ ISR(SPI_STC_vect) {
             Serial.print(c);
         }
         SPDR = c;
-    } else {    // Has to send something in response
-        Serial.print("Nothing to send yet!");
-        receiving_state = true; // Able again to receive
-        receiving_index = 0;    // Resets the receiving index
-        SPDR = '\0';
+    } else { 
+        Serial.println("Processing commands!");
+        processCommand();
+        sending_state = true;
+        sending_index = 0;
     }
 }
 
@@ -102,10 +99,6 @@ void processCommand() {
 }
 
 void loop() {
-    if (!receiving_state) {
-        processCommand();
-        sending_state = true;
-        sending_index = 0;
-    } 
+    // Nothing here – all work done inside ISR
 }
 
