@@ -72,9 +72,9 @@ ISR(SPI_STC_vect) {
         processCommand();   // The ONLY one that writes on sending Buffer
         sending_state = true;
         sending_index = 0;
-    } else {    // Nothing to be sent
+    } else {    
         Serial.println("0: Nothing to be SENT!");
-    }
+    }   // else: Nothing to be sent
 }
 
 
