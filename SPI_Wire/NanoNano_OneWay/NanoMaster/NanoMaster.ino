@@ -54,6 +54,8 @@ void sendString(const char* command) {
 
     // Signals the start of the transmission
     c = SPI.transfer(START);
+    Serial.print("Response to START: 0x");
+    Serial.println(c, HEX);  // See what we actually get
     if (c == ACK) {
         Serial.println("Receiver acknowledged!");
     } else {
