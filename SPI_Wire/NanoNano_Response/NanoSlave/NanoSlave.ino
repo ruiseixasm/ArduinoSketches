@@ -45,6 +45,8 @@ ISR(SPI_STC_vect) {
     if (receiving_index < BUFFER_SIZE) {
         receiving_buffer[receiving_index++] = c;
         if (c == '\0') {
+            Serial.print("Received: ");
+            Serial.println(receiving_buffer);
             receiving_state = false;    // End of receiving
         }
     } else {    // overflow
@@ -78,7 +80,7 @@ ISR(SPI_STC_vect) {
 
 void processCommand() {
 
-    Serial.print("Received: ");
+    Serial.print("Processed command: ");
     Serial.println(receiving_buffer);
 
     if (strcmp(receiving_buffer, "LED_ON") == 0) {
