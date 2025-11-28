@@ -52,15 +52,10 @@ ISR(SPI_STC_vect) {
                 sending_state = true;
                 sending_index = 0;
                 // When master clocks next byte, we start sending
-                if (sending_state) {
-                    c = sending_buffer[sending_index++];
-                    Serial.print("Sending these chars: ");
-                    Serial.print(c);
-                    SPDR = c;
-                } else {
-
-                    SPDR = '\0';
-                }
+                c = sending_buffer[sending_index++];
+                Serial.print("Sending these chars: ");
+                Serial.print(c);
+                SPDR = c;
 
             } else {
                 SPDR = '\0'; // nothing to send yet
@@ -78,12 +73,13 @@ ISR(SPI_STC_vect) {
             sending_state = false;
             Serial.println(c);
         } else {
-            Serial.print("Sending this char: ");
             Serial.print(c);
         }
         SPDR = c;
     } else {
         
+        Serial.print("Else case: ");
+        Serial.println(c);
         // End of response
         SPDR = '\0';
         receiving_state = true;
