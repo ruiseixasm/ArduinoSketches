@@ -45,7 +45,7 @@ ISR(SPI_STC_vect) {
     if (receiving_index < BUFFER_SIZE) {
         receiving_buffer[receiving_index++] = c;
         if (c == '\0') {
-            Serial.print("Received: ");
+            Serial.print("1: Receiving buffer: ");
             Serial.println(receiving_buffer);
             receiving_state = false;    // End of receiving
         }
@@ -67,12 +67,12 @@ ISR(SPI_STC_vect) {
         }
         SPDR = c;
     } else if (!receiving_state) {  // Has something in the receiving Buffer
-        Serial.println("Processing commands!");
+        Serial.println("2: Processing commands!");
         processCommand();
         sending_state = true;
         sending_index = 0;
-    } else {    // Nothing to be received
-        Serial.println("Nothing to be received!");
+    } else {    // Nothing to be sent
+        Serial.println("0: Nothing to be SENT!");
         receiving_state = true; // Back to receiving state
     }
 }
@@ -80,7 +80,7 @@ ISR(SPI_STC_vect) {
 
 void processCommand() {
 
-    Serial.print("Processed command: ");
+    Serial.print("3: Processed command: ");
     Serial.println(receiving_buffer);
 
     if (strcmp(receiving_buffer, "LED_ON") == 0) {
