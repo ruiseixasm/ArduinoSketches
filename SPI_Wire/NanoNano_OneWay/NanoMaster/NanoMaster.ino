@@ -24,9 +24,15 @@ const int SS_PIN = 10;  // Slave Select pin
 
 
 void setup() {
+
+    // SPI_CLOCK_DIV2 = 8MHz (Arduino Nano 16MHz / 2)
+    // SPI_CLOCK_DIV4 = 4MHz (Arduino Nano 16MHz / 4) ← This is what you want
+    // SPI_CLOCK_DIV8 = 2MHz (Arduino Nano 16MHz / 8)
+    // SPI_CLOCK_DIV16 = 1MHz (Arduino Nano 16MHz / 16) ← What you had
+
     // Initialize SPI
     SPI.begin();
-    SPI.setClockDivider(SPI_CLOCK_DIV16);
+    SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
     SPI.setDataMode(SPI_MODE0);
     SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
     
@@ -63,7 +69,7 @@ void sendString(const char* command) {
     uint8_t c; // Always able to receive (FULL DUPLEX)
   
     digitalWrite(SS_PIN, LOW);
-    delayMicroseconds(10);
+    delayMicroseconds(5);
 
     // Signals the start of the transmission
     c = SPI.transfer(START);
@@ -89,7 +95,7 @@ void sendString(const char* command) {
     // Signals the end of the transmission
     SPI.transfer(END);
     
-    delayMicroseconds(10);
+    delayMicroseconds(5);
     digitalWrite(SS_PIN, HIGH);
     
     Serial.print("Sent: ");

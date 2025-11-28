@@ -21,6 +21,9 @@ char receiving_buffer[BUFFER_SIZE];
 volatile byte receiving_index = 0;
 volatile bool receiving_state = false;
 
+// For loop flags
+volatile bool process_command = false;
+
 
 void setup() {
     Serial.begin(115200);
@@ -59,6 +62,8 @@ void setup() {
 // ------------------------------
 ISR(SPI_STC_vect) {
 
+    // AVOID PLACING HEAVY CODE OR CALL HERE. THIS INTERRUPTS THE LOOP!
+
     // WARNING:
     //     AVOID PLACING Serial.print CALLS HERE BECAUSE IT WILL DELAY 
     //     THE POSSIBILITY OF SPI CAPTURE AND RESPONSE IN TIME !!!
@@ -79,7 +84,7 @@ ISR(SPI_STC_vect) {
         // Serial.println("2. End receiving");
         receiving_state = false;
         if (receiving_index > 0) {
-            processCommand();
+            process_command = true;
         }
         SPDR = ACK;  // Send acknowledgment back to Master
     } else if (receiving_state) {
@@ -116,6 +121,11 @@ void processCommand() {
 }
 
 void loop() {
-    // Nothing here – all work done inside ISR
+    // HEAVY PROCESSING SHALL BE IN THE LOOP
+
+    if (process_command) {
+        processCommand();
+        process_command = false;    // Critical to avoid repeated calls over the ISR function
+    }
 }
 
