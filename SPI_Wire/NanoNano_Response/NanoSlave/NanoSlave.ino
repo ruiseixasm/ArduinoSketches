@@ -12,8 +12,8 @@ char sending_buffer[BUFFER_SIZE];
 volatile byte receiving_index = 0;
 volatile byte sending_index = 0;
 
-volatile bool receiving_complete = false;
-volatile bool sending_ready = false;
+volatile bool receiving_state = true;
+volatile bool sending_state = false;
 
 
 void setup() {
@@ -35,77 +35,78 @@ void setup() {
 // SPI Interrupt
 // ------------------------------
 ISR(SPI_STC_vect) {
-  char c = SPDR;    // The most important line!!
+    char c = SPDR;    // The most important line!!
 
-  // If we are still receiving a command
-  if (!receiving_complete) {
+    // If we are still receiving a command
+    if (receiving_state) {
 
-    if (receiving_index < BUFFER_SIZE - 1) {
-      receiving_buffer[receiving_index++] = c;
-      if (c == '\0') {
+        if (receiving_index < BUFFER_SIZE - 1) {
+        receiving_buffer[receiving_index++] = c;
+        if (c == '\0') {
+            receiving_state = false;
+
+            // When master clocks next byte, we start sending
+            SPDR = sending_state ? sending_buffer[sending_index++] : '\0';
+
+        } else {
+            SPDR = '\0'; // nothing to send yet
+        }
+
+        } else {
+        // overflow
         receiving_index = 0;
-        receiving_complete = true;
+        SPDR = '\0';
+        }
 
+    } else if (sending_state) {
+        SPDR = sending_buffer[sending_index++];
+        if (SPDR == '\0') {
+            sending_state = false;
+        }
+    } else {
+        
         // Prepare complete response BEFORE sending anything
         processCommand();
 
-        // When master clocks next byte, we start sending
+        // End of response
+        SPDR = '\0';
+        receiving_state = true;
+        receiving_index = 0;
         sending_index = 0;
-        SPDR = sending_ready ? sending_buffer[sending_index++] : '\0';
-
-      } else {
-          SPDR = '\0'; // nothing to send yet
-      }
-
-    } else {
-      // overflow
-      receiving_index = 0;
-      SPDR = '\0';
     }
-
-  } else {
-    // Send phase
-    if (sending_ready) {
-      SPDR = sending_buffer[sending_index++];
-      if (SPDR == '\0') {
-        sending_ready = false;
-        receiving_complete = false;
-        sending_index = 0;
-      }
-    } else {
-      // End of response
-      SPDR = '\0';
-      receiving_complete = false;
-      sending_index = 0;
-    }
-  }
 }
 
 
 void processCommand() {
 
-  Serial.print("Received: ");
-  Serial.println(receiving_buffer);
+    Serial.print("Received: ");
+    Serial.println(receiving_buffer);
 
-  if (strcmp(receiving_buffer, "LED_ON") == 0) {
-    digitalWrite(LED_PIN, HIGH);
-    Serial.println("LED is ON");
-    strcpy(sending_buffer, "OK_ON");
-  }
-  else if (strcmp(receiving_buffer, "LED_OFF") == 0) {
-    digitalWrite(LED_PIN, LOW);
-    Serial.println("LED is OFF");
-    strcpy(sending_buffer, "OK_OFF");
-  }
-  else {
-    Serial.println("Unknown command");
-    strcpy(sending_buffer, "BUZZ");
-  }
+    if (strcmp(receiving_buffer, "LED_ON") == 0) {
+        strcpy(sending_buffer, "OK_ON");
+        digitalWrite(LED_PIN, HIGH);
+        Serial.print("LED is ON");
+        Serial.print(" | Sending: ");
+        Serial.println(sending_buffer);
+    }
+    else if (strcmp(receiving_buffer, "LED_OFF") == 0) {
+        strcpy(sending_buffer, "OK_OFF");
+        digitalWrite(LED_PIN, LOW);
+        Serial.print("LED is OFF");
+        Serial.print(" | Sending: ");
+        Serial.println(sending_buffer);
+    }
+    else {
+        strcpy(sending_buffer, "BUZZ");
+        Serial.print("Unknown command");
+        Serial.print(" | Sending: ");
+        Serial.println(sending_buffer);
+    }
 
-  sending_ready = true;
+    sending_state = true;
 }
 
 void loop() {
-  // Nothing here – all work done inside ISR
+    // Nothing here – all work done inside ISR
 }
 
