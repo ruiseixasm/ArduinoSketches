@@ -41,19 +41,19 @@ void setup() {
 ISR(SPI_STC_vect) {
     char c = SPDR;    // The most important line!!
 
-    // If we are still receiving a command
-    if (receiving_state) {
-        if (receiving_index < BUFFER_SIZE) {
-            receiving_buffer[receiving_index++] = c;
-            if (c == '\0') {
-                receiving_state = false;    // End of receiving
-            }
-        } else {    // overflow
-            receiving_state = false;        // End of receiving
-            receiving_index = 0;
+    // One is always able to receive (receiving buffer always available)
+    if (receiving_index < BUFFER_SIZE) {
+        receiving_buffer[receiving_index++] = c;
+        if (c == '\0') {
+            receiving_state = false;    // End of receiving
         }
-        SPDR = '/0';    // Always empty the sending buffer
-    } else if (sending_state) {    // THE SLAVE HAS THE OPPORTUNITY TO SEND SOMETHING (FULL DUPLEX)
+    } else {    // overflow
+        receiving_index = 0;
+    }
+    SPDR = '/0';    // Always empty the sending buffer
+
+    // At this tage the receiving buffer can be used again
+    if (sending_state) {    // THE SLAVE HAS THE OPPORTUNITY TO SEND SOMETHING (FULL DUPLEX)
         c = sending_buffer[sending_index++];
         if (c == '\0') {
             sending_state = false;
@@ -64,16 +64,14 @@ ISR(SPI_STC_vect) {
             Serial.print(c);
         }
         SPDR = c;
-    } else if (receiving_index > 0) {  // Has something in the receiving Buffer
+    } else if (!receiving_state) {  // Has something in the receiving Buffer
         Serial.println("Processing commands!");
         processCommand();
         sending_state = true;
         sending_index = 0;
-        SPDR = '/0';    // Always empty the sending buffer
     } else {    // Nothing to be received
         Serial.println("Nothing to be received!");
         receiving_state = true; // Back to receiving state
-        SPDR = '/0';    // Always empty the sending buffer
     }
 }
 
