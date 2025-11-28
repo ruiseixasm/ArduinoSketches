@@ -1,0 +1,77 @@
+// SPI Master Code - Pure String Commands
+#include <SPI.h>
+
+// Pin definitions
+const int BUZZ_PIN = 2; // External BUZZER pin
+const int SS_PIN = 10;  // Slave Select pin
+
+void setup() {
+  // Initialize SPI
+  SPI.begin();
+  SPI.setClockDivider(SPI_CLOCK_DIV16);
+  SPI.setDataMode(SPI_MODE0);
+  
+  // Initialize pins
+  pinMode(SS_PIN, OUTPUT);
+  digitalWrite(SS_PIN, HIGH);
+  pinMode(BUZZ_PIN, OUTPUT);
+  digitalWrite(BUZZ_PIN, LOW);
+  
+  // Initialize serial
+  Serial.begin(115200);
+  delay(500);
+  Serial.println("\n\nSPI Master Initialized - String Mode");
+}
+
+void loop() {
+  // Send string commands directly
+  sendString("LED_ON");
+  delay(2000);
+  
+  sendString("LED_OFF");
+  delay(2000);
+}
+
+
+String sendString(const char* command) {
+  String response = "";
+  
+  digitalWrite(SS_PIN, LOW);
+  delayMicroseconds(1000); // Increase to 1000μs
+  
+  // Send command
+  int i = 0;
+  while (command[i] != '\0') {
+    SPI.transfer(command[i]);
+    i++;
+    delayMicroseconds(10);
+  }
+  SPI.transfer('\0');
+  
+  // Receive response
+  char received;
+  do {
+    received = SPI.transfer(0xFF);
+    if (received != '\0' && received != 0) {
+      response += received;
+    }
+  } while (received != '\0' && received != 0);
+  
+  digitalWrite(SS_PIN, HIGH);
+  
+  Serial.print("Sent: ");
+  Serial.print(command);
+  Serial.print(" | Received: ");
+  Serial.println(response);
+  
+  // NEW CODE: Check if response is "BUZZ" and activate buzzer
+  if (response == "BUZZ") {
+    digitalWrite(BUZZ_PIN, HIGH);
+    delay(200);  // Buzzer on for 200ms
+    digitalWrite(BUZZ_PIN, LOW);
+    Serial.println("BUZZER activated for 200ms!");
+  }
+  
+  return response;
+}
+
