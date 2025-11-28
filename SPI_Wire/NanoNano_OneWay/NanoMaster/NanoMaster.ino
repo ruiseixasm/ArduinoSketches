@@ -2,6 +2,12 @@
 #include <SPI.h>
 
 
+// How to Use Sigrok PulseView Software | Logic Analyzer
+//     https://sigrok.org/wiki/Downloads
+//     Saleae Logic - 24MHz - 8CH - fx2lafw (generic driver for FX2 based LAs) (fx2lafw)
+//     Capture: 5M samples @ 12MHz
+
+
 enum MessageCode : uint8_t {
     START   = 0xF0, // Start of transmission
     END     = 0xF1, // End of transmission
