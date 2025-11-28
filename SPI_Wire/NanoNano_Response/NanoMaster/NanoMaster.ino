@@ -53,17 +53,20 @@ void sendString(const char* command) {
     delayMicroseconds(100);
 
     // Receive response
+    Serial.print("Receiving these chars: ");
     char c;
     for(size_t i = 0; i < BUFFER_SIZE; i++) {
 
         c = SPI.transfer(0xFF);  // Reads char by char
+        
+        Serial.print(c);
         receiving_buffer[i] = c;
         if (c == '\0') break;
     }
     
     digitalWrite(SS_PIN, HIGH);
     
-    Serial.print("Sent: ");
+    Serial.print("\nSent: ");
     Serial.print(command);
     Serial.print(" | Received: ");
     Serial.println(receiving_buffer);
