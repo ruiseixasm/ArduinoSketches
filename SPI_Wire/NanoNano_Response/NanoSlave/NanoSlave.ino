@@ -40,22 +40,25 @@ ISR(SPI_STC_vect) {
     // If we are still receiving a command
     if (receiving_state) {
 
-        if (receiving_index < BUFFER_SIZE - 1) {
-        receiving_buffer[receiving_index++] = c;
-        if (c == '\0') {
-            receiving_state = false;
+        if (receiving_index < BUFFER_SIZE) {
+            receiving_buffer[receiving_index++] = c;
+            if (c == '\0') {
+                receiving_state = false;
 
-            // When master clocks next byte, we start sending
-            SPDR = sending_state ? sending_buffer[sending_index++] : '\0';
+                // Prepare complete response BEFORE sending anything
+                processCommand();
+
+                // When master clocks next byte, we start sending
+                SPDR = sending_state ? sending_buffer[sending_index++] : '\0';
+
+            } else {
+                SPDR = '\0'; // nothing to send yet
+            }
 
         } else {
-            SPDR = '\0'; // nothing to send yet
-        }
-
-        } else {
-        // overflow
-        receiving_index = 0;
-        SPDR = '\0';
+            // overflow
+            receiving_index = 0;
+            SPDR = '\0';
         }
 
     } else if (sending_state) {
@@ -65,9 +68,6 @@ ISR(SPI_STC_vect) {
         }
     } else {
         
-        // Prepare complete response BEFORE sending anything
-        processCommand();
-
         // End of response
         SPDR = '\0';
         receiving_state = true;
