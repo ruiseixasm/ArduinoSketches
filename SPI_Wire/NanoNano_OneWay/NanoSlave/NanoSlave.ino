@@ -97,26 +97,26 @@ ISR(SPI_STC_vect) {
             SPDR = ERROR;  // Buffer overflow
         }
     } else {
-        SPDR = NACK;  // Not in receiving state
+        SPDR = ERROR;  // Buffer overflow
     }
 }
 
 
 void processCommand() {
 
-    // Serial.print("3. Processed command: ");
+    Serial.print("Processed command: ");
     Serial.println(receiving_buffer);
 
     if (strcmp(receiving_buffer, "LED_ON") == 0) {
         digitalWrite(LED_PIN, HIGH);
-        // Serial.print("LED is ON");
+        Serial.print("LED is ON");
     }
     else if (strcmp(receiving_buffer, "LED_OFF") == 0) {
         digitalWrite(LED_PIN, LOW);
-        // Serial.print("LED is OFF");
+        Serial.print("LED is OFF");
     }
     else {
-        // Serial.println("Unknown command");
+        Serial.println("Unknown command");
     }
 }
 
@@ -124,7 +124,7 @@ void loop() {
     // HEAVY PROCESSING SHALL BE IN THE LOOP
 
     if (process_command) {
-        processCommand();
+        processCommand();   // Called only once!
         process_command = false;    // Critical to avoid repeated calls over the ISR function
     }
 }
