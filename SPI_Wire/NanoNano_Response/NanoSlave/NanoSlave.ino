@@ -14,6 +14,10 @@ volatile byte sending_index = 0;
 
 volatile bool receiving_state = true;
 volatile bool sending_state = false;
+// 0/0; 0/1; 1/0; 1/1 combinations (4)
+//     0/0: Received, to be processed;
+//     0/1: Sending, can't receive wile sending
+//     1/0: Receiving, wont process anything until concludes reception
 
 
 void setup() {
