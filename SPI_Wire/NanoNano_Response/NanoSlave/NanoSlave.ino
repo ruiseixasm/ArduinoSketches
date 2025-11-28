@@ -43,12 +43,16 @@ ISR(SPI_STC_vect) {
 
     // One is always able to receive (receiving buffer always available)
     if (receiving_index < BUFFER_SIZE) {
-        receiving_buffer[receiving_index++] = c;
-        if (c == '\0') {
-            Serial.print("1: Receiving buffer: ");
-            Serial.println(receiving_buffer);
+        if (c == 0xFF) {    // Sending call
+            Serial.println("1b: Sending call");
             receiving_state = false;    // End of receiving
-            receiving_index = 0;    // In order to be received again
+        } else {
+            receiving_buffer[receiving_index++] = c;
+            if (c == '\0') {
+                Serial.print("1a: Receiving buffer: ");
+                Serial.println(receiving_buffer);
+                receiving_index = 0;    // In order to be received again
+            }
         }
     } else {    // overflow
         receiving_index = 0;

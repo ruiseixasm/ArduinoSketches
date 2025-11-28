@@ -73,7 +73,7 @@ void sendString(const char* command) {
                 break;
             } else if  (receiving_index < BUFFER_SIZE) {
                 delayMicroseconds(10);
-                c = SPI.transfer(0xFF);  // Sends another char request '\0' = 0xFF
+                c = SPI.transfer(0xFF);  // Special char to collect the receiving messages (Valid ASCII goes up to 127 (7F))
             }
         } while(receiving_index < BUFFER_SIZE);
     }
