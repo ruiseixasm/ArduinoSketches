@@ -64,6 +64,7 @@ ISR(SPI_STC_vect) {
 
         if (receiving_index < BUFFER_SIZE) {
             receiving_buffer[receiving_index++] = c;
+            SPDR = ACK;  // Send acknowledgment back to Master
         } else {
             receiving_state = false;
             receiving_index = 0;
