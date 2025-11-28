@@ -52,6 +52,7 @@ ISR(SPI_STC_vect) {
             receiving_state = false;        // End of receiving
             receiving_index = 0;
         }
+        SPDR = '/0';    // Always empty the sending buffer
     } else if (sending_state) {    // THE SLAVE HAS THE OPPORTUNITY TO SEND SOMETHING (FULL DUPLEX)
         c = sending_buffer[sending_index++];
         if (c == '\0') {
@@ -68,9 +69,11 @@ ISR(SPI_STC_vect) {
         processCommand();
         sending_state = true;
         sending_index = 0;
+        SPDR = '/0';    // Always empty the sending buffer
     } else {    // Nothing to be received
         Serial.println("Nothing to be received!");
         receiving_state = true; // Back to receiving state
+        SPDR = '/0';    // Always empty the sending buffer
     }
 }
 
