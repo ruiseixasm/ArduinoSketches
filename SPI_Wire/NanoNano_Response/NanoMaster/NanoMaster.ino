@@ -7,6 +7,9 @@ const int SS_PIN = 10;  // Slave Select pin
 
 #define BUFFER_SIZE 128
 char receiving_buffer[BUFFER_SIZE];
+byte receiving_index = 0;   // No interrupts, so, not volatile
+bool receiving_state = true;
+
 
 void setup() {
     // Initialize SPI
@@ -37,6 +40,10 @@ void loop() {
 
 
 void sendString(const char* command) {
+    char c; // Always able to receive (FULL DUPLEX)
+    receiving_buffer[0] = '\0'; // Avoids garbage printing
+    receiving_state = false;
+    receiving_index = 0;
   
     digitalWrite(SS_PIN, LOW);
     delayMicroseconds(50);
@@ -44,26 +51,34 @@ void sendString(const char* command) {
     // Send command
     int i = 0;
     while (command[i] != '\0') {
-        SPI.transfer(command[i]);
+        c = SPI.transfer(command[i]);   // requests a char (ALSO)
+        if (c != '\0') {    // In case something was received
+            receiving_state = true;
+            receiving_buffer[receiving_index++] = c;
+        } else if (receiving_index > 0) {
+            receiving_state = false;    // Received everything
+        }
         i++;
         delayMicroseconds(10);
     }
-    SPI.transfer('\0');
-    
-    delayMicroseconds(100);
+    c = SPI.transfer('\0'); // requests a char (ALSO)
 
-    // Receive response
-    Serial.print("Receiving these chars: ");
-    char c;
-    for(size_t i = 0; i < BUFFER_SIZE; i++) {
+    if (receiving_state) {  // In case the data wasn't all received above
 
-        c = SPI.transfer(0xFF);  // Reads char by char (0xFF == '\0')
-        
-        Serial.print(c);
-        receiving_buffer[i] = c;
-        if (c == '\0') break;
+        do {
+            Serial.print(c);
+            receiving_buffer[receiving_index++] = c;
+            Serial.print(c);
+            if (c == '\0') {
+                break;
+            } else if  (receiving_index < BUFFER_SIZE) {
+                delayMicroseconds(10);
+                c = SPI.transfer(0xFF);  // Sends another char request '\0' = 0xFF
+            }
+        } while(receiving_index < BUFFER_SIZE);
     }
     
+    delayMicroseconds(50);
     digitalWrite(SS_PIN, HIGH);
     
     Serial.print("\nSent: ");
