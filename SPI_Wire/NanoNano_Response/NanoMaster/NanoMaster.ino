@@ -57,7 +57,7 @@ void sendString(const char* command) {
     char c;
     for(size_t i = 0; i < BUFFER_SIZE; i++) {
 
-        c = SPI.transfer(0xFF);  // Reads char by char
+        c = SPI.transfer(0xFF);  // Reads char by char (0xFF == '\0')
         
         Serial.print(c);
         receiving_buffer[i] = c;

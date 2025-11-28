@@ -43,13 +43,24 @@ ISR(SPI_STC_vect) {
         if (receiving_index < BUFFER_SIZE) {
             receiving_buffer[receiving_index++] = c;
             if (c == '\0') {
-                receiving_state = false;
-
+                
                 // Prepare complete response BEFORE sending anything
                 processCommand();
-
+                
+                receiving_state = false;
+                receiving_index = 0;
+                sending_state = true;
+                sending_index = 0;
                 // When master clocks next byte, we start sending
-                SPDR = sending_state ? sending_buffer[sending_index++] : '\0';
+                if (sending_state) {
+                    c = sending_buffer[sending_index++];
+                    Serial.print("Sending these chars: ");
+                    Serial.print(c);
+                    SPDR = c;
+                } else {
+
+                    SPDR = '\0';
+                }
 
             } else {
                 SPDR = '\0'; // nothing to send yet
@@ -57,22 +68,25 @@ ISR(SPI_STC_vect) {
 
         } else {
             // overflow
-            receiving_index = 0;
             SPDR = '\0';
+            receiving_index = 0;
         }
 
     } else if (sending_state) {
-        SPDR = sending_buffer[sending_index++];
-        if (SPDR == '\0') {
+        c = sending_buffer[sending_index++];
+        if (c == '\0') {
             sending_state = false;
+            Serial.println(c);
+        } else {
+            Serial.print("Sending this char: ");
+            Serial.print(c);
         }
+        SPDR = c;
     } else {
         
         // End of response
         SPDR = '\0';
         receiving_state = true;
-        receiving_index = 0;
-        sending_index = 0;
     }
 }
 
@@ -102,8 +116,6 @@ void processCommand() {
         Serial.print(" | Sending: ");
         Serial.println(sending_buffer);
     }
-
-    sending_state = true;
 }
 
 void loop() {
