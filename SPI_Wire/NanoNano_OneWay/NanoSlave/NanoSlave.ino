@@ -23,17 +23,34 @@ volatile bool receiving_state = false;
 
 
 void setup() {
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
-  
-  // Initialize SPI as slave
-  SPCR |= _BV(SPE);
-  SPCR |= _BV(SPIE);
-  SPI.attachInterrupt();
-  
-  Serial.begin(115200);
-  delay(500);
-  Serial.println("\n\nSPI Slave Ready - One Way Communication");
+    Serial.begin(115200);
+    delay(500);
+    Serial.println("\n\nSPI Slave Ready - One Way Communication");
+
+    
+    Serial.print("LED_PIN: ");
+    Serial.println(LED_PIN);
+
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, LOW);
+
+    pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
+
+    // Initialize SPI as slave - EXPLICIT MSB FIRST
+    SPCR = 0;  // Clear register
+    SPCR |= _BV(SPE);    // SPI Enable
+    SPCR |= _BV(SPIE);   // SPI Interrupt Enable  
+    SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
+    SPCR &= ~_BV(CPOL);  // Clock polarity 0
+    SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
+
+    // // Initialize SPI as slave
+    // SPCR |= _BV(SPE);
+    // SPCR |= _BV(SPIE);
+
+
+    SPI.attachInterrupt();
+
 }
 
 
@@ -42,19 +59,22 @@ void setup() {
 // ------------------------------
 ISR(SPI_STC_vect) {
 
+    // AVOID PLACING Serial.print CALLS HERE BECAUSE IT WILL DELAY THE POSSIBILITY OF SPI CAPTURE AND RESPONSE IN TIME !!!
+
+    // char is signed by default on most Arduino platforms (-128 to +127)
     // char c = SPDR;    // DON'T USE char BECAUSE BECOMES SIGNED!!
     uint8_t c = SPDR;    // The most important line!!
 
-    Serial.print("0. Slave received: 0x");
-    Serial.println(c, HEX);  // Debug what byte actually arrives
+    // Serial.print("0. Slave received: 0x");
+    // Serial.println(c, HEX);  // Debug what byte actually arrives
     
     if (c == START) {
-        Serial.println("1. Start receiving");
+        // Serial.println("1. Start receiving");
         receiving_state = true;
         receiving_index = 0;
         SPDR = ACK;  // Send acknowledgment back to Master
     } else if (c == END) {
-        Serial.println("2. End receiving");
+        // Serial.println("2. End receiving");
         receiving_state = false;
         if (receiving_index > 0) {
             processCommand();
@@ -67,7 +87,6 @@ ISR(SPI_STC_vect) {
             SPDR = ACK;  // Send acknowledgment back to Master
         } else {
             receiving_state = false;
-            receiving_index = 0;
             SPDR = ERROR;  // Buffer overflow
         }
     } else {
@@ -78,19 +97,19 @@ ISR(SPI_STC_vect) {
 
 void processCommand() {
 
-    Serial.print("3. Processed command: ");
+    // Serial.print("3. Processed command: ");
     Serial.println(receiving_buffer);
 
     if (strcmp(receiving_buffer, "LED_ON") == 0) {
         digitalWrite(LED_PIN, HIGH);
-        Serial.print("LED is ON");
+        // Serial.print("LED is ON");
     }
     else if (strcmp(receiving_buffer, "LED_OFF") == 0) {
         digitalWrite(LED_PIN, LOW);
-        Serial.print("LED is OFF");
+        // Serial.print("LED is OFF");
     }
     else {
-        Serial.println("Unknown command");
+        // Serial.println("Unknown command");
     }
 }
 

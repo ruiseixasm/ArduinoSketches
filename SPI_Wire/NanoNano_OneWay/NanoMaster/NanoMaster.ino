@@ -28,6 +28,7 @@ void setup() {
     SPI.begin();
     SPI.setClockDivider(SPI_CLOCK_DIV16);
     SPI.setDataMode(SPI_MODE0);
+    SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
     
     // Initialize pins
     pinMode(SS_PIN, OUTPUT);
@@ -52,6 +53,8 @@ void loop() {
 
 
 void sendString(const char* command) {
+    
+    // char is signed by default on most Arduino platforms (-128 to +127)
     // char c; // DON'T USE char BECAUSE BECOMES SIGNED!!
     uint8_t c; // Always able to receive (FULL DUPLEX)
   
