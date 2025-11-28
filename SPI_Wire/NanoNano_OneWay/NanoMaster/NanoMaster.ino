@@ -1,14 +1,20 @@
 // SPI Master Code - Pure String Commands
 #include <SPI.h>
 
+
+enum MessageCode : uint8_t {
+    START   = 0xF0, // Start of transmission
+    END     = 0xF1, // End of transmission
+    ACK     = 0xF2, // Acknowledge
+    NACK    = 0xF3, // Not acknowledged
+    READY   = 0xF4, // Slave has response ready
+    ERROR   = 0xF5  // Error frame
+};
+
+
 // Pin definitions
 const int BUZZ_PIN = 2; // External BUZZER pin
 const int SS_PIN = 10;  // Slave Select pin
-
-#define BUFFER_SIZE 128
-char receiving_buffer[BUFFER_SIZE];
-byte receiving_index = 0;   // No interrupts, so, not volatile
-bool receiving_state = true;
 
 
 void setup() {
@@ -26,7 +32,7 @@ void setup() {
     // Initialize serial
     Serial.begin(115200);
     delay(500);
-    Serial.println("\n\nSPI Master Initialized - String Mode");
+    Serial.println("\n\nSPI Master Initialized - One Way Communication");
 }
 
 void loop() {
@@ -40,59 +46,39 @@ void loop() {
 
 
 void sendString(const char* command) {
-    char c; // Always able to receive (FULL DUPLEX)
-    receiving_buffer[0] = '\0'; // Avoids garbage printing
-    receiving_state = false;
-    receiving_index = 0;
+    // char c; // DON'T USE char BECAUSE BECOMES SIGNED!!
+    uint8_t c; // Always able to receive (FULL DUPLEX)
   
     digitalWrite(SS_PIN, LOW);
     delayMicroseconds(50);
+
+    // Signals the start of the transmission
+    c = SPI.transfer(START);
+    if (c == ACK) {
+        Serial.println("Receiver acknowledged!");
+    } else {
+        Serial.println("Receiver NOT acknowledged!");
+    }
+    delayMicroseconds(10);
     
     // Send command
     int i = 0;
     while (command[i] != '\0') {
-        c = SPI.transfer(command[i]);   // requests a char (ALSO)
-        if (c != '\0') {    // In case something was received
-            receiving_state = true;
-            receiving_buffer[receiving_index++] = c;
-        } else if (receiving_index > 0) {
-            receiving_state = false;    // Received everything
-        }
+        SPI.transfer(command[i]);   // requests a char (ALSO)
         i++;
         delayMicroseconds(10);
     }
-    c = SPI.transfer('\0'); // requests a char (ALSO)
+    SPI.transfer('\0'); // requests a char (ALSO)
+    delayMicroseconds(10);
 
-    if (receiving_state) {  // In case the data wasn't all received above
-
-        do {
-            Serial.print(c);
-            receiving_buffer[receiving_index++] = c;
-            Serial.print(c);
-            if (c == '\0') {
-                break;
-            } else if  (receiving_index < BUFFER_SIZE) {
-                delayMicroseconds(10);
-                c = SPI.transfer(0xFF);  // Special char to collect the receiving messages (Valid ASCII goes up to 127 (7F))
-            }
-        } while(receiving_index < BUFFER_SIZE);
-    }
+    // Signals the end of the transmission
+    SPI.transfer(END);
     
     delayMicroseconds(50);
     digitalWrite(SS_PIN, HIGH);
     
-    Serial.print("\nSent: ");
-    Serial.print(command);
-    Serial.print(" | Received: ");
-    Serial.println(receiving_buffer);
+    Serial.print("Sent: ");
+    Serial.println(command);
     
-    // NEW CODE: Check if response is "BUZZ" and activate buzzer
-    if (strcmp(receiving_buffer, "BUZZ") == 0) {
-        digitalWrite(BUZZ_PIN, HIGH);
-        delay(100);  // Buzzer on for 200ms
-        digitalWrite(BUZZ_PIN, LOW);
-        Serial.println("BUZZER activated for 200ms!");
-    }
-  
 }
 
