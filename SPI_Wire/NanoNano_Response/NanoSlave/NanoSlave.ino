@@ -42,12 +42,10 @@ ISR(SPI_STC_vect) {
         if (receiving_index < BUFFER_SIZE) {
             receiving_buffer[receiving_index++] = c;
             if (c == '\0') {
-                receiving_state = false;
-                receiving_index = 0;
+                receiving_state = false;    // End of receiving
             }
-        } else {
-            // overflow
-            receiving_index = 0;
+        } else {    // overflow
+            receiving_state = false;        // End of receiving
         }
     }
 
@@ -56,18 +54,18 @@ ISR(SPI_STC_vect) {
         c = sending_buffer[sending_index++];
         if (c == '\0') {
             sending_state = false;
+            receiving_state = true;
+            receiving_index = 0;    // In order to be received again
             Serial.println(c);
         } else {
             Serial.print(c);
         }
         SPDR = c;
     } else {    // Has to send something in response
-        
-        Serial.print("Else case: ");
-        Serial.println(c);
-        // End of response
+        Serial.print("Nothing to send yet!");
+        receiving_state = true; // Able again to receive
+        receiving_index = 0;    // Resets the receiving index
         SPDR = '\0';
-        receiving_state = true;
     }
 }
 
