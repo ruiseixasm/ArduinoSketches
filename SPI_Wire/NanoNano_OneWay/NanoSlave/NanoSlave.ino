@@ -59,7 +59,9 @@ void setup() {
 // ------------------------------
 ISR(SPI_STC_vect) {
 
-    // AVOID PLACING Serial.print CALLS HERE BECAUSE IT WILL DELAY THE POSSIBILITY OF SPI CAPTURE AND RESPONSE IN TIME !!!
+    // WARNING:
+    //     AVOID PLACING Serial.print CALLS HERE BECAUSE IT WILL DELAY 
+    //     THE POSSIBILITY OF SPI CAPTURE AND RESPONSE IN TIME !!!
 
     // char is signed by default on most Arduino platforms (-128 to +127)
     // char c = SPDR;    // DON'T USE char BECAUSE BECOMES SIGNED!!

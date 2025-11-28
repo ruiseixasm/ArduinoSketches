@@ -54,38 +54,42 @@ void loop() {
 
 void sendString(const char* command) {
     
+    // WARNING:
+    //     AVOID PLACING Serial.print CALLS HERE BECAUSE IT WILL DELAY 
+    //     THE POSSIBILITY OF SPI CAPTURE AND RESPONSE IN TIME !!!
+
     // char is signed by default on most Arduino platforms (-128 to +127)
     // char c; // DON'T USE char BECAUSE BECOMES SIGNED!!
     uint8_t c; // Always able to receive (FULL DUPLEX)
   
     digitalWrite(SS_PIN, LOW);
-    delayMicroseconds(50);
+    delayMicroseconds(10);
 
     // Signals the start of the transmission
     c = SPI.transfer(START);
-    Serial.print("Response to START: 0x");
-    Serial.println(c, HEX);  // See what we actually get
-    if (c == ACK) {
-        Serial.println("Receiver acknowledged!");
-    } else {
-        Serial.println("Receiver NOT acknowledged!");
-    }
-    delayMicroseconds(10);
+    // Serial.print("Response to START: 0x");
+    // Serial.println(c, HEX);  // See what we actually get
+    // if (c == ACK) {
+    //     Serial.println("Receiver acknowledged!");
+    // } else {
+    //     Serial.println("Receiver NOT acknowledged!");
+    // }
+    delayMicroseconds(5);
     
     // Send command
     int i = 0;
     while (command[i] != '\0') {
         SPI.transfer(command[i]);   // requests a char (ALSO)
         i++;
-        delayMicroseconds(10);
+        delayMicroseconds(5);
     }
     SPI.transfer('\0'); // requests a char (ALSO)
-    delayMicroseconds(10);
+    delayMicroseconds(5);
 
     // Signals the end of the transmission
     SPI.transfer(END);
     
-    delayMicroseconds(50);
+    delayMicroseconds(10);
     digitalWrite(SS_PIN, HIGH);
     
     Serial.print("Sent: ");
