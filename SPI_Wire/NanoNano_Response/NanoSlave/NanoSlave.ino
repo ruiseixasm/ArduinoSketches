@@ -48,6 +48,7 @@ ISR(SPI_STC_vect) {
             Serial.print("1: Receiving buffer: ");
             Serial.println(receiving_buffer);
             receiving_state = false;    // End of receiving
+            receiving_index = 0;    // In order to be received again
         }
     } else {    // overflow
         receiving_index = 0;
@@ -61,7 +62,6 @@ ISR(SPI_STC_vect) {
         if (c == '\0') {
             sending_state = false;
             receiving_state = true;
-            receiving_index = 0;    // In order to be received again
             Serial.println(c);
         } else {
             Serial.print(c);
