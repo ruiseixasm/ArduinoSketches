@@ -58,7 +58,7 @@ void loop() {
 }
 
 
-void sendString(const char* command) {
+bool sendString(const char* command) {
     
     // WARNING:
     //     AVOID PLACING Serial.print CALLS HERE BECAUSE IT WILL DELAY 
@@ -67,39 +67,49 @@ void sendString(const char* command) {
     // char is signed by default on most Arduino platforms (-128 to +127)
     // char c; // DON'T USE char BECAUSE BECOMES SIGNED!!
     uint8_t c; // Always able to receive (FULL DUPLEX)
+    bool successfully_sent = false;
+
+    for (size_t s = 0; !successfully_sent && s < 3; s++) {
   
-    digitalWrite(SS_PIN, LOW);
-    delayMicroseconds(5);
+        successfully_sent = true;
 
-    // Signals the start of the transmission
-    c = SPI.transfer(START);
-    // Serial.print("Response to START: 0x");
-    // Serial.println(c, HEX);  // See what we actually get
-    // if (c == ACK) {
-    //     Serial.println("Receiver acknowledged!");
-    // } else {
-    //     Serial.println("Receiver NOT acknowledged!");
-    // }
-    delayMicroseconds(5);
-    
-    // Send command
-    int i = 0;
-    while (command[i] != '\0') {
-        SPI.transfer(command[i]);   // requests a char (ALSO)
-        i++;
+        digitalWrite(SS_PIN, LOW);
         delayMicroseconds(5);
-    }
-    SPI.transfer('\0'); // requests a char (ALSO)
-    delayMicroseconds(5);
 
-    // Signals the end of the transmission
-    SPI.transfer(END);
+        // Signals the start of the transmission
+        if (SPI.transfer(START) == ERROR)
+            successfully_sent = false;
+        delayMicroseconds(5);
+        
+        // Send command
+        int i = 0;
+        while (command[i] != '\0') {
+            if (SPI.transfer(command[i]) == ERROR)
+                successfully_sent = false;
+            i++;
+            delayMicroseconds(5);
+        }
+        if (SPI.transfer('\0') == ERROR)
+            successfully_sent = false;
+        delayMicroseconds(5);
+
+        // Signals the end of the transmission
+        if (SPI.transfer(END) == ERROR)
+            successfully_sent = false;
+        
+        delayMicroseconds(5);
+        digitalWrite(SS_PIN, HIGH);
+
+        if (!successfully_sent) {
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(100);  // Buzzer on for 100ms
+            digitalWrite(BUZZ_PIN, LOW);
+            Serial.println("BUZZER activated for 100ms!");
+        }
     
-    delayMicroseconds(5);
-    digitalWrite(SS_PIN, HIGH);
-    
-    Serial.print("Sent: ");
-    Serial.println(command);
+    }
+
+    return successfully_sent;
     
 }
 
