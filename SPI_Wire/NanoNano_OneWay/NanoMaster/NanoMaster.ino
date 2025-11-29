@@ -75,11 +75,11 @@ bool sendString(const char* command) {
         successfully_sent = true;
 
         digitalWrite(SS_PIN, LOW);
-        delayMicroseconds(1);
+        delayMicroseconds(micro_delay);
 
         // Signals the start of the transmission
         SPI.transfer(START);
-        delayMicroseconds(1);
+        delayMicroseconds(micro_delay);
         
         // Send command
         int i = 0;
@@ -89,13 +89,13 @@ bool sendString(const char* command) {
             delayMicroseconds(micro_delay);
         }
         SPI.transfer('\0');
-        delayMicroseconds(10);   // It has to process '\0' as a common char
+        delayMicroseconds(10);   // Needs more time to let the receiver process the total length
 
         // Signals the end of the transmission
         if (SPI.transfer(END) != i)
             successfully_sent = false;
         
-        delayMicroseconds(1);
+        delayMicroseconds(micro_delay);
         digitalWrite(SS_PIN, HIGH);
 
         if (successfully_sent) {

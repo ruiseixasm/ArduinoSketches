@@ -85,7 +85,7 @@ ISR(SPI_STC_vect) {
         receiving_state = false;
         if (receiving_index > 0) {
             process_command = true;
-            SPDR = receiving_index - 1; // Returns the total amount of bytes (excluding '\0')
+            SPDR = ACK;  // Send acknowledgment back to Master
         } else {
             SPDR = ERROR;   // No chars received
         }
@@ -93,7 +93,7 @@ ISR(SPI_STC_vect) {
 
         if (receiving_index < BUFFER_SIZE) {
             if (c == '\0') {
-                SPDR = receiving_index; // Returns the total amount of bytes (excluding '\0')
+                SPDR = receiving_index; // Returns the total amount of bytes (excluding '\0') (FOR NEXT SEND)
             } else {
                 SPDR = ACK;  // Send acknowledgment back to Master
             }
