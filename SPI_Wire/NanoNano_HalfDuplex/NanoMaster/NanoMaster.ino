@@ -132,6 +132,7 @@ bool receiveString() {
         last_message = SPI.transfer(last_message);
         delayMicroseconds(receive_delay_us);
         if (last_message == NONE || last_message == END) {
+            receiving_buffer[i] = '\0'; // Implicit char
             receiving_index = i;
             break;
         } else if (last_message == ERROR) {
@@ -145,7 +146,12 @@ bool receiveString() {
     digitalWrite(SS_PIN, HIGH);
 
     if (successfully_received) {
-        Serial.println("Message successfully received");
+        if (receiving_index > 0) {
+            Serial.print("Received message: ");
+            Serial.println(receiving_buffer);
+        } else {
+            Serial.println("Nothing received");
+        }
     } else {
         digitalWrite(BUZZ_PIN, HIGH);
         delay(10);  // Buzzer on for 10ms
