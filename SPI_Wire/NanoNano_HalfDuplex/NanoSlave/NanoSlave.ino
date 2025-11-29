@@ -105,7 +105,7 @@ ISR(SPI_STC_vect) {
         if (last_message == '\0') {
             SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
         } else {
-            SPDR = c;
+            SPDR = last_message;
         }
     }
 }
