@@ -90,7 +90,7 @@ bool sendString(const char* command) {
         if (SPI.transfer(END) != last_sent)
             successfully_sent = false;
 
-        delayMicroseconds(5);
+        delayMicroseconds(3);
         digitalWrite(SS_PIN, HIGH);
 
         if (successfully_sent) {
@@ -144,7 +144,7 @@ bool receiveString() {
         }
     }
 
-    delayMicroseconds(5);
+    delayMicroseconds(3);
     digitalWrite(SS_PIN, HIGH);
 
     if (successfully_received) {
