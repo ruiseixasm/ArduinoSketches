@@ -55,60 +55,54 @@ void loop() {
 
 #define micro_delay 10
 
-void sendString(const char* command) {
+bool sendString(const char* command) {
     uint8_t c; // Avoid using 'char' while using values above 127
     receiving_buffer[0] = '\0'; // Avoids garbage printing
     receiving_state = false;
     receiving_index = 0;
-  
-    digitalWrite(SS_PIN, LOW);
-    delayMicroseconds(micro_delay);
+
     
-    // Send command
-    int i = 0;
-    while (command[i] != '\0') {
-        c = SPI.transfer(command[i]);   // requests a char (ALSO)
-        if (c != '\0') {    // In case something was received
-            receiving_state = true;
-            receiving_buffer[receiving_index++] = c;
-        } else if (receiving_index > 0) {
-            receiving_state = false;    // Received everything
-        }
-        i++;
+    bool successfully_sent = false;
+
+    for (size_t s = 0; !successfully_sent && s < 3; s++) {
+  
+        successfully_sent = true;
+
+        digitalWrite(SS_PIN, LOW);
         delayMicroseconds(micro_delay);
-    }
-    c = SPI.transfer('\0'); // requests a char (ALSO)
 
-    if (receiving_state) {  // In case the data wasn't all received above
+        // Informs the receiver its intend to start sending
+        SPI.transfer(SEND);
+        delayMicroseconds(micro_delay);
+        
+        // Send command
+        uint8_t last_message = SEND;
+        for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
+            if (SPI.transfer(command[i]) != last_message)
+                successfully_sent = false;
+            last_message = command[i];
+            delayMicroseconds(micro_delay);
+            if (command[i] == '\0') break;
+        }
 
-        do {
-            Serial.print(c);
-            receiving_buffer[receiving_index++] = c;
-            Serial.print(c);
-            if (c == '\0') {
-                break;
-            } else if  (receiving_index < BUFFER_SIZE) {
-                delayMicroseconds(micro_delay);
-                c = SPI.transfer(0xFF);  // Special char to collect the receiving messages (Valid ASCII goes up to 127 (7F))
-            }
-        } while(receiving_index < BUFFER_SIZE);
+        if (SPI.transfer(END) != '\0')
+            successfully_sent = false;
+        delayMicroseconds(micro_delay);
+
+        digitalWrite(SS_PIN, HIGH);
+
+        if (successfully_sent) {
+            Serial.println("Command successfully sent");
+        } else {
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(10);  // Buzzer on for 10ms
+            digitalWrite(BUZZ_PIN, LOW);
+            Serial.print("Command NOT successfully sent on try: ");
+            Serial.println(s + 1);
+            Serial.println("BUZZER activated for 10ms!");
+        }
     }
-    
-    delayMicroseconds(50);
-    digitalWrite(SS_PIN, HIGH);
-    
-    Serial.print("\nSent: ");
-    Serial.print(command);
-    Serial.print(" | Received: ");
-    Serial.println(receiving_buffer);
-    
-    // NEW CODE: Check if response is "BUZZ" and activate buzzer
-    if (strcmp(receiving_buffer, "BUZZ") == 0) {
-        digitalWrite(BUZZ_PIN, HIGH);
-        delay(100);  // Buzzer on for 200ms
-        digitalWrite(BUZZ_PIN, LOW);
-        Serial.println("BUZZER activated for 200ms!");
-    }
-  
+
+    return successfully_sent;
 }
 
