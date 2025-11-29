@@ -22,6 +22,8 @@ enum MessageCode : uint8_t {
 const int BUZZ_PIN = 2; // External BUZZER pin
 const int SS_PIN = 10;  // Slave Select pin
 
+#define BUFFER_SIZE 128
+
 
 void setup() {
 
@@ -57,7 +59,7 @@ void loop() {
     delay(2000);
 }
 
-#define micro_delay 6
+#define micro_delay 8
 
 bool sendString(const char* command) {
     
@@ -84,32 +86,29 @@ bool sendString(const char* command) {
         // Send command
         int i = 0;
         uint8_t last_message = START;
-        while (command[i] != '\0') {
+        for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
             if (SPI.transfer(command[i]) != last_message)
                 successfully_sent = false;
             last_message = command[i];
-            i++;
             delayMicroseconds(micro_delay);
+            if (command[i] == '\0') break;
         }
-        SPI.transfer('\0');
-        delayMicroseconds(2 * micro_delay); // Needs more time to let the receiver process the total length
 
-        // Signals the end of the transmission
-        if (SPI.transfer(END) != i)
+        if (SPI.transfer(END) != '\0')
             successfully_sent = false;
-        
         delayMicroseconds(micro_delay);
+
         digitalWrite(SS_PIN, HIGH);
 
         if (successfully_sent) {
             Serial.println("Command successfully sent");
         } else {
             digitalWrite(BUZZ_PIN, HIGH);
-            delay(20);  // Buzzer on for 20ms
+            delay(10);  // Buzzer on for 10ms
             digitalWrite(BUZZ_PIN, LOW);
             Serial.print("Command NOT successfully sent on try: ");
             Serial.println(s + 1);
-            Serial.println("BUZZER activated for 20ms!");
+            Serial.println("BUZZER activated for 10ms!");
         }
     }
 

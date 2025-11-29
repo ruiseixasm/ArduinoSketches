@@ -82,9 +82,6 @@ ISR(SPI_STC_vect) {
         }
     } else if (receiving_state) {
         if (receiving_index < BUFFER_SIZE) {
-            if (c == '\0') {
-                SPDR = receiving_index; // Returns the total amount of bytes (excluding '\0') (FOR NEXT SEND)
-            }
             receiving_buffer[receiving_index++] = c;
         } else {
             receiving_state = false;
