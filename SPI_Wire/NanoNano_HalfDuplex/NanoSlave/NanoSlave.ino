@@ -100,11 +100,11 @@ ISR(SPI_STC_vect) {
         if (c != last_message) {
             SPDR = ERROR;
             process_message = false;
-        }
-        last_message = sending_buffer[sending_index++];
-        if (last_message == '\0') {
+        } else if (last_message == '\0') {
             SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
+            process_message = false;
         } else {
+            last_message = sending_buffer[sending_index++];
             SPDR = last_message;
         }
     }
