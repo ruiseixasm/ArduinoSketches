@@ -94,15 +94,15 @@ ISR(SPI_STC_vect) {
             SPDR = NONE;    // Nothing to send
         } else {
             SPDR = last_message;
-            process_message = true;
+            sending_state = true;
         }
     } else if (sending_state) {
         if (c != last_message) {
             SPDR = ERROR;
-            process_message = false;
+            sending_state = false;
         } else if (last_message == '\0') {
             SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
-            process_message = false;
+            sending_state = false;
         } else {
             last_message = sending_buffer[sending_index++];
             SPDR = last_message;
