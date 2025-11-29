@@ -63,7 +63,7 @@ bool sendString(const char* command) {
     receiving_index = 0;
 
     
-    bool successfully_sent = true;
+    bool successfully_sent = false; // It has to start as false to enter in the next loop
 
     for (size_t s = 0; !successfully_sent && s < 3; s++) {
   
