@@ -20,7 +20,7 @@ const int BUZZ_PIN = 2; // External BUZZER pin
 const int SS_PIN = 10;  // Slave Select pin
 
 #define BUFFER_SIZE 128
-char receiving_buffer[BUFFER_SIZE];
+char receiving_buffer[BUFFER_SIZE] = {'\0'};
 byte receiving_index = 0;   // No interrupts, so, not volatile
 bool receiving_state = true;
 

@@ -20,13 +20,13 @@ const int LED_PIN = 2;
 const int SS_PIN = 10;
 
 #define BUFFER_SIZE 128
-char receiving_buffer[BUFFER_SIZE];
-char sending_buffer[BUFFER_SIZE];
+char receiving_buffer[BUFFER_SIZE] = {'\0'};
+char sending_buffer[BUFFER_SIZE] = {'\0'};
 
 volatile byte receiving_index = 0;
 volatile byte sending_index = 0;
 
-volatile bool receiving_state = true;
+volatile bool receiving_state = false;
 volatile bool sending_state = false;
 volatile bool process_message = false;
 
