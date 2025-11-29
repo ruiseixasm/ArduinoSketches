@@ -83,6 +83,7 @@ bool sendString(const char* command) {
                 successfully_sent = false;
             last_sent = command[i];
             delayMicroseconds(send_delay_us);
+            // Don't make '\0' implicit in order to not have to change the SPDR on the slave side!!
             if (command[i] == '\0') break;
         }
 
