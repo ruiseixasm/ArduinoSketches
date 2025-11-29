@@ -78,21 +78,18 @@ bool sendString(const char* command) {
         delayMicroseconds(5);
 
         // Signals the start of the transmission
-        if (SPI.transfer(START) != ACK)
-            successfully_sent = false;
+        SPI.transfer(START);
         delayMicroseconds(1);
         
         // Send command
         int i = 0;
         while (command[i] != '\0') {
-            if (SPI.transfer(command[i]) != ACK)
-                successfully_sent = false;
+            SPI.transfer(command[i]);
             i++;
             delayMicroseconds(micro_delay);
         }
-        if (SPI.transfer('\0') != ACK)
-            successfully_sent = false;
-        delayMicroseconds(1);   // It has to process '\0' as a common char
+        SPI.transfer('\0');
+        delayMicroseconds(5);   // It has to process '\0' as a common char
 
         // Signals the end of the transmission
         if (SPI.transfer(END) != ACK)

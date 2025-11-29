@@ -85,8 +85,10 @@ ISR(SPI_STC_vect) {
         receiving_state = false;
         if (receiving_index > 0) {
             process_command = true;
+            SPDR = ACK;     // Send acknowledgment back to Master
+        } else {
+            SPDR = ERROR;   // No chars received
         }
-        SPDR = ACK;  // Send acknowledgment back to Master
     } else if (receiving_state) {
 
         if (receiving_index < BUFFER_SIZE) {
@@ -96,7 +98,7 @@ ISR(SPI_STC_vect) {
         }
         SPDR = ACK;     // Send acknowledgment back to Master
     } else {
-        SPDR = ERROR;  // Buffer overflow
+        SPDR = ERROR;
     }
 }
 
