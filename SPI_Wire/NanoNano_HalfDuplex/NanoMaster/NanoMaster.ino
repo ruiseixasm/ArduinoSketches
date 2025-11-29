@@ -86,7 +86,7 @@ bool sendString(const char* command) {
             if (command[i] == '\0') break;
         }
 
-        if (SPI.transfer(END) != '\0')
+        if (SPI.transfer(END) != last_sent)
             successfully_sent = false;
         delayMicroseconds(send_delay_us);
 
