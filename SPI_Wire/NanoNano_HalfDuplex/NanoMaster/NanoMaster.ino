@@ -77,11 +77,11 @@ bool sendString(const char* command) {
         delayMicroseconds(send_delay_us);
         
         // RECEIVE message code
-        uint8_t last_message = RECEIVE;
+        uint8_t last_sent = RECEIVE;
         for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
-            if (SPI.transfer(command[i]) != last_message)
+            if (SPI.transfer(command[i]) != last_sent)
                 successfully_sent = false;
-            last_message = command[i];
+            last_sent = command[i];
             delayMicroseconds(send_delay_us);
             if (command[i] == '\0') break;
         }
@@ -116,6 +116,7 @@ bool receiveString() {
     receiving_state = false;
     receiving_index = 0;
 
+
     bool successfully_received = true;
 
     
@@ -127,19 +128,19 @@ bool receiveString() {
     delayMicroseconds(receive_delay_us);
     
     // Starts to receive all chars here
-    uint8_t last_message = SEND;
+    uint8_t last_received = SEND;
     for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
-        last_message = SPI.transfer(last_message);
+        last_received = SPI.transfer(last_received);
         delayMicroseconds(receive_delay_us);
-        if (last_message == NONE || last_message == END) {
+        if (last_received == NONE || last_received == END) {
             receiving_buffer[i] = '\0'; // Implicit char
             receiving_index = i;
             break;
-        } else if (last_message == ERROR) {
+        } else if (last_received == ERROR) {
             successfully_received = false;
             break;
         } else {
-            receiving_buffer[i] = last_message;
+            receiving_buffer[i] = last_received;
         }
     }
 
@@ -160,7 +161,7 @@ bool receiveString() {
         Serial.println("BUZZER activated for 10ms!");
     }
 
-    return true;
+    return successfully_received;
 }
 
 

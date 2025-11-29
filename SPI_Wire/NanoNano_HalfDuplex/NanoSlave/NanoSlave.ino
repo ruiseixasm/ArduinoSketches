@@ -70,7 +70,7 @@ ISR(SPI_STC_vect) {
     //     THE POSSIBILITY OF SPI CAPTURE AND RESPONSE IN TIME !!!
 
     uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
-    uint8_t last_message = SEND;
+    uint8_t last_received = SEND;
 
 
     if (c == RECEIVE) {
@@ -78,9 +78,7 @@ ISR(SPI_STC_vect) {
         receiving_index = 0;
     } else if (c == END) {
         receiving_state = false;
-        if (receiving_index > 0) {
-            process_message = true;
-        }
+        process_message = true;
     } else if (receiving_state) {
         if (receiving_index < BUFFER_SIZE) {
             receiving_buffer[receiving_index++] = c;
@@ -89,23 +87,23 @@ ISR(SPI_STC_vect) {
         }
     } else if (c == SEND) {
         sending_index = 0;
-        last_message = sending_buffer[sending_index++];
-        if (last_message == '\0') {
+        last_received = sending_buffer[sending_index++];
+        if (last_received == '\0') {
             SPDR = NONE;    // Nothing to send
         } else {
-            SPDR = last_message;
+            SPDR = last_received;
             sending_state = true;
         }
     } else if (sending_state) {
-        if (c != last_message) {
+        if (c != last_received) {
             SPDR = ERROR;
             sending_state = false;
-        } else if (last_message == '\0') {
+        } else if (last_received == '\0') {
             SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
             sending_state = false;
         } else {
-            last_message = sending_buffer[sending_index++];
-            SPDR = last_message;
+            last_received = sending_buffer[sending_index++];
+            SPDR = last_received;
         }
     }
 }
