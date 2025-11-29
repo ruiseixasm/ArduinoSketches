@@ -57,7 +57,7 @@ void loop() {
     delay(2000);
 }
 
-#define micro_delay 5
+#define micro_delay 6
 
 bool sendString(const char* command) {
     
@@ -89,7 +89,7 @@ bool sendString(const char* command) {
             delayMicroseconds(micro_delay);
         }
         SPI.transfer('\0');
-        delayMicroseconds(10);   // Needs more time to let the receiver process the total length
+        delayMicroseconds(2 * micro_delay); // Needs more time to let the receiver process the total length
 
         // Signals the end of the transmission
         if (SPI.transfer(END) != i)
