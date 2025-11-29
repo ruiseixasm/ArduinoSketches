@@ -106,3 +106,56 @@ bool sendString(const char* command) {
     return successfully_sent;
 }
 
+
+bool receiveString() {
+    uint8_t c; // Avoid using 'char' while using values above 127
+    receiving_buffer[0] = '\0'; // Avoids garbage printing
+    receiving_state = false;
+    receiving_index = 0;
+
+    
+    bool successfully_sent = false;
+
+    for (size_t s = 0; !successfully_sent && s < 3; s++) {
+  
+        successfully_sent = true;
+
+        digitalWrite(SS_PIN, LOW);
+        delayMicroseconds(micro_delay);
+
+        // Asks the receiver to start sending
+        SPI.transfer(SEND);
+        delayMicroseconds(micro_delay);
+        
+        // SEND message code
+        uint8_t last_message = SEND;
+        for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
+            c = SPI.transfer(SEND);
+            if (c != last_message)
+                successfully_sent = false;
+            delayMicroseconds(micro_delay);
+            if (c == '\0') break;
+        }
+
+        if (SPI.transfer(END) != '\0')
+            successfully_sent = false;
+        delayMicroseconds(micro_delay);
+
+        digitalWrite(SS_PIN, HIGH);
+
+        if (successfully_sent) {
+            Serial.println("Command successfully sent");
+        } else {
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(10);  // Buzzer on for 10ms
+            digitalWrite(BUZZ_PIN, LOW);
+            Serial.print("Command NOT successfully sent on try: ");
+            Serial.println(s + 1);
+            Serial.println("BUZZER activated for 10ms!");
+        }
+    }
+
+    return successfully_sent;
+}
+
+
