@@ -71,12 +71,12 @@ bool sendString(const char* command) {
         digitalWrite(SS_PIN, LOW);
         delayMicroseconds(micro_delay);
 
-        // Informs the receiver its intend to start sending
-        SPI.transfer(SEND);
+        // Asks the receiver to start receiving
+        SPI.transfer(RECEIVE);
         delayMicroseconds(micro_delay);
         
-        // Send command
-        uint8_t last_message = SEND;
+        // RECEIVE message code
+        uint8_t last_message = RECEIVE;
         for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
             if (SPI.transfer(command[i]) != last_message)
                 successfully_sent = false;
