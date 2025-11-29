@@ -85,6 +85,14 @@ ISR(SPI_STC_vect) {
         } else {
             receiving_state = false;
         }
+    } else if (c == SEND) {
+        c = sending_buffer[sending_index++];
+        if (c == '\0') {
+            SPDR = END; // Spares one extra send for a known char '\0'
+            sending_index = 0;
+        } else {
+            SPDR = c;
+        }
     }
 }
 
