@@ -116,16 +116,24 @@ void processMessage() {
     Serial.print("Processed command: ");
     Serial.println(receiving_buffer);
 
+
     if (strcmp(receiving_buffer, "LED_ON") == 0) {
         digitalWrite(LED_PIN, HIGH);
-        Serial.println("LED is ON");
-    }
-    else if (strcmp(receiving_buffer, "LED_OFF") == 0) {
+        strcpy(sending_buffer, "OK_ON");
+        Serial.print("LED is ON");
+        Serial.print(" | Sending: ");
+        Serial.println(sending_buffer);
+    } else if (strcmp(receiving_buffer, "LED_OFF") == 0) {
         digitalWrite(LED_PIN, LOW);
-        Serial.println("LED is OFF");
-    }
-    else {
-        Serial.println("Unknown command");
+        strcpy(sending_buffer, "OK_OFF");
+        Serial.print("LED is OFF");
+        Serial.print(" | Sending: ");
+        Serial.println(sending_buffer);
+    } else {
+        strcpy(sending_buffer, "BUZZ");
+        Serial.print("Unknown command");
+        Serial.print(" | Sending: ");
+        Serial.println(sending_buffer);
     }
 }
 
