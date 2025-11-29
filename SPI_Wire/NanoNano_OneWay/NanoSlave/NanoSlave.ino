@@ -72,9 +72,6 @@ ISR(SPI_STC_vect) {
     // char c = SPDR;    // DON'T USE char BECAUSE BECOMES SIGNED!!
     uint8_t c = SPDR;    // The most important line!!
 
-    // Serial.print("0. Slave received: 0x");
-    // Serial.println(c, HEX);  // Debug what byte actually arrives
-    
     if (c == START) {
         receiving_state = true;
         receiving_index = 0;
