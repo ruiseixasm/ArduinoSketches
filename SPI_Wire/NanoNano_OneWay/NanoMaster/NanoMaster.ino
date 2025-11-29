@@ -83,8 +83,11 @@ bool sendString(const char* command) {
         
         // Send command
         int i = 0;
+        uint8_t last_message = START;
         while (command[i] != '\0') {
-            SPI.transfer(command[i]);
+            if (SPI.transfer(command[i]) != last_message)
+                successfully_sent = false;
+            last_message = command[i];
             i++;
             delayMicroseconds(micro_delay);
         }

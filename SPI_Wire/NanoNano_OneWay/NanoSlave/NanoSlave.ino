@@ -76,34 +76,22 @@ ISR(SPI_STC_vect) {
     // Serial.println(c, HEX);  // Debug what byte actually arrives
     
     if (c == START) {
-        // Serial.println("1. Start receiving");
         receiving_state = true;
         receiving_index = 0;
-        // SPDR = ACK;  // Send acknowledgment back to Master
     } else if (c == END) {
-        // Serial.println("2. End receiving");
         receiving_state = false;
         if (receiving_index > 0) {
             process_command = true;
-            // SPDR = ACK;  // Send acknowledgment back to Master
-        } else {
-            // SPDR = ERROR;   // No chars received
         }
     } else if (receiving_state) {
-
         if (receiving_index < BUFFER_SIZE) {
             if (c == '\0') {
                 SPDR = receiving_index; // Returns the total amount of bytes (excluding '\0') (FOR NEXT SEND)
-            } else {
-                // SPDR = ACK;  // Send acknowledgment back to Master
             }
             receiving_buffer[receiving_index++] = c;
         } else {
             receiving_state = false;
-            // SPDR = ERROR;     // Send acknowledgment back to Master
         }
-    } else {
-        // SPDR = ERROR;
     }
 }
 
