@@ -88,7 +88,7 @@ ISR(SPI_STC_vect) {
 }
 
 
-void processCommand() {
+void processMessage() {
 
     Serial.print("Processed command: ");
     Serial.println(receiving_buffer);
@@ -109,7 +109,7 @@ void processCommand() {
 void loop() {
     // HEAVY PROCESSING SHALL BE IN THE LOOP
     if (process_message) {
-        processCommand();   // Called only once!
+        processMessage();   // Called only once!
         process_message = false;    // Critical to avoid repeated calls over the ISR function
     }
 }
