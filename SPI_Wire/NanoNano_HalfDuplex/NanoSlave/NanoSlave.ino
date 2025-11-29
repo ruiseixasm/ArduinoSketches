@@ -39,6 +39,9 @@ void setup() {
     Serial.print("LED_PIN: ");
     Serial.println(LED_PIN);
 
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, LOW);
+
     pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
 
     // Initialize SPI as slave - EXPLICIT MSB FIRST
