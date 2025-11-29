@@ -131,18 +131,16 @@ bool receiveString() {
     for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
         last_message = SPI.transfer(last_message);
         delayMicroseconds(receive_delay_us);
-        if (last_message == NONE) {
-            break;
-        } else if (last_message == END) {
+        if (last_message == NONE || last_message == END) {
+            receiving_index = i;
             break;
         } else if (last_message == ERROR) {
             successfully_received = false;
             break;
+        } else {
+            receiving_buffer[i] = last_message;
         }
     }
-
-    SPI.transfer(END);
-    delayMicroseconds(receive_delay_us);
 
     digitalWrite(SS_PIN, HIGH);
 
