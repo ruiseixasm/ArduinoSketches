@@ -57,7 +57,7 @@ void loop() {
     delay(2000);
 }
 
-#define micro_delay 3
+#define micro_delay 5
 
 bool sendString(const char* command) {
     
