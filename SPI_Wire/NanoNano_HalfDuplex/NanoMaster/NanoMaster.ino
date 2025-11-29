@@ -1,6 +1,19 @@
 // SPI Master Code - Pure String Commands
 #include <SPI.h>
 
+
+enum MessageCode : uint8_t {
+    START   = 0xF0, // Start of transmission
+    END     = 0xF1, // End of transmission
+    ACK     = 0xF2, // Acknowledge
+    NACK    = 0xF3, // Not acknowledged
+    READY   = 0xF4, // Slave has response ready
+    ERROR   = 0xF5, // Error frame
+    RECEIVE = 0xF7, // Asks the receiver to start receiving
+    SEND    = 0xF6  // Asks the receiver to start sending
+};
+
+
 // Pin definitions
 const int BUZZ_PIN = 2; // External BUZZER pin
 const int SS_PIN = 10;  // Slave Select pin
