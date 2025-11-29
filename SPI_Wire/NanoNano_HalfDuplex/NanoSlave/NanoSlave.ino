@@ -9,8 +9,9 @@ enum MessageCode : uint8_t {
     NACK    = 0xF3, // Not acknowledged
     READY   = 0xF4, // Slave has response ready
     ERROR   = 0xF5, // Error frame
-    RECEIVE = 0xF7, // Asks the receiver to start receiving
-    SEND    = 0xF6  // Asks the receiver to start sending
+    RECEIVE = 0xF6, // Asks the receiver to start receiving
+    SEND    = 0xF7, // Asks the receiver to start sending
+    NONE    = 0xF8  // Means nothing to send
 };
 
 
