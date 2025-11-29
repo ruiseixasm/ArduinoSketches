@@ -57,7 +57,7 @@ void loop() {
     delay(2000);
 }
 
-#define micro_delay 9
+#define micro_delay 3
 
 bool sendString(const char* command) {
     
@@ -75,7 +75,7 @@ bool sendString(const char* command) {
         successfully_sent = true;
 
         digitalWrite(SS_PIN, LOW);
-        delayMicroseconds(5);
+        delayMicroseconds(1);
 
         // Signals the start of the transmission
         SPI.transfer(START);
@@ -89,10 +89,10 @@ bool sendString(const char* command) {
             delayMicroseconds(micro_delay);
         }
         SPI.transfer('\0');
-        delayMicroseconds(5);   // It has to process '\0' as a common char
+        delayMicroseconds(10);   // It has to process '\0' as a common char
 
         // Signals the end of the transmission
-        if (SPI.transfer(END) != ACK)
+        if (SPI.transfer(END) != i)
             successfully_sent = false;
         
         delayMicroseconds(1);
@@ -101,12 +101,12 @@ bool sendString(const char* command) {
         if (successfully_sent) {
             Serial.println("Command successfully sent");
         } else {
-            // digitalWrite(BUZZ_PIN, HIGH);
-            // delay(30);  // Buzzer on for 30ms
-            // digitalWrite(BUZZ_PIN, LOW);
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(20);  // Buzzer on for 20ms
+            digitalWrite(BUZZ_PIN, LOW);
             Serial.print("Command NOT successfully sent on try: ");
             Serial.println(s + 1);
-            Serial.println("BUZZER activated for 30ms!");
+            Serial.println("BUZZER activated for 20ms!");
         }
     }
 
