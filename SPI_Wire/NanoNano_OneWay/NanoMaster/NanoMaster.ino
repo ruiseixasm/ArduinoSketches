@@ -77,24 +77,24 @@ bool sendString(const char* command) {
         delayMicroseconds(5);
 
         // Signals the start of the transmission
-        if (SPI.transfer(START) == ERROR)
+        if (SPI.transfer(START) != ACK)
             successfully_sent = false;
-        delayMicroseconds(5);
+        delayMicroseconds(8);
         
         // Send command
         int i = 0;
         while (command[i] != '\0') {
-            if (SPI.transfer(command[i]) == ERROR)
+            if (SPI.transfer(command[i]) != ACK)
                 successfully_sent = false;
             i++;
-            delayMicroseconds(5);
+            delayMicroseconds(8);
         }
-        if (SPI.transfer('\0') == ERROR)
+        if (SPI.transfer('\0') != ACK)
             successfully_sent = false;
-        delayMicroseconds(5);
+        delayMicroseconds(8);   // It has to process '\0' as a common char
 
         // Signals the end of the transmission
-        if (SPI.transfer(END) == ERROR)
+        if (SPI.transfer(END) != ACK)
             successfully_sent = false;
         
         delayMicroseconds(5);
@@ -104,10 +104,10 @@ bool sendString(const char* command) {
             Serial.println("Command successfully sent");
         } else {
             digitalWrite(BUZZ_PIN, HIGH);
-            delay(100);  // Buzzer on for 100ms
+            delay(30);  // Buzzer on for 30ms
             digitalWrite(BUZZ_PIN, LOW);
             Serial.println("Command NOT successfully sent");
-            Serial.println("BUZZER activated for 100ms!");
+            Serial.println("BUZZER activated for 30ms!");
         }
     }
 

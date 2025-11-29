@@ -91,11 +91,10 @@ ISR(SPI_STC_vect) {
 
         if (receiving_index < BUFFER_SIZE) {
             receiving_buffer[receiving_index++] = c;
-            SPDR = ACK;     // Send acknowledgment back to Master
         } else {
             receiving_state = false;
-            SPDR = NACK;    // Message too big to be acknowledged
         }
+        SPDR = ACK;     // Send acknowledgment back to Master
     } else {
         SPDR = ERROR;  // Buffer overflow
     }
