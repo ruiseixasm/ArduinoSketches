@@ -70,7 +70,7 @@ ISR(SPI_STC_vect) {
 
     // char is signed by default on most Arduino platforms (-128 to +127)
     // char c = SPDR;    // DON'T USE char BECAUSE BECOMES SIGNED!!
-    uint8_t c = SPDR;    // The most important line!!
+    uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
 
     if (c == START) {
         receiving_state = true;

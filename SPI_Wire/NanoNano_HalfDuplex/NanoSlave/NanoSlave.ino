@@ -34,17 +34,28 @@ volatile bool sending_state = false;
 
 
 void setup() {
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
-  
-  // Initialize SPI as slave
-  SPCR |= _BV(SPE);
-  SPCR |= _BV(SPIE);
-  SPI.attachInterrupt();
-  
-  Serial.begin(115200);
-  delay(500);
-  Serial.println("\n\nSPI Slave Ready - String Mode");
+    Serial.begin(115200);
+    delay(500);
+    Serial.println("\n\nSPI Slave Ready - Half-Duplex Mode");
+
+    Serial.print("LED_PIN: ");
+    Serial.println(LED_PIN);
+
+    pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
+
+    // Initialize SPI as slave - EXPLICIT MSB FIRST
+    SPCR = 0;  // Clear register
+    SPCR |= _BV(SPE);    // SPI Enable
+    SPCR |= _BV(SPIE);   // SPI Interrupt Enable  
+    SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
+    SPCR &= ~_BV(CPOL);  // Clock polarity 0
+    SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
+
+    // // Initialize SPI as slave
+    // SPCR |= _BV(SPE);
+    // SPCR |= _BV(SPIE);
+
+    SPI.attachInterrupt();  
 }
 
 
@@ -52,7 +63,7 @@ void setup() {
 // SPI Interrupt
 // ------------------------------
 ISR(SPI_STC_vect) {
-    char c = SPDR;    // The most important line!!
+    uint8_t c; // Avoid using 'char' while using values above 127
 
     // One is always able to receive (receiving buffer always available)
     if (receiving_index < BUFFER_SIZE) {
