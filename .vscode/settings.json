@@ -5,6 +5,7 @@
         "IMXRT",
         "Monteiro",
         "MOSI",
+        "MSBFIRST",
         "RAMEND",
         "RAMSTART",
         "Seixas",

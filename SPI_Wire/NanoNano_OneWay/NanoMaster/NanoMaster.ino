@@ -84,7 +84,6 @@ bool sendString(const char* command) {
         delayMicroseconds(micro_delay);
         
         // Send command
-        int i = 0;
         uint8_t last_message = START;
         for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
             if (SPI.transfer(command[i]) != last_message)

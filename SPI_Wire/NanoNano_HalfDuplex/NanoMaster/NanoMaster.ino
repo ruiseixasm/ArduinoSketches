@@ -27,8 +27,9 @@ bool receiving_state = true;
 void setup() {
     // Initialize SPI
     SPI.begin();
-    SPI.setClockDivider(SPI_CLOCK_DIV16);
+    SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
     SPI.setDataMode(SPI_MODE0);
+    SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
     
     // Initialize pins
     pinMode(SS_PIN, OUTPUT);
@@ -39,7 +40,7 @@ void setup() {
     // Initialize serial
     Serial.begin(115200);
     delay(500);
-    Serial.println("\n\nSPI Master Initialized - String Mode");
+    Serial.println("\n\nSPI Master Initialized - Half-Duplex Mode");
 }
 
 void loop() {
@@ -52,14 +53,16 @@ void loop() {
 }
 
 
+#define micro_delay 10
+
 void sendString(const char* command) {
-    char c; // Always able to receive (FULL DUPLEX)
+    uint8_t c; // Avoid using 'char' while using values above 127
     receiving_buffer[0] = '\0'; // Avoids garbage printing
     receiving_state = false;
     receiving_index = 0;
   
     digitalWrite(SS_PIN, LOW);
-    delayMicroseconds(50);
+    delayMicroseconds(micro_delay);
     
     // Send command
     int i = 0;
@@ -72,7 +75,7 @@ void sendString(const char* command) {
             receiving_state = false;    // Received everything
         }
         i++;
-        delayMicroseconds(10);
+        delayMicroseconds(micro_delay);
     }
     c = SPI.transfer('\0'); // requests a char (ALSO)
 
@@ -85,7 +88,7 @@ void sendString(const char* command) {
             if (c == '\0') {
                 break;
             } else if  (receiving_index < BUFFER_SIZE) {
-                delayMicroseconds(10);
+                delayMicroseconds(micro_delay);
                 c = SPI.transfer(0xFF);  // Special char to collect the receiving messages (Valid ASCII goes up to 127 (7F))
             }
         } while(receiving_index < BUFFER_SIZE);
