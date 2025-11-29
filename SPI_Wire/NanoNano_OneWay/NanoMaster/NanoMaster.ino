@@ -100,16 +100,17 @@ bool sendString(const char* command) {
         delayMicroseconds(5);
         digitalWrite(SS_PIN, HIGH);
 
-        if (!successfully_sent) {
+        if (successfully_sent) {
+            Serial.println("Command successfully sent");
+        } else {
             digitalWrite(BUZZ_PIN, HIGH);
             delay(100);  // Buzzer on for 100ms
             digitalWrite(BUZZ_PIN, LOW);
+            Serial.println("Command NOT successfully sent");
             Serial.println("BUZZER activated for 100ms!");
         }
-    
     }
 
     return successfully_sent;
-    
 }
 
