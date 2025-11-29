@@ -54,7 +54,7 @@ void loop() {
 }
 
 
-#define micro_delay 10
+#define send_delay_us 10
 
 bool sendString(const char* command) {
     uint8_t c; // Avoid using 'char' while using values above 127
@@ -63,18 +63,18 @@ bool sendString(const char* command) {
     receiving_index = 0;
 
     
-    bool successfully_sent = false;
+    bool successfully_sent = true;
 
     for (size_t s = 0; !successfully_sent && s < 3; s++) {
   
         successfully_sent = true;
 
         digitalWrite(SS_PIN, LOW);
-        delayMicroseconds(micro_delay);
+        delayMicroseconds(send_delay_us);
 
         // Asks the receiver to start receiving
         SPI.transfer(RECEIVE);
-        delayMicroseconds(micro_delay);
+        delayMicroseconds(send_delay_us);
         
         // RECEIVE message code
         uint8_t last_message = RECEIVE;
@@ -82,13 +82,13 @@ bool sendString(const char* command) {
             if (SPI.transfer(command[i]) != last_message)
                 successfully_sent = false;
             last_message = command[i];
-            delayMicroseconds(micro_delay);
+            delayMicroseconds(send_delay_us);
             if (command[i] == '\0') break;
         }
 
         if (SPI.transfer(END) != '\0')
             successfully_sent = false;
-        delayMicroseconds(micro_delay);
+        delayMicroseconds(send_delay_us);
 
         digitalWrite(SS_PIN, HIGH);
 
@@ -108,55 +108,55 @@ bool sendString(const char* command) {
 }
 
 
+#define receive_delay_us 10
+
 bool receiveString() {
     uint8_t c; // Avoid using 'char' while using values above 127
     receiving_buffer[0] = '\0'; // Avoids garbage printing
     receiving_state = false;
     receiving_index = 0;
 
+    bool successfully_received = true;
+
     
-    bool successfully_sent = false;
+    digitalWrite(SS_PIN, LOW);
+    delayMicroseconds(receive_delay_us);
 
-    for (size_t s = 0; !successfully_sent && s < 3; s++) {
-  
-        successfully_sent = true;
-
-        digitalWrite(SS_PIN, LOW);
-        delayMicroseconds(micro_delay);
-
-        // Asks the receiver to start sending
-        SPI.transfer(SEND);
-        delayMicroseconds(micro_delay);
-        
-        // SEND message code
-        uint8_t last_message = SEND;
-        for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
-            c = SPI.transfer(SEND);
-            if (c != last_message)
-                successfully_sent = false;
-            delayMicroseconds(micro_delay);
-            if (c == '\0') break;
-        }
-
-        if (SPI.transfer(END) != '\0')
-            successfully_sent = false;
-        delayMicroseconds(micro_delay);
-
-        digitalWrite(SS_PIN, HIGH);
-
-        if (successfully_sent) {
-            Serial.println("Command successfully sent");
-        } else {
-            digitalWrite(BUZZ_PIN, HIGH);
-            delay(10);  // Buzzer on for 10ms
-            digitalWrite(BUZZ_PIN, LOW);
-            Serial.print("Command NOT successfully sent on try: ");
-            Serial.println(s + 1);
-            Serial.println("BUZZER activated for 10ms!");
+    // Asks the receiver to start sending
+    SPI.transfer(SEND);
+    delayMicroseconds(receive_delay_us);
+    
+    // Starts to receive all chars here
+    uint8_t last_message = SEND;
+    for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
+        last_message = SPI.transfer(last_message);
+        delayMicroseconds(receive_delay_us);
+        if (last_message == NONE) {
+            break;
+        } else if (last_message == END) {
+            break;
+        } else if (last_message == ERROR) {
+            successfully_received = false;
+            break;
         }
     }
 
-    return successfully_sent;
+    SPI.transfer(END);
+    delayMicroseconds(receive_delay_us);
+
+    digitalWrite(SS_PIN, HIGH);
+
+    if (successfully_received) {
+        Serial.println("Message successfully received");
+    } else {
+        digitalWrite(BUZZ_PIN, HIGH);
+        delay(10);  // Buzzer on for 10ms
+        digitalWrite(BUZZ_PIN, LOW);
+        Serial.println("Message NOT successfully received");
+        Serial.println("BUZZER activated for 10ms!");
+    }
+
+    return true;
 }
 
 
