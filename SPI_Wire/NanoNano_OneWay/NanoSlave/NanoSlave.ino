@@ -109,11 +109,11 @@ void processCommand() {
 
     if (strcmp(receiving_buffer, "LED_ON") == 0) {
         digitalWrite(LED_PIN, HIGH);
-        Serial.print("LED is ON");
+        Serial.println("LED is ON");
     }
     else if (strcmp(receiving_buffer, "LED_OFF") == 0) {
         digitalWrite(LED_PIN, LOW);
-        Serial.print("LED is OFF");
+        Serial.println("LED is OFF");
     }
     else {
         Serial.println("Unknown command");
