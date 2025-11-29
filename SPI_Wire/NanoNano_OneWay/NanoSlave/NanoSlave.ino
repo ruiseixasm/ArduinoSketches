@@ -51,9 +51,7 @@ void setup() {
     // SPCR |= _BV(SPE);
     // SPCR |= _BV(SPIE);
 
-
     SPI.attachInterrupt();
-
 }
 
 

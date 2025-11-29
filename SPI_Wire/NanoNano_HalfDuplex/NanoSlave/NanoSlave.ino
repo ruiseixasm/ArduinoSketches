@@ -75,7 +75,6 @@ ISR(SPI_STC_vect) {
     uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
     uint8_t last_received = SEND;
 
-
     if (c == RECEIVE) {
         receiving_state = true;
         receiving_index = 0;
