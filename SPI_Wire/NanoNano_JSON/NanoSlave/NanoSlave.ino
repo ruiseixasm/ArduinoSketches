@@ -93,7 +93,7 @@ ISR(SPI_STC_vect) {
         if (_sending_index > 1 && c != _sending_buffer[_sending_index - 2]) {  // Two messages delay
             _sending_state = false;
             SPDR = ERROR;
-        } else if (_sending_buffer[_sending_index] == '\0') {
+        } else if (_sending_buffer[_sending_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
             _sending_state = false;
             _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
             SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
