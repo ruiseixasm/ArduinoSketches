@@ -130,7 +130,7 @@ protected:
     bool replyMessage(JsonObject json_message, bool as_reply = true) {
         if (json_message["c"].is<uint16_t>()) {
             uint16_t c = json_message["c"].as<uint16_t>();
-            if (c == 1) {   // c == 1 means a local message while 0 meaans a remote one
+            if (c == 1) {   // c == 1 means a local message while 0 means a remote one
                 return localSend(json_message, as_reply);
             }
         }
