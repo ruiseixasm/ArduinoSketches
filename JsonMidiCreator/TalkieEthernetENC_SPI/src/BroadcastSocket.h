@@ -167,7 +167,7 @@ protected:
     static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 
     
-    bool remoteReceive(size_t length) {
+    virtual bool remoteReceive(size_t length) {
 
         // Triggers all Talkers to processes the received data
         bool pre_validated = false;
@@ -304,62 +304,10 @@ protected:
             }
         }
 
-        
+
     // NOT Pure virtual methods anymores (= 0;)
     virtual bool send(size_t length, bool as_reply = false) {
-        (void)length; // Silence unused parameter warning
         (void)as_reply; // Silence unused parameter warning
-        return false;
-    }
-
-
-public:
-    // Delete copy/move operations
-    BroadcastSocket(const BroadcastSocket&) = delete;
-    BroadcastSocket& operator=(const BroadcastSocket&) = delete;
-    BroadcastSocket(BroadcastSocket&&) = delete;
-    BroadcastSocket& operator=(BroadcastSocket&&) = delete;
-
-
-
-    virtual size_t receive() {
-        // In theory, a UDP packet on a local area network (LAN) could survive
-        // for about 4.25 minutes (255 seconds).
-        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
-        if (_control_timing && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
-            _control_timing = false;
-        }
-        return 0;
-    }
-
-    
-    bool remoteSend(JsonObject json_message, bool as_reply = false) {
-
-        JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
-        if (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error) {
-            json_message["i"] = (uint32_t)millis();
-
-        } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
-
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("R: Response message without an identifier (i)"));
-            serializeJson(json_message, Serial);
-            Serial.println();  // optional: just to add a newline after the JSON
-            #endif
-
-            return false;
-        }
-
-        size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("R: "));
-        serializeJson(json_message, Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
-        #endif
-
-
-
 
 
         if (length < 3*4 + 2) {
@@ -394,6 +342,57 @@ public:
         Serial.println();
         #endif
         
+
+        return true;
+    }
+
+
+public:
+    // Delete copy/move operations
+    BroadcastSocket(const BroadcastSocket&) = delete;
+    BroadcastSocket& operator=(const BroadcastSocket&) = delete;
+    BroadcastSocket(BroadcastSocket&&) = delete;
+    BroadcastSocket& operator=(BroadcastSocket&&) = delete;
+
+
+
+    virtual size_t receive() {
+        // In theory, a UDP packet on a local area network (LAN) could survive
+        // for about 4.25 minutes (255 seconds).
+        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
+        if (_control_timing && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
+            _control_timing = false;
+        }
+        return 0;
+    }
+
+    
+    virtual bool remoteSend(JsonObject json_message, bool as_reply = false) {
+
+        JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
+        if (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error) {
+            json_message["i"] = (uint32_t)millis();
+
+        } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
+
+            #ifdef BROADCASTSOCKET_DEBUG
+            Serial.print(F("R: Response message without an identifier (i)"));
+            serializeJson(json_message, Serial);
+            Serial.println();  // optional: just to add a newline after the JSON
+            #endif
+
+            return false;
+        }
+
+        size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+
+        #ifdef BROADCASTSOCKET_DEBUG
+        Serial.print(F("R: "));
+        serializeJson(json_message, Serial);
+        Serial.println();  // optional: just to add a newline after the JSON
+        #endif
+
+
         return send(length, as_reply);
     }
     
