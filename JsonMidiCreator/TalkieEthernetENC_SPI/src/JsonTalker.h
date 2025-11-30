@@ -73,6 +73,7 @@ protected:
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
     uint8_t _channel = 0;
+    bool _muted = false;
 
 
     // Can't use method reference because these type of references are class designation dependent,
@@ -102,6 +103,41 @@ protected:
         };
 
         return _manifesto;
+    }
+
+
+    bool remoteSend(JsonObject json_message, bool as_reply = false);
+
+
+    bool localSend(JsonObject json_message, bool as_reply = false) {
+        (void)as_reply; // Silence unused parameter warning
+
+        if (_muted) return false;
+
+        json_message["f"] = _name;
+        json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
+        // Triggers all local Talkers to processes the json_message
+        bool pre_validated = false;
+        bool sent_message = false;
+        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+            if (_json_talkers[talker_i] != this) {  // Can't send to myself
+                pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+                sent_message = true;
+                if (!pre_validated) break;
+            }
+        }
+        return sent_message;
+    }
+
+
+    bool replyMessage(JsonObject json_message, bool as_reply = true) {
+        if (json_message["c"].is<uint16_t>()) {
+            uint16_t c = json_message["c"].as<uint16_t>();
+            if (c == 1) {   // c == 1 means a local message while 0 means a remote one
+                return localSend(json_message, as_reply);
+            }
+        }
+        return remoteSend(json_message, as_reply);
     }
 
     
@@ -166,7 +202,7 @@ protected:
                 } else {
                     json_message["r"] = "Already On!";
                     if (_socket != nullptr)
-                        this->remoteSend(json_message);
+                        this->replyMessage(json_message, false);
                     return false;
                 }
                 return true;
@@ -188,7 +224,7 @@ protected:
                 } else {
                     json_message["r"] = "Already Off!";
                     if (_socket != nullptr)
-                        this->remoteSend(json_message);
+                        this->replyMessage(json_message, false);
                     return false;
                 }
                 return true;
@@ -300,25 +336,8 @@ public:
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
     
-
-    bool remoteSend(JsonObject json_message, bool as_reply = false);
-
-
-    bool localSend(JsonObject json_message) {
-        json_message["f"] = _name;
-        json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
-        // Triggers all local Talkers to processes the json_message
-        bool pre_validated = false;
-        bool sent_message = false;
-        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-            if (_json_talkers[talker_i] != this) {  // Can't send to myself
-                pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
-                sent_message = true;
-                if (!pre_validated) break;
-            }
-        }
-        return sent_message;
-    }
+    void mute() { _muted = true; }
+    void unmute() { _muted = false; }
 
     
     bool processData(JsonObject json_message, bool pre_validated) {
@@ -351,7 +370,7 @@ public:
                 json_message["t"] = json_message["f"];
                 json_message["e"] = 4;
                 
-                remoteSend(json_message, true);
+                replyMessage(json_message, true);
                 return false;
             }
         }
@@ -396,7 +415,7 @@ public:
         {
         case MessageCode::TALK:
             json_message["d"] = _desc;
-            remoteSend(json_message, true);
+            replyMessage(json_message, true);
             break;
         
         case MessageCode::LIST:
@@ -417,21 +436,21 @@ public:
                     none_list = false;
                     json_message["n"] = my_manifesto.runs[i].name;
                     json_message["d"] = my_manifesto.runs[i].desc;
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
                 json_message["w"] = MessageCode::SET;
                 for (size_t i = 0; i < my_manifesto.sets_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.sets[i].name;
                     json_message["d"] = my_manifesto.sets[i].desc;
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
                 json_message["w"] = MessageCode::GET;
                 for (size_t i = 0; i < my_manifesto.gets_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.gets[i].name;
                     json_message["d"] = my_manifesto.gets[i].desc;
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
                 if(none_list) {
                     json_message["g"] = 2;       // NONE
@@ -450,13 +469,13 @@ public:
                     #endif
             
                     json_message["g"] = 0;       // ROGER
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                     // No memory leaks because message_doc exists in the listen() method stack
                     json_message.remove("g");
                     command_run(command_found_i, json_message);
                 } else {
                     json_message["g"] = 1;   // UNKNOWN
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
             }
             break;
@@ -467,13 +486,13 @@ public:
                 const uint8_t command_found_i = command_index(MessageCode::SET, json_message);
                 if (command_found_i < 255) {
                     json_message["g"] = 0;       // ROGER
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                     // No memory leaks because message_doc exists in the listen() method stack
                     json_message.remove("g");
                     command_set(command_found_i, json_message);
                 } else {
                     json_message["g"] = 1;   // UNKNOWN
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
             }
             break;
@@ -486,10 +505,10 @@ public:
                     // No memory leaks because message_doc exists in the listen() method stack
                     // The return of the value works as an implicit ROGER (avoids network flooding)
                     json_message["v"] = command_get(command_found_i, json_message);
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 } else {
                     json_message["g"] = 1;   // UNKNOWN
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
             }
             break;
@@ -540,7 +559,7 @@ public:
 
             #endif
 
-                remoteSend(json_message, true);
+                replyMessage(json_message, true);
 
                 // TO INSERT HERE EXTRA DATA !!
             }
@@ -565,7 +584,7 @@ public:
                 _channel = json_message["b"].as<uint8_t>();
             }
             json_message["b"] = _channel;
-            remoteSend(json_message, true);
+            replyMessage(json_message, true);
             break;
         
         default:
