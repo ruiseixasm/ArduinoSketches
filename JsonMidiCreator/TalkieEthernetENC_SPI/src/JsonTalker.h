@@ -40,16 +40,16 @@ public:
 
     virtual const char* class_name() const { return "JsonTalker"; }
 
-    enum class MessageCode {
-        talk,
-        list,
-        run,
-        set,
-        get,
-        sys,
-        echo,
-        error,
-        channel
+    enum MessageCode : int {
+        TALK,
+        LIST,
+        RUN,
+        SET,
+        GET,
+        SYS,
+        ECHO,
+        ERROR,
+        CHANNEL
     };
 
     
@@ -117,15 +117,15 @@ protected:
         const Manifesto& my_manifesto = get_manifesto();
         switch (message_code)
         {
-        case MessageCode::run:
+        case MessageCode::RUN:
             command = my_manifesto.runs;
             count = my_manifesto.runs_count;
             break;
-        case MessageCode::set:
+        case MessageCode::SET:
             command = my_manifesto.sets;
             count = my_manifesto.sets_count;
             break;
-        case MessageCode::get:
+        case MessageCode::GET:
             command = my_manifesto.gets;
             count = my_manifesto.gets_count;
             break;
@@ -390,16 +390,16 @@ public:
         MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
         json_message["w"] = json_message["m"].as<int>();
         json_message["t"] = json_message["f"];
-        json_message["m"] = static_cast<int>(MessageCode::echo);
+        json_message["m"] = static_cast<int>(MessageCode::ECHO);
 
         switch (message_code)
         {
-        case MessageCode::talk:
+        case MessageCode::TALK:
             json_message["d"] = _desc;
             remoteSend(json_message, true);
             break;
         
-        case MessageCode::list:
+        case MessageCode::LIST:
             {   // Because of none_list !!!
                 bool none_list = true;
 
@@ -412,21 +412,21 @@ public:
             
                 const Manifesto& my_manifesto = get_manifesto();
 
-                json_message["w"] = static_cast<int>(MessageCode::run);
+                json_message["w"] = static_cast<int>(MessageCode::RUN);
                 for (size_t i = 0; i < my_manifesto.runs_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.runs[i].name;
                     json_message["d"] = my_manifesto.runs[i].desc;
                     remoteSend(json_message, true);
                 }
-                json_message["w"] = static_cast<int>(MessageCode::set);
+                json_message["w"] = static_cast<int>(MessageCode::SET);
                 for (size_t i = 0; i < my_manifesto.sets_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.sets[i].name;
                     json_message["d"] = my_manifesto.sets[i].desc;
                     remoteSend(json_message, true);
                 }
-                json_message["w"] = static_cast<int>(MessageCode::get);
+                json_message["w"] = static_cast<int>(MessageCode::GET);
                 for (size_t i = 0; i < my_manifesto.gets_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.gets[i].name;
@@ -439,10 +439,10 @@ public:
             }
             break;
         
-        case MessageCode::run:
+        case MessageCode::RUN:
             if (json_message["n"].is<String>()) {
 
-                const uint8_t command_found_i = command_index(MessageCode::run, json_message);
+                const uint8_t command_found_i = command_index(MessageCode::RUN, json_message);
                 if (command_found_i < 255) {
 
                     #ifdef JSON_TALKER_DEBUG
@@ -461,10 +461,10 @@ public:
             }
             break;
         
-        case MessageCode::set:
+        case MessageCode::SET:
             if (json_message["n"].is<String>() && json_message["v"].is<long>()) {
 
-                const uint8_t command_found_i = command_index(MessageCode::set, json_message);
+                const uint8_t command_found_i = command_index(MessageCode::SET, json_message);
                 if (command_found_i < 255) {
                     json_message["g"] = 0;       // ROGER
                     remoteSend(json_message, true);
@@ -478,10 +478,10 @@ public:
             }
             break;
         
-        case MessageCode::get:
+        case MessageCode::GET:
             if (json_message["n"].is<String>()) {
 
-                const uint8_t command_found_i = command_index(MessageCode::get, json_message);
+                const uint8_t command_found_i = command_index(MessageCode::GET, json_message);
                 if (command_found_i < 255) {
                     json_message["g"] = 0;       // ROGER
                     remoteSend(json_message, true);
@@ -496,7 +496,7 @@ public:
             }
             break;
         
-        case MessageCode::sys:
+        case MessageCode::SYS:
             {
             // AVR Boards (Uno, Nano, Mega) - Check RAM size
             #ifdef __AVR__
@@ -548,15 +548,15 @@ public:
             }
             break;
         
-        case MessageCode::echo:
+        case MessageCode::ECHO:
             this->echo(json_message);
             break;
         
-        case MessageCode::error:
+        case MessageCode::ERROR:
             this->error(json_message);
             break;
         
-        case MessageCode::channel:
+        case MessageCode::CHANNEL:
             if (json_message["b"].is<uint8_t>()) {
 
                 #ifdef JSON_TALKER_DEBUG

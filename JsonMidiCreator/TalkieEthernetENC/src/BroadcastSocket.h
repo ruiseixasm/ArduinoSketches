@@ -210,7 +210,7 @@ protected:
 
                     JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(message_code_int);
 
-                    if (!(message_code < JsonTalker::MessageCode::run || message_code > JsonTalker::MessageCode::get)) {
+                    if (!(message_code < JsonTalker::MessageCode::RUN || message_code > JsonTalker::MessageCode::get)) {
 
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.print(F("C: Message code requires delay check: "));

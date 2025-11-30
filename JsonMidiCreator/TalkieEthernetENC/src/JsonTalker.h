@@ -117,7 +117,7 @@ protected:
         const Manifesto& my_manifesto = get_manifesto();
         switch (message_code)
         {
-        case MessageCode::run:
+        case MessageCode::RUN:
             command = my_manifesto.runs;
             count = my_manifesto.runs_count;
             break;
@@ -412,7 +412,7 @@ public:
             
                 const Manifesto& my_manifesto = get_manifesto();
 
-                json_message["w"] = static_cast<int>(MessageCode::run);
+                json_message["w"] = static_cast<int>(MessageCode::RUN);
                 for (size_t i = 0; i < my_manifesto.runs_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.runs[i].name;
@@ -439,10 +439,10 @@ public:
             }
             break;
         
-        case MessageCode::run:
+        case MessageCode::RUN:
             if (json_message["n"].is<String>()) {
 
-                const uint8_t command_found_i = command_index(MessageCode::run, json_message);
+                const uint8_t command_found_i = command_index(MessageCode::RUN, json_message);
                 if (command_found_i < 255) {
 
                     #ifdef JSON_TALKER_DEBUG

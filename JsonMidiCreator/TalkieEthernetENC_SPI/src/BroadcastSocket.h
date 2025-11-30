@@ -246,7 +246,7 @@ protected:
 
                     JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(message_code_int);
 
-                    if (!(message_code < JsonTalker::MessageCode::run || message_code > JsonTalker::MessageCode::get)) {
+                    if (!(message_code < JsonTalker::MessageCode::RUN || message_code > JsonTalker::MessageCode::GET)) {
 
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.print(F("C: Message code requires delay check: "));
@@ -370,7 +370,7 @@ public:
     virtual bool remoteSend(JsonObject json_message, bool as_reply = false) {
 
         JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
-        if (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error) {
+        if (message_code != JsonTalker::MessageCode::ECHO && message_code != JsonTalker::MessageCode::ERROR) {
             json_message["i"] = (uint32_t)millis();
 
         } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
