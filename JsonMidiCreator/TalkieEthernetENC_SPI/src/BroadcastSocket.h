@@ -244,7 +244,7 @@ protected:
                 
                 if (_max_delay_ms > 0) {
 
-                    JsonTalker::MessageCode message_code = message_code_int;
+                    JsonTalker::MessageCode message_code = static_cast<MessageCode>(message_code_int);
 
                     if (!(message_code < JsonTalker::MessageCode::RUN || message_code > JsonTalker::MessageCode::GET)) {
 
@@ -369,7 +369,7 @@ public:
     
     virtual bool remoteSend(JsonObject json_message, bool as_reply = false) {
 
-        JsonTalker::MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
+        JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
         if (message_code != JsonTalker::MessageCode::ECHO && message_code != JsonTalker::MessageCode::ERROR) {
             json_message["i"] = (uint32_t)millis();
 
