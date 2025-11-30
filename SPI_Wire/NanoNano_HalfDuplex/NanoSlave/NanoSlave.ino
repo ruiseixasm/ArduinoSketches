@@ -37,8 +37,8 @@ void setup() {
     delay(500);
     Serial.println("\n\nSPI Slave Ready - Half-Duplex Mode");
 
-    Serial.print("GREEN_LED_PIN: ");
-    Serial.println(GREEN_LED_PIN);
+    Serial.print("LED_BUILTIN: ");  // Led 13 is already used by SCK
+    Serial.println(LED_BUILTIN);
 
     pinMode(GREEN_LED_PIN, OUTPUT);
     digitalWrite(GREEN_LED_PIN, LOW);
