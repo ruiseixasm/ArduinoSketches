@@ -26,7 +26,24 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 class BroadcastSocket_SPI_Master : public BroadcastSocket {
+public:
+
+    enum MessageCode : uint8_t {
+        START   = 0xF0, // Start of transmission
+        END     = 0xF1, // End of transmission
+        ACK     = 0xF2, // Acknowledge
+        NACK    = 0xF3, // Not acknowledged
+        READY   = 0xF4, // Slave has response ready
+        ERROR   = 0xF5, // Error frame
+        RECEIVE = 0xF6, // Asks the receiver to start receiving
+        SEND    = 0xF7, // Asks the receiver to start sending
+        NONE    = 0xF8  // Means nothing to send
+    };
+
+
 private:
+    uint8_t _receiving_index = 0;   // No interrupts, so, not volatile
+    bool _receiving_state = true;
 
 
 protected:
@@ -61,7 +78,6 @@ public:
     }
 
 
-
     size_t receive() override {
 
         // Need to call homologous method in super class first
@@ -70,6 +86,18 @@ public:
         return 0;   // nothing received
     }
 
+
+    void setup(int ss_pin) {
+        // Initialize SPI
+        SPI.begin();
+        SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
+        SPI.setDataMode(SPI_MODE0);
+        SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
+        
+        // Initialize pins
+        pinMode(ss_pin, OUTPUT);
+        digitalWrite(ss_pin, HIGH);
+    }
 };
 
 #endif // BROADCAST_SOCKET_SPI_MASTER_HPP
