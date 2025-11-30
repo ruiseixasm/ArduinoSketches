@@ -46,7 +46,7 @@ public:
 
 
 private:
-    int8_t _receiving_index = -1;   // No interrupts, so, not volatile
+    uint8_t _length = 0;   // No interrupts, so, not volatile
     JsonObject* _talkers_ss_pins;
 
 protected:
@@ -83,11 +83,11 @@ protected:
     }
 
     
-    int8_t receiveString(int ss_pin) {
+    uint8_t receiveString(int ss_pin) {
         uint8_t c; // Avoid using 'char' while using values above 127
-        _receiving_index = -1;
+        _length = 0;
 
-        for (uint8_t r = 0; _receiving_index < 0 && r < 3; r++) {
+        for (uint8_t r = 0; _length == 0 && r < 3; r++) {
     
             digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
@@ -103,11 +103,11 @@ protected:
                     c = SPI.transfer(_receiving_buffer[i - 1]);
                     if (c == END) {
                         _receiving_buffer[i] = '\0'; // Implicit char
-                        _receiving_index = i;
+                        _length = i;
                         break;
                     } else if (c == ERROR) {
                         _receiving_buffer[0] = '\0'; // Implicit char
-                        _receiving_index = -1;
+                        _length = 0;
                         break;
                     } else {
                         _receiving_buffer[i] = c;
@@ -116,7 +116,7 @@ protected:
                     c = SPI.transfer('\0');   // Dummy char, not intended to be processed
                     if (c == NONE) {
                         _receiving_buffer[0] = '\0'; // Implicit char
-                        _receiving_index = 0;
+                        _length = 1;
                         break;
                     }
                     _receiving_buffer[0] = c;   // Dummy char, not intended to be processed
@@ -125,10 +125,51 @@ protected:
 
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
-
         }
 
-        return _receiving_index;
+        return _length;
+    }
+
+
+    uint8_t sendString(const char* command, int ss_pin) {
+        uint8_t c; // Avoid using 'char' while using values above 127
+        _receiving_buffer[0] = '\0'; // Avoids garbage printing
+        _length = 0;
+
+        
+        for (size_t s = 0; _length == 0 && s < 3; s++) {
+    
+            digitalWrite(ss_pin, LOW);
+            delayMicroseconds(5);
+
+            // Asks the receiver to start receiving
+            SPI.transfer(RECEIVE);
+            delayMicroseconds(send_delay_us);
+            
+            // RECEIVE message code
+            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
+                if (i > 0) {
+                    if (SPI.transfer(command[i]) != command[i - 1])
+                        _length = 0;
+                } else {
+                    SPI.transfer(command[0]);
+                }
+                delayMicroseconds(send_delay_us);
+                // Don't make '\0' implicit in order to not have to change the SPDR on the slave side!!
+                if (command[i] == '\0') {
+                    _length = i + 1;
+                    break;
+                }
+            }
+
+            if (SPI.transfer(END) != '\0')  // Because the last char is always '\0'
+                _length = 0;
+
+            delayMicroseconds(5);
+            digitalWrite(ss_pin, HIGH);
+        }
+
+        return _length;
     }
 
 
