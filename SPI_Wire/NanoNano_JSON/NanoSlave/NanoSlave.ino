@@ -122,14 +122,29 @@ void processMessage() {
     Serial.print("Processed command: ");
     Serial.println(receiving_buffer);
 
+    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+    #if ARDUINOJSON_VERSION_MAJOR >= 7
+    JsonDocument message_doc;
+    #else
+    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+    #endif
 
-    if (strcmp(receiving_buffer, "LED_ON") == 0) {
+    DeserializationError error = deserializeJson(message_doc, receiving_buffer, BUFFER_SIZE);
+    if (error) {
+        return false;
+    }
+    JsonObject json_message = message_doc.as<JsonObject>();
+
+    const char* command_name = json_message["n"].as<const char*>();
+
+
+    if (strcmp(command_name, "ON") == 0) {
         digitalWrite(GREEN_LED_PIN, HIGH);
         strcpy(sending_buffer, "OK_ON");
         Serial.print("LED is ON");
         Serial.print(" | Sending: ");
         Serial.println(sending_buffer);
-    } else if (strcmp(receiving_buffer, "LED_OFF") == 0) {
+    } else if (strcmp(command_name, "OFF") == 0) {
         digitalWrite(GREEN_LED_PIN, LOW);
         strcpy(sending_buffer, "OK_OFF");
         Serial.print("LED is OFF");
