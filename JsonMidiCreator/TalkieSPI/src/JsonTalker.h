@@ -483,10 +483,8 @@ public:
 
                 const uint8_t command_found_i = command_index(MessageCode::GET, json_message);
                 if (command_found_i < 255) {
-                    json_message["g"] = 0;       // ROGER
-                    remoteSend(json_message, true);
                     // No memory leaks because message_doc exists in the listen() method stack
-                    json_message.remove("g");
+                    // The return of the value works as an implicit roger (avoids network flooding)
                     json_message["v"] = command_get(command_found_i, json_message);
                     remoteSend(json_message, true);
                 } else {
