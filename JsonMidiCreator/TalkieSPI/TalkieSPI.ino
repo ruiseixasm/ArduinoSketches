@@ -80,10 +80,10 @@ auto& broadcast_socket = BroadcastSocket_SPI_Master::instance(talkers, sizeof(ta
 // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
 #if ARDUINOJSON_VERSION_MAJOR >= 7
 JsonDocument ss_pins_doc;
-JsonObject devices_ss_pins = ss_pins_doc.to<JsonObject>(); // NEW: Persistent object for device control
+JsonObject talkers_ss_pins = ss_pins_doc.to<JsonObject>(); // NEW: Persistent object for device control
 #else
 StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> ss_pins_doc;
-JsonObject devices_ss_pins = ss_pins_doc.to<JsonObject>();    // NEW
+JsonObject talkers_ss_pins = ss_pins_doc.to<JsonObject>();    // NEW
 #endif
 
 
@@ -122,10 +122,10 @@ void setup() {
 
     // STEP 1: Initialize SPI only
     // Defines the CS pin by Talker name here
-    devices_ss_pins["A"] = 4;
-    devices_ss_pins["B"] = 4;
+    talkers_ss_pins["a"] = 4;
+    talkers_ss_pins["b"] = 16;
     Serial.println("Step 1: Starting SPI...");
-    broadcast_socket.setup(&devices_ss_pins);
+    broadcast_socket.setup(&talkers_ss_pins);
     Serial.println("SPI started successfully");
     delay(1000);
 

@@ -44,7 +44,7 @@ public:
 private:
     uint8_t _receiving_index = 0;   // No interrupts, so, not volatile
     bool _receiving_state = true;
-    JsonObject* _devices_ss_pins;
+    JsonObject* _talkers_ss_pins;
 
 protected:
     // Needed for the compiler, the base class is the one being called though
@@ -98,13 +98,13 @@ public:
     }
 
 
-    void setup(JsonObject* receivers_ss_pins) {
+    void setup(JsonObject* talkers_ss_pins) {
         // Initialize SPI
         SPI.begin();
         SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
         SPI.setDataMode(SPI_MODE0);
         SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
-        _devices_ss_pins = receivers_ss_pins;
+        _talkers_ss_pins = talkers_ss_pins;
     }
 };
 
