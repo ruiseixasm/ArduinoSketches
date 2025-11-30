@@ -86,6 +86,7 @@ protected:
     size_t receiveString(int ss_pin) {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
+    	_receiving_buffer[0] = '\0'; // Avoids garbage printing
 
         for (uint8_t r = 0; length == 0 && r < 3; r++) {
     
@@ -96,32 +97,35 @@ protected:
             c = SPI.transfer(SEND);
             delayMicroseconds(send_delay_us);
                 
-            // Starts to receive all chars here
-            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {	// First char is a control byte
-                delayMicroseconds(receive_delay_us);
-                if (i > 0) {    // The first response is discarded
-                    c = SPI.transfer(_receiving_buffer[i - 1]);
-                    if (c == END) {
-                        _receiving_buffer[i] = '\0'; // Implicit char
-                        length = i;
-                        break;
-                    } else if (c == ERROR) {
-                        _receiving_buffer[0] = '\0'; // Implicit char
-                        length = 0;
-                        break;
-                    } else {
-                        _receiving_buffer[i] = c;
-                    }
-                } else {
-                    c = SPI.transfer('\0');   // Dummy char, not intended to be processed
-                    if (c == NONE) {
-                        _receiving_buffer[0] = '\0'; // Implicit char
-                        length = 1;
-                        break;
-                    }
-                    _receiving_buffer[0] = c;   // First char received
-                }
-            }
+			// Starts to receive all chars here
+			for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {	// First char is a control byte
+				delayMicroseconds(receive_delay_us);
+				if (i > 0) {    // The first response is discarded
+					c = SPI.transfer(_receiving_buffer[i - 1]);
+					if (c == END) {
+						length = i;
+						break;
+					} else if (c == ERROR || c == NACK) {
+						_receiving_buffer[0] = '\0'; // Implicit char
+						length = 0;
+						break;
+					} else {
+						_receiving_buffer[i] = c;
+					}
+				} else {
+					c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
+					if (c == NONE) {
+						_receiving_buffer[0] = '\0'; // Implicit char
+						length = 1;
+						break;
+					} else if (c == NACK) {
+						_receiving_buffer[0] = '\0'; // Implicit char
+						length = 0;
+						break;
+					}
+					_receiving_buffer[0] = c;   // First char received
+				}
+			}
 
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
@@ -143,25 +147,36 @@ protected:
             // Asks the receiver to start receiving
             SPI.transfer(RECEIVE);
             delayMicroseconds(send_delay_us);
-            
-            // RECEIVE message code
-            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
-                if (i > 0) {
-                    if (SPI.transfer(_sending_buffer[i]) != _sending_buffer[i - 1])
-                        length = 0;
-                } else {
-                    SPI.transfer(_sending_buffer[0]);
-                }
-                delayMicroseconds(send_delay_us);
-                // Don't make '\0' implicit in order to not have to change the SPDR on the slave side!!
-                if (_sending_buffer[i] == '\0') {
-                    length = i + 1;
-                    break;
-                }
-            }
-
-            if (SPI.transfer(END) != '\0')  // Because the last char is always '\0'
-                length = 0;
+				
+			for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
+				if (i > 0) {
+					if (_sending_buffer[i - 1] == '\0') {
+						c = SPI.transfer(END);
+						if (c == '\0') {
+							length = i;
+							break;
+						} else {
+							SPI.transfer(ERROR);
+							length = 0;
+							break;
+						}
+					} else {
+						c = SPI.transfer(_sending_buffer[i]);	// Receives the _sending_buffer[i - 1]
+					}
+					if (c != _sending_buffer[i - 1]) {    // Excludes NACK situation
+						SPI.transfer(ERROR);
+						length = 0;
+						break;
+					}
+				} else {
+					c = SPI.transfer(_sending_buffer[0]);	// Doesn't check first char
+				}
+				delayMicroseconds(send_delay_us);
+				if (c == NACK) {
+					length = 0;
+					break;
+				}
+			}
 
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
