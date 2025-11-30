@@ -14,6 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef JSON_TALKER_H
 #define JSON_TALKER_H
 
+#include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
@@ -29,7 +30,11 @@ class BroadcastSocket;
 class JsonTalker {
 private:
     
-    static BroadcastSocket* _socket;
+    // The socket can't be static becaus different talkers may use different sockets (remote)
+    BroadcastSocket* _socket = nullptr;
+    // Pointer PRESERVE the polymorphism while objects don't!
+    static JsonTalker** _json_talkers;  // It's capable of communicate with other talkers (local)
+    static uint8_t _talker_count;
 
 public:
 
@@ -280,19 +285,40 @@ public:
             // Nothing to see here
         }
 
+
     void setSocket(BroadcastSocket* socket) {
         _socket = socket;
     }
+
+    static void connectTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
+        _json_talkers = json_talkers;
+        _talker_count = talker_count;
+    }
+
 
     const char* get_name() { return _name; }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
     
 
-
-
-
     bool remoteSend(JsonObject json_message, bool as_reply = false);
+
+
+    bool localSend(JsonObject json_message) {
+        json_message["f"] = _name;
+        json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
+        // Triggers all local Talkers to processes the json_message
+        bool pre_validated = false;
+        bool sent_message = false;
+        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+            if (_json_talkers[talker_i] != this) {  // Can't send to myself
+                pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+                sent_message = true;
+                if (!pre_validated) break;
+            }
+        }
+        return sent_message;
+    }
 
     
     bool processData(JsonObject json_message, bool pre_validated) {

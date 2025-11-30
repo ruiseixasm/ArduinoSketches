@@ -29,8 +29,8 @@ private:
 
 
     // Pointer PRESERVE the polymorphism while objects don't!
-    JsonTalker** _json_talkers = nullptr;   // Change to pointer-to-pointer
-    size_t _talker_count = 0;
+    JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
+    uint8_t _talker_count = 0;
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
     uint32_t _last_local_time = 0;
@@ -123,7 +123,7 @@ private:
         Serial.println(checksum);
         #endif
 
-        if (checksum > 0) {
+        if (checksum > 0) { // It's already 0
 
             // First, find how many digits
             uint16_t temp = checksum;
@@ -135,6 +135,9 @@ private:
             size_t data_i = length - 1;    // Old length (shorter)
             length += num_digits - 1;      // Discount the digit '0' already placed
             
+            if (length > BROADCAST_SOCKET_BUFFER_SIZE)
+                return length;  // buffer overflow
+
             bool at_c = false;
             for (size_t i = length - 1; data_i > 5; --i) {
                 
@@ -245,7 +248,7 @@ protected:
 
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
-                for (size_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
 
                     #ifdef BROADCASTSOCKET_DEBUG
                     Serial.print(F("Creating new JsonObject for talker: "));
@@ -283,10 +286,12 @@ protected:
     }
 
 
-    BroadcastSocket(JsonTalker** json_talkers, size_t talker_count)
+    BroadcastSocket(JsonTalker** json_talkers, uint8_t talker_count)
         : _json_talkers(json_talkers), _talker_count(talker_count) {
-            // Talker socket is static, shared by all talkers, so, only one needs to be set
-            if (_talker_count > 0) _json_talkers[0]->setSocket(this);
+            // Each talker has its remote connections, ONLY local connections are static
+            for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                _json_talkers[talker_i]->setSocket(this);
+            }
         }
 
 
@@ -320,44 +325,61 @@ public:
     bool remoteSend(JsonObject json_message, bool as_reply = false) {
 
         JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
-        if (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error)    // Skips response messages
+        if (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error) {
             json_message["i"] = (uint32_t)millis();
 
-        json_message["c"] = 0;
+        } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
+
+            #ifdef BROADCASTSOCKET_DEBUG
+            Serial.print(F("R: Response message without an identifier (i)"));
+            serializeJson(json_message, Serial);
+            Serial.println();  // optional: just to add a newline after the JSON
+            #endif
+
+            return false;
+        }
+
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
-
         #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("S1: "));
-        Serial.write(_sending_buffer, length);
-        Serial.println();
+        Serial.print(F("R: "));
+        serializeJson(json_message, Serial);
+        Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-        length = insertChecksum(length);
-        
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("S2: "));
-        Serial.write(_sending_buffer, length);
-        Serial.println();
-        #endif
-
-        if (length == 0) {
+        if (length < 3*4 + 2) {
 
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.println(F("Error: Serialization failed"));
             #endif
 
             return false;
-        } else {
-            
+        }
+
+        #ifdef BROADCASTSOCKET_DEBUG
+        Serial.print(F("S: "));
+        Serial.write(_sending_buffer, length);
+        Serial.println();
+        #endif
+
+        length = insertChecksum(length);
+        
+        if (length > BROADCAST_SOCKET_BUFFER_SIZE) {
+
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("T: "));
-            serializeJson(json_message, Serial);
-            Serial.println();  // optional: just to add a newline after the JSON
+            Serial.println(F("Error: Message too big"));
             #endif
 
-            return send(length, as_reply);
+            return false;
         }
+
+        #ifdef BROADCASTSOCKET_DEBUG
+        Serial.print(F("T: "));
+        Serial.write(_sending_buffer, length);
+        Serial.println();
+        #endif
+        
+        return send(length, as_reply);
     }
     
 
