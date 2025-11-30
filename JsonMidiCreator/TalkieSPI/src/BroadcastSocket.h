@@ -362,8 +362,15 @@ public:
         return 0;
     }
 
+
+    virtual bool remoteJsonMessage(JsonObject json_message, bool as_reply = false) {
+
+        // Give a chance for subclasses process it
+        return true;
+    }
+
     
-    virtual bool remoteSend(JsonObject json_message, bool as_reply = false) {
+    bool remoteSend(JsonObject json_message, bool as_reply = false) {
 
         JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
         if (message_code != JsonTalker::MessageCode::ECHO && message_code != JsonTalker::MessageCode::ERROR) {
@@ -380,6 +387,10 @@ public:
             return false;
         }
 
+        // Give a chance for subclasses process it
+        if (!remoteJsonMessage(json_message, as_reply))
+            return false;
+
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
         #ifdef BROADCASTSOCKET_DEBUG
@@ -387,7 +398,6 @@ public:
         serializeJson(json_message, Serial);
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
-
 
         return send(length, as_reply);
     }
