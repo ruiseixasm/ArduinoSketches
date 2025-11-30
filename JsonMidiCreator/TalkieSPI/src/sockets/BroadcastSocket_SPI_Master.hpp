@@ -97,7 +97,7 @@ protected:
             delayMicroseconds(send_delay_us);
                 
             // Starts to receive all chars here
-            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
+            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {	// First char is a control byte
                 delayMicroseconds(receive_delay_us);
                 if (i > 0) {    // The first response is discarded
                     c = SPI.transfer(_receiving_buffer[i - 1]);
@@ -119,7 +119,7 @@ protected:
                         length = 1;
                         break;
                     }
-                    _receiving_buffer[0] = c;   // Dummy char, not intended to be processed
+                    _receiving_buffer[0] = c;   // First char received
                 }
             }
 

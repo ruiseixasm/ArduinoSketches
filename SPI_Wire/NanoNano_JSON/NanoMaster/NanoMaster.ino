@@ -115,7 +115,6 @@ size_t receiveString() {
     uint8_t c; // Avoid using 'char' while using values above 127
     _receiving_buffer[0] = '\0'; // Avoids garbage printing
 
-
     for (size_t r = 0; length == 0 && r < 3; r++) {
   
         digitalWrite(SS_PIN, LOW);
@@ -126,12 +125,11 @@ size_t receiveString() {
         delayMicroseconds(send_delay_us);
             
         // Starts to receive all chars here
-        for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
+        for (uint8_t i = 0; i < BUFFER_SIZE; i++) {	// First char is a control byte
             delayMicroseconds(receive_delay_us);
             if (i > 0) {    // The first response is discarded
                 c = SPI.transfer(_receiving_buffer[i - 1]);
                 if (c == END) {
-                    _receiving_buffer[i] = '\0'; // Implicit char
                     length = i;
                     break;
                 } else if (c == ERROR) {
@@ -148,7 +146,7 @@ size_t receiveString() {
                     length = 1;
                     break;
                 }
-                _receiving_buffer[0] = c;   // Dummy char, not intended to be processed
+                _receiving_buffer[0] = c;   // First char received
             }
         }
 
