@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../BroadcastSocket.h"
 
-// #define BROADCAST_ETHERNETENC_DEBUG
+#define BROADCAST_ETHERNETENC_DEBUG
 
 
 #define ENABLE_DIRECT_ADDRESSING
@@ -48,47 +48,51 @@ protected:
         : BroadcastSocket(json_talkers, talker_count) {}
 
 
-    bool send(size_t length, bool as_reply = false) override {
+    size_t send(size_t length, bool as_reply = false) override {
         if (_udp == nullptr) return false;
 
         // Need to call homologous method in super class first
-        BroadcastSocket::send(length, as_reply); // Very important pre processing !!
+        length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
 
-        IPAddress broadcastIP(255, 255, 255, 255);
-        
-        #ifdef ENABLE_DIRECT_ADDRESSING
-        if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.println(F("Failed to begin packet"));
+        if (length > 0) {
+
+            IPAddress broadcastIP(255, 255, 255, 255);
+            
+            #ifdef ENABLE_DIRECT_ADDRESSING
+            if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
+                #ifdef BROADCAST_ETHERNETENC_DEBUG
+                Serial.println(F("Failed to begin packet"));
+                #endif
+                return 0;
+            }
+            #else
+            if (!_udp->beginPacket(broadcastIP, _port)) {
+                #ifdef BROADCAST_ETHERNETENC_DEBUG
+                Serial.println(F("Failed to begin packet"));
+                #endif
+                return 0;
+            }
             #endif
-            return false;
-        }
-        #else
-        if (!_udp->beginPacket(broadcastIP, _port)) {
+
+            size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(_sending_buffer), length);
+            (void)bytesSent; // Silence unused variable warning
+
+            if (!_udp->endPacket()) {
+                #ifdef BROADCAST_ETHERNETENC_DEBUG
+                Serial.println(F("Failed to end packet"));
+                #endif
+                return 0;
+            }
+
             #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.println(F("Failed to begin packet"));
+            Serial.print(F("B: "));
+            Serial.write(_sending_buffer, length);
+            Serial.println();
             #endif
-            return false;
-        }
-        #endif
 
-        size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(_sending_buffer), length);
-        (void)bytesSent; // Silence unused variable warning
-
-        if (!_udp->endPacket()) {
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.println(F("Failed to end packet"));
-            #endif
-            return false;
         }
 
-        #ifdef BROADCAST_ETHERNETENC_DEBUG
-        Serial.print(F("S: "));
-        Serial.write(_sending_buffer, length);
-        Serial.println();
-        #endif
-
-        return true;
+        return length;
     }
 
 
@@ -129,7 +133,7 @@ public:
             Serial.print(F(":"));
             Serial.print(_udp->remotePort());
             Serial.print(F(" -> "));
-            Serial.println(_received_data);
+            Serial.println(_receiving_buffer);
             #endif
             
             _source_ip = _udp->remoteIP();

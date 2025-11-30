@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonTalker.h"
 
 
-// #define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -119,7 +119,7 @@ private:
         uint16_t checksum = generateChecksum(_sending_buffer, length);
 
         #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("S: Checksum is: "));
+        Serial.print(F("I: Checksum is: "));
         Serial.println(checksum);
         #endif
 
@@ -306,7 +306,7 @@ protected:
 
 
     // NOT Pure virtual methods anymores (= 0;)
-    virtual bool send(size_t length, bool as_reply = false) {
+    virtual size_t send(size_t length, bool as_reply = false) {
         (void)as_reply; // Silence unused parameter warning
 
 
@@ -316,7 +316,7 @@ protected:
             Serial.println(F("Error: Serialization failed"));
             #endif
 
-            return false;
+            return 0;
         }
 
         #ifdef BROADCASTSOCKET_DEBUG
@@ -333,7 +333,7 @@ protected:
             Serial.println(F("Error: Message too big"));
             #endif
 
-            return false;
+            return 0;
         }
 
         #ifdef BROADCASTSOCKET_DEBUG
@@ -343,7 +343,7 @@ protected:
         #endif
         
 
-        return true;
+        return length;
     }
 
 
