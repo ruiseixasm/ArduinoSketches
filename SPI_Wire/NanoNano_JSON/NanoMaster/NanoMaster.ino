@@ -75,14 +75,22 @@ size_t sendString(const char* command) {
             if (i > 0) {
 				if (command[i - 1] == '\0') {
 					c = SPI.transfer(END);
+					if (c == '\0') {
+						length = i;
+						break;
+					} else {
+						SPI.transfer(ERROR);
+						length = 0;
+						break;
+					}
 				} else {
 					c = SPI.transfer(command[i]);	// Receives the command[i - 1]
 				}
                 if (c != command[i - 1]) {    // Excludes NACK situation
+					SPI.transfer(ERROR);
                     length = 0;
 					break;
 				}
-				length = i;
             } else {
                 c = SPI.transfer(command[0]);	// Doesn't check first char
             }
