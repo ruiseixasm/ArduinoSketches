@@ -166,42 +166,12 @@ protected:
     static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 
-    
-    virtual bool remoteReceive(size_t length) {
 
-        // Triggers all Talkers to processes the received data
-        bool pre_validated = false;
-        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+    virtual bool remoteReceive(JsonObject json_message, JsonTalker* talker, bool pre_validated) {
 
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("Creating new JsonObject for talker: "));
-            Serial.println(_json_talkers[talker_i]->get_name());
-            #endif
-            
-            // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-            #if ARDUINOJSON_VERSION_MAJOR >= 7
-            JsonDocument message_doc;
-            #else
-            StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
-            #endif
-
-            DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
-            if (error) {
-                #ifdef BROADCASTSOCKET_DEBUG
-                Serial.println(F("Failed to deserialize received data"));
-                #endif
-                return false;
-            }
-            JsonObject json_message = message_doc.as<JsonObject>();
-
-
-            pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
-            if (!pre_validated) break;
-        }
-
-        return true;
+        return talker->processData(json_message, pre_validated);
     }
-
+    
 
     size_t triggerTalkers(size_t length) {
 
@@ -244,7 +214,7 @@ protected:
                 
                 if (_max_delay_ms > 0) {
 
-                    JsonTalker::MessageCode message_code = static_cast<MessageCode>(message_code_int);
+                    JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(message_code_int);
 
                     if (!(message_code < JsonTalker::MessageCode::RUN || message_code > JsonTalker::MessageCode::GET)) {
 
@@ -283,7 +253,33 @@ protected:
                 }
 
                 // Triggers all Talkers to processes the received data
-                remoteReceive(length);
+                bool pre_validated = false;
+                for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+
+                    #ifdef BROADCASTSOCKET_DEBUG
+                    Serial.print(F("Creating new JsonObject for talker: "));
+                    Serial.println(_json_talkers[talker_i]->get_name());
+                    #endif
+                    
+                    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+                    #if ARDUINOJSON_VERSION_MAJOR >= 7
+                    JsonDocument message_doc;
+                    #else
+                    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+                    #endif
+
+                    DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
+                    if (error) {
+                        #ifdef BROADCASTSOCKET_DEBUG
+                        Serial.println(F("Failed to deserialize received data"));
+                        #endif
+                        return 0;
+                    }
+                    JsonObject json_message = message_doc.as<JsonObject>();
+
+                    pre_validated = remoteReceive(json_message, _json_talkers[talker_i], pre_validated);
+                    if (!pre_validated) break;
+                }
                 
             } else {
                 #ifdef BROADCASTSOCKET_DEBUG
