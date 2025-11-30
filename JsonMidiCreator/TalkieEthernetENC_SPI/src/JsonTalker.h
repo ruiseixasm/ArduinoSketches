@@ -387,10 +387,10 @@ public:
         #endif
 
 
-        MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
+        MessageCode message_code = json_message["m"].as<int>();
         json_message["w"] = json_message["m"].as<int>();
         json_message["t"] = json_message["f"];
-        json_message["m"] = static_cast<int>(MessageCode::ECHO);
+        json_message["m"] = MessageCode::ECHO;
 
         switch (message_code)
         {
@@ -412,21 +412,21 @@ public:
             
                 const Manifesto& my_manifesto = get_manifesto();
 
-                json_message["w"] = static_cast<int>(MessageCode::RUN);
+                json_message["w"] = MessageCode::RUN;
                 for (size_t i = 0; i < my_manifesto.runs_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.runs[i].name;
                     json_message["d"] = my_manifesto.runs[i].desc;
                     remoteSend(json_message, true);
                 }
-                json_message["w"] = static_cast<int>(MessageCode::SET);
+                json_message["w"] = MessageCode::SET;
                 for (size_t i = 0; i < my_manifesto.sets_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.sets[i].name;
                     json_message["d"] = my_manifesto.sets[i].desc;
                     remoteSend(json_message, true);
                 }
-                json_message["w"] = static_cast<int>(MessageCode::GET);
+                json_message["w"] = MessageCode::GET;
                 for (size_t i = 0; i < my_manifesto.gets_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.gets[i].name;
