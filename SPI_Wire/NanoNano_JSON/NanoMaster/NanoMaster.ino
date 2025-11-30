@@ -131,14 +131,14 @@ size_t receiveString() {
         delayMicroseconds(send_delay_us);
             
         // Starts to receive all chars here
-        for (uint8_t i = 0; c != NACK && i < BUFFER_SIZE; i++) {	// First char is a control byte
+        for (uint8_t i = 0; i < BUFFER_SIZE; i++) {	// First char is a control byte
             delayMicroseconds(receive_delay_us);
             if (i > 0) {    // The first response is discarded
                 c = SPI.transfer(_receiving_buffer[i - 1]);
                 if (c == END) {
                     length = i;
                     break;
-                } else if (c == ERROR) {
+                } else if (c == ERROR || c == NACK) {
                     _receiving_buffer[0] = '\0'; // Implicit char
                     length = 0;
                     break;
@@ -151,14 +151,12 @@ size_t receiveString() {
                     _receiving_buffer[0] = '\0'; // Implicit char
                     length = 1;
                     break;
+                } else if (c == NACK) {
+                    _receiving_buffer[0] = '\0'; // Implicit char
+                    length = 0;
                 }
                 _receiving_buffer[0] = c;   // First char received
             }
-        }
-
-        if (c == NACK) {
-            _receiving_buffer[0] = '\0'; // Implicit char
-            length = 0;
         }
 
         delayMicroseconds(5);
