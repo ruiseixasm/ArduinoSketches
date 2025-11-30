@@ -103,10 +103,10 @@ bool sendString(const char* command) {
         } else {
             Serial.print("Command NOT successfully sent on try: ");
             Serial.println(s + 1);
-            // Serial.println("BUZZER activated for 10ms!");
-            // digitalWrite(BUZZ_PIN, HIGH);
-            // delay(10);  // Buzzer on for 10ms
-            // digitalWrite(BUZZ_PIN, LOW);
+            Serial.println("BUZZER activated for 10ms!");
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(10);  // Buzzer on for 10ms
+            digitalWrite(BUZZ_PIN, LOW);
         }
     }
 
@@ -177,14 +177,14 @@ bool receiveString() {
         } else {
             Serial.print("Message NOT successfully received on try: ");
             Serial.println(r + 1);
-            // Serial.println("BUZZER activated for 2 x 10ms!");
-            // digitalWrite(BUZZ_PIN, HIGH);
-            // delay(10);  // Buzzer on for 10ms
-            // digitalWrite(BUZZ_PIN, LOW);
-            // delay(100);
-            // digitalWrite(BUZZ_PIN, HIGH);
-            // delay(10);  // Buzzer on for 10ms
-            // digitalWrite(BUZZ_PIN, LOW);
+            Serial.println("BUZZER activated for 2 x 10ms!");
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(10);  // Buzzer on for 10ms
+            digitalWrite(BUZZ_PIN, LOW);
+            delay(100);
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(10);  // Buzzer on for 10ms
+            digitalWrite(BUZZ_PIN, LOW);
         }
     }
 
