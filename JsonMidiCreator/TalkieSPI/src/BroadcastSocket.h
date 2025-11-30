@@ -303,7 +303,7 @@ protected:
 
     // NOT Pure virtual methods anymores (= 0;)
     virtual size_t send(size_t length, bool as_reply = false) {
-        (void)as_reply; // Silence unused parameter warning
+        // (void)as_reply; // Silence unused parameter warning
 
 
         if (length < 3*4 + 2) {
@@ -364,6 +364,8 @@ public:
 
 
     virtual bool sendJsonMessage(JsonObject json_message, bool as_reply = false) {
+        // (void)json_message; // Silence unused parameter warning
+        // (void)as_reply; // Silence unused parameter warning
 
         // Give a chance for subclasses process it
         return true;
