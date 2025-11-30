@@ -21,9 +21,9 @@ const int BUZZ_PIN = 2; // External BUZZER pin
 const int SS_PIN = 10;  // Slave Select pin
 
 #define BUFFER_SIZE 128
-char receiving_buffer[BUFFER_SIZE] = {'\0'};
-byte receiving_index = 0;   // No interrupts, so, not volatile
-bool receiving_state = true;
+char _receiving_buffer[BUFFER_SIZE] = {'\0'};
+uint8_t _receiving_index = 0;   // No interrupts, so, not volatile
+bool _receiving_state = true;
 
 
 void setup() {
@@ -61,9 +61,9 @@ void loop() {
 
 bool sendString(const char* command) {
     uint8_t c; // Avoid using 'char' while using values above 127
-    receiving_buffer[0] = '\0'; // Avoids garbage printing
-    receiving_state = false;
-    receiving_index = 0;
+    _receiving_buffer[0] = '\0'; // Avoids garbage printing
+    _receiving_state = false;
+    _receiving_index = 0;
 
     
     bool successfully_sent = false; // It has to start as false to enter in the next loop
@@ -118,9 +118,9 @@ bool sendString(const char* command) {
 
 bool receiveString() {
     uint8_t c; // Avoid using 'char' while using values above 127
-    receiving_buffer[0] = '\0'; // Avoids garbage printing
-    receiving_state = false;
-    receiving_index = 0;
+    _receiving_buffer[0] = '\0'; // Avoids garbage printing
+    _receiving_state = false;
+    _receiving_index = 0;
 
 
     bool successfully_received = false; // It has to start as false to enter in the next loop
@@ -140,27 +140,27 @@ bool receiveString() {
         for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
             delayMicroseconds(receive_delay_us);
             if (i > 0) {    // The first response is discarded
-                c = SPI.transfer(receiving_buffer[i - 1]);
+                c = SPI.transfer(_receiving_buffer[i - 1]);
                 if (c == END) {
-                    receiving_buffer[i] = '\0'; // Implicit char
-                    receiving_index = i;
+                    _receiving_buffer[i] = '\0'; // Implicit char
+                    _receiving_index = i;
                     break;
                 } else if (c == ERROR) {
-                    receiving_buffer[0] = '\0'; // Implicit char
-                    receiving_index = 0;
+                    _receiving_buffer[0] = '\0'; // Implicit char
+                    _receiving_index = 0;
                     successfully_received = false;
                     break;
                 } else {
-                    receiving_buffer[i] = c;
+                    _receiving_buffer[i] = c;
                 }
             } else {
                 c = SPI.transfer('\0');   // Dummy char, not intended to be processed
                 if (c == NONE) {
-                    receiving_buffer[0] = '\0'; // Implicit char
-                    receiving_index = 0;
+                    _receiving_buffer[0] = '\0'; // Implicit char
+                    _receiving_index = 0;
                     break;
                 }
-                receiving_buffer[0] = c;   // Dummy char, not intended to be processed
+                _receiving_buffer[0] = c;   // Dummy char, not intended to be processed
             }
         }
 
@@ -168,9 +168,9 @@ bool receiveString() {
         digitalWrite(SS_PIN, HIGH);
 
         if (successfully_received) {
-            if (receiving_index > 0) {
+            if (_receiving_index > 0) {
                 Serial.print("Received message: ");
-                Serial.println(receiving_buffer);
+                Serial.println(_receiving_buffer);
             } else {
                 Serial.println("Nothing received");
             }
