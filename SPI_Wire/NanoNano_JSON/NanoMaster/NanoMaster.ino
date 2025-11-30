@@ -154,6 +154,7 @@ size_t receiveString() {
                 } else if (c == NACK) {
                     _receiving_buffer[0] = '\0'; // Implicit char
                     length = 0;
+                    break;
                 }
                 _receiving_buffer[0] = c;   // First char received
             }
