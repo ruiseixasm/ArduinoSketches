@@ -73,26 +73,24 @@ size_t sendString(const char* command) {
         // RECEIVE message code
         for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
             if (i > 0) {
-                c = SPI.transfer(command[i]);
-                if (c != command[i - 1])    // Includes NACK situation
+				if (command[i - 1] == '\0') {
+					c = SPI.transfer(END);
+				} else {
+					c = SPI.transfer(command[i]);	// Receives the command[i - 1]
+				}
+                if (c != command[i - 1]) {    // Excludes NACK situation
                     length = 0;
+					break;
+				}
+				length = i;
             } else {
-                c = SPI.transfer(command[0]);
+                c = SPI.transfer(command[0]);	// Doesn't check first char
             }
             delayMicroseconds(send_delay_us);
-            // Don't make '\0' implicit in order to not have to change the SPDR on the slave side!!
             if (c == NACK) {
                 length = 0;
                 break;
-            } else if (command[i - 1] == '\0') {
-                c = SPI.transfer(END);
-                if (c != '\0') {    // Because the last char is always '\0' (Includes NACK situation)
-                    length = 0;
-                } else {
-                    length = i;
-                }
-				break;
-			}
+            }
         }
 
         delayMicroseconds(5);
@@ -103,10 +101,10 @@ size_t sendString(const char* command) {
         } else {
             Serial.print("Command NOT successfully sent on try: ");
             Serial.println(s + 1);
-            Serial.println("BUZZER activated for 10ms!");
-            digitalWrite(BUZZ_PIN, HIGH);
-            delay(10);  // Buzzer on for 10ms
-            digitalWrite(BUZZ_PIN, LOW);
+            // Serial.println("BUZZER activated for 10ms!");
+            // digitalWrite(BUZZ_PIN, HIGH);
+            // delay(10);  // Buzzer on for 10ms
+            // digitalWrite(BUZZ_PIN, LOW);
         }
     }
 
@@ -173,14 +171,14 @@ size_t receiveString() {
         } else {
             Serial.print("Message NOT successfully received on try: ");
             Serial.println(r + 1);
-            Serial.println("BUZZER activated for 2 x 10ms!");
-            digitalWrite(BUZZ_PIN, HIGH);
-            delay(10);  // Buzzer on for 10ms
-            digitalWrite(BUZZ_PIN, LOW);
-            delay(100);
-            digitalWrite(BUZZ_PIN, HIGH);
-            delay(10);  // Buzzer on for 10ms
-            digitalWrite(BUZZ_PIN, LOW);
+            // Serial.println("BUZZER activated for 2 x 10ms!");
+            // digitalWrite(BUZZ_PIN, HIGH);
+            // delay(10);  // Buzzer on for 10ms
+            // digitalWrite(BUZZ_PIN, LOW);
+            // delay(200);
+            // digitalWrite(BUZZ_PIN, HIGH);
+            // delay(10);  // Buzzer on for 10ms
+            // digitalWrite(BUZZ_PIN, LOW);
         }
     }
 
