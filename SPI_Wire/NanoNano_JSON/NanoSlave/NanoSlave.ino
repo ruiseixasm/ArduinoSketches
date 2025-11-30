@@ -81,11 +81,12 @@ ISR(SPI_STC_vect) {
     if (c == RECEIVE) {
         _receiving_state = true;
         _receiving_index = 0;
+        SPDR = ACK;
     } else if (c == SEND) {
         _sending_index = 0;
         if (_sending_buffer[_sending_index] == '\0') {
             SPDR = NONE;    // Nothing to send
-        } else {
+        } else {    // Starts sending right away, so, no ACK
             SPDR = _sending_buffer[_sending_index++];
             _sending_state = true;
         }
@@ -106,9 +107,11 @@ ISR(SPI_STC_vect) {
     } else if (c == END) {
         _receiving_state = false;
         _process_message = true;
+        SPDR = ACK;
     } else if (_receiving_state) {
         if (_receiving_index < BUFFER_SIZE) {
             _receiving_buffer[_receiving_index++] = c;
+            // Returns same received char as receiving confirmation (no need to set SPDR)
         } else {
             _receiving_state = false;
             SPDR = ERROR;
