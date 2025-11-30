@@ -16,7 +16,8 @@ enum MessageCode : uint8_t {
 
 
 // Pin definitions
-const int LED_PIN = 2;
+const int GREEN_LED_PIN = 2;
+const int YELLOW_LED_PIN = 21;  // A7 = digital pin 21
 const int SS_PIN = 10;
 
 #define BUFFER_SIZE 128
@@ -36,11 +37,13 @@ void setup() {
     delay(500);
     Serial.println("\n\nSPI Slave Ready - Half-Duplex Mode");
 
-    Serial.print("LED_PIN: ");
-    Serial.println(LED_PIN);
+    Serial.print("GREEN_LED_PIN: ");
+    Serial.println(GREEN_LED_PIN);
 
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
+    pinMode(GREEN_LED_PIN, OUTPUT);
+    digitalWrite(GREEN_LED_PIN, LOW);
+    pinMode(YELLOW_LED_PIN, OUTPUT);
+    digitalWrite(YELLOW_LED_PIN, LOW);
 
     pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
 
@@ -118,13 +121,13 @@ void processMessage() {
 
 
     if (strcmp(receiving_buffer, "LED_ON") == 0) {
-        digitalWrite(LED_PIN, HIGH);
+        digitalWrite(GREEN_LED_PIN, HIGH);
         strcpy(sending_buffer, "OK_ON");
         Serial.print("LED is ON");
         Serial.print(" | Sending: ");
         Serial.println(sending_buffer);
     } else if (strcmp(receiving_buffer, "LED_OFF") == 0) {
-        digitalWrite(LED_PIN, LOW);
+        digitalWrite(GREEN_LED_PIN, LOW);
         strcpy(sending_buffer, "OK_OFF");
         Serial.print("LED is OFF");
         Serial.print(" | Sending: ");
