@@ -73,6 +73,7 @@ protected:
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
     uint8_t _channel = 0;
+    bool _muted = false;
 
 
     // Can't use method reference because these type of references are class designation dependent,
@@ -110,6 +111,8 @@ protected:
 
     bool localSend(JsonObject json_message, bool as_reply = false) {
         (void)as_reply; // Silence unused parameter warning
+
+        if (_muted) return false;
 
         json_message["f"] = _name;
         json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
@@ -333,6 +336,9 @@ public:
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
     
+    void mute() { _muted = true; }
+    void unmute() { _muted = false; }
+
     
     bool processData(JsonObject json_message, bool pre_validated) {
 
