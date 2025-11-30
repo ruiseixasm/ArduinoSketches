@@ -62,9 +62,6 @@ void loop() {
 size_t sendString(const char* command) {
     size_t length = 0;	// No interrupts, so, not volatile
     uint8_t c; // Avoid using 'char' while using values above 127
-    _receiving_buffer[0] = '\0'; // Avoids garbage printing
-    _receiving_state = false;
-    _receiving_index = 0;
 
     for (size_t s = 0; length == 0 && s < 3; s++) {
   
