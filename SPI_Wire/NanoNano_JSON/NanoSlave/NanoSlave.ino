@@ -90,6 +90,11 @@ ISR(SPI_STC_vect) {
             SPDR = _sending_buffer[_sending_index++];
             _sending_state = true;
         }
+    } else if (c == ERROR) {
+        _receiving_state = false;
+        _process_message = false;
+		_sending_state = false;
+        SPDR = ACK;
     } else if (_sending_state) {
         if (_sending_index > 1 && c != _sending_buffer[_sending_index - 2]) {  // Two messages delay
             _sending_state = false;
@@ -116,11 +121,6 @@ ISR(SPI_STC_vect) {
             _receiving_state = false;
             SPDR = ERROR;
         }
-    } else if (c == ERROR) {
-        _receiving_state = false;
-        _process_message = false;
-		_sending_state = false;
-        SPDR = ACK;
     } else {
         SPDR = NACK;
     }
