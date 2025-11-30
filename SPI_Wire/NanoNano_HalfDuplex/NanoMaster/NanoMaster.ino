@@ -79,17 +79,19 @@ bool sendString(const char* command) {
         delayMicroseconds(send_delay_us);
         
         // RECEIVE message code
-        uint8_t last_sent = RECEIVE;
         for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
-            if (SPI.transfer(command[i]) != last_sent)
-                successfully_sent = false;
-            last_sent = command[i];
+            if (i > 0) {
+                if (SPI.transfer(command[i]) != command[i - 1])
+                    successfully_sent = false;
+            } else {
+                SPI.transfer(command[0]);
+            }
             delayMicroseconds(send_delay_us);
             // Don't make '\0' implicit in order to not have to change the SPDR on the slave side!!
             if (command[i] == '\0') break;
         }
 
-        if (SPI.transfer(END) != last_sent)
+        if (SPI.transfer(END) != '\0')  // Because the last char is always '\0'
             successfully_sent = false;
 
         delayMicroseconds(5);
