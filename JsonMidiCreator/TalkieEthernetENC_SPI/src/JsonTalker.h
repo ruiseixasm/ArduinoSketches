@@ -387,7 +387,7 @@ public:
         #endif
 
 
-        MessageCode message_code = json_message["m"].as<int>();
+        MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
         json_message["w"] = json_message["m"].as<int>();
         json_message["t"] = json_message["f"];
         json_message["m"] = MessageCode::ECHO;
