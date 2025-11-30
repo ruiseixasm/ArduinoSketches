@@ -80,7 +80,15 @@ ISR(SPI_STC_vect) {
 
     if (c < 128) {  // If it's a typical ASCII char
 
-        if (_sending_state) {
+        if (_receiving_state) {
+            if (_receiving_index < BUFFER_SIZE) {
+                _receiving_buffer[_receiving_index++] = c;
+                // Returns same received char as receiving confirmation (no need to set SPDR)
+            } else {
+                _receiving_state = false;
+                SPDR = ERROR;
+            }
+        } else if (_sending_state) {
             if (_sending_index > 1 && c != _sending_buffer[_sending_index - 2]) {  // Two messages delay
                 _sending_state = false;
                 SPDR = ERROR;
@@ -92,14 +100,6 @@ ISR(SPI_STC_vect) {
                 SPDR = _sending_buffer[_sending_index++];
             } else {
                 _sending_state = false;
-                SPDR = ERROR;
-            }
-        } else if (_receiving_state) {
-            if (_receiving_index < BUFFER_SIZE) {
-                _receiving_buffer[_receiving_index++] = c;
-                // Returns same received char as receiving confirmation (no need to set SPDR)
-            } else {
-                _receiving_state = false;
                 SPDR = ERROR;
             }
         } else {
