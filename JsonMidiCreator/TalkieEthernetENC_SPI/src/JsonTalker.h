@@ -112,8 +112,6 @@ protected:
     bool localSend(JsonObject json_message, bool as_reply = false) {
         (void)as_reply; // Silence unused parameter warning
 
-        if (_muted) return false;
-
         json_message["f"] = _name;
         json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
         // Triggers all local Talkers to processes the json_message
