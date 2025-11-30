@@ -104,6 +104,26 @@ protected:
         return _manifesto;
     }
 
+
+    bool remoteSend(JsonObject json_message, bool as_reply = false);
+
+
+    bool localSend(JsonObject json_message) {
+        json_message["f"] = _name;
+        json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
+        // Triggers all local Talkers to processes the json_message
+        bool pre_validated = false;
+        bool sent_message = false;
+        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+            if (_json_talkers[talker_i] != this) {  // Can't send to myself
+                pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+                sent_message = true;
+                if (!pre_validated) break;
+            }
+        }
+        return sent_message;
+    }
+
     
     long _total_runs = 0;
     // static becaus it's a shared state among all other talkers, device (board) parameter
@@ -300,26 +320,6 @@ public:
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
     
-
-    bool remoteSend(JsonObject json_message, bool as_reply = false);
-
-
-    bool localSend(JsonObject json_message) {
-        json_message["f"] = _name;
-        json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
-        // Triggers all local Talkers to processes the json_message
-        bool pre_validated = false;
-        bool sent_message = false;
-        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-            if (_json_talkers[talker_i] != this) {  // Can't send to myself
-                pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
-                sent_message = true;
-                if (!pre_validated) break;
-            }
-        }
-        return sent_message;
-    }
-
     
     bool processData(JsonObject json_message, bool pre_validated) {
 
