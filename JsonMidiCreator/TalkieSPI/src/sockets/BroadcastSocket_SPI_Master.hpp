@@ -131,6 +131,8 @@ protected:
             digitalWrite(ss_pin, HIGH);
         }
 
+        if (length > 0)
+            length--;   // removes the '\0' from the length as final value
         return length;
     }
 
@@ -182,6 +184,8 @@ protected:
             digitalWrite(ss_pin, HIGH);
         }
 
+        if (length > 0)
+            length--;   // removes the '\0' from the length as final value
         return length;
     }
 

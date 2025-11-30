@@ -116,6 +116,8 @@ size_t sendString(const char* command) {
         }
     }
 
+    if (length > 0)
+        length--;   // removes the '\0' from the length as final value
     return length;
 }
 
@@ -190,6 +192,8 @@ size_t receiveString() {
         }
     }
 
+    if (length > 0)
+        length--;   // removes the '\0' from the length as final value
     return length;
 }
 
