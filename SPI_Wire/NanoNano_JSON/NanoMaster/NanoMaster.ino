@@ -142,7 +142,7 @@ size_t receiveString() {
                     _receiving_buffer[i] = c;
                 }
             } else {
-                c = SPI.transfer('\0');   // Dummy char, not intended to be processed
+                c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
                 if (c == NONE) {
                     _receiving_buffer[0] = '\0'; // Implicit char
                     length = 1;
