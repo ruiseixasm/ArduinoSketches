@@ -47,18 +47,6 @@ protected:
     BroadcastSocket_EthernetENC(JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {}
 
-public:
-
-    // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_EthernetENC& instance(JsonTalker** json_talkers, uint8_t talker_count) {
-        static BroadcastSocket_EthernetENC instance(json_talkers, talker_count);
-        return instance;
-    }
-
-    void set_port(uint16_t port) {
-        _port = port;
-    }
-    
 
     bool send(size_t length, bool as_reply = false) override {
         if (_udp == nullptr) return false;
@@ -100,6 +88,20 @@ public:
         return true;
     }
 
+
+public:
+
+    // Move ONLY the singleton instance method to subclass
+    static BroadcastSocket_EthernetENC& instance(JsonTalker** json_talkers, uint8_t talker_count) {
+        static BroadcastSocket_EthernetENC instance(json_talkers, talker_count);
+        return instance;
+    }
+
+    
+    void set_port(uint16_t port) {
+        _port = port;
+    }
+    
 
     size_t receive() override {
         if (_udp == nullptr) return 0;
