@@ -130,10 +130,10 @@ protected:
     }
 
 
-    size_t sendString(const char* command, int ss_pin) {
+    size_t sendString(int ss_pin) {
         size_t length = 0;   // No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
-        _receiving_buffer[0] = '\0'; // Avoids garbage printing
+        _sending_buffer[0] = '\0'; // Avoids garbage printing
 
         for (size_t s = 0; length == 0 && s < 3; s++) {
     
@@ -147,14 +147,14 @@ protected:
             // RECEIVE message code
             for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
                 if (i > 0) {
-                    if (SPI.transfer(command[i]) != command[i - 1])
+                    if (SPI.transfer(_sending_buffer[i]) != _sending_buffer[i - 1])
                         length = 0;
                 } else {
-                    SPI.transfer(command[0]);
+                    SPI.transfer(_sending_buffer[0]);
                 }
                 delayMicroseconds(send_delay_us);
                 // Don't make '\0' implicit in order to not have to change the SPDR on the slave side!!
-                if (command[i] == '\0') {
+                if (_sending_buffer[i] == '\0') {
                     length = i + 1;
                     break;
                 }
