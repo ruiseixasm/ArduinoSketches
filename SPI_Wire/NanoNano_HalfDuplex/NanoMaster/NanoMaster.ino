@@ -100,12 +100,12 @@ bool sendString(const char* command) {
         if (successfully_sent) {
             Serial.println("Command successfully sent");
         } else {
-            digitalWrite(BUZZ_PIN, HIGH);
-            delay(10);  // Buzzer on for 10ms
-            digitalWrite(BUZZ_PIN, LOW);
             Serial.print("Command NOT successfully sent on try: ");
             Serial.println(s + 1);
             Serial.println("BUZZER activated for 10ms!");
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(10);  // Buzzer on for 10ms
+            digitalWrite(BUZZ_PIN, LOW);
         }
     }
 
@@ -122,64 +122,69 @@ bool receiveString() {
     receiving_index = 0;
 
 
-    bool successfully_received = true;
+    bool successfully_received = false; // It has to start as false to enter in the next loop
 
-    
-    digitalWrite(SS_PIN, LOW);
-    delayMicroseconds(5);
+    for (size_t r = 0; !successfully_received && r < 3; r++) {
+  
+        successfully_received = true;
 
-    // Asks the receiver to start receiving
-    c = SPI.transfer(SEND);
-    delayMicroseconds(send_delay_us);
-        
-    // Starts to receive all chars here
-    for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
-        delayMicroseconds(receive_delay_us);
-        if (i > 0) {    // The first response is discarded
-            c = SPI.transfer(receiving_buffer[i - 1]);
-            if (c == END) {
-                receiving_buffer[i] = '\0'; // Implicit char
-                receiving_index = i;
-                break;
-            } else if (c == ERROR) {
-                receiving_buffer[0] = '\0'; // Implicit char
-                receiving_index = 0;
-                successfully_received = false;
-                break;
+        digitalWrite(SS_PIN, LOW);
+        delayMicroseconds(5);
+
+        // Asks the receiver to start receiving
+        c = SPI.transfer(SEND);
+        delayMicroseconds(send_delay_us);
+            
+        // Starts to receive all chars here
+        for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
+            delayMicroseconds(receive_delay_us);
+            if (i > 0) {    // The first response is discarded
+                c = SPI.transfer(receiving_buffer[i - 1]);
+                if (c == END) {
+                    receiving_buffer[i] = '\0'; // Implicit char
+                    receiving_index = i;
+                    break;
+                } else if (c == ERROR) {
+                    receiving_buffer[0] = '\0'; // Implicit char
+                    receiving_index = 0;
+                    successfully_received = false;
+                    break;
+                } else {
+                    receiving_buffer[i] = c;
+                }
             } else {
-                receiving_buffer[i] = c;
+                c = SPI.transfer('\0');   // Dummy char, not intended to be processed
+                if (c == NONE) {
+                    receiving_buffer[0] = '\0'; // Implicit char
+                    receiving_index = 0;
+                    break;
+                }
+                receiving_buffer[0] = c;   // Dummy char, not intended to be processed
+            }
+        }
+
+        delayMicroseconds(5);
+        digitalWrite(SS_PIN, HIGH);
+
+        if (successfully_received) {
+            if (receiving_index > 0) {
+                Serial.print("Received message: ");
+                Serial.println(receiving_buffer);
+            } else {
+                Serial.println("Nothing received");
             }
         } else {
-            c = SPI.transfer('\0');   // Dummy char, not intended to be processed
-            if (c == NONE) {
-                receiving_buffer[0] = '\0'; // Implicit char
-                receiving_index = 0;
-                break;
-            }
-            receiving_buffer[0] = c;   // Dummy char, not intended to be processed
+            Serial.print("Message NOT successfully received on try: ");
+            Serial.println(r + 1);
+            Serial.println("BUZZER activated for 2 x 10ms!");
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(10);  // Buzzer on for 10ms
+            digitalWrite(BUZZ_PIN, LOW);
+            delay(100);
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(10);  // Buzzer on for 10ms
+            digitalWrite(BUZZ_PIN, LOW);
         }
-    }
-
-    delayMicroseconds(5);
-    digitalWrite(SS_PIN, HIGH);
-
-    if (successfully_received) {
-        if (receiving_index > 0) {
-            Serial.print("Received message: ");
-            Serial.println(receiving_buffer);
-        } else {
-            Serial.println("Nothing received");
-        }
-    } else {
-        Serial.println("Message NOT successfully received");
-        Serial.println("BUZZER activated for 2 x 5ms!");
-        digitalWrite(BUZZ_PIN, HIGH);
-        delay(5);   // Buzzer on for 5ms
-        digitalWrite(BUZZ_PIN, LOW);
-        delay(50);   // Buzzer on for 5ms
-        digitalWrite(BUZZ_PIN, HIGH);
-        delay(5);   // Buzzer on for 5ms
-        digitalWrite(BUZZ_PIN, LOW);
     }
 
     return successfully_received;
