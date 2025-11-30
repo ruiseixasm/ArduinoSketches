@@ -85,7 +85,8 @@ size_t sendString(const char* command) {
                 length = 0;
                 break;
             } else if (command[i - 1] == '\0') {
-                if (SPI.transfer(END) != '\0') {  // Because the last char is always '\0' (Includes NACK situation)
+                c = SPI.transfer(END);
+                if (c != '\0') {    // Because the last char is always '\0' (Includes NACK situation)
                     length = 0;
                 } else {
                     length = i;
