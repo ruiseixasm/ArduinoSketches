@@ -160,7 +160,7 @@ bool receiveString() {
         digitalWrite(BUZZ_PIN, HIGH);
         delay(5);   // Buzzer on for 5ms
         digitalWrite(BUZZ_PIN, LOW);
-        delay(5);   // Buzzer on for 5ms
+        delay(50);   // Buzzer on for 5ms
         digitalWrite(BUZZ_PIN, HIGH);
         delay(5);   // Buzzer on for 5ms
         digitalWrite(BUZZ_PIN, LOW);
