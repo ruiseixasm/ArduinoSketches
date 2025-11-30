@@ -167,6 +167,42 @@ protected:
     static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 
     
+    bool remoteReceive(size_t length) {
+
+        // Triggers all Talkers to processes the received data
+        bool pre_validated = false;
+        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+
+            #ifdef BROADCASTSOCKET_DEBUG
+            Serial.print(F("Creating new JsonObject for talker: "));
+            Serial.println(_json_talkers[talker_i]->get_name());
+            #endif
+            
+            // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+            #if ARDUINOJSON_VERSION_MAJOR >= 7
+            JsonDocument message_doc;
+            #else
+            StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+            #endif
+
+            DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
+            if (error) {
+                #ifdef BROADCASTSOCKET_DEBUG
+                Serial.println(F("Failed to deserialize received data"));
+                #endif
+                return false;
+            }
+            JsonObject json_message = message_doc.as<JsonObject>();
+
+
+            pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+            if (!pre_validated) break;
+        }
+
+        return true;
+    }
+
+
     size_t triggerTalkers(size_t length) {
 
         #ifdef BROADCASTSOCKET_DEBUG
@@ -247,34 +283,8 @@ protected:
                 }
 
                 // Triggers all Talkers to processes the received data
-                bool pre_validated = false;
-                for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-
-                    #ifdef BROADCASTSOCKET_DEBUG
-                    Serial.print(F("Creating new JsonObject for talker: "));
-                    Serial.println(_json_talkers[talker_i]->get_name());
-                    #endif
-                    
-                    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-                    #if ARDUINOJSON_VERSION_MAJOR >= 7
-                    JsonDocument message_doc;
-                    #else
-                    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
-                    #endif
-
-                    DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
-                    if (error) {
-                        #ifdef BROADCASTSOCKET_DEBUG
-                        Serial.println(F("Failed to deserialize received data"));
-                        #endif
-                        return false;
-                    }
-                    JsonObject json_message = message_doc.as<JsonObject>();
-
-
-                    pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
-                    if (!pre_validated) break;
-                }
+                remoteReceive(length);
+                
             } else {
                 #ifdef BROADCASTSOCKET_DEBUG
                 Serial.print(F("C: Validation of Checksum FAILED!!"));
