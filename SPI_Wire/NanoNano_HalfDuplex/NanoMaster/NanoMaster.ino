@@ -124,23 +124,37 @@ bool receiveString() {
 
     
     digitalWrite(SS_PIN, LOW);
+    delayMicroseconds(5);
 
+    // Asks the receiver to start receiving
+    c = SPI.transfer(SEND);
+    delayMicroseconds(send_delay_us);
+        
     // Starts to receive all chars here
-    uint8_t last_received = SEND;
-    for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // skips i == 0
+    for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
         delayMicroseconds(receive_delay_us);
-        last_received = SPI.transfer(last_received);
         if (i > 0) {    // The first response is discarded
-            if (last_received == NONE || last_received == END) {
-                receiving_buffer[i - 1] = '\0'; // Implicit char
-                receiving_index = i - 1;
+            c = SPI.transfer(receiving_buffer[i - 1]);
+            if (c == END) {
+                receiving_buffer[i] = '\0'; // Implicit char
+                receiving_index = i;
                 break;
-            } else if (last_received == ERROR) {
+            } else if (c == ERROR) {
+                receiving_buffer[0] = '\0'; // Implicit char
+                receiving_index = 0;
                 successfully_received = false;
                 break;
             } else {
-                receiving_buffer[i - 1] = last_received;
+                receiving_buffer[i] = c;
             }
+        } else {
+            c = SPI.transfer('\0');   // Dummy char, not intended to be processed
+            if (c == NONE) {
+                receiving_buffer[0] = '\0'; // Implicit char
+                receiving_index = 0;
+                break;
+            }
+            receiving_buffer[0] = c;   // Dummy char, not intended to be processed
         }
     }
 
