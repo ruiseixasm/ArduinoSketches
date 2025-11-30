@@ -31,7 +31,6 @@ private:
     // Pointer PRESERVE the polymorphism while objects don't!
     JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
     uint8_t _talker_count = 0;
-    uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
     uint32_t _last_local_time = 0;
     uint32_t _last_remote_time = 0;
@@ -165,6 +164,7 @@ protected:
 
     static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    uint8_t _max_delay_ms = 5;
 
 
     virtual bool remoteReceive(JsonObject json_message, JsonTalker* talker, bool pre_validated) {
@@ -386,6 +386,8 @@ public:
 
             return false;
         }
+
+        json_message["c"] = 0;  // Makes sure `c` is set
 
         // Give a chance for subclasses process it
         if (!sendJsonMessage(json_message, as_reply))

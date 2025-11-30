@@ -54,6 +54,7 @@ protected:
     BroadcastSocket_SPI_Master(JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
             
+            _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
             // devices_ss_pins["initialized"] = true;
         }
