@@ -338,6 +338,7 @@ public:
     
     void mute() { _muted = true; }
     void unmute() { _muted = false; }
+    bool muted() { return _muted; }
 
     
     bool processData(JsonObject json_message, bool pre_validated) {
