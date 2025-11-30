@@ -59,19 +59,15 @@ void loop() {
 
 #define send_delay_us 10
 
-bool sendString(const char* command) {
+size_t sendString(const char* command) {
+    size_t length = 0;	// No interrupts, so, not volatile
     uint8_t c; // Avoid using 'char' while using values above 127
     _receiving_buffer[0] = '\0'; // Avoids garbage printing
     _receiving_state = false;
     _receiving_index = 0;
 
-    
-    bool successfully_sent = false; // It has to start as false to enter in the next loop
-
-    for (size_t s = 0; !successfully_sent && s < 3; s++) {
+    for (size_t s = 0; length == 0 && s < 3; s++) {
   
-        successfully_sent = true;
-
         digitalWrite(SS_PIN, LOW);
         delayMicroseconds(5);
 
@@ -83,22 +79,25 @@ bool sendString(const char* command) {
         for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
             if (i > 0) {
                 if (SPI.transfer(command[i]) != command[i - 1])
-                    successfully_sent = false;
+                    length = 0;
             } else {
                 SPI.transfer(command[0]);
             }
             delayMicroseconds(send_delay_us);
             // Don't make '\0' implicit in order to not have to change the SPDR on the slave side!!
-            if (command[i] == '\0') break;
+            if (command[i] == '\0') {
+				length = i + 1;
+				break;
+			}
         }
 
         if (SPI.transfer(END) != '\0')  // Because the last char is always '\0'
-            successfully_sent = false;
+            length = 0;
 
         delayMicroseconds(5);
         digitalWrite(SS_PIN, HIGH);
 
-        if (successfully_sent) {
+        if (length > 0) {
             Serial.println("Command successfully sent");
         } else {
             Serial.print("Command NOT successfully sent on try: ");
@@ -110,7 +109,7 @@ bool sendString(const char* command) {
         }
     }
 
-    return successfully_sent;
+    return length;
 }
 
 
