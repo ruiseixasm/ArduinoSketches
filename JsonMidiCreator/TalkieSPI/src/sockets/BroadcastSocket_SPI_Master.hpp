@@ -60,10 +60,21 @@ protected:
     BroadcastSocket_SPI_Master(JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
             
-            // Initialize devices control object (optional initial setup)
-            devices_ss_pins["initialized"] = true;
+            // // Initialize devices control object (optional initial setup)
+            // devices_ss_pins["initialized"] = true;
         }
 
+    bool remoteReceive(JsonObject json_message, JsonTalker* talker, bool pre_validated) override {
+
+        if (json_message["t"].is<const char*>()) {
+
+            const char* talker_name = json_message["t"].as<const char*>();
+            devices_ss_pins[talker_name] = -1;
+        }
+
+        return BroadcastSocket::remoteReceive(json_message, talker, pre_validated);
+    }
+    
 
     size_t send(size_t length, bool as_reply = false) override {
 
