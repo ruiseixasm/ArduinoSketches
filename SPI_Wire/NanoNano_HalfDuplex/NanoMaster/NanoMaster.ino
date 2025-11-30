@@ -111,7 +111,7 @@ bool sendString(const char* command) {
 }
 
 
-#define receive_delay_us 20 // Receive needs more time to be processed
+#define receive_delay_us 10 // Receive needs more time to be processed
 
 bool receiveString() {
     uint8_t c; // Avoid using 'char' while using values above 127
@@ -156,10 +156,14 @@ bool receiveString() {
         }
     } else {
         Serial.println("Message NOT successfully received");
-        // Serial.println("BUZZER activated for 5ms!");
-        // digitalWrite(BUZZ_PIN, HIGH);
-        // delay(5);   // Buzzer on for 5ms
-        // digitalWrite(BUZZ_PIN, LOW);
+        Serial.println("BUZZER activated for 2 x 5ms!");
+        digitalWrite(BUZZ_PIN, HIGH);
+        delay(5);   // Buzzer on for 5ms
+        digitalWrite(BUZZ_PIN, LOW);
+        delay(5);   // Buzzer on for 5ms
+        digitalWrite(BUZZ_PIN, HIGH);
+        delay(5);   // Buzzer on for 5ms
+        digitalWrite(BUZZ_PIN, LOW);
     }
 
     return successfully_received;
