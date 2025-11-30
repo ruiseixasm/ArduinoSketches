@@ -86,6 +86,8 @@ protected:
 
         static const Manifesto _manifesto = {
             (const Command[]){  // runs
+                {"mute", "Mutes this talker"},
+                {"unmute", "Unmutes this talker"},
                 {"on", "Turns led ON"},
                 {"off", "Turns led OFF"}
             },
@@ -93,13 +95,14 @@ protected:
                 {"delay", "Sets the socket max delay"}
             },
             (const Command[]){  // gets
+                {"muted", "Returns 1 if muted and 0 if not"},
                 {"delay", "Gets the socket max delay"},
                 {"drops", "Gets total drops count"},
                 {"runs", "Gets total runs"}
             },
-            2,
+            4,
             1,
-            3
+            4
         };
 
         return _manifesto;
@@ -111,8 +114,6 @@ protected:
 
     bool localSend(JsonObject json_message, bool as_reply = false) {
         (void)as_reply; // Silence unused parameter warning
-
-        if (_muted) return false;
 
         json_message["f"] = _name;
         json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
@@ -180,6 +181,13 @@ protected:
         switch (command_index)
         {
         case 0:
+            _muted = true;
+            break;
+        case 1:
+            _muted = false;
+            break;
+
+        case 2:
             {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(F("Case 0 - Turning LED ON"));
@@ -209,7 +217,7 @@ protected:
             }
             break;
         
-        case 1:
+        case 3:
             {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(F("Case 1 - Turning LED OFF"));
@@ -257,18 +265,21 @@ protected:
         switch (command_index)
         {
         case 0:
+            return _muted;
+            break;
+        case 1:
             {
                 return static_cast<long>(this->get_delay());
             }
             break;
 
-        case 1:
+        case 2:
             {
                 return this->get_total_drops();
             }
             break;
 
-        case 2:
+        case 3:
             {
                 return _total_runs;
             }
