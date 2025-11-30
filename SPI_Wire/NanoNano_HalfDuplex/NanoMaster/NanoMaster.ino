@@ -124,7 +124,6 @@ bool receiveString() {
 
     
     digitalWrite(SS_PIN, LOW);
-    delayMicroseconds(5);
 
     // Starts to receive all chars here
     uint8_t last_received = SEND;
@@ -145,7 +144,7 @@ bool receiveString() {
         }
     }
 
-    delayMicroseconds(2 * receive_delay_us);
+    delayMicroseconds(5);
     digitalWrite(SS_PIN, HIGH);
 
     if (successfully_received) {
