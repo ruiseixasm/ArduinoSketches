@@ -22,8 +22,6 @@ const int SS_PIN = 10;  // Slave Select pin
 
 #define BUFFER_SIZE 128
 char _receiving_buffer[BUFFER_SIZE] = {'\0'};
-uint8_t _receiving_index = 0;   // No interrupts, so, not volatile
-bool _receiving_state = true;
 
 
 void setup() {
@@ -112,19 +110,14 @@ size_t sendString(const char* command) {
 
 #define receive_delay_us 10 // Receive needs more time to be processed
 
-bool receiveString() {
+size_t receiveString() {
+    size_t length = 0;	// No interrupts, so, not volatile
     uint8_t c; // Avoid using 'char' while using values above 127
     _receiving_buffer[0] = '\0'; // Avoids garbage printing
-    _receiving_state = false;
-    _receiving_index = 0;
 
 
-    bool successfully_received = false; // It has to start as false to enter in the next loop
-
-    for (size_t r = 0; !successfully_received && r < 3; r++) {
+    for (size_t r = 0; length == 0 && r < 3; r++) {
   
-        successfully_received = true;
-
         digitalWrite(SS_PIN, LOW);
         delayMicroseconds(5);
 
@@ -139,12 +132,11 @@ bool receiveString() {
                 c = SPI.transfer(_receiving_buffer[i - 1]);
                 if (c == END) {
                     _receiving_buffer[i] = '\0'; // Implicit char
-                    _receiving_index = i;
+                    length = i;
                     break;
                 } else if (c == ERROR) {
                     _receiving_buffer[0] = '\0'; // Implicit char
-                    _receiving_index = 0;
-                    successfully_received = false;
+                    length = 0;
                     break;
                 } else {
                     _receiving_buffer[i] = c;
@@ -153,7 +145,7 @@ bool receiveString() {
                 c = SPI.transfer('\0');   // Dummy char, not intended to be processed
                 if (c == NONE) {
                     _receiving_buffer[0] = '\0'; // Implicit char
-                    _receiving_index = 0;
+                    length = 1;
                     break;
                 }
                 _receiving_buffer[0] = c;   // Dummy char, not intended to be processed
@@ -163,8 +155,8 @@ bool receiveString() {
         delayMicroseconds(5);
         digitalWrite(SS_PIN, HIGH);
 
-        if (successfully_received) {
-            if (_receiving_index > 0) {
+        if (length > 0) {
+            if (length > 1) {
                 Serial.print("Received message: ");
                 Serial.println(_receiving_buffer);
             } else {
@@ -184,7 +176,7 @@ bool receiveString() {
         }
     }
 
-    return successfully_received;
+    return length;
 }
 
 

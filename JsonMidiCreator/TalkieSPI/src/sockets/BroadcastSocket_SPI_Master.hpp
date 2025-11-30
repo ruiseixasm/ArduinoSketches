@@ -84,7 +84,7 @@ protected:
 
     
     size_t receiveString(int ss_pin) {
-        size_t length = 0;   // No interrupts, so, not volatile
+        size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
         for (uint8_t r = 0; length == 0 && r < 3; r++) {
@@ -132,7 +132,7 @@ protected:
 
 
     size_t sendString(int ss_pin) {
-        size_t length = 0;   // No interrupts, so, not volatile
+        size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
         for (size_t s = 0; length == 0 && s < 3; s++) {
