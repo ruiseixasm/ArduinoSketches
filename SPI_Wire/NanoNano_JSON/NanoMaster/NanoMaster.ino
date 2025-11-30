@@ -67,16 +67,17 @@ size_t sendString(const char* command) {
         delayMicroseconds(5);
 
         // Asks the receiver to start receiving
-        SPI.transfer(RECEIVE);
+        c = SPI.transfer(RECEIVE);
         delayMicroseconds(send_delay_us);
         
         // RECEIVE message code
         for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
             if (i > 0) {
-                if (SPI.transfer(command[i]) != command[i - 1])
+                c = SPI.transfer(command[i]);
+                if (c != command[i - 1])    // Includes NACK situation
                     length = 0;
             } else {
-                SPI.transfer(command[0]);
+                c = SPI.transfer(command[0]);
             }
             delayMicroseconds(send_delay_us);
             // Don't make '\0' implicit in order to not have to change the SPDR on the slave side!!
@@ -86,8 +87,9 @@ size_t sendString(const char* command) {
 			}
         }
 
-        if (SPI.transfer(END) != '\0')  // Because the last char is always '\0'
+        if (SPI.transfer(END) != '\0') {  // Because the last char is always '\0' (Includes NACK situation)
             length = 0;
+        }
 
         delayMicroseconds(5);
         digitalWrite(SS_PIN, HIGH);
@@ -125,7 +127,7 @@ size_t receiveString() {
         delayMicroseconds(send_delay_us);
             
         // Starts to receive all chars here
-        for (uint8_t i = 0; i < BUFFER_SIZE; i++) {	// First char is a control byte
+        for (uint8_t i = 0; c != NACK && i < BUFFER_SIZE; i++) {	// First char is a control byte
             delayMicroseconds(receive_delay_us);
             if (i > 0) {    // The first response is discarded
                 c = SPI.transfer(_receiving_buffer[i - 1]);
@@ -148,6 +150,11 @@ size_t receiveString() {
                 }
                 _receiving_buffer[0] = c;   // First char received
             }
+        }
+
+        if (c == NACK) {
+            _receiving_buffer[0] = '\0'; // Implicit char
+            length = 0;
         }
 
         delayMicroseconds(5);
