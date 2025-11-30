@@ -304,6 +304,14 @@ protected:
             }
         }
 
+        
+    // NOT Pure virtual methods anymores (= 0;)
+    virtual bool send(size_t length, bool as_reply = false) {
+        (void)length; // Silence unused parameter warning
+        (void)as_reply; // Silence unused parameter warning
+        return false;
+    }
+
 
 public:
     // Delete copy/move operations
@@ -312,13 +320,6 @@ public:
     BroadcastSocket(BroadcastSocket&&) = delete;
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
 
-
-    // NOT Pure virtual methods anymores (= 0;)
-    virtual bool send(size_t length, bool as_reply = false) {
-        (void)length; // Silence unused parameter warning
-        (void)as_reply; // Silence unused parameter warning
-        return false;
-    }
 
 
     virtual size_t receive() {
@@ -356,6 +357,10 @@ public:
         serializeJson(json_message, Serial);
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
+
+
+
+
 
         if (length < 3*4 + 2) {
 
