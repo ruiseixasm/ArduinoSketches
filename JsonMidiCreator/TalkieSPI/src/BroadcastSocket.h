@@ -363,7 +363,7 @@ public:
     }
 
 
-    virtual bool remoteJsonMessage(JsonObject json_message, bool as_reply = false) {
+    virtual bool sendJsonMessage(JsonObject json_message, bool as_reply = false) {
 
         // Give a chance for subclasses process it
         return true;
@@ -388,7 +388,7 @@ public:
         }
 
         // Give a chance for subclasses process it
-        if (!remoteJsonMessage(json_message, as_reply))
+        if (!sendJsonMessage(json_message, as_reply))
             return false;
 
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
