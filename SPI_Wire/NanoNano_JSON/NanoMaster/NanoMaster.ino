@@ -71,7 +71,7 @@ size_t sendString(const char* command) {
         delayMicroseconds(send_delay_us);
         
         // RECEIVE message code
-        for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
+        for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
             if (i > 0) {
                 c = SPI.transfer(command[i]);
                 if (c != command[i - 1])    // Includes NACK situation
@@ -81,17 +81,17 @@ size_t sendString(const char* command) {
             }
             delayMicroseconds(send_delay_us);
             // Don't make '\0' implicit in order to not have to change the SPDR on the slave side!!
-            if (c == NACK ) {
+            if (c == NACK) {
                 length = 0;
                 break;
-            } else if (command[i] == '\0') {
-				length = i + 1;
+            } else if (command[i - 1] == '\0') {
+                if (SPI.transfer(END) != '\0') {  // Because the last char is always '\0' (Includes NACK situation)
+                    length = 0;
+                } else {
+                    length = i;
+                }
 				break;
 			}
-        }
-
-        if (SPI.transfer(END) != '\0') {  // Because the last char is always '\0' (Includes NACK situation)
-            length = 0;
         }
 
         delayMicroseconds(5);
