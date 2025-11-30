@@ -25,6 +25,10 @@ https://github.com/ruiseixasm/JsonTalkie
 #define ENABLE_DIRECT_ADDRESSING
 
 
+#define send_delay_us 10
+#define receive_delay_us 10 // Receive needs more time to be processed
+
+
 class BroadcastSocket_SPI_Master : public BroadcastSocket {
 public:
 
@@ -42,8 +46,7 @@ public:
 
 
 private:
-    uint8_t _receiving_index = 0;   // No interrupts, so, not volatile
-    bool _receiving_state = true;
+    int8_t _receiving_index = -1;   // No interrupts, so, not volatile
     JsonObject* _talkers_ss_pins;
 
 protected:
@@ -79,6 +82,55 @@ protected:
         return length;
     }
 
+    
+    int8_t receiveString(int ss_pin) {
+        uint8_t c; // Avoid using 'char' while using values above 127
+        _receiving_index = -1;
+
+        for (uint8_t r = 0; _receiving_index < 0 && r < 3; r++) {
+    
+            digitalWrite(ss_pin, LOW);
+            delayMicroseconds(5);
+
+            // Asks the receiver to start receiving
+            c = SPI.transfer(SEND);
+            delayMicroseconds(send_delay_us);
+                
+            // Starts to receive all chars here
+            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
+                delayMicroseconds(receive_delay_us);
+                if (i > 0) {    // The first response is discarded
+                    c = SPI.transfer(_receiving_buffer[i - 1]);
+                    if (c == END) {
+                        _receiving_buffer[i] = '\0'; // Implicit char
+                        _receiving_index = i;
+                        break;
+                    } else if (c == ERROR) {
+                        _receiving_buffer[0] = '\0'; // Implicit char
+                        _receiving_index = -1;
+                        break;
+                    } else {
+                        _receiving_buffer[i] = c;
+                    }
+                } else {
+                    c = SPI.transfer('\0');   // Dummy char, not intended to be processed
+                    if (c == NONE) {
+                        _receiving_buffer[0] = '\0'; // Implicit char
+                        _receiving_index = 0;
+                        break;
+                    }
+                    _receiving_buffer[0] = c;   // Dummy char, not intended to be processed
+                }
+            }
+
+            delayMicroseconds(5);
+            digitalWrite(ss_pin, HIGH);
+
+        }
+
+        return _receiving_index;
+    }
+
 
 public:
 
@@ -92,9 +144,19 @@ public:
     size_t receive() override {
 
         // Need to call homologous method in super class first
-        BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+        size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+        bool received_once = false;
 
-        return 0;   // nothing received
+        for (auto key_value : *_talkers_ss_pins) {
+            // const char* key = key_value.key().c_str();
+            int ss_pin = key_value.value();
+
+            if(receiveString(ss_pin) > 0)
+                received_once = true;
+        }
+
+
+        return length;   // nothing received
     }
 
 
