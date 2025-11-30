@@ -81,15 +81,6 @@ ISR(SPI_STC_vect) {
     if (c == RECEIVE) {
         receiving_state = true;
         receiving_index = 0;
-    } else if (c == END) {
-        receiving_state = false;
-        process_message = true;
-    } else if (receiving_state) {
-        if (receiving_index < BUFFER_SIZE) {
-            receiving_buffer[receiving_index++] = c;
-        } else {
-            receiving_state = false;
-        }
     } else if (c == SEND) {
         sending_index = 0;
         last_sent = sending_buffer[sending_index++];
@@ -107,9 +98,22 @@ ISR(SPI_STC_vect) {
             sending_state = false;
             sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
             SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
-        } else {
+        } else if (sending_index < BUFFER_SIZE) {
             last_sent = sending_buffer[sending_index++];
             SPDR = last_sent;
+        } else {
+            sending_state = false;
+            SPDR = ERROR;
+        }
+    } else if (c == END) {
+        receiving_state = false;
+        process_message = true;
+    } else if (receiving_state) {
+        if (receiving_index < BUFFER_SIZE) {
+            receiving_buffer[receiving_index++] = c;
+        } else {
+            receiving_state = false;
+            SPDR = ERROR;
         }
     }
 }
