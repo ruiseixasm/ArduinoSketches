@@ -46,9 +46,11 @@ void setup() {
 
 void loop() {
     // Send string commands directly
+    receiveString();    // Before because sendString results in a command that takes time
     sendString("LED_ON");
     delay(2000);
     
+    receiveString();
     sendString("LED_OFF");
     delay(2000);
 }
@@ -90,7 +92,7 @@ bool sendString(const char* command) {
         if (SPI.transfer(END) != last_sent)
             successfully_sent = false;
 
-        delayMicroseconds(3);
+        delayMicroseconds(5);
         digitalWrite(SS_PIN, HIGH);
 
         if (successfully_sent) {
@@ -144,7 +146,7 @@ bool receiveString() {
         }
     }
 
-    delayMicroseconds(3);
+    delayMicroseconds(5);
     digitalWrite(SS_PIN, HIGH);
 
     if (successfully_received) {
@@ -155,11 +157,11 @@ bool receiveString() {
             Serial.println("Nothing received");
         }
     } else {
-        digitalWrite(BUZZ_PIN, HIGH);
-        delay(10);  // Buzzer on for 10ms
-        digitalWrite(BUZZ_PIN, LOW);
         Serial.println("Message NOT successfully received");
-        Serial.println("BUZZER activated for 10ms!");
+        // Serial.println("BUZZER activated for 5ms!");
+        // digitalWrite(BUZZ_PIN, HIGH);
+        // delay(5);   // Buzzer on for 5ms
+        // digitalWrite(BUZZ_PIN, LOW);
     }
 
     return successfully_received;
