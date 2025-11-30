@@ -78,51 +78,65 @@ ISR(SPI_STC_vect) {
 
     uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
 
-    if (c == RECEIVE) {
-        _receiving_state = true;
-        _receiving_index = 0;
-        SPDR = ACK;
-    } else if (c == SEND) {
-        _sending_index = 0;
-        if (_sending_buffer[_sending_index] == '\0') {
-            SPDR = NONE;    // Nothing to send
-        } else {    // Starts sending right away, so, no ACK
-            SPDR = _sending_buffer[_sending_index++];
-            _sending_state = true;
-        }
-    } else if (c == ERROR) {
-        _receiving_state = false;
-        _process_message = false;
-		_sending_state = false;
-        SPDR = ACK;
-    } else if (_sending_state) {
-        if (_sending_index > 1 && c != _sending_buffer[_sending_index - 2]) {  // Two messages delay
-            _sending_state = false;
-            SPDR = ERROR;
-        } else if (_sending_buffer[_sending_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
-            _sending_state = false;
-            _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
-            SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
-        } else if (_sending_index < BUFFER_SIZE) {
-            SPDR = _sending_buffer[_sending_index++];
+    if (c < 128) {  // If it's a typical ASCII char
+
+        if (_sending_state) {
+            if (_sending_index > 1 && c != _sending_buffer[_sending_index - 2]) {  // Two messages delay
+                _sending_state = false;
+                SPDR = ERROR;
+            } else if (_sending_buffer[_sending_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
+                _sending_state = false;
+                _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
+                SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
+            } else if (_sending_index < BUFFER_SIZE) {
+                SPDR = _sending_buffer[_sending_index++];
+            } else {
+                _sending_state = false;
+                SPDR = ERROR;
+            }
+        } else if (_receiving_state) {
+            if (_receiving_index < BUFFER_SIZE) {
+                _receiving_buffer[_receiving_index++] = c;
+                // Returns same received char as receiving confirmation (no need to set SPDR)
+            } else {
+                _receiving_state = false;
+                SPDR = ERROR;
+            }
         } else {
-            _sending_state = false;
-            SPDR = ERROR;
+            SPDR = NACK;
         }
-    } else if (c == END) {
-        _receiving_state = false;
-        _process_message = true;
-        SPDR = ACK;
-    } else if (_receiving_state) {
-        if (_receiving_index < BUFFER_SIZE) {
-            _receiving_buffer[_receiving_index++] = c;
-            // Returns same received char as receiving confirmation (no need to set SPDR)
-        } else {
-            _receiving_state = false;
-            SPDR = ERROR;
+
+    } else {    // It's a control message 0xFX
+        
+        switch (c) {
+            case RECEIVE:
+                _receiving_state = true;
+                _receiving_index = 0;
+                SPDR = ACK;
+                break;
+            case SEND:
+                _sending_index = 0;
+                if (_sending_buffer[_sending_index] == '\0') {
+                    SPDR = NONE;    // Nothing to send
+                } else {    // Starts sending right away, so, no ACK
+                    SPDR = _sending_buffer[_sending_index++];
+                    _sending_state = true;
+                }
+                break;
+            case END:
+                _receiving_state = false;
+                _process_message = true;
+                SPDR = ACK;
+                break;
+            case ERROR:
+                _receiving_state = false;
+                _process_message = false;
+                _sending_state = false;
+                SPDR = ACK;
+                break;
+            default:
+                SPDR = NACK;
         }
-    } else {
-        SPDR = NACK;
     }
 }
 
