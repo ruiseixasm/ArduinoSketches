@@ -45,12 +45,24 @@ private:
     uint8_t _receiving_index = 0;   // No interrupts, so, not volatile
     bool _receiving_state = true;
 
+    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+    #if ARDUINOJSON_VERSION_MAJOR >= 7
+    JsonDocument ss_pins_doc;
+    JsonObject devices_ss_pins = ss_pins_doc.to<JsonObject>(); // NEW: Persistent object for device control
+    #else
+    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> ss_pins_doc;
+    JsonObject devices_ss_pins = ss_pins_doc.to<JsonObject>();    // NEW
+    #endif
 
 protected:
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
     BroadcastSocket_SPI_Master(JsonTalker** json_talkers, uint8_t talker_count)
-        : BroadcastSocket(json_talkers, talker_count) {}
+        : BroadcastSocket(json_talkers, talker_count) {
+            
+            // Initialize devices control object (optional initial setup)
+            devices_ss_pins["initialized"] = true;
+        }
 
 
     size_t send(size_t length, bool as_reply = false) override {
