@@ -133,7 +133,6 @@ protected:
     size_t sendString(int ss_pin) {
         size_t length = 0;   // No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
-        _sending_buffer[0] = '\0'; // Avoids garbage printing
 
         for (size_t s = 0; length == 0 && s < 3; s++) {
     
