@@ -116,6 +116,11 @@ ISR(SPI_STC_vect) {
             _receiving_state = false;
             SPDR = ERROR;
         }
+    } else if (c == ERROR) {
+        _receiving_state = false;
+        _process_message = false;
+		_sending_state = false;
+        SPDR = ACK;
     } else {
         SPDR = NACK;
     }
