@@ -140,24 +140,22 @@ void processMessage() {
 
     if (strcmp(command_name, "ON") == 0) {
         digitalWrite(GREEN_LED_PIN, HIGH);
-        strcpy(_sending_buffer, "OK_ON");
-
         json_message["n"] = "OK_ON";
         size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
-
         Serial.print("LED is ON");
         Serial.print(" | Sending: ");
-
-
         Serial.println(_sending_buffer);
+
     } else if (strcmp(command_name, "OFF") == 0) {
         digitalWrite(GREEN_LED_PIN, LOW);
-        strcpy(_sending_buffer, "OK_OFF");
+        json_message["n"] = "OK_OFF";
+        size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
         Serial.print("LED is OFF");
         Serial.print(" | Sending: ");
         Serial.println(_sending_buffer);
     } else {
-        strcpy(_sending_buffer, "BUZZ");
+        json_message["n"] = "BUZZ";
+        size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
         Serial.print("Unknown command");
         Serial.print(" | Sending: ");
         Serial.println(_sending_buffer);
