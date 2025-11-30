@@ -136,7 +136,6 @@ protected:
         _receiving_buffer[0] = '\0'; // Avoids garbage printing
         _length = 0;
 
-        
         for (size_t s = 0; _length == 0 && s < 3; s++) {
     
             digitalWrite(ss_pin, LOW);
