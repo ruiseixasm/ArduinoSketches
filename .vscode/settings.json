@@ -1,17 +1,19 @@
 {
     "cSpell.words": [
-        "ARDUINOJSON",
-        "Ethercard",
-        "IMXRT",
-        "Monteiro",
-        "MOSI",
-        "MSBFIRST",
-        "RAMEND",
-        "RAMSTART",
-        "Seixas",
-        "SPCR",
-        "SPDR",
-        "TEENSYDUINO",
-        "vect"
-    ]
+		"ARDUINOJSON",
+		"CPHA",
+		"DORD",
+		"Ethercard",
+		"IMXRT",
+		"Monteiro",
+		"MOSI",
+		"MSBFIRST",
+		"RAMEND",
+		"RAMSTART",
+		"Seixas",
+		"SPCR",
+		"SPDR",
+		"TEENSYDUINO",
+		"vect"
+	]
 }
