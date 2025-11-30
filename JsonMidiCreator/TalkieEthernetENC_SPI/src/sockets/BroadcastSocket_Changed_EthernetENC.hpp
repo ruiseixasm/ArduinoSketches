@@ -51,6 +51,9 @@ protected:
     bool send(size_t length, bool as_reply = false) override {
         if (_udp == nullptr) return false;
 
+        // Need to call homologous method in super class first
+        BroadcastSocket::send(length, as_reply); // Very important pre processing !!
+
         IPAddress broadcastIP(255, 255, 255, 255);
         
         #ifdef ENABLE_DIRECT_ADDRESSING
@@ -97,7 +100,7 @@ public:
         return instance;
     }
 
-    
+
     void set_port(uint16_t port) {
         _port = port;
     }
@@ -107,7 +110,7 @@ public:
         if (_udp == nullptr) return 0;
 
         // Need to call homologous method in super class first
-        BroadcastSocket::receive(); // Very im_portant to do or else it may stop receiving !!
+        BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
         // Receive packets
         int packetSize = _udp->parsePacket();
