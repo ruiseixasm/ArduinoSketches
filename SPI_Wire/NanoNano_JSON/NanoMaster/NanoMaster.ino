@@ -81,7 +81,10 @@ size_t sendString(const char* command) {
             }
             delayMicroseconds(send_delay_us);
             // Don't make '\0' implicit in order to not have to change the SPDR on the slave side!!
-            if (command[i] == '\0') {
+            if (c == NACK ) {
+                length = 0;
+                break;
+            } else if (command[i] == '\0') {
 				length = i + 1;
 				break;
 			}
