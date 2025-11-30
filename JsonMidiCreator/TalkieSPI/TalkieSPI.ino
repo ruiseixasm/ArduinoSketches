@@ -77,6 +77,15 @@ JsonTalker* talkers[] = { &talker, &player };   // It's an array of pointers
 auto& broadcast_socket = BroadcastSocket_SPI_Master::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
 
 
+// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+JsonDocument ss_pins_doc;
+JsonObject devices_ss_pins = ss_pins_doc.to<JsonObject>(); // NEW: Persistent object for device control
+#else
+StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> ss_pins_doc;
+JsonObject devices_ss_pins = ss_pins_doc.to<JsonObject>();    // NEW
+#endif
+
 
 // Buzzer pin
 #define buzzer_pin 3
@@ -112,9 +121,11 @@ void setup() {
 
 
     // STEP 1: Initialize SPI only
-    const int CS_PIN = 10;  // Defines CS pin here
+    // Defines the CS pin by Talker name here
+    devices_ss_pins["A"] = 4;
+    devices_ss_pins["B"] = 4;
     Serial.println("Step 1: Starting SPI...");
-    broadcast_socket.setup(CS_PIN);
+    broadcast_socket.setup(&devices_ss_pins);
     Serial.println("SPI started successfully");
     delay(1000);
 

@@ -44,15 +44,7 @@ public:
 private:
     uint8_t _receiving_index = 0;   // No interrupts, so, not volatile
     bool _receiving_state = true;
-
-    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-    #if ARDUINOJSON_VERSION_MAJOR >= 7
-    JsonDocument ss_pins_doc;
-    JsonObject devices_ss_pins = ss_pins_doc.to<JsonObject>(); // NEW: Persistent object for device control
-    #else
-    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> ss_pins_doc;
-    JsonObject devices_ss_pins = ss_pins_doc.to<JsonObject>();    // NEW
-    #endif
+    JsonObject* _devices_ss_pins;
 
 protected:
     // Needed for the compiler, the base class is the one being called though
@@ -64,17 +56,6 @@ protected:
             // devices_ss_pins["initialized"] = true;
         }
 
-    bool remoteReceive(JsonObject json_message, JsonTalker* talker, bool pre_validated) override {
-
-        if (json_message["t"].is<const char*>()) {
-
-            const char* talker_name = json_message["t"].as<const char*>();
-            devices_ss_pins[talker_name] = -1;
-        }
-
-        return BroadcastSocket::remoteReceive(json_message, talker, pre_validated);
-    }
-    
 
     bool sendJsonMessage(JsonObject json_message, bool as_reply = false) override {
 
@@ -117,16 +98,13 @@ public:
     }
 
 
-    void setup(int ss_pin) {
+    void setup(JsonObject* receivers_ss_pins) {
         // Initialize SPI
         SPI.begin();
         SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
         SPI.setDataMode(SPI_MODE0);
         SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
-        
-        // Initialize pins
-        pinMode(ss_pin, OUTPUT);
-        digitalWrite(ss_pin, HIGH);
+        _devices_ss_pins = receivers_ss_pins;
     }
 };
 
