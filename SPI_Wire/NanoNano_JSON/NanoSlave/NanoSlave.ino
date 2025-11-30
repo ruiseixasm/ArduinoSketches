@@ -1,5 +1,6 @@
 // SPI Slave Code - Pure String Commands
 #include <SPI.h>
+#include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
 enum MessageCode : uint8_t {
