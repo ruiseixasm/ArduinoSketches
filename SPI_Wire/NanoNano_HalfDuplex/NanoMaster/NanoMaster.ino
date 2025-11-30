@@ -111,7 +111,7 @@ bool sendString(const char* command) {
 }
 
 
-#define receive_delay_us 15 // Receive needs more time to be processed
+#define receive_delay_us 20 // Receive needs more time to be processed
 
 bool receiveString() {
     uint8_t c; // Avoid using 'char' while using values above 127
@@ -126,27 +126,26 @@ bool receiveString() {
     digitalWrite(SS_PIN, LOW);
     delayMicroseconds(5);
 
-    // Asks the receiver to start sending
-    SPI.transfer(SEND);
-    
     // Starts to receive all chars here
     uint8_t last_received = SEND;
-    for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
+    for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // skips i == 0
         delayMicroseconds(receive_delay_us);
         last_received = SPI.transfer(last_received);
-        if (last_received == NONE || last_received == END) {
-            receiving_buffer[i] = '\0'; // Implicit char
-            receiving_index = i;
-            break;
-        } else if (last_received == ERROR) {
-            successfully_received = false;
-            break;
-        } else {
-            receiving_buffer[i] = last_received;
+        if (i > 0) {    // The first response is discarded
+            if (last_received == NONE || last_received == END) {
+                receiving_buffer[i - 1] = '\0'; // Implicit char
+                receiving_index = i - 1;
+                break;
+            } else if (last_received == ERROR) {
+                successfully_received = false;
+                break;
+            } else {
+                receiving_buffer[i - 1] = last_received;
+            }
         }
     }
 
-    delayMicroseconds(5);
+    delayMicroseconds(2 * receive_delay_us);
     digitalWrite(SS_PIN, HIGH);
 
     if (successfully_received) {
