@@ -54,7 +54,7 @@ void loop() {
     delay(2000);
 }
 
-
+// To make this value the minimum possible, always place the setting SPDR on top in the Slave code (SPDR =)
 #define send_delay_us 10
 
 size_t sendString(const char* command) {
@@ -123,7 +123,8 @@ size_t sendString(const char* command) {
 }
 
 
-#define receive_delay_us 12 // Receive needs more time to be processed due to Slave dependency
+// To make this value the minimum possible, always place the setting SPDR on top in the Slave code (SPDR =)
+#define receive_delay_us 10
 
 size_t receiveString() {
     size_t length = 0;	// No interrupts, so, not volatile
