@@ -12,7 +12,8 @@ enum MessageCode : uint8_t {
     ERROR   = 0xF5, // Error frame
     RECEIVE = 0xF6, // Asks the receiver to start receiving
     SEND    = 0xF7, // Asks the receiver to start sending
-    NONE    = 0xF8  // Means nothing to send
+    NONE    = 0xF8, // Means nothing to send
+    FULL    = 0xF9  // Signals the buffer as full
 };
 
 
@@ -89,7 +90,7 @@ ISR(SPI_STC_vect) {
                     // Returns same received char as receiving confirmation (no need to set SPDR)
                     _receiving_buffer[_buffer_index++] = c;
                 } else {
-                    SPDR = ERROR;   // ALWAYS ON TOP
+                    SPDR = FULL;    // ALWAYS ON TOP
                     _transmission_mode = NONE;
                 }
                 break;
@@ -104,7 +105,7 @@ ISR(SPI_STC_vect) {
                 } else if (_buffer_index < BUFFER_SIZE) {
                     SPDR = _sending_buffer[_buffer_index++];
                 } else {
-                    SPDR = ERROR;
+                    SPDR = FULL;
                     _transmission_mode = NONE;
                 }
                 break;
@@ -136,7 +137,10 @@ ISR(SPI_STC_vect) {
                 _transmission_mode = NONE;
                 _process_message = true;
                 break;
+            case ACK:
+                break;
             case ERROR:
+            case FULL:
                 SPDR = ACK;
                 _transmission_mode = NONE;
                 break;

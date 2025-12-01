@@ -12,7 +12,8 @@ enum MessageCode : uint8_t {
     ERROR   = 0xF5, // Error frame
     RECEIVE = 0xF6, // Asks the receiver to start receiving
     SEND    = 0xF7, // Asks the receiver to start sending
-    NONE    = 0xF8  // Means nothing to send
+    NONE    = 0xF8, // Means nothing to send
+    FULL    = 0xF9  // Signals the buffer as full
 };
 
 
@@ -79,7 +80,6 @@ size_t sendString(const char* command) {
 						length = i;
 						break;
 					} else {
-						SPI.transfer(ERROR);
 						length = 0;
 						break;
 					}
@@ -87,7 +87,6 @@ size_t sendString(const char* command) {
 					c = SPI.transfer(command[i]);	// Receives the command[i - 1]
 				}
                 if (c != command[i - 1]) {    // Excludes NACK situation
-					SPI.transfer(ERROR);
                     length = 0;
 					break;
 				}
@@ -99,6 +98,15 @@ size_t sendString(const char* command) {
                 length = 0;
                 break;
             }
+        }
+
+        if (length == 0) {
+            SPI.transfer(ERROR);
+            _receiving_buffer[0] = '\0'; // Implicit char
+        } if (_receiving_buffer[length - 1] != '\0') {
+            SPI.transfer(FULL);
+            _receiving_buffer[0] = '\0';
+            length = 1; // Avoids another try
         }
 
         delayMicroseconds(5);
@@ -149,7 +157,6 @@ size_t receiveString() {
                     length = i;
                     break;
                 } else if (c == ERROR || c == NACK) {
-                    _receiving_buffer[0] = '\0'; // Implicit char
                     length = 0;
                     break;
                 } else {
@@ -162,12 +169,20 @@ size_t receiveString() {
                     length = 1;
                     break;
                 } else if (c == NACK) {
-                    _receiving_buffer[0] = '\0'; // Implicit char
                     length = 0;
                     break;
                 }
                 _receiving_buffer[0] = c;   // First char received
             }
+        }
+
+        if (length == 0) {
+            SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
+            _receiving_buffer[0] = '\0'; // Implicit char
+        } if (_receiving_buffer[length - 1] != '\0') {
+            SPI.transfer(FULL);
+            _receiving_buffer[0] = '\0';
+            length = 1; // Avoids another try
         }
 
         delayMicroseconds(5);
