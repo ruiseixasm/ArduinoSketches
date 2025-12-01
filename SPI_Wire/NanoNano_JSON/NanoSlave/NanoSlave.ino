@@ -89,13 +89,13 @@ ISR(SPI_STC_vect) {
                     // Returns same received char as receiving confirmation (no need to set SPDR)
                     _receiving_buffer[_buffer_index++] = c;
                 } else {
-                    SPDR = ERROR;
+                    SPDR = ERROR;   // ALWAYS ON TOP
                     _transmission_mode = NONE;
                 }
                 break;
             case SEND:
                 if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
-                    SPDR = ERROR;   // ALWAYS ON TOP
+                    SPDR = ERROR;
                     _transmission_mode = NONE;
                 } else if (_sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
                     SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
