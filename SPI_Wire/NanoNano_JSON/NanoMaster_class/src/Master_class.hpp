@@ -112,12 +112,12 @@ private:
                 if (length > 1) {
                     Serial.println("Command successfully sent");
                 } else {
-                    Serial.println("Nothing sent");
+                    Serial.println("\tNothing sent");
                 }
             } else {
-                Serial.print("Command NOT successfully sent on try: ");
+                Serial.print("\t\tCommand NOT successfully sent on try: ");
                 Serial.println(s + 1);
-                Serial.println("BUZZER activated for 10ms!");
+                Serial.println("\t\tBUZZER activated for 10ms!");
                 digitalWrite(BUZZ_PIN, HIGH);
                 delay(10);  // Buzzer on for 10ms
                 digitalWrite(BUZZ_PIN, LOW);
@@ -190,12 +190,12 @@ private:
                     Serial.print("Received message: ");
                     Serial.println(_receiving_buffer);
                 } else {
-                    Serial.println("Nothing received");
+                    Serial.println("\tNothing received");
                 }
             } else {
-                Serial.print("Message NOT successfully received on try: ");
+                Serial.print("\t\tMessage NOT successfully received on try: ");
                 Serial.println(r + 1);
-                Serial.println("BUZZER activated for 2 x 10ms!");
+                Serial.println("\t\tBUZZER activated for 2 x 10ms!");
                 digitalWrite(BUZZ_PIN, HIGH);
                 delay(10);  // Buzzer on for 10ms
                 digitalWrite(BUZZ_PIN, LOW);

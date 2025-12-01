@@ -20,11 +20,14 @@ void setup() {
 }
 
 void loop() {
+    Serial.println("------------------------------TESTING------------------------------");
     if(!master_class.test()) {
-        Serial.println("TEST FAILED");
-        // digitalWrite(BUZZ_PIN, HIGH);
-        // delay(1000);  // Buzzer on for 1 second
-        // digitalWrite(BUZZ_PIN, LOW);
+        Serial.println("----------------------------TEST FAILED----------------------------");
+        digitalWrite(BUZZ_PIN, HIGH);
+        delay(500); // Buzzer on for 1/2 second
+        digitalWrite(BUZZ_PIN, LOW);
+    } else {
+        Serial.println("----------------------------TEST PASSED----------------------------");
     }
 }
 
