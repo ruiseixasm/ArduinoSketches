@@ -3,25 +3,21 @@
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 #include "src/Slave_class.hpp"
 
-const int SS_PIN = 10;  // Slave Select pin
-const int BUZZ_PIN = 2; // External BUZZER pin
+const int GREEN_LED_PIN = 2; // External GREEN_LED_PIN pin
+const int YELLOW_LED_PIN = 21;  // A7 = digital pin 21
 
-Slave_class master_class = Slave_class(SS_PIN);
+Slave_class slave_class = Slave_class(SS_PIN);
 
 void setup() {
     // Initialize serial
     Serial.begin(115200);
     delay(500);
 
-    pinMode(BUZZ_PIN, OUTPUT);
-    digitalWrite(BUZZ_PIN, LOW);
-    
     Serial.println("\n\nSPI Slave Initialized - JSON class Mode");
 }
 
 void loop() {
-    
-
+    slave_class.read();
 }
 
 

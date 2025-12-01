@@ -217,13 +217,13 @@ public:
         digitalWrite(YELLOW_LED_PIN, LOW);
     }
 
+    
     bool read() {
         if (_process_message) {
             processMessage();   // Called only once!
             _process_message = false;    // Critical to avoid repeated calls over the ISR function
         }
     }
-
 
 };
 
