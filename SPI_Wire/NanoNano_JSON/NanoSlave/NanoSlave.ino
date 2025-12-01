@@ -81,7 +81,7 @@ ISR(SPI_STC_vect) {
 
     if (c < 128) {  // Only ASCII chars shall be transmitted as data
 
-        // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses an jump table
+        // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses a jump table
 
         switch (_transmission_mode) {
             case RECEIVE:
@@ -114,7 +114,7 @@ ISR(SPI_STC_vect) {
 
     } else {    // It's a control message 0xFX
         
-        // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses an jump table
+        // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses a jump table
 
         switch (c) {
             case RECEIVE:
