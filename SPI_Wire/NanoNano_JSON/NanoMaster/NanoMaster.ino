@@ -113,6 +113,7 @@ size_t sendString(const char* command) {
             digitalWrite(BUZZ_PIN, HIGH);
             delay(10);  // Buzzer on for 10ms
             digitalWrite(BUZZ_PIN, LOW);
+            delay(500);
         }
     }
 
@@ -189,6 +190,7 @@ size_t receiveString() {
             digitalWrite(BUZZ_PIN, HIGH);
             delay(10);  // Buzzer on for 10ms
             digitalWrite(BUZZ_PIN, LOW);
+            delay(500);
         }
     }
 
