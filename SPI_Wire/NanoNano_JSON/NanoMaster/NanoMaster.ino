@@ -41,7 +41,7 @@ void setup() {
     // Initialize serial
     Serial.begin(115200);
     delay(500);
-    Serial.println("\n\nSPI Master Initialized - Half-Duplex Mode");
+    Serial.println("\n\nSPI Master Initialized - JSON Mode");
 }
 
 void loop() {

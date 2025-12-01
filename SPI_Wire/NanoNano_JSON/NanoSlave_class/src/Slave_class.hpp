@@ -84,7 +84,8 @@ private:
                     }
                     break;
                 case SEND:
-                    if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
+                    // Checking the least likely first to avoid extra checking
+                    if (c != _sending_buffer[_buffer_index - 2] && _buffer_index > 1) {  // Two messages delay
                         SPDR = ERROR;
                         _transmission_mode = NONE;
                     } else if (_sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked

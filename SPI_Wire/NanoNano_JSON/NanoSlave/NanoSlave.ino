@@ -34,7 +34,7 @@ volatile bool _process_message = false;
 void setup() {
     Serial.begin(115200);
     delay(500);
-    Serial.println("\n\nSPI Slave Ready - Half-Duplex Mode");
+    Serial.println("\n\nSPI Slave Ready - JSON Mode");
 
     Serial.print("LED_BUILTIN: ");  // Led 13 is already used by SCK
     Serial.println(LED_BUILTIN);
@@ -94,7 +94,8 @@ ISR(SPI_STC_vect) {
                 }
                 break;
             case SEND:
-                if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
+                // Checking the least likely first to avoid extra checking
+                if (c != _sending_buffer[_buffer_index - 2] && _buffer_index > 1) {  // Two messages delay
                     SPDR = ERROR;
                     _transmission_mode = NONE;
                 } else if (_sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
@@ -102,7 +103,7 @@ ISR(SPI_STC_vect) {
                     _transmission_mode = NONE;
                     _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
                 } else if (_buffer_index < BUFFER_SIZE) {
-                    SPDR = _sending_buffer[_buffer_index++];
+                    SPDR = _sending_buffer[_buffer_index++];    // This one is the one that takes the most, so, the critical path
                 } else {
                     SPDR = FULL;
                     _transmission_mode = NONE;
