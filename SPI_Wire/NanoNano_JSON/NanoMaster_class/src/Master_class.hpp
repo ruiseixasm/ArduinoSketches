@@ -238,9 +238,6 @@ public:
         size_t length = 0;
 
         // ON cycle
-        length = receiveString();    // Clears up any Slave buffer
-        length = receiveString();    // Testing that receiving nothing also works
-        if (length > 0) return false;
         length = sendString("{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}");
         if (length == 0) return false;
         delay(1000);
@@ -248,17 +245,19 @@ public:
         delay(1000);
         length = receiveString();
         if (length == 0) return false;
+        length = receiveString();   // Testing that receiving nothing also works
+        if (length > 0) return false;
 
         // OFF cycle
-        length = receiveString();
-        if (length > 0) return false;
         length = sendString("{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}");
         if (length == 0) return false;
         delay(1000);
         length = sendString("");
         delay(1000);
-        length = receiveString();    // Before because sendString results in a command that takes time
+        length = receiveString();
         if (length == 0) return false;
+        length = receiveString();
+        if (length > 0) return false;
 
         return true;
     }
