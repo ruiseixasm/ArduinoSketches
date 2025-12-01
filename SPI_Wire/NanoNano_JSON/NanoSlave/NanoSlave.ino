@@ -28,8 +28,6 @@ char _sending_buffer[BUFFER_SIZE] = {'\0'};
 volatile uint8_t _buffer_index = 0; // Only one buffer is processed each time
 volatile MessageCode _transmission_mode = NONE;
 
-volatile bool _receiving_state = false;
-volatile bool _sending_state = false;
 volatile bool _process_message = false;
 
 
@@ -84,16 +82,16 @@ ISR(SPI_STC_vect) {
             case SEND:
                 if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
                     SPDR = ERROR;
-                    _sending_state = false;
+                    _transmission_mode = NONE;
                 } else if (_sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
                     SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
-                    _sending_state = false;
+                    _transmission_mode = NONE;
                     _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
                 } else if (_buffer_index < BUFFER_SIZE) {
                     SPDR = _sending_buffer[_buffer_index++];
                 } else {
                     SPDR = ERROR;
-                    _sending_state = false;
+                    _transmission_mode = NONE;
                 }
                 break;
             case RECEIVE:
@@ -102,7 +100,7 @@ ISR(SPI_STC_vect) {
                     _receiving_buffer[_buffer_index++] = c;
                 } else {
                     SPDR = ERROR;
-                    _receiving_state = false;
+                    _transmission_mode = NONE;
                 }
                 break;
             default:
@@ -118,28 +116,23 @@ ISR(SPI_STC_vect) {
                     SPDR = NONE;    // Nothing to send
                 } else {    // Starts sending right away, so, no ACK
                     SPDR = _sending_buffer[0];
-                    _buffer_index = 1;  // Skips the sent 0
                     _transmission_mode = SEND;
-
-                    _sending_state = true;
+                    _buffer_index = 1;  // Skips the sent 0
                 }
                 break;
             case RECEIVE:
                 SPDR = ACK;
-                _buffer_index = 0;
                 _transmission_mode = RECEIVE;
-
-                _receiving_state = true;
+                _buffer_index = 0;
                 break;
             case END:
                 SPDR = ACK;
-                _receiving_state = false;
+                _transmission_mode = NONE;
                 _process_message = true;
                 break;
             case ERROR:
                 SPDR = ACK;
-                _receiving_state = false;
-                _sending_state = false;
+                _transmission_mode = NONE;
                 break;
             default:
                 SPDR = NACK;
