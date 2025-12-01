@@ -22,9 +22,9 @@ void setup() {
 void loop() {
     if(!master_class.test()) {
         Serial.println("TEST FAILED");
-        digitalWrite(BUZZ_PIN, HIGH);
-        delay(1000);  // Buzzer on for 1 second
-        digitalWrite(BUZZ_PIN, LOW);
+        // digitalWrite(BUZZ_PIN, HIGH);
+        // delay(1000);  // Buzzer on for 1 second
+        // digitalWrite(BUZZ_PIN, LOW);
     }
 }
 

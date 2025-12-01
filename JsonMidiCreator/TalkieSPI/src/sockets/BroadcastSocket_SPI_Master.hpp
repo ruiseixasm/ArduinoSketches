@@ -188,10 +188,8 @@ protected:
 
             if (length == 0) {
                 SPI.transfer(ERROR);
-                _receiving_buffer[0] = '\0'; // Implicit char
-            } if (_receiving_buffer[length - 1] != '\0') {
+            } if (_sending_buffer[length - 1] != '\0') {
                 SPI.transfer(FULL);
-                _receiving_buffer[0] = '\0';
                 length = 1; // Avoids another try
             }
 

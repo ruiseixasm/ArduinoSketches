@@ -92,8 +92,11 @@ size_t sendString(const char* command) {
                     length = 0;
 					break;
 				}
-            } else {
+            } else if (command[0] != '\0') {
                 c = SPI.transfer(command[0]);	// Doesn't check first char
+            } else {
+                length = 1; // Nothing sent
+                break;
             }
             delayMicroseconds(send_delay_us);
             if (c == NACK) {
@@ -104,10 +107,11 @@ size_t sendString(const char* command) {
 
         if (length == 0) {
             SPI.transfer(ERROR);
-            _receiving_buffer[0] = '\0'; // Implicit char
-        } if (_receiving_buffer[length - 1] != '\0') {
+            // _receiving_buffer[0] = '\0'; // Implicit char
+        } else if (command[length - 1] != '\0') {
             SPI.transfer(FULL);
-            _receiving_buffer[0] = '\0';
+            Serial.println("FULL");
+            // _receiving_buffer[0] = '\0';
             length = 1; // Avoids another try
         }
 
@@ -115,7 +119,12 @@ size_t sendString(const char* command) {
         digitalWrite(SS_PIN, HIGH);
 
         if (length > 0) {
-            Serial.println("Command successfully sent");
+            if (length > 1) {
+                Serial.print("Command sent: ");
+                Serial.println(command);
+            } else {
+                Serial.println("Nothing sent");
+            }
         } else {
             Serial.print("Command NOT successfully sent on try: ");
             Serial.println(s + 1);
@@ -180,10 +189,8 @@ size_t receiveString() {
 
         if (length == 0) {
             SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
-            _receiving_buffer[0] = '\0'; // Implicit char
-        } if (_receiving_buffer[length - 1] != '\0') {
+        } else if (_receiving_buffer[length - 1] != '\0') {
             SPI.transfer(FULL);
-            _receiving_buffer[0] = '\0';
             length = 1; // Avoids another try
         }
 

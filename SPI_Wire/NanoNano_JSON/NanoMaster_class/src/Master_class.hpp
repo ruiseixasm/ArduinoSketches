@@ -82,8 +82,11 @@ private:
                         length = 0;
                         break;
                     }
-                } else {
+                } else if (command[0] != '\0') {
                     c = SPI.transfer(command[0]);	// Doesn't check first char
+                } else {
+                    length = 1; // Nothing sent
+                    break;
                 }
                 delayMicroseconds(send_delay_us);
                 if (c == NACK) {
@@ -94,10 +97,11 @@ private:
 
             if (length == 0) {
                 SPI.transfer(ERROR);
-                _receiving_buffer[0] = '\0'; // Implicit char
-            } if (_receiving_buffer[length - 1] != '\0') {
+                // _receiving_buffer[0] = '\0'; // Implicit char
+            } else if (command[length - 1] != '\0') {
                 SPI.transfer(FULL);
-                _receiving_buffer[0] = '\0';
+                Serial.println("FULL");
+                // _receiving_buffer[0] = '\0';
                 length = 1; // Avoids another try
             }
 
@@ -105,7 +109,11 @@ private:
             digitalWrite(_ss_pin, HIGH);
 
             if (length > 0) {
-                Serial.println("Command successfully sent");
+                if (length > 1) {
+                    Serial.println("Command successfully sent");
+                } else {
+                    Serial.println("Nothing sent");
+                }
             } else {
                 Serial.print("Command NOT successfully sent on try: ");
                 Serial.println(s + 1);
@@ -168,7 +176,7 @@ private:
             if (length == 0) {
                 SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
                 _receiving_buffer[0] = '\0'; // Implicit char
-            } if (_receiving_buffer[length - 1] != '\0') {
+            } else if (_receiving_buffer[length - 1] != '\0') {
                 SPI.transfer(FULL);
                 _receiving_buffer[0] = '\0';
                 length = 1; // Avoids another try
@@ -236,7 +244,9 @@ public:
         if (length > 0) return false;
         length = sendString("{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}");
         if (length == 0) return false;
-        delay(2000);
+        delay(1000);
+        length = sendString("");    // Testing sending nothing at all
+        delay(1000);
 
         length = receiveString();
         if (length == 0) return false;
@@ -244,7 +254,9 @@ public:
         if (length > 0) return false;
         length = sendString("{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}");
         if (length == 0) return false;
-        delay(2000);
+        delay(1000);
+        length = sendString("");
+        delay(1000);
 
         return true;
     }
