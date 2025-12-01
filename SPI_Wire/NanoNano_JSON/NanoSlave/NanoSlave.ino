@@ -81,9 +81,18 @@ ISR(SPI_STC_vect) {
 
     if (c < 128) {  // Only ASCII chars shall be transmitted as data
 
-        // Sending is more demanding on the Slave side, so it has priority of checking over Receiving
+        // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses an jump table
 
         switch (_transmission_mode) {
+            case RECEIVE:
+                if (_buffer_index < BUFFER_SIZE) {
+                    // Returns same received char as receiving confirmation (no need to set SPDR)
+                    _receiving_buffer[_buffer_index++] = c;
+                } else {
+                    SPDR = ERROR;
+                    _transmission_mode = NONE;
+                }
+                break;
             case SEND:
                 if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
                     SPDR = ERROR;   // ALWAYS ON TOP
@@ -99,24 +108,20 @@ ISR(SPI_STC_vect) {
                     _transmission_mode = NONE;
                 }
                 break;
-            case RECEIVE:
-                if (_buffer_index < BUFFER_SIZE) {
-                    // Returns same received char as receiving confirmation (no need to set SPDR)
-                    _receiving_buffer[_buffer_index++] = c;
-                } else {
-                    SPDR = ERROR;
-                    _transmission_mode = NONE;
-                }
-                break;
             default:
                 SPDR = NACK;
         }
 
     } else {    // It's a control message 0xFX
         
-        // Sending is more demanding on the Slave side, so it has priority of checking over Receiving
+        // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses an jump table
 
         switch (c) {
+            case RECEIVE:
+                SPDR = ACK;
+                _transmission_mode = RECEIVE;
+                _buffer_index = 0;
+                break;
             case SEND:
                 if (_sending_buffer[0] == '\0') {
                     SPDR = NONE;    // Nothing to send
@@ -125,11 +130,6 @@ ISR(SPI_STC_vect) {
                     _transmission_mode = SEND;
                     _buffer_index = 1;  // Skips the sent 0
                 }
-                break;
-            case RECEIVE:
-                SPDR = ACK;
-                _transmission_mode = RECEIVE;
-                _buffer_index = 0;
                 break;
             case END:
                 SPDR = ACK;
