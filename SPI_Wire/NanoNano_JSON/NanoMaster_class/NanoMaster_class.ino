@@ -16,7 +16,7 @@ void setup() {
     pinMode(BUZZ_PIN, OUTPUT);
     digitalWrite(BUZZ_PIN, LOW);
     
-    Serial.println("\n\nSPI Master Initialized - Half-Duplex Mode");
+    Serial.println("\n\nSPI Master Initialized - JSON class Mode");
 }
 
 void loop() {
