@@ -17,7 +17,7 @@ void setup() {
 }
 
 void loop() {
-    slave_class.read();
+    slave_class.process();
 }
 
 
