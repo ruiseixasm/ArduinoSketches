@@ -41,7 +41,8 @@ public:
         ERROR   = 0xF5, // Error frame
         RECEIVE = 0xF6, // Asks the receiver to start receiving
         SEND    = 0xF7, // Asks the receiver to start sending
-        NONE    = 0xF8  // Means nothing to send
+        NONE    = 0xF8, // Means nothing to send
+        FULL    = 0xF9  // Signals the buffer as full
     };
 
 
@@ -96,36 +97,43 @@ protected:
             // Asks the receiver to start receiving
             c = SPI.transfer(SEND);
             delayMicroseconds(send_delay_us);
-                
-			// Starts to receive all chars here
-			for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {	// First char is a control byte
-				delayMicroseconds(receive_delay_us);
-				if (i > 0) {    // The first response is discarded
-					c = SPI.transfer(_receiving_buffer[i - 1]);
-					if (c == END) {
-						length = i;
-						break;
-					} else if (c == ERROR || c == NACK) {
-						_receiving_buffer[0] = '\0'; // Implicit char
-						length = 0;
-						break;
-					} else {
-						_receiving_buffer[i] = c;
-					}
-				} else {
-					c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
-					if (c == NONE) {
-						_receiving_buffer[0] = '\0'; // Implicit char
-						length = 1;
-						break;
-					} else if (c == NACK) {
-						_receiving_buffer[0] = '\0'; // Implicit char
-						length = 0;
-						break;
-					}
-					_receiving_buffer[0] = c;   // First char received
-				}
-			}
+
+            // Starts to receive all chars here
+            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {	// First char is a control byte
+                delayMicroseconds(receive_delay_us);
+                if (i > 0) {    // The first response is discarded
+                    c = SPI.transfer(_receiving_buffer[i - 1]);
+                    if (c == END) {
+                        length = i;
+                        break;
+                    } else if (c == ERROR || c == NACK) {
+                        length = 0;
+                        break;
+                    } else {
+                        _receiving_buffer[i] = c;
+                    }
+                } else {
+                    c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
+                    if (c == NONE) {
+                        _receiving_buffer[0] = '\0'; // Implicit char
+                        length = 1;
+                        break;
+                    } else if (c == NACK) {
+                        length = 0;
+                        break;
+                    }
+                    _receiving_buffer[0] = c;   // First char received
+                }
+            }
+
+            if (length == 0) {
+                SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
+                _receiving_buffer[0] = '\0'; // Implicit char
+            } if (_receiving_buffer[length - 1] != '\0') {
+                SPI.transfer(FULL);
+                _receiving_buffer[0] = '\0';
+                length = 1; // Avoids another try
+            }
 
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
@@ -149,36 +157,43 @@ protected:
             // Asks the receiver to start receiving
             SPI.transfer(RECEIVE);
             delayMicroseconds(send_delay_us);
-				
-			for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
-				if (i > 0) {
-					if (_sending_buffer[i - 1] == '\0') {
-						c = SPI.transfer(END);
-						if (c == '\0') {
-							length = i;
-							break;
-						} else {
-							SPI.transfer(ERROR);
-							length = 0;
-							break;
-						}
-					} else {
-						c = SPI.transfer(_sending_buffer[i]);	// Receives the _sending_buffer[i - 1]
-					}
-					if (c != _sending_buffer[i - 1]) {    // Excludes NACK situation
-						SPI.transfer(ERROR);
-						length = 0;
-						break;
-					}
-				} else {
-					c = SPI.transfer(_sending_buffer[0]);	// Doesn't check first char
-				}
-				delayMicroseconds(send_delay_us);
-				if (c == NACK) {
-					length = 0;
-					break;
-				}
-			}
+
+            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
+                if (i > 0) {
+                    if (_sending_buffer[i - 1] == '\0') {
+                        c = SPI.transfer(END);
+                        if (c == '\0') {
+                            length = i;
+                            break;
+                        } else {
+                            length = 0;
+                            break;
+                        }
+                    } else {
+                        c = SPI.transfer(_sending_buffer[i]);	// Receives the _sending_buffer[i - 1]
+                    }
+                    if (c != _sending_buffer[i - 1]) {    // Excludes NACK situation
+                        length = 0;
+                        break;
+                    }
+                } else {
+                    c = SPI.transfer(_sending_buffer[0]);	// Doesn't check first char
+                }
+                delayMicroseconds(send_delay_us);
+                if (c == NACK) {
+                    length = 0;
+                    break;
+                }
+            }
+
+            if (length == 0) {
+                SPI.transfer(ERROR);
+                _receiving_buffer[0] = '\0'; // Implicit char
+            } if (_receiving_buffer[length - 1] != '\0') {
+                SPI.transfer(FULL);
+                _receiving_buffer[0] = '\0';
+                length = 1; // Avoids another try
+            }
 
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
