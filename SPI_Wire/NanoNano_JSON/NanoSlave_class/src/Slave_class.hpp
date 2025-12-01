@@ -11,25 +11,28 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef MASTER_CLASS_HPP
-#define MASTER_CLASS_HPP
+#ifndef SLAVE_CLASS_HPP
+#define SLAVE_CLASS_HPP
 
 #include <SPI.h>
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
 // Pin definitions
-extern const int BUZZ_PIN;  // Declare as external (defined elsewhere)
+extern const int GREEN_LED_PIN; // Declare as external (defined elsewhere)
+extern const int YELLOW_LED_PIN;
 
 #define BUFFER_SIZE 128
 char _receiving_buffer[BUFFER_SIZE] = {'\0'};
+char _sending_buffer[BUFFER_SIZE] = {'\0'};
+
+volatile uint8_t _buffer_index = 0; // Only one buffer is processed each time
+volatile MessageCode _transmission_mode = NONE;
+
+volatile bool _process_message = false;
 
 
-// To make this value the minimum possible, always place the setting SPDR on top in the Slave code (SPDR =)
-#define send_delay_us 10
-#define receive_delay_us 10
-
-class Master_class
+class Slave_class
 {
 public:
     
@@ -48,222 +51,181 @@ public:
 
 private:
 
-    int _ss_pin = 10;
 
-    size_t sendString(const char* command) {
-        size_t length = 0;	// No interrupts, so, not volatile
-        uint8_t c; // Avoid using 'char' while using values above 127
+    // ------------------------------
+    // SPI Interrupt
+    // ------------------------------
+    ISR(SPI_STC_vect) {
 
-        for (size_t s = 0; length == 0 && s < 3; s++) {
-    
-            digitalWrite(_ss_pin, LOW);
-            delayMicroseconds(5);
+        // WARNING 1:
+        //     AVOID PLACING HEAVY CODE OR CALL HERE. THIS INTERRUPTS THE LOOP!
 
-            // Asks the receiver to start receiving
-            c = SPI.transfer(RECEIVE);
-            delayMicroseconds(send_delay_us);
-            
-            // RECEIVE message code
-            for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
-                if (i > 0) {
-                    if (command[i - 1] == '\0') {
-                        c = SPI.transfer(END);
-                        if (c == '\0') {
-                            length = i;
-                            break;
-                        } else {
-                            length = 0;
-                            break;
-                        }
+        // WARNING 2:
+        //     AVOID PLACING Serial.print CALLS HERE BECAUSE IT WILL DELAY 
+        //     THE POSSIBILITY OF SPI CAPTURE AND RESPONSE IN TIME !!!
+
+        // WARNING 3:
+        //     THE SETTING OF THE `SPDR` VARIABLE SHALL ALWAYS BE ON TOP, FIRSTLY THAN ALL OTHERS!
+
+        uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
+
+        if (c < 128) {  // Only ASCII chars shall be transmitted as data
+
+            // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses a jump table
+
+            switch (_transmission_mode) {
+                case RECEIVE:
+                    if (_buffer_index < BUFFER_SIZE) {
+                        // Returns same received char as receiving confirmation (no need to set SPDR)
+                        _receiving_buffer[_buffer_index++] = c;
                     } else {
-                        c = SPI.transfer(command[i]);	// Receives the command[i - 1]
+                        SPDR = FULL;    // ALWAYS ON TOP
+                        _transmission_mode = NONE;
                     }
-                    if (c != command[i - 1]) {    // Excludes NACK situation
-                        length = 0;
-                        break;
+                    break;
+                case SEND:
+                    if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
+                        SPDR = ERROR;
+                        _transmission_mode = NONE;
+                    } else if (_sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
+                        SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
+                        _transmission_mode = NONE;
+                        _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
+                    } else if (_buffer_index < BUFFER_SIZE) {
+                        SPDR = _sending_buffer[_buffer_index++];
+                    } else {
+                        SPDR = FULL;
+                        _transmission_mode = NONE;
                     }
-                } else if (command[0] != '\0') {
-                    c = SPI.transfer(command[0]);	// Doesn't check first char
-                } else {
-                    length = 1; // Nothing sent
                     break;
-                }
-                delayMicroseconds(send_delay_us);
-                if (c == NACK) {
-                    length = 0;
-                    break;
-                }
+                default:
+                    SPDR = NACK;
             }
 
-            if (length == 0) {
-                SPI.transfer(ERROR);
-                // _receiving_buffer[0] = '\0'; // Implicit char
-            } else if (command[length - 1] != '\0') {
-                SPI.transfer(FULL);
-                Serial.println("FULL");
-                // _receiving_buffer[0] = '\0';
-                length = 1; // Avoids another try
-            }
+        } else {    // It's a control message 0xFX
+            
+            // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses a jump table
 
-            delayMicroseconds(5);
-            digitalWrite(_ss_pin, HIGH);
-
-            if (length > 0) {
-                if (length > 1) {
-                    Serial.println("Command successfully sent");
-                } else {
-                    Serial.println("\tNothing sent");
-                }
-            } else {
-                Serial.print("\t\tCommand NOT successfully sent on try: ");
-                Serial.println(s + 1);
-                Serial.println("\t\tBUZZER activated for 10ms!");
-                digitalWrite(BUZZ_PIN, HIGH);
-                delay(10);  // Buzzer on for 10ms
-                digitalWrite(BUZZ_PIN, LOW);
-                delay(500);
+            switch (c) {
+                case RECEIVE:
+                    SPDR = ACK;
+                    _transmission_mode = RECEIVE;
+                    _buffer_index = 0;
+                    break;
+                case SEND:
+                    if (_sending_buffer[0] == '\0') {
+                        SPDR = NONE;    // Nothing to send
+                    } else {    // Starts sending right away, so, no ACK
+                        SPDR = _sending_buffer[0];
+                        _transmission_mode = SEND;
+                        _buffer_index = 1;  // Skips the sent 0
+                    }
+                    break;
+                case END:
+                    SPDR = ACK;
+                    _transmission_mode = NONE;
+                    _process_message = true;
+                    break;
+                case ACK:
+                    break;
+                case ERROR:
+                case FULL:
+                    SPDR = ACK;
+                    _transmission_mode = NONE;
+                    break;
+                default:
+                    SPDR = NACK;
             }
         }
-
-        if (length > 0)
-            length--;   // removes the '\0' from the length as final value
-        return length;
     }
 
 
-    size_t receiveString() {
-        size_t length = 0;	// No interrupts, so, not volatile
-        uint8_t c; // Avoid using 'char' while using values above 127
-        _receiving_buffer[0] = '\0'; // Avoids garbage printing
+    void processMessage() {
 
-        for (size_t r = 0; length == 0 && r < 3; r++) {
-    
-            digitalWrite(_ss_pin, LOW);
-            delayMicroseconds(5);
+        Serial.print("Processed command: ");
+        Serial.println(_receiving_buffer);
 
-            // Asks the receiver to start receiving
-            c = SPI.transfer(SEND);
-            delayMicroseconds(send_delay_us);
-                
-            // Starts to receive all chars here
-            for (uint8_t i = 0; i < BUFFER_SIZE; i++) {	// First char is a control byte
-                delayMicroseconds(receive_delay_us);
-                if (i > 0) {    // The first response is discarded
-                    c = SPI.transfer(_receiving_buffer[i - 1]);
-                    if (c == END) {
-                        length = i;
-                        break;
-                    } else if (c == ERROR || c == NACK) {
-                        length = 0;
-                        break;
-                    } else {
-                        _receiving_buffer[i] = c;
-                    }
-                } else {
-                    c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
-                    if (c == NONE) {
-                        _receiving_buffer[0] = '\0'; // Implicit char
-                        length = 1;
-                        break;
-                    } else if (c == NACK) {
-                        length = 0;
-                        break;
-                    }
-                    _receiving_buffer[0] = c;   // First char received
-                }
-            }
+        // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+        #if ARDUINOJSON_VERSION_MAJOR >= 7
+        JsonDocument message_doc;
+        #else
+        StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+        #endif
 
-            if (length == 0) {
-                SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
-                _receiving_buffer[0] = '\0'; // Implicit char
-            } else if (_receiving_buffer[length - 1] != '\0') {
-                SPI.transfer(FULL);
-                _receiving_buffer[0] = '\0';
-                length = 1; // Avoids another try
-            }
-
-            delayMicroseconds(5);
-            digitalWrite(_ss_pin, HIGH);
-
-            if (length > 0) {
-                if (length > 1) {
-                    Serial.print("Received message: ");
-                    Serial.println(_receiving_buffer);
-                } else {
-                    Serial.println("\tNothing received");
-                }
-            } else {
-                Serial.print("\t\tMessage NOT successfully received on try: ");
-                Serial.println(r + 1);
-                Serial.println("\t\tBUZZER activated for 2 x 10ms!");
-                digitalWrite(BUZZ_PIN, HIGH);
-                delay(10);  // Buzzer on for 10ms
-                digitalWrite(BUZZ_PIN, LOW);
-                delay(200);
-                digitalWrite(BUZZ_PIN, HIGH);
-                delay(10);  // Buzzer on for 10ms
-                digitalWrite(BUZZ_PIN, LOW);
-                delay(500);
-            }
+        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BUFFER_SIZE);
+        if (error) {
+            return false;
         }
+        JsonObject json_message = message_doc.as<JsonObject>();
 
-        if (length > 0)
-            length--;   // removes the '\0' from the length as final value
-        return length;
+        const char* command_name = json_message["n"].as<const char*>();
+
+
+        if (strcmp(command_name, "ON") == 0) {
+            digitalWrite(GREEN_LED_PIN, HIGH);
+            json_message["n"] = "OK_ON";
+            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
+            Serial.print("LED is ON");
+            Serial.print(" | Sending: ");
+            Serial.println(_sending_buffer);
+
+        } else if (strcmp(command_name, "OFF") == 0) {
+            digitalWrite(GREEN_LED_PIN, LOW);
+            json_message["n"] = "OK_OFF";
+            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
+            Serial.print("LED is OFF");
+            Serial.print(" | Sending: ");
+            Serial.println(_sending_buffer);
+        } else {
+            json_message["n"] = "BUZZ";
+            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
+            Serial.print("Unknown command");
+            Serial.print(" | Sending: ");
+            Serial.println(_sending_buffer);
+        }
     }
 
 
 public:
 
-    Master_class(int ss_pin = 10) {
-        // Initialize SPI
-        SPI.begin();
-        SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
-        SPI.setDataMode(SPI_MODE0);
-        SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
-        // Enable the SS pin
-        pinMode(ss_pin, OUTPUT);
-        digitalWrite(ss_pin, HIGH);
-        // Sets the class SS pin
-        _ss_pin = ss_pin;
+    Slave_class() {
+
+        pinMode(GREEN_LED_PIN, OUTPUT);
+        digitalWrite(GREEN_LED_PIN, LOW);
+        pinMode(YELLOW_LED_PIN, OUTPUT);
+        digitalWrite(YELLOW_LED_PIN, LOW);
+
+        pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
+
+        // Initialize SPI as slave - EXPLICIT MSB FIRST
+        SPCR = 0;  // Clear register
+        SPCR |= _BV(SPE);    // SPI Enable
+        SPCR |= _BV(SPIE);   // SPI Interrupt Enable  
+        SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
+        SPCR &= ~_BV(CPOL);  // Clock polarity 0
+        SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
+
+        SPI.attachInterrupt();
     }
 
-    ~Master_class() {
+    ~Slave_class() {
         // This returns the pin to exact power-on state:
-        pinMode(_ss_pin, INPUT);
-        digitalWrite(_ss_pin, LOW);  // Important: disables any pull-up
+        pinMode(GREEN_LED_PIN, INPUT);
+        digitalWrite(GREEN_LED_PIN, LOW);  // Important: disables any pull-up
+
+        pinMode(YELLOW_LED_PIN, INPUT);
+        digitalWrite(YELLOW_LED_PIN, LOW);
     }
 
-    
-    bool test() {
-        size_t length = 0;
-
-        // ON cycle
-        length = sendString("{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}");
-        if (length == 0) return false;
-        delay(1000);
-        length = sendString("");    // Testing sending nothing at all
-        delay(1000);
-        length = receiveString();
-        if (length == 0) return false;
-        length = receiveString();   // Testing that receiving nothing also works
-        if (length > 0) return false;
-
-        // OFF cycle
-        length = sendString("{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}");
-        if (length == 0) return false;
-        delay(1000);
-        length = sendString("");
-        delay(1000);
-        length = receiveString();
-        if (length == 0) return false;
-        length = receiveString();
-        if (length > 0) return false;
-
-        return true;
+    bool read() {
+        if (_process_message) {
+            processMessage();   // Called only once!
+            _process_message = false;    // Critical to avoid repeated calls over the ISR function
+        }
     }
+
 
 };
 
 
-#endif // MASTER_CLASS_HPP
+#endif // SLAVE_CLASS_HPP

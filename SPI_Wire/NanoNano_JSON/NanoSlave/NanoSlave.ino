@@ -20,7 +20,6 @@ enum MessageCode : uint8_t {
 // Pin definitions
 const int GREEN_LED_PIN = 2;
 const int YELLOW_LED_PIN = 21;  // A7 = digital pin 21
-const int SS_PIN = 10;
 
 #define BUFFER_SIZE 128
 char _receiving_buffer[BUFFER_SIZE] = {'\0'};
@@ -59,7 +58,7 @@ void setup() {
     // SPCR |= _BV(SPE);
     // SPCR |= _BV(SPIE);
 
-    SPI.attachInterrupt();  
+    SPI.attachInterrupt();
 }
 
 
