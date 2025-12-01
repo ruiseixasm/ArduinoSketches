@@ -25,8 +25,7 @@ const int SS_PIN = 10;
 char _receiving_buffer[BUFFER_SIZE] = {'\0'};
 char _sending_buffer[BUFFER_SIZE] = {'\0'};
 
-volatile uint8_t _receiving_index = 0;
-volatile uint8_t _sending_index = 0;
+volatile uint8_t _buffer_index = 0; // Only one buffer is processed each time
 
 volatile bool _receiving_state = false;
 volatile bool _sending_state = false;
@@ -80,27 +79,27 @@ ISR(SPI_STC_vect) {
 
     if (c < 128) {  // If it's a typical ASCII char
 
-        if (_receiving_state) {
-            if (_receiving_index < BUFFER_SIZE) {
-                _receiving_buffer[_receiving_index++] = c;
-                // Returns same received char as receiving confirmation (no need to set SPDR)
-            } else {
-                _receiving_state = false;
+        if (_sending_state) {
+            if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
                 SPDR = ERROR;
-            }
-        } else if (_sending_state) {
-            if (_sending_index > 1 && c != _sending_buffer[_sending_index - 2]) {  // Two messages delay
                 _sending_state = false;
-                SPDR = ERROR;
-            } else if (_sending_buffer[_sending_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
+            } else if (_sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
+                SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
                 _sending_state = false;
                 _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
-                SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
-            } else if (_sending_index < BUFFER_SIZE) {
-                SPDR = _sending_buffer[_sending_index++];
+            } else if (_buffer_index < BUFFER_SIZE) {
+                SPDR = _sending_buffer[_buffer_index++];
             } else {
-                _sending_state = false;
                 SPDR = ERROR;
+                _sending_state = false;
+            }
+        } else if (_receiving_state) {
+            if (_buffer_index < BUFFER_SIZE) {
+                // Returns same received char as receiving confirmation (no need to set SPDR)
+                _receiving_buffer[_buffer_index++] = c;
+            } else {
+                SPDR = ERROR;
+                _receiving_state = false;
             }
         } else {
             SPDR = NACK;
@@ -109,30 +108,29 @@ ISR(SPI_STC_vect) {
     } else {    // It's a control message 0xFX
         
         switch (c) {
-            case RECEIVE:
-                _receiving_state = true;
-                _receiving_index = 0;
-                SPDR = ACK;
-                break;
             case SEND:
-                _sending_index = 0;
-                if (_sending_buffer[_sending_index] == '\0') {
+                if (_sending_buffer[0] == '\0') {
                     SPDR = NONE;    // Nothing to send
                 } else {    // Starts sending right away, so, no ACK
-                    SPDR = _sending_buffer[_sending_index++];
+                    SPDR = _sending_buffer[0];
+                    _buffer_index = 1;  // Skips the sent 0
                     _sending_state = true;
                 }
                 break;
+            case RECEIVE:
+                SPDR = ACK;
+                _buffer_index = 0;
+                _receiving_state = true;
+                break;
             case END:
+                SPDR = ACK;
                 _receiving_state = false;
                 _process_message = true;
-                SPDR = ACK;
                 break;
             case ERROR:
-                _receiving_state = false;
-                _process_message = false;
-                _sending_state = false;
                 SPDR = ACK;
+                _receiving_state = false;
+                _sending_state = false;
                 break;
             default:
                 SPDR = NACK;

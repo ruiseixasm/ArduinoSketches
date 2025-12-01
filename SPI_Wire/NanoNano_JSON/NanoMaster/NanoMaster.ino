@@ -122,7 +122,7 @@ size_t sendString(const char* command) {
 }
 
 
-#define receive_delay_us 10 // Receive needs more time to be processed
+#define receive_delay_us 12 // Receive needs more time to be processed due to Slave dependency
 
 size_t receiveString() {
     size_t length = 0;	// No interrupts, so, not volatile
