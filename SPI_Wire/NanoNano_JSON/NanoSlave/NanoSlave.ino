@@ -68,20 +68,26 @@ void setup() {
 // ------------------------------
 ISR(SPI_STC_vect) {
 
-    // AVOID PLACING HEAVY CODE OR CALL HERE. THIS INTERRUPTS THE LOOP!
+    // WARNING 1:
+    //     AVOID PLACING HEAVY CODE OR CALL HERE. THIS INTERRUPTS THE LOOP!
 
-    // WARNING:
+    // WARNING 2:
     //     AVOID PLACING Serial.print CALLS HERE BECAUSE IT WILL DELAY 
     //     THE POSSIBILITY OF SPI CAPTURE AND RESPONSE IN TIME !!!
+
+    // WARNING 3:
+    //     THE SETTING OF THE `SPDR` VARIABLE SHALL ALWAYS BE ON TOP, FIRSTLY THAN ALL OTHERS!
 
     uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
 
     if (c < 128) {  // If it's a typical ASCII char
 
+        // Sending is more demanding on the Slave side, so it has priority of checking over Receiving
+
         switch (_transmission_mode) {
             case SEND:
                 if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
-                    SPDR = ERROR;
+                    SPDR = ERROR;   // ALWAYS ON TOP
                     _transmission_mode = NONE;
                 } else if (_sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
                     SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
@@ -105,11 +111,12 @@ ISR(SPI_STC_vect) {
                 break;
             default:
                 SPDR = NACK;
-                break;
         }
 
     } else {    // It's a control message 0xFX
         
+        // Sending is more demanding on the Slave side, so it has priority of checking over Receiving
+
         switch (c) {
             case SEND:
                 if (_sending_buffer[0] == '\0') {
