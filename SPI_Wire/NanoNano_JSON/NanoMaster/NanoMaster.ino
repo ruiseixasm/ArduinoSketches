@@ -47,10 +47,12 @@ void setup() {
 void loop() {
     // Send string commands directly
     receiveString();    // Before because sendString results in a command that takes time
+    receiveString();    // Testing that receiving nothing also works
     sendString("{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}");
     delay(2000);
 
-    receiveString();    // Before because sendString results in a command that takes time
+    receiveString();
+    receiveString();
     sendString("{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}");
     delay(2000);
 }
