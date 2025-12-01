@@ -62,7 +62,6 @@ void setup() {
 }
 
 
-
 // ------------------------------
 // SPI Interrupt
 // ------------------------------
@@ -80,7 +79,7 @@ ISR(SPI_STC_vect) {
 
     uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
 
-    if (c < 128) {  // If it's a typical ASCII char
+    if (c < 128) {  // Only ASCII chars shall be transmitted as data
 
         // Sending is more demanding on the Slave side, so it has priority of checking over Receiving
 
@@ -192,6 +191,7 @@ void processMessage() {
         Serial.println(_sending_buffer);
     }
 }
+
 
 void loop() {
     // HEAVY PROCESSING SHALL BE IN THE LOOP
