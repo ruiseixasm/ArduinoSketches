@@ -26,6 +26,7 @@ void loop() {
         digitalWrite(BUZZ_PIN, HIGH);
         delay(500); // Buzzer on for 1/2 second
         digitalWrite(BUZZ_PIN, LOW);
+        delay(60000);    // Avoids fast loops of failure
     } else {
         Serial.println("----------------------------TEST PASSED----------------------------");
     }
