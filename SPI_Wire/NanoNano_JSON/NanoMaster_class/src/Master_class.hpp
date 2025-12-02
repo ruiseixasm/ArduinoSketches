@@ -144,7 +144,6 @@ private:
 
             // Asks the Slave to start receiving
             c = SPI.transfer(SEND);
-            delayMicroseconds(send_delay_us);
                 
             // Starts to receive all chars here
             for (uint8_t i = 0; i < BUFFER_SIZE; i++) {	// First char is a control byte
