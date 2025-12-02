@@ -98,11 +98,11 @@ private:
                         SPDR = _sending_buffer[_buffer_index++];    // This way avoids the critical path bellow (in advance)
                         // Boundary safety takes the most toll, that's why SPDR typical scenario is given in advance
                         if (_buffer_index > 2) {    // Two positions of delay (note the _buffer_index++ above)
-                            uint8_t previous_c = _sending_buffer[_buffer_index - 3];
-                            if (previous_c != c) {
+                            uint8_t sent_c = _sending_buffer[_buffer_index - 3];
+                            if (sent_c != c) {
                                 SPDR = ERROR;
                                 _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
-                            } else if (previous_c == '\0') {
+                            } else if (sent_c == '\0') {
                                 SPDR = END;     // Main reason for transmission fail (critical path) (one in many though)
                                 _transmission_mode = NONE;
                                 _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty (NONE next time)
