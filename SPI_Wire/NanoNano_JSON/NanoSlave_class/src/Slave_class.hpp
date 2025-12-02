@@ -14,9 +14,10 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef SLAVE_CLASS_HPP
 #define SLAVE_CLASS_HPP
 
+#include <Arduino.h>
 #include <SPI.h>
-#include <ArduinoJson.h>    // Include ArduinoJson Library
 #include <avr/interrupt.h>
+#include <ArduinoJson.h>
 
 
 // Pin definitions - define these in your main sketch
@@ -29,7 +30,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 #define BUFFER_SIZE 128
-
 
 
 class Slave_class
@@ -53,7 +53,7 @@ public:
 
 private:
     // Static instance for ISR access
-    static Slave_class* instance;
+    static Slave_class* _instance;
     
     // Buffers and state variables
     char _receiving_buffer[BUFFER_SIZE];
@@ -63,15 +63,6 @@ private:
     volatile bool _process_message;
 
     
-    // Private methods
-    void processMessage();
-    
-    // Static ISR wrapper (called by hardware)
-    static void isrWrapper() {
-        if (instance) {
-            instance->handleSPI_Interrupt();
-        }
-    }
     
     // Actual interrupt handler
     void handleSPI_Interrupt() {
@@ -160,7 +151,6 @@ private:
     }
 
 
-
     void processMessage() {
 
         Serial.print("Processed command: ");
@@ -170,7 +160,7 @@ private:
         #if ARDUINOJSON_VERSION_MAJOR >= 7
         JsonDocument message_doc;
         #else
-        StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+        StaticJsonDocument<BUFFER_SIZE> message_doc;
         #endif
 
         DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BUFFER_SIZE);
@@ -207,6 +197,19 @@ private:
     }
 
 
+    void initSPISlave() {  // FIX 3: Add missing method definition
+        pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
+        
+        // Initialize SPI as slave - EXPLICIT MSB FIRST
+        SPCR = 0;  // Clear register
+        SPCR |= _BV(SPE);    // SPI Enable
+        SPCR |= _BV(SPIE);   // SPI Interrupt Enable  
+        SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
+        SPCR &= ~_BV(CPOL);  // Clock polarity 0
+        SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
+    }
+
+
 public:
 
     Slave_class() {
@@ -231,10 +234,10 @@ public:
     }
 
     ~Slave_class() {
-        if (instance == this) {
+        if (_instance == this) {
             // Disable SPI interrupt
             SPCR &= ~(1 << SPIE);
-            instance = nullptr;
+            _instance = nullptr;
         }
 
         // This returns the pin to exact power-on state:
@@ -245,56 +248,16 @@ public:
         digitalWrite(YELLOW_LED_PIN, LOW);
     }
 
-
-    void initSPISlave() {
-        // Set MISO as OUTPUT (slave sends data)
-        DDRB |= (1 << DDB4);  // PB4 = MISO = Pin 12
-        
-        // Set MOSI, SCK, SS as INPUT
-        DDRB &= ~((1 << DDB3) | (1 << DDB5) | (1 << DDB2));
-        // PB3 = MOSI = Pin 11, PB5 = SCK = Pin 13, PB2 = SS = Pin 10
-        
-        // Enable SPI as slave with interrupt
-        SPCR = (1 << SPE) | (1 << SPIE);  // SPI Enable + Interrupt Enable
-        
-        // Mode 0 (CPOL=0, CPHA=0), MSB first
-        SPCR &= ~((1 << CPOL) | (1 << CPHA) | (1 << DORD));
-        
-        // Clear any pending interrupt
-        SPSR;
-        SPDR;
-        
-        // Prepare first response
-        SPDR = NONE;
-    }
     
-    bool process() {
-        if (process_message) {
-            digitalWrite(YELLOW_LED_PIN, HIGH);
-            processMessage();
-            digitalWrite(YELLOW_LED_PIN, LOW);
-            process_message = false;
-            return true;
+    // Static ISR wrapper (called by hardware)
+    static void isrWrapper() {
+        if (_instance) {
+            _instance->handleSPI_Interrupt();
         }
-        return false;
     }
     
-    void setResponse(const char* response) {
-        strncpy(sending_buffer, response, BUFFER_SIZE - 1);
-        sending_buffer[BUFFER_SIZE - 1] = '\0';
-    }
-    
-    const char* getLastCommand() const {
-        return receiving_buffer;
-    }
-    
-    // Static method to attach ISR (for main sketch)
-    static void attachSPI_ISR() {
-        // Does nothing, just ensures ISR is linked
-    }
 
-
-    bool process() {
+    void process() {
         if (_process_message) {
             processMessage();   // Called only once!
             _process_message = false;    // Critical to avoid repeated calls over the ISR function
@@ -305,7 +268,7 @@ public:
 
 
 // Initialize static member
-Slave_class* Slave_class::instance = nullptr;
+Slave_class* Slave_class::_instance = nullptr;
 
 
 #endif // SLAVE_CLASS_HPP
