@@ -34,7 +34,7 @@ private:
     bool _control_timing = false;
     uint32_t _last_local_time = 0;
     uint32_t _last_remote_time = 0;
-    long _drops_count = 0;
+    uint16_t _drops_count = 0;
 
 
     static uint16_t generateChecksum(const char* net_data, const size_t len) {
@@ -409,7 +409,7 @@ public:
 
     void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
     uint8_t get_max_delay() { return _max_delay_ms; }
-    long get_drops_count() { return _drops_count; }
+    uint16_t get_drops_count() { return _drops_count; }
 
 };
 

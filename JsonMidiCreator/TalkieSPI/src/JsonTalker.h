@@ -53,7 +53,7 @@ public:
     };
 
     
-    // Now without a method reference `bool (JsonTalker::*method)(JsonObject, long)`
+    // Now without a method reference `bool (JsonTalker::*method)(JsonObject, uint32_t)`
     struct Command {
         const char* name;
         const char* desc;
@@ -142,7 +142,7 @@ protected:
     }
 
     
-    long _total_runs = 0;
+    uint16_t _total_runs = 0;
     // static becaus it's a shared state among all other talkers, device (board) parameter
     static bool _is_led_on;  // keep track of state yourself, by default it's off
 
@@ -245,7 +245,7 @@ protected:
 
     
     virtual bool command_set(const uint8_t command_index, JsonObject json_message) {
-        long json_value = json_message["v"].as<long>();
+        uint32_t json_value = json_message["v"].as<uint32_t>();
         switch (command_index)
         {
         case 0:
@@ -260,7 +260,7 @@ protected:
     }
 
     
-    virtual long command_get(const uint8_t command_index, JsonObject json_message) {
+    virtual uint32_t command_get(const uint8_t command_index, JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
@@ -269,7 +269,7 @@ protected:
             break;
         case 1:
             {
-                return static_cast<long>(this->get_delay());
+                return static_cast<uint32_t>(this->get_delay());
             }
             break;
 
@@ -318,8 +318,8 @@ protected:
 
     void set_delay(uint8_t delay);
     uint8_t get_delay();
-    long get_total_drops();
-    long get_total_runs() { return _total_runs; }
+    uint16_t get_total_drops();
+    uint16_t get_total_runs() { return _total_runs; }
 
 
 public:
@@ -493,7 +493,7 @@ public:
             break;
         
         case MessageCode::SET:
-            if (json_message["n"].is<String>() && json_message["v"].is<long>()) {
+            if (json_message["n"].is<String>() && json_message["v"].is<uint32_t>()) {
 
                 const uint8_t command_found_i = command_index(MessageCode::SET, json_message);
                 if (command_found_i < 255) {

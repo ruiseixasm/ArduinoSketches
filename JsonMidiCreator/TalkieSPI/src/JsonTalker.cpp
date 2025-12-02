@@ -38,7 +38,7 @@ uint8_t JsonTalker::get_delay() {
     return _socket->get_max_delay();
 }
 
-long JsonTalker::get_total_drops() {
+uint16_t JsonTalker::get_total_drops() {
     return _socket->get_drops_count();
 }
 
