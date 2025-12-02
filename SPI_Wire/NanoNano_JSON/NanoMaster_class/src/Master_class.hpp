@@ -272,9 +272,9 @@ public:
     
     bool test() {
 
-        if (acknowledgeReady()) {
+        size_t length = 0;
 
-            size_t length = 0;
+        if (acknowledgeReady()) {
 
             // ON cycle
             length = sendString("{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}");
@@ -299,6 +299,28 @@ public:
             if (length > 0) return false;
 
         }
+
+        // ON cycle
+        length = sendString("{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}");
+        if (length == 0) return false;
+        delay(1000);
+        length = sendString("");    // Testing sending nothing at all
+        delay(1000);
+        length = receiveString();
+        if (length == 0) return false;
+        length = receiveString();   // Testing that receiving nothing also works
+        if (length > 0) return false;
+
+        // OFF cycle
+        length = sendString("{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}");
+        if (length == 0) return false;
+        delay(1000);
+        length = sendString("");
+        delay(1000);
+        length = receiveString();
+        if (length == 0) return false;
+        length = receiveString();
+        if (length > 0) return false;
 
         return true;
     }
