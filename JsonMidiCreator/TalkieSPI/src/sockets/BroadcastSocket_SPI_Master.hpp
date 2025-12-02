@@ -45,7 +45,7 @@ public:
         FULL    = 0xF9, // Signals the buffer as full
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
-    }
+    };
 
 
 private:

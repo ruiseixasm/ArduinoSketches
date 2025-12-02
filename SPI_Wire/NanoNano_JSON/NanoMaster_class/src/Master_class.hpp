@@ -46,7 +46,7 @@ public:
         FULL    = 0xF9, // Signals the buffer as full
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
-    }
+    };
 
 private:
 
@@ -63,9 +63,9 @@ private:
 
             // Asks the Slave to start receiving
             c = SPI.transfer(RECEIVE);
-            delayMicroseconds(send_delay_us);
             
             for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
+                delayMicroseconds(send_delay_us);
                 if (i > 0) {
                     if (command[i - 1] == '\0') {
                         c = SPI.transfer(END);
@@ -79,7 +79,7 @@ private:
                     } else {
                         c = SPI.transfer(command[i]);	// Receives the command[i - 1]
                     }
-                    if (c != command[i - 1]) {    // Excludes NACK situation
+                    if (c != command[i - 1]) {    // Includes NACK situation
                         length = 0;
                         break;
                     }
@@ -89,17 +89,21 @@ private:
                     length = 1; // Nothing sent
                     break;
                 }
-                delayMicroseconds(send_delay_us);
                 if (c == NACK) {
-                    length = 0;
+                    length = 0; // Triggers retry
+                    break;
+                } else if (c == VOID) {
+                    length = 1; // Avoids another try
                     break;
                 }
             }
 
             if (length == 0) {
+                delayMicroseconds(send_delay_us);
                 SPI.transfer(ERROR);
                 // _receiving_buffer[0] = '\0'; // Implicit char
-            } else if (command[length - 1] != '\0') {
+            } else if (length > 1 && command[length - 1] != '\0') {
+                delayMicroseconds(send_delay_us);
                 SPI.transfer(FULL);
                 Serial.println("FULL");
                 // _receiving_buffer[0] = '\0';
