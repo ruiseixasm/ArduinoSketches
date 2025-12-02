@@ -42,8 +42,10 @@ public:
         RECEIVE = 0xF6, // Asks the receiver to start receiving
         SEND    = 0xF7, // Asks the receiver to start sending
         NONE    = 0xF8, // Means nothing to send
-        FULL    = 0xF9  // Signals the buffer as full
-    };
+        FULL    = 0xF9, // Signals the buffer as full
+        
+        VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
+    }
 
 
 private:
