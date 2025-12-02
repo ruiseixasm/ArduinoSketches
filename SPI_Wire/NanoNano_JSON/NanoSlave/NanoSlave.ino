@@ -137,6 +137,7 @@ ISR(SPI_STC_vect) {
                 _process_message = true;
                 break;
             case ACK:
+                SPDR = READY;
                 break;
             case ERROR:
             case FULL:

@@ -127,6 +127,7 @@ private:
                     _process_message = true;
                     break;
                 case ACK:
+                    SPDR = READY;
                     break;
                 case ERROR:
                 case FULL:
