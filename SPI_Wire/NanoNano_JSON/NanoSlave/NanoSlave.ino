@@ -103,7 +103,7 @@ ISR(SPI_STC_vect) {
                     SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
                     _transmission_mode = NONE;
                     _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
-                } else if (_buffer_index < BUFFER_SIZE) {
+                } else if (_buffer_index < BUFFER_SIZE - 1) {   // _buffer_index still not incremented
                     _buffer_index++;
                 } else {
                     SPDR = FULL;
