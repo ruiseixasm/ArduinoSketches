@@ -86,7 +86,7 @@ private:
                 } else if (command[0] != '\0') {
                     c = SPI.transfer(command[0]);	// Doesn't check first char
                 } else {
-                    length = 1; // Nothing sent
+                    length = 1; // Nothing to be sent
                     break;
                 }
                 if (c == NACK) {
