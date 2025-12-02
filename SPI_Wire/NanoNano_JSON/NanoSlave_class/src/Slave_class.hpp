@@ -84,16 +84,17 @@ private:
                     }
                     break;
                 case SEND:
-                    // Boundary safety takes the most toll
+                    SPDR = _sending_buffer[_buffer_index];    // This way avoids the critical path bellow (in advance)
+                    // Boundary safety takes the most toll, that's why SPDR typical scenario is given in advance
                     if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
                         SPDR = ERROR;
-                        _transmission_mode = NONE;
+                        _transmission_mode = NONE;  // Makes sure no more communication is done regardeless
                     } else if (_buffer_index > 0 && _sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
                         SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
                         _transmission_mode = NONE;
                         _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
                     } else if (_buffer_index < BUFFER_SIZE) {
-                        SPDR = _sending_buffer[_buffer_index++];    // This one is the one that takes the most, so, the critical path
+                        _buffer_index++;
                     } else {
                         SPDR = FULL;
                         _transmission_mode = NONE;
