@@ -101,7 +101,7 @@ private:
                         if (c != c_2) {
                             SPDR = ERROR;
                             _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
-                        } else if (c_2 == '\0') }{
+                        } else if (c_2 == '\0') {
                             SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
                             _transmission_mode = NONE;
                             _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty (NONE next time)
