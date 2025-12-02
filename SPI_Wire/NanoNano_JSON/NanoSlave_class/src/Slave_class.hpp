@@ -104,7 +104,7 @@ private:
                             } else if (c == '\0') {
                                 SPDR = END;     // Main reason for transmission fail (critical path) (one in many though)
                                 _transmission_mode = NONE;
-                                _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty (NONE next time)
+                                _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
                             }
                         }
                     } else {
