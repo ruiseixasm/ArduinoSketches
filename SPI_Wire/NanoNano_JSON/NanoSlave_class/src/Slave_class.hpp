@@ -84,16 +84,16 @@ private:
                     }
                     break;
                 case SEND:
-                    // Checking the least likely first to avoid extra checking
-                    if (c != _sending_buffer[_buffer_index - 2] && _buffer_index > 1) {  // Two messages delay
+                    // Boundary safety takes the most toll
+                    if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
                         SPDR = ERROR;
                         _transmission_mode = NONE;
-                    } else if (_sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
+                    } else if (_buffer_index > 0 && _sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
                         SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
                         _transmission_mode = NONE;
                         _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty
                     } else if (_buffer_index < BUFFER_SIZE) {
-                        SPDR = _sending_buffer[_buffer_index++];
+                        SPDR = _sending_buffer[_buffer_index++];    // This one is the one that takes the most, so, the critical path
                     } else {
                         SPDR = FULL;
                         _transmission_mode = NONE;
