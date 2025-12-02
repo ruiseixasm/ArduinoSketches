@@ -6,18 +6,34 @@
 const int GREEN_LED_PIN = 2; // External GREEN_LED_PIN pin
 const int YELLOW_LED_PIN = 21;  // A7 = digital pin 21
 
-Slave_class slave_class = Slave_class(SS_PIN);
+ISR(SPI_STC_vect) {
+    Slave_class::isrWrapper();
+}
+
+// Create instance
+Slave_class slave_class;
 
 void setup() {
     // Initialize serial
     Serial.begin(115200);
     delay(500);
 
+    // Enable global interrupts
+    sei();
+
     Serial.println("\n\nSPI Slave Initialized - JSON class Mode");
 }
 
 void loop() {
-    slave_class.process();
+    // Process received messages
+    if (slave_class.process()) {
+        // Message was processed
+        Serial.print(F("Processed: "));
+        Serial.println(slave_class.getLastCommand());
+
+        // Add small delay to prevent Serial flooding
+        delay(10);
+    }
 }
 
 

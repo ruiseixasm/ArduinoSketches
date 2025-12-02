@@ -16,20 +16,20 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <SPI.h>
 #include <ArduinoJson.h>    // Include ArduinoJson Library
+#include <avr/interrupt.h>
 
 
-// Pin definitions
-extern const int GREEN_LED_PIN; // Declare as external (defined elsewhere)
-extern const int YELLOW_LED_PIN;
+// Pin definitions - define these in your main sketch
+#ifndef GREEN_LED_PIN
+#define GREEN_LED_PIN 2
+#endif
+
+#ifndef YELLOW_LED_PIN
+#define YELLOW_LED_PIN 21
+#endif
 
 #define BUFFER_SIZE 128
-char _receiving_buffer[BUFFER_SIZE] = {'\0'};
-char _sending_buffer[BUFFER_SIZE] = {'\0'};
 
-volatile uint8_t _buffer_index = 0; // Only one buffer is processed each time
-volatile MessageCode _transmission_mode = NONE;
-
-volatile bool _process_message = false;
 
 
 class Slave_class
@@ -52,12 +52,29 @@ public:
     };
 
 private:
+    // Static instance for ISR access
+    static Slave_class* instance;
+    
+    // Buffers and state variables
+    char _receiving_buffer[BUFFER_SIZE];
+    char _sending_buffer[BUFFER_SIZE];
+    volatile uint8_t _buffer_index;
+    volatile MessageCode _transmission_mode;
+    volatile bool _process_message;
 
-
-    // ------------------------------
-    // SPI Interrupt
-    // ------------------------------
-    ISR(SPI_STC_vect) {
+    
+    // Private methods
+    void processMessage();
+    
+    // Static ISR wrapper (called by hardware)
+    static void isrWrapper() {
+        if (instance) {
+            instance->handleSPI_Interrupt();
+        }
+    }
+    
+    // Actual interrupt handler
+    void handleSPI_Interrupt() {
 
         // WARNING 1:
         //     AVOID PLACING HEAVY CODE OR CALL HERE. THIS INTERRUPTS THE LOOP!
@@ -143,6 +160,7 @@ private:
     }
 
 
+
     void processMessage() {
 
         Serial.print("Processed command: ");
@@ -193,31 +211,86 @@ public:
 
     Slave_class() {
 
+        _instance = this;  // Set static instance
+        
+        // Initialize buffers
+        _receiving_buffer[0] = '\0';
+        _sending_buffer[0] = '\0';
+        _buffer_index = 0;
+        _transmission_mode = NONE;
+        _process_message = false;
+
+        // Initialize pins
         pinMode(GREEN_LED_PIN, OUTPUT);
         digitalWrite(GREEN_LED_PIN, LOW);
         pinMode(YELLOW_LED_PIN, OUTPUT);
         digitalWrite(YELLOW_LED_PIN, LOW);
 
-        pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
-
-        // Initialize SPI as slave - EXPLICIT MSB FIRST
-        SPCR = 0;  // Clear register
-        SPCR |= _BV(SPE);    // SPI Enable
-        SPCR |= _BV(SPIE);   // SPI Interrupt Enable  
-        SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
-        SPCR &= ~_BV(CPOL);  // Clock polarity 0
-        SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
-
-        SPI.attachInterrupt();
+        // Setup SPI as slave
+        initSPISlave();
     }
 
     ~Slave_class() {
+        if (instance == this) {
+            // Disable SPI interrupt
+            SPCR &= ~(1 << SPIE);
+            instance = nullptr;
+        }
+
         // This returns the pin to exact power-on state:
         pinMode(GREEN_LED_PIN, INPUT);
         digitalWrite(GREEN_LED_PIN, LOW);  // Important: disables any pull-up
 
         pinMode(YELLOW_LED_PIN, INPUT);
         digitalWrite(YELLOW_LED_PIN, LOW);
+    }
+
+
+    void initSPISlave() {
+        // Set MISO as OUTPUT (slave sends data)
+        DDRB |= (1 << DDB4);  // PB4 = MISO = Pin 12
+        
+        // Set MOSI, SCK, SS as INPUT
+        DDRB &= ~((1 << DDB3) | (1 << DDB5) | (1 << DDB2));
+        // PB3 = MOSI = Pin 11, PB5 = SCK = Pin 13, PB2 = SS = Pin 10
+        
+        // Enable SPI as slave with interrupt
+        SPCR = (1 << SPE) | (1 << SPIE);  // SPI Enable + Interrupt Enable
+        
+        // Mode 0 (CPOL=0, CPHA=0), MSB first
+        SPCR &= ~((1 << CPOL) | (1 << CPHA) | (1 << DORD));
+        
+        // Clear any pending interrupt
+        SPSR;
+        SPDR;
+        
+        // Prepare first response
+        SPDR = NONE;
+    }
+    
+    bool process() {
+        if (process_message) {
+            digitalWrite(YELLOW_LED_PIN, HIGH);
+            processMessage();
+            digitalWrite(YELLOW_LED_PIN, LOW);
+            process_message = false;
+            return true;
+        }
+        return false;
+    }
+    
+    void setResponse(const char* response) {
+        strncpy(sending_buffer, response, BUFFER_SIZE - 1);
+        sending_buffer[BUFFER_SIZE - 1] = '\0';
+    }
+    
+    const char* getLastCommand() const {
+        return receiving_buffer;
+    }
+    
+    // Static method to attach ISR (for main sketch)
+    static void attachSPI_ISR() {
+        // Does nothing, just ensures ISR is linked
     }
 
 
@@ -229,6 +302,10 @@ public:
     }
 
 };
+
+
+// Initialize static member
+Slave_class* Slave_class::instance = nullptr;
 
 
 #endif // SLAVE_CLASS_HPP
