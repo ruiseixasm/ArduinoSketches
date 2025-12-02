@@ -347,16 +347,16 @@ public:
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
     
-    JsonTalker* mute() {    // Returns a pointer, because, BroadcastSocket keeps an array of pointers
+    JsonTalker& mute() {    // It does NOT make a copy!
         _muted = true;
-        return this;
+        return *this;
     }
 
-    JsonTalker* unmute() {
+    JsonTalker& unmute() {
         _muted = false;
-        return this;
+        return *this;
     }
-    
+
     bool muted() { return _muted; }
 
     
