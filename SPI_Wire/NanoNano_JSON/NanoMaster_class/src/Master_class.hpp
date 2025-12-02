@@ -146,14 +146,14 @@ private:
             c = SPI.transfer(SEND);
                 
             // Starts to receive all chars here
-            for (uint8_t i = 0; i < BUFFER_SIZE; i++) {	// First char is a control byte
+            for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // First char is a control byte
                 delayMicroseconds(receive_delay_us);
                 if (i > 0) {    // The first response is discarded
                     c = SPI.transfer(_receiving_buffer[i - 1]);
                     if (c < 128) {   // Only accepts ASCII chars
-                        _receiving_buffer[i] = c;
+                        _receiving_buffer[i] = c;   // Also sets '\0'!
                     } else if (c == END) {
-                        length = i;
+                        length = i - 1; // After '\0'
                         break;
                     } else {    // Includes NACK (implicit)
                         length = 0;
