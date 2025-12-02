@@ -86,10 +86,10 @@ private:
                 case SEND:
                     SPDR = _sending_buffer[_buffer_index];    // This way avoids the critical path bellow (in advance)
                     // Boundary safety takes the most toll, that's why SPDR typical scenario is given in advance
-                    if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2]) {  // Two messages delay
+                    if (_buffer_index > 1 && c != _sending_buffer[_buffer_index - 2] || _buffer_index == 0) {  // Two messages delay
                         SPDR = ERROR;
                         _transmission_mode = NONE;  // Makes sure no more communication is done regardless
-                    } else if (_buffer_index > 0 && _sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
+                    } else if (_sending_buffer[_buffer_index - 1] == '\0') {	// Has to send '\0' in order to its previous char be checked
                         SPDR = END;     // Nothing more to send (spares extra send, '\0' implicit)
                         _transmission_mode = NONE;
                         _sending_buffer[0] = '\0';   // Makes sure the sending buffer is marked as empty (NONE next time)
