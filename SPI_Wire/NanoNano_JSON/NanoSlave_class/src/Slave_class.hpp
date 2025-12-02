@@ -94,11 +94,11 @@ private:
                     }
                     break;
                 case SEND:
-                    if (_buffer_index < BUFFER_SIZE) {
-                        SPDR = _sending_buffer[_buffer_index++];    // This way avoids the critical path bellow (in advance)
+                    if (++_buffer_index < BUFFER_SIZE) {
+                        SPDR = _sending_buffer[_buffer_index];  // This way avoids being the critical path (in advance)
                         // Boundary safety takes the most toll, that's why SPDR typical scenario is given in advance
-                        if (_buffer_index > 2) {    // Two positions of delay (note the _buffer_index++ above)
-                            if (c != _sending_buffer[_buffer_index - 3]) {
+                        if (_buffer_index > 1) {    // Two positions of delay
+                            if (c != _sending_buffer[_buffer_index - 2]) {
                                 SPDR = ERROR;
                                 _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
                             } else if (c == '\0') {
@@ -132,7 +132,7 @@ private:
                     } else {    // Starts sending right away, so, no ACK
                         SPDR = _sending_buffer[0];
                         _transmission_mode = SEND;
-                        _buffer_index = 1;  // Skips the sent 0
+                        _buffer_index = 0;
                     }
                     break;
                 case END:
