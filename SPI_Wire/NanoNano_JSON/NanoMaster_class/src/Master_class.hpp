@@ -67,11 +67,8 @@ private:
             for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
                 delayMicroseconds(send_delay_us);
                 if (i > 0) {
-                    if (c == VOID) {
+                    if (c == VOID) {    // First time check
                         length = 1; // Avoids another try
-                        break;
-                    } else if (c != command[i - 1]) {   // Includes NACK
-                        length = 0; // Triggers retry
                         break;
                     } else if (command[i - 1] == '\0') {
                         c = SPI.transfer(END);
@@ -84,6 +81,10 @@ private:
                         }
                     } else {
                         c = SPI.transfer(command[i]);	// Receives the command[i - 1]
+                    }
+                    if (c != command[i - 1]) {    // Includes NACK situation
+                        length = 0;
+                        break;
                     }
                 } else if (command[0] != '\0') {
                     c = SPI.transfer(command[0]);	// Doesn't check first char
