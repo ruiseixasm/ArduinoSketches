@@ -168,7 +168,7 @@ private:
                     c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
                     if (c < 128) {   // Only accepts ASCII chars
                         _receiving_buffer[0] = c;   // First char received
-                    } else if (c == NONE) {
+                    } else if (c == NONE || c == VOID) {
                         _receiving_buffer[0] = '\0'; // Sets receiving as nothing (for prints)
                         length = 1;
                         break;
@@ -182,7 +182,7 @@ private:
             if (length == 0) {
                 SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
                 _receiving_buffer[0] = '\0'; // Implicit char
-            } else if (_receiving_buffer[length - 1] != '\0') {
+            } else if (length > 1 && _receiving_buffer[length - 1] != '\0') {
                 SPI.transfer(FULL);
                 _receiving_buffer[0] = '\0';
                 length = 1; // Avoids another try
