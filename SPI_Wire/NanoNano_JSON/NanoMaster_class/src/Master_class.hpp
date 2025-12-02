@@ -151,14 +151,14 @@ private:
                 delayMicroseconds(receive_delay_us);
                 if (i > 0) {    // The first response is discarded
                     c = SPI.transfer(_receiving_buffer[i - 1]);
-                    if (c == END) {
+                    if (c < 128) {   // Only accepts ASCII chars
+                        _receiving_buffer[i] = c;
+                    } else if (c == END) {
                         length = i;
                         break;
-                    } else if (c == ERROR || c == NACK) {
+                    } else {    // Includes NACK (implicit)
                         length = 0;
                         break;
-                    } else {
-                        _receiving_buffer[i] = c;
                     }
                 } else {
                     c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
@@ -176,9 +176,11 @@ private:
             }
 
             if (length == 0) {
+                delayMicroseconds(receive_delay_us);
                 SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
                 _receiving_buffer[0] = '\0'; // Implicit char
             } else if (length > 1 && _receiving_buffer[length - 1] != '\0') {
+                delayMicroseconds(receive_delay_us);
                 SPI.transfer(FULL);
                 _receiving_buffer[0] = '\0';
                 length = 1; // Avoids another try
