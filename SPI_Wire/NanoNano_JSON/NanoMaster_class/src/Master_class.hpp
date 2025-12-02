@@ -59,11 +59,10 @@ private:
             digitalWrite(_ss_pin, LOW);
             delayMicroseconds(5);
 
-            // Asks the receiver to start receiving
+            // Asks the Slave to start receiving
             c = SPI.transfer(RECEIVE);
             delayMicroseconds(send_delay_us);
             
-            // RECEIVE message code
             for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
                 if (i > 0) {
                     if (command[i - 1] == '\0') {
@@ -141,7 +140,7 @@ private:
             digitalWrite(_ss_pin, LOW);
             delayMicroseconds(5);
 
-            // Asks the receiver to start receiving
+            // Asks the Slave to start receiving
             c = SPI.transfer(SEND);
             delayMicroseconds(send_delay_us);
                 
@@ -161,15 +160,16 @@ private:
                     }
                 } else {
                     c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
-                    if (c == NONE) {
-                        _receiving_buffer[0] = '\0'; // Implicit char
+                    if (c < 128) {   // Only accepts ASCII chars
+                        _receiving_buffer[0] = c;   // First char received
+                    } else if (c == NONE) {
+                        _receiving_buffer[0] = '\0'; // Sets receiving as nothing (for prints)
                         length = 1;
                         break;
-                    } else if (c == NACK) {
+                    } else {    // Includes NACK (implicit)
                         length = 0;
                         break;
                     }
-                    _receiving_buffer[0] = c;   // First char received
                 }
             }
 
