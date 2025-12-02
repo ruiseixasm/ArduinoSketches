@@ -213,6 +213,39 @@ private:
     }
 
 
+    bool acknowledgeReady() {
+        uint8_t c; // Avoid using 'char' while using values above 127
+        bool acknowledge = false;
+
+        for (size_t a = 0; !acknowledge && a < 3; a++) {
+    
+            digitalWrite(_ss_pin, LOW);
+            delayMicroseconds(5);
+
+            // Asks the Slave to acknowledge readiness
+            SPI.transfer(ACK);
+            delayMicroseconds(send_delay_us);
+            c = SPI.transfer(ACK);  // When the response is collected
+            
+            if (c == READY) {
+                acknowledge = true;
+            }
+            
+            delayMicroseconds(5);
+            digitalWrite(_ss_pin, HIGH);
+
+        }
+
+        if (acknowledge) {
+            Serial.println("Slave is ready!");
+        } else {
+            Serial.println("Slave is NOT ready!");
+        }
+
+        return acknowledge;
+    }
+
+
 public:
 
     Master_class(int ss_pin = 10) {
@@ -236,29 +269,34 @@ public:
 
     
     bool test() {
-        size_t length = 0;
 
-        // ON cycle
-        length = sendString("{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}");
-        if (length == 0) return false;
-        delay(1000);
-        length = sendString("");    // Testing sending nothing at all
-        delay(1000);
-        length = receiveString();
-        if (length == 0) return false;
-        length = receiveString();   // Testing that receiving nothing also works
-        if (length > 0) return false;
+        if (acknowledgeReady()) {
 
-        // OFF cycle
-        length = sendString("{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}");
-        if (length == 0) return false;
-        delay(1000);
-        length = sendString("");
-        delay(1000);
-        length = receiveString();
-        if (length == 0) return false;
-        length = receiveString();
-        if (length > 0) return false;
+            size_t length = 0;
+
+            // ON cycle
+            length = sendString("{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}");
+            if (length == 0) return false;
+            delay(1000);
+            length = sendString("");    // Testing sending nothing at all
+            delay(1000);
+            length = receiveString();
+            if (length == 0) return false;
+            length = receiveString();   // Testing that receiving nothing also works
+            if (length > 0) return false;
+
+            // OFF cycle
+            length = sendString("{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}");
+            if (length == 0) return false;
+            delay(1000);
+            length = sendString("");
+            delay(1000);
+            length = receiveString();
+            if (length == 0) return false;
+            length = receiveString();
+            if (length > 0) return false;
+
+        }
 
         return true;
     }
