@@ -8,6 +8,7 @@ const int BUZZ_PIN = 2; // External BUZZER pin
 
 Master_class master_class = Master_class(SS_PIN);
 
+
 void setup() {
     // Initialize serial
     Serial.begin(115200);
@@ -18,6 +19,7 @@ void setup() {
     
     Serial.println("\n\nSPI Master Initialized - JSON class Mode");
 }
+
 
 void loop() {
     Serial.println("------------------------------TESTING------------------------------");
