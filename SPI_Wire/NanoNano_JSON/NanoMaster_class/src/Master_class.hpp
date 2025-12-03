@@ -183,18 +183,18 @@ private:
                 }
             }
 
-            if (length == 0) {
+            if (length > 1) {
+                delayMicroseconds(receive_delay_us);
+                SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+                #ifdef MASTER_CLASS_DEBUG
+                Serial.println("\t\t\tSent END");
+                #endif
+            } else if (length == 0) {
                 delayMicroseconds(receive_delay_us);
                 SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
                 _receiving_buffer[0] = '\0'; // Implicit char
                 #ifdef MASTER_CLASS_DEBUG
                 Serial.println("\t\t\tSent ERROR");
-                #endif
-            } else if (length > 1) {
-                delayMicroseconds(receive_delay_us);
-                SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
-                #ifdef MASTER_CLASS_DEBUG
-                Serial.println("\t\t\tSent END");
                 #endif
             }
 
