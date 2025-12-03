@@ -25,8 +25,16 @@ https://github.com/ruiseixasm/JsonTalkie
 #define GREEN_LED_PIN 2
 #endif
 
+
+// Why A7 cannot be HIGH
+
+// On the ATmega328P Nano (old bootloader or new):
+//     Pin	Digital I/O?	Analog Input?
+//     A0–A5	✔ Yes	✔ Yes
+//     A6–A7	❌ No (input-only)	✔ Yes
+
 #ifndef YELLOW_LED_PIN
-#define YELLOW_LED_PIN 21
+#define YELLOW_LED_PIN 19   // A5
 #endif
 
 #define BUFFER_SIZE 128
@@ -233,10 +241,6 @@ public:
         digitalWrite(GREEN_LED_PIN, LOW);
         pinMode(YELLOW_LED_PIN, OUTPUT);
         digitalWrite(YELLOW_LED_PIN, LOW);
-
-        // digitalWrite(YELLOW_LED_PIN, HIGH);
-        // delay(500);
-        // digitalWrite(YELLOW_LED_PIN, LOW);
 
         // Setup SPI as slave
         initSPISlave();
