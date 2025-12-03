@@ -147,11 +147,10 @@ private:
                     break;
                 case END:
                     SPDR = ACK;
-                    if (_transmission_mode == SEND) {
-                        _transmission_mode = NONE;
-                        _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
-                    } else {
+                    if (_transmission_mode == RECEIVE) {
                         _process_message = true;
+                    } else if (_transmission_mode == SEND) {
+                        _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
                     }
                     _transmission_mode = NONE;
                     break;
