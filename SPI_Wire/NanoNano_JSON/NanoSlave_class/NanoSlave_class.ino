@@ -15,9 +15,10 @@ Slave_class slave_class;    // Sets the LEDS
 void setup() {
     // Initialize serial
     Serial.begin(115200);
+    pinMode(GREEN_LED_PIN, OUTPUT);
     digitalWrite(YELLOW_LED_PIN, HIGH);
     delay(500);
-    digitalWrite(YELLOW_LED_PIN, LOW);
+    // digitalWrite(YELLOW_LED_PIN, LOW);
 
     // Enable global interrupts
     sei();

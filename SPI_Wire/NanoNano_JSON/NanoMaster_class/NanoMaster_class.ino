@@ -11,7 +11,7 @@ Master_class master_class = Master_class(SS_PIN);
 void setup() {
     // Initialize serial
     Serial.begin(115200);
-    delay(500);
+    delay(2000);    // Give some extra time to Slave start up completely
 
     pinMode(BUZZ_PIN, OUTPUT);
     digitalWrite(BUZZ_PIN, LOW);

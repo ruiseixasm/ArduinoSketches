@@ -234,6 +234,10 @@ public:
         pinMode(YELLOW_LED_PIN, OUTPUT);
         digitalWrite(YELLOW_LED_PIN, LOW);
 
+        // digitalWrite(YELLOW_LED_PIN, HIGH);
+        // delay(500);
+        // digitalWrite(YELLOW_LED_PIN, LOW);
+
         // Setup SPI as slave
         initSPISlave();
     }
@@ -253,7 +257,7 @@ public:
         digitalWrite(YELLOW_LED_PIN, LOW);
     }
 
-    
+
     // Static ISR wrapper (called by hardware)
     static void isrWrapper() {
         if (_instance) {
