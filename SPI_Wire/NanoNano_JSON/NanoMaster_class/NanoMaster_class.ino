@@ -22,7 +22,7 @@ void setup() {
 
 
 void loop() {
-    Serial.println("------------------------------TESTING------------------------------");
+    Serial.println("----------------------------**TESTING**----------------------------");
     if(!master_class.test()) {
         Serial.println("----------------------------TEST FAILED----------------------------");
         digitalWrite(BUZZ_PIN, HIGH);

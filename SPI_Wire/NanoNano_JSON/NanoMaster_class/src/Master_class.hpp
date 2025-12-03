@@ -18,6 +18,9 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
+// #define MASTER_CLASS_DEBUG
+
+
 // Pin definitions
 extern const int BUZZ_PIN;  // Declare as external (defined elsewhere)
 
@@ -98,27 +101,26 @@ private:
                 delayMicroseconds(send_delay_us);
                 SPI.transfer(ERROR);
                 // _receiving_buffer[0] = '\0'; // Implicit char
-            } else if (length > 1 && command[length - 1] != '\0') {
-                delayMicroseconds(send_delay_us);
-                SPI.transfer(FULL);
-                Serial.println("FULL");
-                // _receiving_buffer[0] = '\0';
-                length = 1; // Avoids another try
             }
 
             delayMicroseconds(5);
             digitalWrite(_ss_pin, HIGH);
 
             if (length > 0) {
+                #ifdef MASTER_CLASS_DEBUG
                 if (length > 1) {
-                    Serial.println("Command successfully sent");
+                    Serial.print("Command successfully sent: ");
+                    Serial.println(command);
                 } else {
                     Serial.println("\tNothing sent");
                 }
+                #endif
             } else {
+                #ifdef MASTER_CLASS_DEBUG
                 Serial.print("\t\tCommand NOT successfully sent on try: ");
                 Serial.println(s + 1);
                 Serial.println("\t\tBUZZER activated for 10ms!");
+                #endif
                 digitalWrite(BUZZ_PIN, HIGH);
                 delay(10);  // Buzzer on for 10ms
                 digitalWrite(BUZZ_PIN, LOW);
@@ -153,6 +155,9 @@ private:
                     if (c < 128) {   // Only accepts ASCII chars
                         _receiving_buffer[i] = c;   // Also sets '\0'!
                     } else if (c == END) {
+                        #ifdef MASTER_CLASS_DEBUG
+                        Serial.println("\t\tReceived END");
+                        #endif
                         length = i; // After '\0' (also set)
                         break;
                     } else {    // Includes NACK (implicit)
@@ -164,6 +169,10 @@ private:
                     if (c < 128) {   // Only accepts ASCII chars
                         _receiving_buffer[0] = c;   // First char received
                     } else if (c == NONE || c == VOID) {
+                        #ifdef MASTER_CLASS_DEBUG
+                        if (c == NONE) Serial.println("\t\tReceived NONE");
+                        if (c == VOID) Serial.println("\t\tReceived VOID");
+                        #endif
                         _receiving_buffer[0] = '\0'; // Sets receiving as nothing (for prints)
                         length = 1;
                         break;
@@ -178,27 +187,35 @@ private:
                 delayMicroseconds(receive_delay_us);
                 SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
                 _receiving_buffer[0] = '\0'; // Implicit char
-            } else if (length > 1 && _receiving_buffer[length - 1] != '\0') {
+                #ifdef MASTER_CLASS_DEBUG
+                Serial.println("\t\t\tSent ERROR");
+                #endif
+            } else if (length > 1) {
                 delayMicroseconds(receive_delay_us);
-                SPI.transfer(FULL);
-                _receiving_buffer[0] = '\0';
-                length = 1; // Avoids another try
+                SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+                #ifdef MASTER_CLASS_DEBUG
+                Serial.println("\t\t\tSent END");
+                #endif
             }
 
             delayMicroseconds(5);
             digitalWrite(_ss_pin, HIGH);
 
             if (length > 0) {
+                #ifdef MASTER_CLASS_DEBUG
                 if (length > 1) {
                     Serial.print("Received message: ");
                     Serial.println(_receiving_buffer);
                 } else {
                     Serial.println("\tNothing received");
                 }
+                #endif
             } else {
+                #ifdef MASTER_CLASS_DEBUG
                 Serial.print("\t\tMessage NOT successfully received on try: ");
                 Serial.println(r + 1);
                 Serial.println("\t\tBUZZER activated for 2 x 10ms!");
+                #endif
                 digitalWrite(BUZZ_PIN, HIGH);
                 delay(10);  // Buzzer on for 10ms
                 digitalWrite(BUZZ_PIN, LOW);
@@ -239,11 +256,13 @@ private:
 
         }
 
+        #ifdef MASTER_CLASS_DEBUG
         if (acknowledge) {
             Serial.println("Slave is ready!");
         } else {
             Serial.println("Slave is NOT ready!");
         }
+        #endif
 
         return acknowledge;
     }

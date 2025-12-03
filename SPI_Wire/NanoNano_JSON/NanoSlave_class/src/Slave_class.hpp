@@ -20,6 +20,9 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>
 
 
+// #define SLAVE_CLASS_DEBUG
+
+
 // Pin definitions - define these in your main sketch
 #ifndef GREEN_LED_PIN
 #define GREEN_LED_PIN 2
@@ -111,8 +114,6 @@ private:
                                 _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
                             } else if (c == '\0') {
                                 SPDR = END;     // Main reason for transmission fail (critical path) (one in many though)
-                                _transmission_mode = NONE;
-                                _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
                             }
                         }
                         _buffer_index++;    // Increments just in the end to save a couple microseconds
@@ -146,8 +147,13 @@ private:
                     break;
                 case END:
                     SPDR = ACK;
+                    if (_transmission_mode == SEND) {
+                        _transmission_mode = NONE;
+                        _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
+                    } else {
+                        _process_message = true;
+                    }
                     _transmission_mode = NONE;
-                    _process_message = true;
                     break;
                 case ACK:
                     SPDR = READY;
