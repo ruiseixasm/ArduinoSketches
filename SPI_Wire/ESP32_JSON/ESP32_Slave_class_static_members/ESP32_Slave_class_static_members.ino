@@ -3,7 +3,9 @@
 #include "src/Slave_class.hpp"
 
 
-// NO ISR on ESP32 - handled internally by SPI driver
+// ESP32 doesn't use ISR() macro like AVR
+// We need to handle SPI differently
+// For now, comment out the ISR
 
 
 // Create instance
@@ -15,7 +17,8 @@ void setup() {
     Serial.begin(115200);
     pinMode(GREEN_LED_PIN, OUTPUT);
 
-    // NO sei() on ESP32 - FreeRTOS handles interrupts
+    // ESP32 doesn't have sei() - FreeRTOS handles interrupts
+    // sei();  // AVR only - remove for ESP32
 
     Serial.println("\n\nSPI Slave Initialized - JSON class Mode");
 }

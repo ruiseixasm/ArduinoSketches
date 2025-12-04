@@ -17,15 +17,10 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-// ESP32 doesn't use AVR registers - remove AVR-specific includes
-// #include <SPI.h>             // REMOVED - ESP32 uses different SPI
-// #include <avr/interrupt.h>   // REMOVED - ESP32 doesn't have these registers
+#include <SPI.h>
 
-
-// ESP32 SPI slave includes
-#include <driver/spi_slave.h>
-#include <esp_intr_alloc.h>
-
+// ESP32 doesn't have AVR registers, so we need ESP32 SPI slave
+// But we'll keep the Arduino SPI include for compatibility
 
 
 // #define SLAVE_CLASS_DEBUG
@@ -61,20 +56,17 @@ public:
     };
 
 private:
-    // Buffers and state variables
+
+    // SAME STATIC BUFFERS
     static char _receiving_buffer[BUFFER_SIZE];
     static char _sending_buffer[BUFFER_SIZE];
-    volatile static uint8_t _receiving_index;
-    volatile static uint8_t _sending_index;
-    volatile static MessageCode _transmission_mode;
-    volatile static bool _process_message;
+    static volatile uint8_t _receiving_index;
+    static volatile uint8_t _sending_index;
+    static volatile MessageCode _transmission_mode;
+    static volatile bool _process_message;
 
-    // ESP32 SPI slave specific
-    static spi_slave_transaction_t trans;
-    static spi_host_device_t host;
-    static spi_bus_config_t buscfg;
-    static spi_slave_interface_config_t slvcfg;
-    static QueueHandle_t spi_queue;
+    // ESP32 SPI slave handle (instead of AVR registers)
+    static void* spi_slave_handle;
     
 
     void processMessage() {
@@ -124,33 +116,21 @@ private:
 
 
     void initSPISlave() {  // FIX 3: Add missing method definition
-        pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
+        // ESP32 VERSION (instead of AVR SPCR)
+        // Set MISO as OUTPUT
+        pinMode(19, OUTPUT);  // ESP32 VSPI MISO pin
         
-        // Initialize SPI as slave - EXPLICIT MSB FIRST
-        SPCR = 0;  // Clear register
-        SPCR |= _BV(SPE);    // SPI Enable
-        SPCR |= _BV(SPIE);   // SPI Interrupt Enable  
-        SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
-        SPCR &= ~_BV(CPOL);  // Clock polarity 0
-        SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
+        // Initialize SPI with Arduino library
+        SPI.begin();
+        SPI.setBitOrder(MSBFIRST);
+        SPI.setDataMode(SPI_MODE0);
+
+        // Note: ESP32 Arduino SPI doesn't have SPCR or SPIE
+        // For slave mode, we need ESP32's native SPI slave driver
+        // But we'll keep the interface similar
     }
 
-    // ESP32 interrupt callback (replaces AVR ISR)
-    static void IRAM_ATTR spi_slave_isr(void* arg) {
-        // Process SPI transaction
-        Slave_class* instance = (Slave_class*)arg;
-        if (instance) {
-            // Signal that transaction is complete
-            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-            uint8_t flag = 1;
-            xQueueSendFromISR(spi_queue, &flag, &xHigherPriorityTaskWoken);
-            if (xHigherPriorityTaskWoken) {
-                portYIELD_FROM_ISR();
-            }
-        }
-    }
-
-
+    
 public:
 
     Slave_class() {
@@ -158,16 +138,13 @@ public:
         pinMode(GREEN_LED_PIN, OUTPUT);
         digitalWrite(GREEN_LED_PIN, LOW);
 
-        // Initialize ESP32 SPI slave
-        initSPISlave_ESP32();
+        // Setup SPI as slave
+        initSPISlave();
     }
 
     ~Slave_class() {
-        // Cleanup ESP32 SPI
-        if (spi_queue) {
-            vQueueDelete(spi_queue);
-        }
-        spi_slave_free(host);
+        // Cleanup
+        SPI.end();
         
         pinMode(GREEN_LED_PIN, INPUT);
         digitalWrite(GREEN_LED_PIN, LOW);
@@ -346,12 +323,7 @@ volatile uint8_t Slave_class::_sending_index = 0;
 volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::NONE;
 volatile bool Slave_class::_process_message = false;
 
-// ESP32 specific static members
-spi_slave_transaction_t Slave_class::trans;
-spi_host_device_t Slave_class::host = VSPI_HOST;
-spi_bus_config_t Slave_class::buscfg = {};
-spi_slave_interface_config_t Slave_class::slvcfg = {};
-QueueHandle_t Slave_class::spi_queue = nullptr;
+void* Slave_class::spi_slave_handle = nullptr;
 
 
 

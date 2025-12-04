@@ -5,6 +5,7 @@
         "DORD",
         "Ethercard",
         "IMXRT",
+        "IRAM",
         "Monteiro",
         "MOSI",
         "MSBFIRST",
@@ -16,6 +17,7 @@
         "TEENSYDUINO",
         "unmute",
         "Unmutes",
-        "vect"
+        "vect",
+        "VSPI"
     ]
 }
