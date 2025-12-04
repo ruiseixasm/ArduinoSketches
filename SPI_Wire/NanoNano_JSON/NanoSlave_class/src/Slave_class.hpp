@@ -69,7 +69,8 @@ private:
     // Buffers and state variables
     char _receiving_buffer[BUFFER_SIZE];
     char _sending_buffer[BUFFER_SIZE];
-    volatile uint8_t _buffer_index;
+    volatile uint8_t _receiving_index;
+    volatile uint8_t _sending_index;
     volatile MessageCode _transmission_mode;
     volatile bool _process_message;
 
@@ -96,31 +97,39 @@ private:
 
             switch (_transmission_mode) {
                 case RECEIVE:
-                    if (_buffer_index < BUFFER_SIZE) {
+                    if (_receiving_index < BUFFER_SIZE) {
                         // Returns same received char as receiving confirmation (no need to set SPDR)
-                        _receiving_buffer[_buffer_index++] = c;
+                        _receiving_buffer[_receiving_index++] = c;
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
                         _transmission_mode = NONE;
                     }
                     break;
                 case SEND:
-                    if (_buffer_index < BUFFER_SIZE) {
-                        SPDR = _sending_buffer[_buffer_index];  // This way avoids being the critical path (in advance)
+                    if (_sending_index < BUFFER_SIZE) {
                         // Boundary safety takes the most toll, that's why SPDR typical scenario is given in advance
-                        if (_buffer_index > 1) {    // Two positions of delay
-                            if (c != _sending_buffer[_buffer_index - 2]) {
-                                SPDR = ERROR;
-                                _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
-                            } else if (c == '\0') {
-                                SPDR = END;     // Main reason for transmission fail (critical path) (one in many though)
-							// Doesn't increment beyond the string real size
-							} else {
-								_buffer_index++;    // Increments just in the end to save a couple microseconds
-							}
+                        SPDR = _sending_buffer[_sending_index];  // This way avoids being the critical path (in advance)
+
+                        if (SPDR == '\0') { // Advance no more if the end of the string has been reached
+
+                            if (_sending_index > 1) {    // Two positions of delay
+                                if (c != _sending_buffer[_sending_index - 2] && c != _sending_buffer[_sending_index - 1]) {
+                                    SPDR = ERROR;
+                                    _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
+                                } else if (c == '\0') {
+                                    SPDR = END;     // Main reason for transmission fail (critical path) (one in many though)
+                                }
+                            }
                         } else {
-							_buffer_index++;    // Increments just in the end to save a couple microseconds
-						}
+                            
+                            if (_sending_index > 1) {    // Two positions of delay
+                                if (c != _sending_buffer[_sending_index - 2]) {
+                                    SPDR = ERROR;
+                                    _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
+                                }
+                            }
+                            _sending_index++;    // Increments just in the end to save a couple microseconds
+                        }
                     } else {
                         SPDR = FULL;
                         _transmission_mode = NONE;
@@ -138,7 +147,7 @@ private:
                 case RECEIVE:
                     SPDR = ACK;
                     _transmission_mode = RECEIVE;
-                    _buffer_index = 0;
+                    _receiving_index = 0;
                     break;
                 case SEND:
                     if (_sending_buffer[0] == '\0') {
@@ -146,7 +155,8 @@ private:
                     } else {    // Starts sending right away, so, no ACK
                         SPDR = _sending_buffer[0];
                         _transmission_mode = SEND;
-                        _buffer_index = 1;  // Skips to the next char
+                        _sending_index = 1;  // Skips to the next char
+                        _receiving_index = 0;
                     }
                     break;
                 case END:
@@ -241,7 +251,8 @@ public:
         // Initialize buffers
         _receiving_buffer[0] = '\0';
         _sending_buffer[0] = '\0';
-        _buffer_index = 0;
+        _receiving_index = 0;
+        _sending_index = 0;
         _transmission_mode = NONE;
         _process_message = false;
 
