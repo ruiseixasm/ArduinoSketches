@@ -67,7 +67,7 @@ private:
     static Slave_class* _instance;
     
     // Buffers and state variables
-    char _receiving_buffer[BUFFER_SIZE];
+    static char _receiving_buffer[BUFFER_SIZE];
     char _sending_buffer[BUFFER_SIZE];
     volatile uint8_t _receiving_index;
     volatile uint8_t _sending_index;
@@ -245,7 +245,6 @@ public:
         _instance = this;  // Set static instance
         
         // Initialize buffers
-        _receiving_buffer[0] = '\0';
         _sending_buffer[0] = '\0';
         _receiving_index = 0;
         _sending_index = 0;
@@ -298,6 +297,9 @@ public:
 
 // Initialize static member
 Slave_class* Slave_class::_instance = nullptr;
+
+char Slave_class::_receiving_buffer[BUFFER_SIZE] = {'\0'};
+
 
 
 #endif // SLAVE_CLASS_HPP
