@@ -16,6 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include "SPISlave_ESP32.hpp"
 
 #include <SPI.h>
 
@@ -25,6 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // #define SLAVE_CLASS_DEBUG
 
+#define BUFFER_SIZE 128
 
 // Pin definitions - define these in your main sketch
 #ifndef GREEN_LED_PIN
@@ -33,8 +35,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
-#define BUFFER_SIZE 128
-
+SPISlave_ESP32 spi;
 
 class Slave_class
 {
@@ -65,9 +66,6 @@ private:
     static volatile MessageCode _transmission_mode;
     static volatile bool _process_message;
 
-    // ESP32 SPI slave handle (instead of AVR registers)
-    static void* spi_slave_handle;
-    
 
     void processMessage() {
 
@@ -134,12 +132,11 @@ private:
 public:
 
     Slave_class() {
-        // Initialize pins (ESP32 pins)
-        pinMode(GREEN_LED_PIN, OUTPUT);
-        digitalWrite(GREEN_LED_PIN, LOW);
 
-        // Setup SPI as slave
-        initSPISlave();
+        pinMode(GREEN_LED_PIN, OUTPUT);
+
+        spi.onByte(spiByteHandler);
+        spi.begin();
     }
 
     ~Slave_class() {
@@ -152,7 +149,7 @@ public:
 
 
     // Actual interrupt handler
-    static void handleSPI_Interrupt() {
+    static void spiByteHandler(uint8_t c, uint8_t &reply) {
 
         // WARNING 1:
         //     AVOID PLACING HEAVY CODE OR CALL HERE. THIS INTERRUPTS THE LOOP!
@@ -164,7 +161,17 @@ public:
         // WARNING 3:
         //     THE SETTING OF THE `SPDR` VARIABLE SHALL ALWAYS BE ON TOP, FIRSTLY THAN ALL OTHERS!
 
-        uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
+
+        // your AVR ISR code — unchanged — but using:
+        //   c      = received byte
+        //   reply  = byte to send back
+
+        // Everything else stays the same logic.
+        // Replace:
+        //      SPDR = X;
+        // with:
+        //      reply = X;
+
 
         if (c < 128) {  // Only ASCII chars shall be transmitted as data
 
@@ -176,26 +183,26 @@ public:
                         // Returns same received char as receiving confirmation (no need to set SPDR)
                         _receiving_buffer[_receiving_index++] = c;
                     } else {
-                        SPDR = FULL;    // ALWAYS ON TOP
+                        reply = FULL;    // ALWAYS ON TOP
                         _transmission_mode = NONE;
                     }
                     break;
                 case SEND:
 					if (_sending_index < BUFFER_SIZE) {
-						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
+						reply = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
 						if (_receiving_index > _sending_index) {	// Less missed sends this way
-							SPDR = END;	// All chars have been checked
+							reply = END;	// All chars have been checked
 							break;
 						}
 					} else {
-						SPDR = FULL;
+						reply = FULL;
 						_transmission_mode = NONE;
 						break;
 					}
 					// Starts checking 2 indexes after
 					if (_sending_index > 1) {    // Two positions of delay
 						if (c != _sending_buffer[_receiving_index]) {   // Also checks '\0' char
-							SPDR = ERROR;
+							reply = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
 							break;
 						}
@@ -207,7 +214,7 @@ public:
 					}
                     break;
                 default:
-                    SPDR = NACK;
+                    reply = NACK;
             }
 
         } else {    // It's a control message 0xFX
@@ -216,22 +223,22 @@ public:
 
             switch (c) {
                 case RECEIVE:
-                    SPDR = ACK;
+                    reply = ACK;
                     _transmission_mode = RECEIVE;
                     _receiving_index = 0;
                     break;
                 case SEND:
                     if (_sending_buffer[0] == '\0') {
-                        SPDR = NONE;    // Nothing to send
+                        reply = NONE;    // Nothing to send
                     } else {    // Starts sending right away, so, no ACK
-                        SPDR = _sending_buffer[0];
+                        reply = _sending_buffer[0];
                         _transmission_mode = SEND;
                         _sending_index = 1;  // Skips to the next char
                         _receiving_index = 0;
                     }
                     break;
                 case END:
-                    SPDR = ACK;
+                    reply = ACK;
                     if (_transmission_mode == RECEIVE) {
                         _process_message = true;
                     } else if (_transmission_mode == SEND) {
@@ -240,72 +247,28 @@ public:
                     _transmission_mode = NONE;
                     break;
                 case ACK:
-                    SPDR = READY;
+                    reply = READY;
                     break;
                 case ERROR:
                 case FULL:
-                    SPDR = ACK;
+                    reply = ACK;
                     _transmission_mode = NONE;
                     break;
                 default:
-                    SPDR = NACK;
+                    reply = NACK;
             }
         }
     }
 
-
-    // ESP32 SPI slave initialization (replaces AVR init)
-    void initSPISlave_ESP32() {
-        // Create queue for SPI transactions
-        spi_queue = xQueueCreate(10, sizeof(uint8_t));
-        
-        // Configure bus (ESP32 VSPI pins by default)
-        buscfg.mosi_io_num = 23;    // VSPI MOSI
-        buscfg.miso_io_num = 19;    // VSPI MISO  
-        buscfg.sclk_io_num = 18;    // VSPI SCK
-        buscfg.quadwp_io_num = -1;
-        buscfg.quadhd_io_num = -1;
-        buscfg.max_transfer_sz = BUFFER_SIZE;
-        
-        // Configure slave
-        slvcfg.mode = 0;
-        slvcfg.spics_io_num = 5;    // VSPI CS (SS)
-        slvcfg.queue_size = 3;
-        slvcfg.flags = 0;
-        slvcfg.post_setup_cb = NULL;
-        slvcfg.post_trans_cb = spi_slave_isr;
-        
-        // Initialize SPI slave
-        spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
-        
-        // Setup transaction
-        memset(&trans, 0, sizeof(trans));
-        trans.length = BUFFER_SIZE * 8;
-        trans.rx_buffer = _receiving_buffer;
-        trans.tx_buffer = _sending_buffer;
-        trans.user = this;
-        
-        // Queue first transaction
-        spi_slave_queue_trans(VSPI_HOST, &trans, portMAX_DELAY);
-    }
-
 	
-    // ESP32 version of process (checks queue instead of flag)
     void process() {
-        uint8_t flag;
-        if (xQueueReceive(spi_queue, &flag, 0)) {
-            // Transaction completed - process message
+        spi.loop();              // Process SPI bytes
+        if (_process_message) {  // If JSON message completed
+            _process_message = false;
             processMessage();
-            
-            // Queue next transaction
-            memset(&trans, 0, sizeof(trans));
-            trans.length = BUFFER_SIZE * 8;
-            trans.rx_buffer = _receiving_buffer;
-            trans.tx_buffer = _sending_buffer;
-            trans.user = this;
-            spi_slave_queue_trans(VSPI_HOST, &trans, portMAX_DELAY);
         }
     }
+
 
     // NOTE: handleSPI_Interrupt() removed - ESP32 uses callback system
     // Your AVR ISR logic would need to be adapted to ESP32's transaction-based system
@@ -322,8 +285,6 @@ volatile uint8_t Slave_class::_receiving_index = 0;
 volatile uint8_t Slave_class::_sending_index = 0;
 volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::NONE;
 volatile bool Slave_class::_process_message = false;
-
-void* Slave_class::spi_slave_handle = nullptr;
 
 
 
