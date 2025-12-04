@@ -22,7 +22,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // Pin definitions
-extern const int BUZZ_PIN;  // Declare as external (defined elsewhere)
+extern const int BLUE_LED;  // Declare as external (defined elsewhere)
 
 #define BUFFER_SIZE 128
 
@@ -121,9 +121,9 @@ private:
                 Serial.println(s + 1);
                 Serial.println("\t\tBUZZER activated for 10ms!");
                 #endif
-                digitalWrite(BUZZ_PIN, HIGH);
+                digitalWrite(BLUE_LED, HIGH);
                 delay(10);  // Buzzer on for 10ms
-                digitalWrite(BUZZ_PIN, LOW);
+                digitalWrite(BLUE_LED, LOW);
                 delay(500);
             }
         }
@@ -217,13 +217,13 @@ private:
                 Serial.println(r + 1);
                 Serial.println("\t\tBUZZER activated for 2 x 10ms!");
                 #endif
-                digitalWrite(BUZZ_PIN, HIGH);
+                digitalWrite(BLUE_LED, HIGH);
                 delay(10);  // Buzzer on for 10ms
-                digitalWrite(BUZZ_PIN, LOW);
+                digitalWrite(BLUE_LED, LOW);
                 delay(200);
-                digitalWrite(BUZZ_PIN, HIGH);
+                digitalWrite(BLUE_LED, HIGH);
                 delay(10);  // Buzzer on for 10ms
-                digitalWrite(BUZZ_PIN, LOW);
+                digitalWrite(BLUE_LED, LOW);
                 delay(500);
             }
         }

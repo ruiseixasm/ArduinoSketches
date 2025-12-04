@@ -5,19 +5,20 @@
 
 // ESP32 pins for external SPI
 const int SS_PIN = 5;  // Changed from 10 to 5 (ESP32 common)
-const int BUZZ_PIN = 2; // ESP32 built-in LED
+const int BLUE_LED = 2; // ESP32 built-in LED
 
 
 Master_class master_class = Master_class(SS_PIN);
 
 
 void setup() {
+    pinMode(BLUE_LED, OUTPUT);
+    digitalWrite(BLUE_LED, HIGH);
     // Initialize serial
     Serial.begin(115200);
     delay(2000);    // Give some extra time to Slave start up completely
+    digitalWrite(BLUE_LED, LOW);
 
-    pinMode(BUZZ_PIN, OUTPUT);
-    digitalWrite(BUZZ_PIN, LOW);
     
     Serial.println("\n\nSPI Master Initialized - JSON class Mode");
 }
@@ -28,10 +29,9 @@ void loop() {
         Serial.println("----------------------------**TESTING**----------------------------");
         if(!master_class.test()) {
             Serial.println("----------------------------TEST FAILED----------------------------");
-            digitalWrite(BUZZ_PIN, HIGH);
-            delay(500); // Buzzer on for 1/2 second
-            digitalWrite(BUZZ_PIN, LOW);
+            digitalWrite(BLUE_LED, HIGH);
             delay(60000);    // Avoids fast loops of failure
+            digitalWrite(BLUE_LED, LOW);
         } else {
             Serial.println("----------------------------TEST PASSED----------------------------");
         }
