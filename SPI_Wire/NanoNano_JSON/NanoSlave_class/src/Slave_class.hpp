@@ -116,7 +116,10 @@ private:
                                 SPDR = END;     // Main reason for transmission fail (critical path) (one in many though)
                             }
                         }
-                        _buffer_index++;    // Increments just in the end to save a couple microseconds
+                        // Doesn't increment beyond the string real size
+                        if (_sending_buffer[_buffer_index] != '\0') {
+                            _buffer_index++;    // Increments just in the end to save a couple microseconds
+                        }
                     } else {
                         SPDR = FULL;
                         _transmission_mode = NONE;
