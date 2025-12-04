@@ -106,30 +106,29 @@ private:
                     }
                     break;
                 case SEND:
-                    if (_sending_index < BUFFER_SIZE) {
-                        if (_receiving_index > _sending_index) {
-                            SPDR = END;
-                            break;
-                        } else {
-                            SPDR = _sending_buffer[_sending_index];  // This way avoids being the critical path (in advance)
-                        }
-                        // Starts checking 2 indexes after
-                        if (_sending_index > 1) {    // Two positions of delay
-                            if (c != _sending_buffer[_receiving_index]) {   // Also checks '\0' char
-                                SPDR = ERROR;
-                                _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
-                                break;
-                            }
-                            _receiving_index++; // Starts checking after two sent
-                        }
-                        // Only increments if NOT at the end of the string being sent
-                        if (_sending_buffer[_sending_index] != '\0') {
-                            _sending_index++;
-                        }
-                    } else {
-                        SPDR = FULL;
-                        _transmission_mode = NONE;
-                    }
+					if (_receiving_index > _sending_index) {
+						SPDR = END;
+						break;
+					} else if (_sending_index < BUFFER_SIZE) {
+						SPDR = _sending_buffer[_sending_index];  // This way avoids being the critical path (in advance)
+					} else {
+						SPDR = FULL;
+						_transmission_mode = NONE;
+						break;
+					}
+					// Starts checking 2 indexes after
+					if (_sending_index > 1) {    // Two positions of delay
+						if (c != _sending_buffer[_receiving_index]) {   // Also checks '\0' char
+							SPDR = ERROR;
+							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
+							break;
+						}
+						_receiving_index++; // Starts checking after two sent
+					}
+					// Only increments if NOT at the end of the string being sent
+					if (_sending_buffer[_sending_index] != '\0') {
+						_sending_index++;
+					}
                     break;
                 default:
                     SPDR = NACK;
