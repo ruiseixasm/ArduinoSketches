@@ -271,10 +271,11 @@ private:
 
 public:
 
-    Master_class(int ss_pin = 10) {
+    Master_class(int ss_pin = 5) {  // ESP32 default SS pin changed from 10 to 5
         // Initialize SPI
         SPI.begin();
-        SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
+        // ESP32: SPI.setClockDivider() doesn't exist, using setFrequency instead
+        // SPI.setFrequency(1000000); // 1MHz if needed
         SPI.setDataMode(SPI_MODE0);
         SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
         // Enable the SS pin
@@ -289,7 +290,6 @@ public:
         pinMode(_ss_pin, INPUT);
         digitalWrite(_ss_pin, LOW);  // Important: disables any pull-up
     }
-
     
     bool test() {
 
@@ -376,6 +376,6 @@ public:
 
 
 char Master_class::_receiving_buffer[BUFFER_SIZE] = {'\0'};
-int Master_class::_ss_pin = 10;
+int Master_class::_ss_pin = 5;  // Changed from 10 to 5
 
 #endif // MASTER_CLASS_HPP
