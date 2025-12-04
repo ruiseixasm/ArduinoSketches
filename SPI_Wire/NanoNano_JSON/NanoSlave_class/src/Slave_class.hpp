@@ -123,7 +123,7 @@ private:
                             _receiving_index++; // Starts checkig after two sent
                         }
                         // Only increments if NOT at the end of the string being sent
-                        if (SPDR != '\0') {
+                        if (_sending_buffer[_sending_index] != '\0') {
                             _sending_index++;
                         }
                     } else {
