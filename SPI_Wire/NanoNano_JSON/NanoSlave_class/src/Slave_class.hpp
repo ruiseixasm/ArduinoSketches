@@ -107,28 +107,24 @@ private:
                     break;
                 case SEND:
                     if (_sending_index < BUFFER_SIZE) {
-                        // Boundary safety takes the most toll, that's why SPDR typical scenario is given in advance
-                        SPDR = _sending_buffer[_sending_index];  // This way avoids being the critical path (in advance)
-
-                        if (SPDR == '\0') { // Advance no more if the end of the string has been reached
-
-                            if (_sending_index > 1) {    // Two positions of delay
-                                if (c != _sending_buffer[_sending_index - 2] && c != _sending_buffer[_sending_index - 1]) {
-                                    SPDR = ERROR;
-                                    _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
-                                } else if (c == '\0') {
-                                    SPDR = END;     // Main reason for transmission fail (critical path) (one in many though)
-                                }
-                            }
+                        if (_receiving_index > _sending_index) {
+                            SPDR = END;
+                            break;
                         } else {
-                            
-                            if (_sending_index > 1) {    // Two positions of delay
-                                if (c != _sending_buffer[_sending_index - 2]) {
-                                    SPDR = ERROR;
-                                    _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
-                                }
+                            SPDR = _sending_buffer[_sending_index];  // This way avoids being the critical path (in advance)
+                        }
+                        // Starts checking 2 indexes after
+                        if (_sending_index > 1) {    // Two positions of delay
+                            if (c != _sending_buffer[_receiving_index]) {   // Also checks '\0' char
+                                SPDR = ERROR;
+                                _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
+                                break;
                             }
-                            _sending_index++;    // Increments just in the end to save a couple microseconds
+                            _receiving_index++; // Starts checkig after two sent
+                        }
+                        // Only increments if NOT at the end of the string being sent
+                        if (SPDR != '\0') {
+                            _sending_index++;
                         }
                     } else {
                         SPDR = FULL;
