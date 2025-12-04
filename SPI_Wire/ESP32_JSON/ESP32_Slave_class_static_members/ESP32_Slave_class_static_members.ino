@@ -3,9 +3,7 @@
 #include "src/Slave_class.hpp"
 
 
-ISR(SPI_STC_vect) {
-    Slave_class::handleSPI_Interrupt();
-}
+// NO ISR on ESP32 - handled internally by SPI driver
 
 
 // Create instance
@@ -17,8 +15,7 @@ void setup() {
     Serial.begin(115200);
     pinMode(GREEN_LED_PIN, OUTPUT);
 
-    // Enable global interrupts
-    sei();
+    // NO sei() on ESP32 - FreeRTOS handles interrupts
 
     Serial.println("\n\nSPI Slave Initialized - JSON class Mode");
 }
