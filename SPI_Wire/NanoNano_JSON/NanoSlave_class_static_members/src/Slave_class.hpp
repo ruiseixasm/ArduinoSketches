@@ -76,6 +76,98 @@ private:
 
     
     
+
+    void processMessage() {
+
+        Serial.print("Processed command: ");
+        Serial.println(_receiving_buffer);
+
+        // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+        #if ARDUINOJSON_VERSION_MAJOR >= 7
+        JsonDocument message_doc;
+        #else
+        StaticJsonDocument<BUFFER_SIZE> message_doc;
+        #endif
+
+        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BUFFER_SIZE);
+        if (error) {
+            return false;
+        }
+        JsonObject json_message = message_doc.as<JsonObject>();
+
+        const char* command_name = json_message["n"].as<const char*>();
+
+
+        if (strcmp(command_name, "ON") == 0) {
+            digitalWrite(GREEN_LED_PIN, HIGH);
+            json_message["n"] = "OK_ON";
+            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
+            Serial.print("LED is ON");
+            Serial.print(" | Sending: ");
+            Serial.println(_sending_buffer);
+
+        } else if (strcmp(command_name, "OFF") == 0) {
+            digitalWrite(GREEN_LED_PIN, LOW);
+            json_message["n"] = "OK_OFF";
+            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
+            Serial.print("LED is OFF");
+            Serial.print(" | Sending: ");
+            Serial.println(_sending_buffer);
+        } else {
+            json_message["n"] = "BUZZ";
+            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
+            Serial.print("Unknown command");
+            Serial.print(" | Sending: ");
+            Serial.println(_sending_buffer);
+        }
+    }
+
+
+    void initSPISlave() {  // FIX 3: Add missing method definition
+        pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
+        
+        // Initialize SPI as slave - EXPLICIT MSB FIRST
+        SPCR = 0;  // Clear register
+        SPCR |= _BV(SPE);    // SPI Enable
+        SPCR |= _BV(SPIE);   // SPI Interrupt Enable  
+        SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
+        SPCR &= ~_BV(CPOL);  // Clock polarity 0
+        SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
+    }
+
+
+public:
+
+    Slave_class() {
+
+        _instance = this;  // Set static instance
+        
+        // Initialize pins
+        pinMode(GREEN_LED_PIN, OUTPUT);
+        digitalWrite(GREEN_LED_PIN, LOW);
+        pinMode(YELLOW_LED_PIN, OUTPUT);
+        digitalWrite(YELLOW_LED_PIN, LOW);
+
+        // Setup SPI as slave
+        initSPISlave();
+    }
+
+    ~Slave_class() {
+        if (_instance == this) {
+            // Disable SPI interrupt
+            SPCR &= ~(1 << SPIE);
+            _instance = nullptr;
+        }
+
+        // This returns the pin to exact power-on state:
+        pinMode(GREEN_LED_PIN, INPUT);
+        digitalWrite(GREEN_LED_PIN, LOW);  // Important: disables any pull-up
+
+        pinMode(YELLOW_LED_PIN, INPUT);
+        digitalWrite(YELLOW_LED_PIN, LOW);
+    }
+
+
     // Actual interrupt handler
     static void handleSPI_Interrupt() {
 
@@ -178,104 +270,7 @@ private:
         }
     }
 
-
-    void processMessage() {
-
-        Serial.print("Processed command: ");
-        Serial.println(_receiving_buffer);
-
-        // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-        #if ARDUINOJSON_VERSION_MAJOR >= 7
-        JsonDocument message_doc;
-        #else
-        StaticJsonDocument<BUFFER_SIZE> message_doc;
-        #endif
-
-        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BUFFER_SIZE);
-        if (error) {
-            return false;
-        }
-        JsonObject json_message = message_doc.as<JsonObject>();
-
-        const char* command_name = json_message["n"].as<const char*>();
-
-
-        if (strcmp(command_name, "ON") == 0) {
-            digitalWrite(GREEN_LED_PIN, HIGH);
-            json_message["n"] = "OK_ON";
-            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
-            Serial.print("LED is ON");
-            Serial.print(" | Sending: ");
-            Serial.println(_sending_buffer);
-
-        } else if (strcmp(command_name, "OFF") == 0) {
-            digitalWrite(GREEN_LED_PIN, LOW);
-            json_message["n"] = "OK_OFF";
-            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
-            Serial.print("LED is OFF");
-            Serial.print(" | Sending: ");
-            Serial.println(_sending_buffer);
-        } else {
-            json_message["n"] = "BUZZ";
-            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
-            Serial.print("Unknown command");
-            Serial.print(" | Sending: ");
-            Serial.println(_sending_buffer);
-        }
-    }
-
-
-    void initSPISlave() {  // FIX 3: Add missing method definition
-        pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
-        
-        // Initialize SPI as slave - EXPLICIT MSB FIRST
-        SPCR = 0;  // Clear register
-        SPCR |= _BV(SPE);    // SPI Enable
-        SPCR |= _BV(SPIE);   // SPI Interrupt Enable  
-        SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
-        SPCR &= ~_BV(CPOL);  // Clock polarity 0
-        SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
-    }
-
-
-public:
-
-    Slave_class() {
-
-        _instance = this;  // Set static instance
-        
-        // Initialize pins
-        pinMode(GREEN_LED_PIN, OUTPUT);
-        digitalWrite(GREEN_LED_PIN, LOW);
-        pinMode(YELLOW_LED_PIN, OUTPUT);
-        digitalWrite(YELLOW_LED_PIN, LOW);
-
-        // Setup SPI as slave
-        initSPISlave();
-    }
-
-    ~Slave_class() {
-        if (_instance == this) {
-            // Disable SPI interrupt
-            SPCR &= ~(1 << SPIE);
-            _instance = nullptr;
-        }
-
-        // This returns the pin to exact power-on state:
-        pinMode(GREEN_LED_PIN, INPUT);
-        digitalWrite(GREEN_LED_PIN, LOW);  // Important: disables any pull-up
-
-        pinMode(YELLOW_LED_PIN, INPUT);
-        digitalWrite(YELLOW_LED_PIN, LOW);
-    }
-
-
-    // Static ISR wrapper (called by hardware)
-    static void isrWrapper() {
-		handleSPI_Interrupt();
-    }
-    
-
+	
     void process() {
         if (_process_message) {
             processMessage();   // Called only once!

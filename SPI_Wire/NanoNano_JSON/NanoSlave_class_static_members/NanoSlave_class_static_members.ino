@@ -4,7 +4,7 @@
 
 
 ISR(SPI_STC_vect) {
-    Slave_class::isrWrapper();
+    Slave_class::handleSPI_Interrupt();
 }
 
 
