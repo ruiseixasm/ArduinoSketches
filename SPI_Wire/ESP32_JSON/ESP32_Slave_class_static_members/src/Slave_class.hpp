@@ -69,6 +69,13 @@ private:
     volatile static MessageCode _transmission_mode;
     volatile static bool _process_message;
 
+    // ESP32 SPI slave specific
+    static spi_slave_transaction_t trans;
+    static spi_host_device_t host;
+    static spi_bus_config_t buscfg;
+    static spi_slave_interface_config_t slvcfg;
+    static QueueHandle_t spi_queue;
+    
 
     void processMessage() {
 
@@ -128,28 +135,42 @@ private:
         SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
     }
 
+    // ESP32 interrupt callback (replaces AVR ISR)
+    static void IRAM_ATTR spi_slave_isr(void* arg) {
+        // Process SPI transaction
+        Slave_class* instance = (Slave_class*)arg;
+        if (instance) {
+            // Signal that transaction is complete
+            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+            uint8_t flag = 1;
+            xQueueSendFromISR(spi_queue, &flag, &xHigherPriorityTaskWoken);
+            if (xHigherPriorityTaskWoken) {
+                portYIELD_FROM_ISR();
+            }
+        }
+    }
+
 
 public:
 
     Slave_class() {
-
-        // Initialize pins
+        // Initialize pins (ESP32 pins)
         pinMode(GREEN_LED_PIN, OUTPUT);
         digitalWrite(GREEN_LED_PIN, LOW);
 
-        // Setup SPI as slave
-        initSPISlave();
+        // Initialize ESP32 SPI slave
+        initSPISlave_ESP32();
     }
 
     ~Slave_class() {
-		
-		// Disable SPI interrupt
-		SPCR &= ~(1 << SPIE);
-
-        // This returns the pin to exact power-on state:
+        // Cleanup ESP32 SPI
+        if (spi_queue) {
+            vQueueDelete(spi_queue);
+        }
+        spi_slave_free(host);
+        
         pinMode(GREEN_LED_PIN, INPUT);
-        digitalWrite(GREEN_LED_PIN, LOW);  // Important: disables any pull-up
-
+        digitalWrite(GREEN_LED_PIN, LOW);
     }
 
 
@@ -255,14 +276,64 @@ public:
         }
     }
 
+
+    // ESP32 SPI slave initialization (replaces AVR init)
+    void initSPISlave_ESP32() {
+        // Create queue for SPI transactions
+        spi_queue = xQueueCreate(10, sizeof(uint8_t));
+        
+        // Configure bus (ESP32 VSPI pins by default)
+        buscfg.mosi_io_num = 23;    // VSPI MOSI
+        buscfg.miso_io_num = 19;    // VSPI MISO  
+        buscfg.sclk_io_num = 18;    // VSPI SCK
+        buscfg.quadwp_io_num = -1;
+        buscfg.quadhd_io_num = -1;
+        buscfg.max_transfer_sz = BUFFER_SIZE;
+        
+        // Configure slave
+        slvcfg.mode = 0;
+        slvcfg.spics_io_num = 5;    // VSPI CS (SS)
+        slvcfg.queue_size = 3;
+        slvcfg.flags = 0;
+        slvcfg.post_setup_cb = NULL;
+        slvcfg.post_trans_cb = spi_slave_isr;
+        
+        // Initialize SPI slave
+        spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
+        
+        // Setup transaction
+        memset(&trans, 0, sizeof(trans));
+        trans.length = BUFFER_SIZE * 8;
+        trans.rx_buffer = _receiving_buffer;
+        trans.tx_buffer = _sending_buffer;
+        trans.user = this;
+        
+        // Queue first transaction
+        spi_slave_queue_trans(VSPI_HOST, &trans, portMAX_DELAY);
+    }
+
 	
+    // ESP32 version of process (checks queue instead of flag)
     void process() {
-        if (_process_message) {
-            processMessage();   // Called only once!
-            _process_message = false;    // Critical to avoid repeated calls over the ISR function
+        uint8_t flag;
+        if (xQueueReceive(spi_queue, &flag, 0)) {
+            // Transaction completed - process message
+            processMessage();
+            
+            // Queue next transaction
+            memset(&trans, 0, sizeof(trans));
+            trans.length = BUFFER_SIZE * 8;
+            trans.rx_buffer = _receiving_buffer;
+            trans.tx_buffer = _sending_buffer;
+            trans.user = this;
+            spi_slave_queue_trans(VSPI_HOST, &trans, portMAX_DELAY);
         }
     }
 
+    // NOTE: handleSPI_Interrupt() removed - ESP32 uses callback system
+    // Your AVR ISR logic would need to be adapted to ESP32's transaction-based system
+    // For external logic analyzer, you'd need to implement byte-by-byte handling
+    // similar to your AVR code but using ESP32 SPI slave driver
 };
 
 
@@ -272,8 +343,16 @@ char Slave_class::_sending_buffer[BUFFER_SIZE] = {'\0'};
 
 volatile uint8_t Slave_class::_receiving_index = 0;
 volatile uint8_t Slave_class::_sending_index = 0;
-volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::MessageCode::NONE;
+volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::NONE;
 volatile bool Slave_class::_process_message = false;
+
+// ESP32 specific static members
+spi_slave_transaction_t Slave_class::trans;
+spi_host_device_t Slave_class::host = VSPI_HOST;
+spi_bus_config_t Slave_class::buscfg = {};
+spi_slave_interface_config_t Slave_class::slvcfg = {};
+QueueHandle_t Slave_class::spi_queue = nullptr;
+
 
 
 #endif // SLAVE_CLASS_HPP
