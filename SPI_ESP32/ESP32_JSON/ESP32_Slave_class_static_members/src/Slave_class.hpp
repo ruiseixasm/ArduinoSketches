@@ -35,8 +35,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
-SPISlave_ESP32 spi;
-
 class Slave_class
 {
 public:
@@ -66,8 +64,11 @@ private:
     static volatile MessageCode _transmission_mode;
     static volatile bool _process_message;
 
+    
+    SPISlave_ESP32 spi;
 
-    void processMessage() {
+
+    bool processMessage() {
 
         Serial.print("Processed command: ");
         Serial.println(_receiving_buffer);
@@ -110,22 +111,8 @@ private:
             Serial.print(" | Sending: ");
             Serial.println(_sending_buffer);
         }
-    }
 
-
-    void initSPISlave() {  // FIX 3: Add missing method definition
-        // ESP32 VERSION (instead of AVR SPCR)
-        // Set MISO as OUTPUT
-        pinMode(19, OUTPUT);  // ESP32 VSPI MISO pin
-        
-        // Initialize SPI with Arduino library
-        SPI.begin();
-        SPI.setBitOrder(MSBFIRST);
-        SPI.setDataMode(SPI_MODE0);
-
-        // Note: ESP32 Arduino SPI doesn't have SPCR or SPIE
-        // For slave mode, we need ESP32's native SPI slave driver
-        // But we'll keep the interface similar
+        return true;
     }
 
     
