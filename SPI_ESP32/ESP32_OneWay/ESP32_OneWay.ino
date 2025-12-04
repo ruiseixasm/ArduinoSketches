@@ -1,227 +1,175 @@
-// Single ESP32 SPI Test - HSPI Master ↔ VSPI Slave (Internal Loopback)
-#include <SPI.h>
+#include <Arduino.h>
 
-// ==================== PIN DEFINITIONS ====================
-// HSPI Pins (Master)
-#define HSPI_MISO 12
+extern "C" {
+  #include "driver/spi_master.h"
+  #include "driver/spi_slave.h"
+  #include "driver/gpio.h"
+  #include "esp_err.h"
+}
+
+// MASTER pins (HSPI)
 #define HSPI_MOSI 13
 #define HSPI_SCLK 14
 #define HSPI_SS   15
 
-// VSPI Pins (Slave) - Connected to HSPI pins internally
-#define VSPI_MISO 19  // Connected to HSPI_MISO 12
-#define VSPI_MOSI 23  // Connected to HSPI_MOSI 13  
-#define VSPI_SCLK 18  // Connected to HSPI_SCLK 14
-#define VSPI_SS    5  // Connected to HSPI_SS   15
+// SLAVE pins (VSPI)
+#define VSPI_MOSI 23
+#define VSPI_SCLK 18
+#define VSPI_SS    5
 
-#define LED_PIN   2   // Onboard LED
+#define LED_PIN    2
 
-SPIClass hspi(HSPI);  // Master SPI
-#define BUFFER_SIZE 128
+uint8_t slave_rx[1];
+uint8_t slave_tx[1] = {0};
 
-enum MessageCode : uint8_t {
-    START   = 0xF0, // Start of transmission
-    END     = 0xF1, // End of transmission
-    VOID    = 0xFF  // No data
-};
+spi_device_handle_t hspi = NULL;
 
-// ==================== SETUP ====================
+void setup_spi_slave() {
+  Serial.println("Init SPI SLAVE (VSPI) ...");
+
+  spi_bus_config_t buscfg;
+  memset(&buscfg, 0, sizeof(buscfg));
+  buscfg.mosi_io_num = VSPI_MOSI;
+  buscfg.miso_io_num = -1;
+  buscfg.sclk_io_num = VSPI_SCLK;
+  buscfg.quadwp_io_num = -1;
+  buscfg.quadhd_io_num = -1;
+  buscfg.max_transfer_sz = 0;
+
+  spi_slave_interface_config_t slvcfg;
+  memset(&slvcfg, 0, sizeof(slvcfg));
+  slvcfg.mode = 0;
+  slvcfg.spics_io_num = VSPI_SS;
+  slvcfg.queue_size = 3;
+  slvcfg.flags = 0;
+  slvcfg.post_setup_cb = NULL;
+  slvcfg.post_trans_cb = NULL;
+
+  esp_err_t ret = spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, 0);
+  if (ret != ESP_OK) {
+    Serial.print("spi_slave_initialize failed: ");
+    Serial.println(ret);
+  } else {
+    Serial.println("SPI SLAVE initialized.");
+  }
+}
+
+void setup_spi_master() {
+  Serial.println("Init SPI MASTER (HSPI) ...");
+
+  spi_bus_config_t buscfg;
+  memset(&buscfg, 0, sizeof(buscfg));
+  buscfg.mosi_io_num = HSPI_MOSI;
+  buscfg.miso_io_num = -1;
+  buscfg.sclk_io_num = HSPI_SCLK;
+  buscfg.quadwp_io_num = -1;
+  buscfg.quadhd_io_num = -1;
+  buscfg.max_transfer_sz = 0;
+
+  spi_device_interface_config_t devcfg;
+  memset(&devcfg, 0, sizeof(devcfg));
+  devcfg.command_bits = 0;
+  devcfg.address_bits = 0;
+  devcfg.dummy_bits = 0;
+  devcfg.mode = 0;
+  devcfg.duty_cycle_pos = 0;
+  devcfg.cs_ena_posttrans = 0;
+  devcfg.cs_ena_pretrans = 0;
+  devcfg.clock_speed_hz = 1 * 1000 * 1000;
+  devcfg.spics_io_num = HSPI_SS;
+  devcfg.queue_size = 3;
+  devcfg.flags = 0;
+  devcfg.pre_cb = NULL;
+  devcfg.post_cb = NULL;
+
+  esp_err_t ret = spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
+  if (ret != ESP_OK) {
+    Serial.print("spi_bus_initialize(HSPI) failed: ");
+    Serial.println(ret);
+    return;
+  }
+
+  ret = spi_bus_add_device(HSPI_HOST, &devcfg, &hspi);
+  if (ret != ESP_OK) {
+    Serial.print("spi_bus_add_device failed: ");
+    Serial.println(ret);
+  } else {
+    Serial.println("SPI MASTER initialized.");
+  }
+}
+
 void setup() {
-    Serial.begin(115200);
-    delay(1000);
-    
-    Serial.println("\n\n========================================");
-    Serial.println("ESP32 Internal SPI Communication Test");
-    Serial.println("HSPI (Master) ↔ VSPI (Slave)");
-    Serial.println("Connected on same ESP32 board");
-    Serial.println("========================================\n");
-    
-    // Print pin connections
-    Serial.println("Internal Connections:");
-    Serial.println("GPIO13 (HSPI_MOSI) → GPIO23 (VSPI_MOSI)");
-    Serial.println("GPIO12 (HSPI_MISO) ← GPIO19 (VSPI_MISO)");
-    Serial.println("GPIO14 (HSPI_SCLK) → GPIO18 (VSPI_SCLK)");
-    Serial.println("GPIO15 (HSPI_SS)   → GPIO5  (VSPI_SS)");
-    Serial.println();
-    
-    // Initialize pins
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
-    
-    // Initialize HSPI as Master
-    Serial.println("Initializing HSPI as Master...");
-    hspi.begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI, HSPI_SS);
-    pinMode(HSPI_SS, OUTPUT);
-    digitalWrite(HSPI_SS, HIGH);
-    
-    // Setup VSPI pins for slave (all as inputs)
-    Serial.println("Setting up VSPI pins as inputs for slave...");
-    pinMode(VSPI_MOSI, INPUT);  // Data input from master
-    pinMode(VSPI_MISO, INPUT);  // Not used in one-way, but set as input
-    pinMode(VSPI_SCLK, INPUT);  // Clock input from master  
-    pinMode(VSPI_SS, INPUT_PULLUP);    // Slave Select with pull-up
-    
-    Serial.println("\nSystem Ready!");
-    Serial.println("Waiting 2 seconds before starting...\n");
-    delay(2000);
+  Serial.begin(115200);
+  delay(500);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  setup_spi_slave();
+  setup_spi_master();
+
+  Serial.println("READY. Connect HSPI->VSPI jumpers and open serial monitor.");
 }
 
-// ==================== MASTER SEND FUNCTION ====================
-bool sendCommand(const char* command) {
-    static uint8_t command_id = 0;
-    command_id++;
-    
-    Serial.print("[MASTER] Sending Command #");
-    Serial.print(command_id);
-    Serial.print(": \"");
-    Serial.print(command);
-    Serial.println("\"");
-    
-    bool success = false;
-    
-    // Visual feedback - quick LED blink
-    digitalWrite(LED_PIN, HIGH);
-    
-    // Begin SPI transaction
-    hspi.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
-    digitalWrite(HSPI_SS, LOW);
-    delayMicroseconds(10);
-    
-    // Send START byte
-    hspi.transfer(START);
-    delayMicroseconds(5);
-    
-    // Send command string
-    for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
-        hspi.transfer((uint8_t)command[i]);
-        delayMicroseconds(5);
-        if (command[i] == '\0') break;
-    }
-    
-    // Send END byte
-    hspi.transfer(END);
-    delayMicroseconds(5);
-    
-    // End transaction
-    digitalWrite(HSPI_SS, HIGH);
-    hspi.endTransaction();
-    
-    // Turn off LED
-    digitalWrite(LED_PIN, LOW);
-    
-    // Check VSPI_SS status (should be HIGH now)
-    if (digitalRead(VSPI_SS) == HIGH) {
-        Serial.println("[MASTER] Transmission completed successfully");
-        success = true;
-    } else {
-        Serial.println("[MASTER] ERROR: Slave Select still active!");
-        success = false;
-    }
-    
-    // Simulate slave receiving (since we're on same board)
-    // In reality, the slave would process this on VSPI pins
-    Serial.print("[SLAVE] Would process: ");
-    Serial.println(command);
-    
-    return success;
+// Helper: master sends a single byte
+void master_send_byte(uint8_t v) {
+  if (!hspi) {
+    Serial.println("Master device handle NULL!");
+    return;
+  }
+  spi_transaction_t t;
+  memset(&t, 0, sizeof(t));
+  t.length = 8;
+  t.tx_buffer = &v;
+  esp_err_t ret = spi_device_transmit(hspi, &t);
+  if (ret != ESP_OK) {
+    Serial.print("spi_device_transmit failed: ");
+    Serial.println(ret);
+  }
 }
 
-// ==================== SLAVE SIMULATION ====================
-void simulateSlaveResponse() {
-    // This function simulates what the slave side would do
-    // In a real two-board setup, this would be on the slave ESP32
-    
-    static unsigned long last_print = 0;
-    static int received_count = 0;
-    
-    // Only print status every 500ms to avoid spamming serial
-    if (millis() - last_print > 500) {
-        last_print = millis();
-        
-        // Check if SS line is being toggled (simulating activity)
-        static bool last_ss_state = HIGH;
-        bool current_ss_state = digitalRead(VSPI_SS);
-        
-        if (current_ss_state != last_ss_state) {
-            if (current_ss_state == LOW) {
-                received_count++;
-                Serial.print("[SLAVE] Detected transmission #");
-                Serial.println(received_count);
-            }
-            last_ss_state = current_ss_state;
-        }
-    }
+// Helper: slave blocks waiting for 1 byte
+bool slave_wait_and_handle() {
+  spi_slave_transaction_t t;
+  memset(&t, 0, sizeof(t));
+  t.length = 8;
+  t.tx_buffer = slave_tx;
+  t.rx_buffer = slave_rx;
+  esp_err_t ret = spi_slave_transmit(VSPI_HOST, &t, 0); // 0 -> non-blocking wait; try  portMAX_DELAY for blocking
+  if (ret == ESP_OK) {
+    uint8_t cmd = slave_rx[0];
+    if (cmd == 0x01) digitalWrite(LED_PIN, HIGH);
+    else digitalWrite(LED_PIN, LOW);
+    Serial.print("SLAVE recv: 0x");
+    Serial.println(cmd, HEX);
+    return true;
+  } else if (ret == ESP_ERR_TIMEOUT) {
+    // no data (non-blocking)
+    return false;
+  } else {
+    // other error
+    // note: some cores may not accept 0 timeout; if you see errors, switch to portMAX_DELAY
+    // Serial.print("spi_slave_transmit err: "); Serial.println(ret);
+    return false;
+  }
 }
 
-// ==================== MAIN LOOP ====================
+unsigned long last_master = 0;
+uint8_t next_value = 1;
+
 void loop() {
-    static int test_cycle = 0;
-    
-    test_cycle++;
-    Serial.println("\n" + String(50, '='));
-    Serial.print("Test Cycle #");
-    Serial.println(test_cycle);
-    Serial.println(String(50, '='));
-    
-    // Test 1: Simple command
-    Serial.println("\n--- Test 1: LED Control ---");
-    if (sendCommand("LED_ON")) {
-        Serial.println("✓ LED_ON command sent");
-    }
-    delay(1500);
-    
-    simulateSlaveResponse();
-    
-    // Test 2: Another command
-    Serial.println("\n--- Test 2: Another Command ---");
-    if (sendCommand("LED_OFF")) {
-        Serial.println("✓ LED_OFF command sent");
-    }
-    delay(1500);
-    
-    simulateSlaveResponse();
-    
-    // Test 3: Custom command
-    Serial.println("\n--- Test 3: Custom Command ---");
-    if (sendCommand("TEST_123")) {
-        Serial.println("✓ TEST_123 command sent");
-    }
-    delay(1500);
-    
-    simulateSlaveResponse();
-    
-    // Test 4: Longer command
-    Serial.println("\n--- Test 4: System Command ---");
-    if (sendCommand("SYSTEM_STATUS_REQUEST")) {
-        Serial.println("✓ System command sent");
-    }
-    delay(1500);
-    
-    simulateSlaveResponse();
-    
-    Serial.println("\n" + String(50, '='));
-    Serial.println("Cycle complete. Waiting 3 seconds...");
-    Serial.println(String(50, '='));
-    delay(3000);
-}
+  unsigned long now = millis();
 
-// ==================== SERIAL COMMAND INTERFACE ====================
-void serialEvent() {
-    if (Serial.available()) {
-        String input = Serial.readStringUntil('\n');
-        input.trim();
-        
-        if (input.length() > 0) {
-            Serial.print("\n[USER] Manual command: \"");
-            Serial.print(input);
-            Serial.println("\"");
-            
-            if (sendCommand(input.c_str())) {
-                Serial.println("✓ Manual command sent successfully");
-            } else {
-                Serial.println("✗ Manual command failed");
-            }
-        }
-    }
+  // Master sends every 2s
+  if (now - last_master >= 2000) {
+    master_send_byte(next_value);
+    Serial.print("MASTER sent: 0x"); Serial.println(next_value, HEX);
+    next_value ^= 1;
+    last_master = now;
+  }
+
+  // Try to read slave (non-blocking)
+  slave_wait_and_handle();
+
+  delay(5); // small yield to avoid busy-loop; adjust if needed
 }
 
