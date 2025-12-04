@@ -106,11 +106,12 @@ private:
                     }
                     break;
                 case SEND:
-					if (_receiving_index > _sending_index) {
-						SPDR = END;
-						break;
-					} else if (_sending_index < BUFFER_SIZE) {
-						SPDR = _sending_buffer[_sending_index];  // This way avoids being the critical path (in advance)
+					if (_sending_index < BUFFER_SIZE) {
+						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
+						if (_receiving_index > _sending_index) {	// Less missed sends this way
+							SPDR = END;
+							break;
+						}
 					} else {
 						SPDR = FULL;
 						_transmission_mode = NONE;
