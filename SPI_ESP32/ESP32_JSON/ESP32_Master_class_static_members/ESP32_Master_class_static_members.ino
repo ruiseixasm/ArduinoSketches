@@ -24,15 +24,20 @@ void setup() {
 
 
 void loop() {
-    Serial.println("----------------------------**TESTING**----------------------------");
-    if(!master_class.test()) {
-        Serial.println("----------------------------TEST FAILED----------------------------");
-        digitalWrite(BUZZ_PIN, HIGH);
-        delay(500); // Buzzer on for 1/2 second
-        digitalWrite(BUZZ_PIN, LOW);
-        delay(60000);    // Avoids fast loops of failure
+    if(master_class.ready()) {
+        Serial.println("----------------------------**TESTING**----------------------------");
+        if(!master_class.test()) {
+            Serial.println("----------------------------TEST FAILED----------------------------");
+            digitalWrite(BUZZ_PIN, HIGH);
+            delay(500); // Buzzer on for 1/2 second
+            digitalWrite(BUZZ_PIN, LOW);
+            delay(60000);    // Avoids fast loops of failure
+        } else {
+            Serial.println("----------------------------TEST PASSED----------------------------");
+        }
     } else {
-        Serial.println("----------------------------TEST PASSED----------------------------");
+        Serial.println("---------------------------**NOT READY**----------------------------");
+        delay(60000);    // Avoids fast loops of tries
     }
 }
 
