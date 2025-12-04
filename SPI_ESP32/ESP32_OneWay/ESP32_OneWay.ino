@@ -173,3 +173,34 @@ void loop() {
   delay(5); // small yield to avoid busy-loop; adjust if needed
 }
 
+
+
+// Notes & tips
+
+// Wire connections (required) — connect pins exactly:
+
+// HSPI_SCLK (GPIO14) → VSPI_SCLK (GPIO18)
+
+// HSPI_MOSI (GPIO13) → VSPI_MOSI (GPIO23)
+
+// HSPI_SS (GPIO15) → VSPI_SS (GPIO5)
+
+// Common GND
+
+// If you still get compile errors, paste the exact new compiler output here and I’ll debug it. (Helpful: copy the whole error text.)
+
+// If spi_slave_transmit(..., 0) errors on your core, change the 0 to portMAX_DELAY (but that will block). I used non-blocking attempt to reduce
+//     deadlocks inside single-board master+slave loops.
+
+// If the Arduino core you're using lacks SPI_DMA_CH_AUTO, replace it with 1 (or DMA_CH_AUTO may be defined; if not, try 0).
+
+// If the sketch compiles but LED doesn't toggle:
+
+// check wiring, check Serial prints
+
+// try slower clock (e.g., .clock_speed_hz = 100000)
+
+// If this compiles and uploads, but still fails at runtime, paste the serial output you see (and tell me whether you used portMAX_DELAY
+//     or 0 in spi_slave_transmit). If it still fails to compile, paste the exact error and I’ll update the code to match your toolchain.
+
+
