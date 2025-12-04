@@ -153,9 +153,9 @@ private:
                 if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
                     c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
                     if (c < 128) {   // Only accepts ASCII chars
-                        if (_receiving_buffer[length] != '\0') {
-                            _receiving_buffer[i] = c;   // Also sets '\0'!
-                            length = i; // Avoids increment beyond the real string size
+                        // Avoids increment beyond the real string size
+                        if (_receiving_buffer[length] != '\0') {    // length == i - 1
+                            _receiving_buffer[++length] = c;        // length == i (also sets '\0')
                         }
                     } else if (c == END) {
                         SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
@@ -171,7 +171,7 @@ private:
                     c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
                     if (c < 128) {   // Only accepts ASCII chars
                         _receiving_buffer[0] = c;   // First char received
-                        length = i;
+                        length = 0;
                     } else if (c == NONE || c == VOID) {
                         #ifdef MASTER_CLASS_DEBUG
                         if (c == NONE) Serial.println("\t\tReceived NONE");
