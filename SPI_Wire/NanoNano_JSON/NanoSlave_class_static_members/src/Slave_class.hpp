@@ -192,7 +192,7 @@ public:
 					if (_sending_index < BUFFER_SIZE) {
 						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
 						if (_receiving_index > _sending_index) {	// Less missed sends this way
-							SPDR = END;
+							SPDR = END;	// All chars have been checked
 							break;
 						}
 					} else {

@@ -25,8 +25,6 @@ https://github.com/ruiseixasm/JsonTalkie
 extern const int BUZZ_PIN;  // Declare as external (defined elsewhere)
 
 #define BUFFER_SIZE 128
-char _receiving_buffer[BUFFER_SIZE] = {'\0'};
-
 
 // To make this value the minimum possible, always place the setting SPDR on top in the Slave code (SPDR =)
 #define send_delay_us 10
@@ -53,7 +51,8 @@ public:
 
 private:
 
-    int _ss_pin = 10;
+	static char _receiving_buffer[BUFFER_SIZE];
+    static int _ss_pin;
 
     size_t sendString(const char* command) {
         size_t length = 0;	// No interrupts, so, not volatile
@@ -375,5 +374,8 @@ public:
 
 };
 
+
+char Master_class::_receiving_buffer[BUFFER_SIZE] = {'\0'};
+int Master_class::_ss_pin = 10;
 
 #endif // MASTER_CLASS_HPP
