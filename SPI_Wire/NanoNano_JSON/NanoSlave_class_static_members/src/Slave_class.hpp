@@ -77,7 +77,7 @@ private:
     
     
     // Actual interrupt handler
-    void handleSPI_Interrupt() {
+    static void handleSPI_Interrupt() {
 
         // WARNING 1:
         //     AVOID PLACING HEAVY CODE OR CALL HERE. THIS INTERRUPTS THE LOOP!
@@ -272,9 +272,7 @@ public:
 
     // Static ISR wrapper (called by hardware)
     static void isrWrapper() {
-        if (_instance) {
-            _instance->handleSPI_Interrupt();
-        }
+		handleSPI_Interrupt();
     }
     
 
