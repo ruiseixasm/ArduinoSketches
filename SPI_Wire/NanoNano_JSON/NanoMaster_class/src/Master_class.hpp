@@ -158,6 +158,7 @@ private:
                             _receiving_buffer[++length] = c;        // length == i (also sets '\0')
                         }
                     } else if (c == END) {
+                        delayMicroseconds(receive_delay_us);
                         SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
                         #ifdef MASTER_CLASS_DEBUG
                         Serial.println("\t\t\tSent END");
