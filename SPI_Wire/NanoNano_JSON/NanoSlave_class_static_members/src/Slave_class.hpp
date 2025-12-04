@@ -68,11 +68,11 @@ private:
     
     // Buffers and state variables
     static char _receiving_buffer[BUFFER_SIZE];
-    char _sending_buffer[BUFFER_SIZE];
-    volatile uint8_t _receiving_index;
-    volatile uint8_t _sending_index;
-    volatile MessageCode _transmission_mode;
-    volatile bool _process_message;
+    static char _sending_buffer[BUFFER_SIZE];
+    volatile static uint8_t _receiving_index;
+    volatile static uint8_t _sending_index;
+    volatile static MessageCode _transmission_mode;
+    volatile static bool _process_message;
 
     
     
@@ -244,13 +244,6 @@ public:
 
         _instance = this;  // Set static instance
         
-        // Initialize buffers
-        _sending_buffer[0] = '\0';
-        _receiving_index = 0;
-        _sending_index = 0;
-        _transmission_mode = NONE;
-        _process_message = false;
-
         // Initialize pins
         pinMode(GREEN_LED_PIN, OUTPUT);
         digitalWrite(GREEN_LED_PIN, LOW);
@@ -299,7 +292,12 @@ public:
 Slave_class* Slave_class::_instance = nullptr;
 
 char Slave_class::_receiving_buffer[BUFFER_SIZE] = {'\0'};
+char Slave_class::_sending_buffer[BUFFER_SIZE] = {'\0'};
 
+volatile uint8_t Slave_class::_receiving_index = 0;
+volatile uint8_t Slave_class::_sending_index = 0;
+volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::MessageCode::NONE;
+volatile bool Slave_class::_process_message = false;
 
 
 #endif // SLAVE_CLASS_HPP
