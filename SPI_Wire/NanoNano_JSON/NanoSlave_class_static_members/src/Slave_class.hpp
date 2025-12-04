@@ -20,6 +20,9 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>
 
 
+// #define SLAVE_CLASS_DEBUG
+
+
 // Pin definitions - define these in your main sketch
 #ifndef GREEN_LED_PIN
 #define GREEN_LED_PIN 2
@@ -66,7 +69,8 @@ private:
     // Buffers and state variables
     char _receiving_buffer[BUFFER_SIZE];
     char _sending_buffer[BUFFER_SIZE];
-    volatile uint8_t _buffer_index;
+    volatile uint8_t _receiving_index;
+    volatile uint8_t _sending_index;
     volatile MessageCode _transmission_mode;
     volatile bool _process_message;
 
@@ -93,33 +97,39 @@ private:
 
             switch (_transmission_mode) {
                 case RECEIVE:
-                    if (_buffer_index < BUFFER_SIZE) {
+                    if (_receiving_index < BUFFER_SIZE) {
                         // Returns same received char as receiving confirmation (no need to set SPDR)
-                        _receiving_buffer[_buffer_index++] = c;
+                        _receiving_buffer[_receiving_index++] = c;
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
                         _transmission_mode = NONE;
                     }
                     break;
                 case SEND:
-                    if (_buffer_index < BUFFER_SIZE) {
-                        SPDR = _sending_buffer[_buffer_index];  // This way avoids being the critical path (in advance)
-                        // Boundary safety takes the most toll, that's why SPDR typical scenario is given in advance
-                        if (_buffer_index > 1) {    // Two positions of delay
-                            if (c != _sending_buffer[_buffer_index - 2]) {
-                                SPDR = ERROR;
-                                _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
-                            } else if (c == '\0') {
-                                SPDR = END;     // Main reason for transmission fail (critical path) (one in many though)
-                                _transmission_mode = NONE;
-                                _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
-                            }
-                        }
-                        _buffer_index++;    // Increments just in the end to save a couple microseconds
-                    } else {
-                        SPDR = FULL;
-                        _transmission_mode = NONE;
-                    }
+					if (_sending_index < BUFFER_SIZE) {
+						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
+						if (_receiving_index > _sending_index) {	// Less missed sends this way
+							SPDR = END;
+							break;
+						}
+					} else {
+						SPDR = FULL;
+						_transmission_mode = NONE;
+						break;
+					}
+					// Starts checking 2 indexes after
+					if (_sending_index > 1) {    // Two positions of delay
+						if (c != _sending_buffer[_receiving_index]) {   // Also checks '\0' char
+							SPDR = ERROR;
+							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
+							break;
+						}
+						_receiving_index++; // Starts checking after two sent
+					}
+					// Only increments if NOT at the end of the string being sent
+					if (_sending_buffer[_sending_index] != '\0') {
+						_sending_index++;
+					}
                     break;
                 default:
                     SPDR = NACK;
@@ -133,7 +143,7 @@ private:
                 case RECEIVE:
                     SPDR = ACK;
                     _transmission_mode = RECEIVE;
-                    _buffer_index = 0;
+                    _receiving_index = 0;
                     break;
                 case SEND:
                     if (_sending_buffer[0] == '\0') {
@@ -141,13 +151,18 @@ private:
                     } else {    // Starts sending right away, so, no ACK
                         SPDR = _sending_buffer[0];
                         _transmission_mode = SEND;
-                        _buffer_index = 1;  // Skips to the next char
+                        _sending_index = 1;  // Skips to the next char
+                        _receiving_index = 0;
                     }
                     break;
                 case END:
                     SPDR = ACK;
+                    if (_transmission_mode == RECEIVE) {
+                        _process_message = true;
+                    } else if (_transmission_mode == SEND) {
+                        _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
+                    }
                     _transmission_mode = NONE;
-                    _process_message = true;
                     break;
                 case ACK:
                     SPDR = READY;
@@ -232,7 +247,8 @@ public:
         // Initialize buffers
         _receiving_buffer[0] = '\0';
         _sending_buffer[0] = '\0';
-        _buffer_index = 0;
+        _receiving_index = 0;
+        _sending_index = 0;
         _transmission_mode = NONE;
         _process_message = false;
 
