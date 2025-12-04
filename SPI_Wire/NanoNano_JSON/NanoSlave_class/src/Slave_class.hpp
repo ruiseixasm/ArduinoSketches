@@ -120,7 +120,7 @@ private:
                                 _transmission_mode = NONE;  // Makes sure no more communication is done, regardless
                                 break;
                             }
-                            _receiving_index++; // Starts checkig after two sent
+                            _receiving_index++; // Starts checking after two sent
                         }
                         // Only increments if NOT at the end of the string being sent
                         if (_sending_buffer[_sending_index] != '\0') {
