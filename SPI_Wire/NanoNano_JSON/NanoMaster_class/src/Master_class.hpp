@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
-#define MASTER_CLASS_DEBUG
+// #define MASTER_CLASS_DEBUG
 
 
 // Pin definitions
