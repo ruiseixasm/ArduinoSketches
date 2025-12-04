@@ -63,9 +63,6 @@ public:
     };
 
 private:
-    // Static instance for ISR access
-    static Slave_class* _instance;
-    
     // Buffers and state variables
     static char _receiving_buffer[BUFFER_SIZE];
     static char _sending_buffer[BUFFER_SIZE];
@@ -74,8 +71,6 @@ private:
     volatile static MessageCode _transmission_mode;
     volatile static bool _process_message;
 
-    
-    
 
     void processMessage() {
 
@@ -140,8 +135,6 @@ public:
 
     Slave_class() {
 
-        _instance = this;  // Set static instance
-        
         // Initialize pins
         pinMode(GREEN_LED_PIN, OUTPUT);
         digitalWrite(GREEN_LED_PIN, LOW);
@@ -153,11 +146,9 @@ public:
     }
 
     ~Slave_class() {
-        if (_instance == this) {
-            // Disable SPI interrupt
-            SPCR &= ~(1 << SPIE);
-            _instance = nullptr;
-        }
+		
+		// Disable SPI interrupt
+		SPCR &= ~(1 << SPIE);
 
         // This returns the pin to exact power-on state:
         pinMode(GREEN_LED_PIN, INPUT);
@@ -281,9 +272,7 @@ public:
 };
 
 
-// Initialize static member
-Slave_class* Slave_class::_instance = nullptr;
-
+// Initialize static members
 char Slave_class::_receiving_buffer[BUFFER_SIZE] = {'\0'};
 char Slave_class::_sending_buffer[BUFFER_SIZE] = {'\0'};
 
