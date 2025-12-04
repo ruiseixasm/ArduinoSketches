@@ -15,9 +15,17 @@ https://github.com/ruiseixasm/JsonTalkie
 #define SLAVE_CLASS_HPP
 
 #include <Arduino.h>
-#include <SPI.h>
-#include <avr/interrupt.h>
 #include <ArduinoJson.h>
+
+// ESP32 doesn't use AVR registers - remove AVR-specific includes
+// #include <SPI.h>             // REMOVED - ESP32 uses different SPI
+// #include <avr/interrupt.h>   // REMOVED - ESP32 doesn't have these registers
+
+
+// ESP32 SPI slave includes
+#include <driver/spi_slave.h>
+#include <esp_intr_alloc.h>
+
 
 
 // #define SLAVE_CLASS_DEBUG
@@ -29,16 +37,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 
-// Why A7 cannot be HIGH
-
-// On the ATmega328P Nano (old bootloader or new):
-//     Pin	Digital I/O?	Analog Input?
-//     A0–A5	✔ Yes	✔ Yes
-//     A6–A7	❌ No (input-only)	✔ Yes
-
-#ifndef YELLOW_LED_PIN
-#define YELLOW_LED_PIN 19   // A5
-#endif
 
 #define BUFFER_SIZE 128
 
@@ -138,8 +136,6 @@ public:
         // Initialize pins
         pinMode(GREEN_LED_PIN, OUTPUT);
         digitalWrite(GREEN_LED_PIN, LOW);
-        pinMode(YELLOW_LED_PIN, OUTPUT);
-        digitalWrite(YELLOW_LED_PIN, LOW);
 
         // Setup SPI as slave
         initSPISlave();
@@ -154,8 +150,6 @@ public:
         pinMode(GREEN_LED_PIN, INPUT);
         digitalWrite(GREEN_LED_PIN, LOW);  // Important: disables any pull-up
 
-        pinMode(YELLOW_LED_PIN, INPUT);
-        digitalWrite(YELLOW_LED_PIN, LOW);
     }
 
 
