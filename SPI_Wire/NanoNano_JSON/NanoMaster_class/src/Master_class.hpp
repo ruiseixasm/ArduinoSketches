@@ -98,7 +98,6 @@ private:
             }
 
             if (length == 0) {
-                delayMicroseconds(send_delay_us);
                 SPI.transfer(ERROR);
                 // _receiving_buffer[0] = '\0'; // Implicit char
             }
@@ -158,7 +157,6 @@ private:
                             _receiving_buffer[++length] = c;        // length == i (also sets '\0')
                         }
                     } else if (c == END) {
-                        delayMicroseconds(receive_delay_us);
                         SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
                         #ifdef MASTER_CLASS_DEBUG
                         Serial.println("\t\t\tSent END");
@@ -189,7 +187,6 @@ private:
             }
 
             if (length == 0) {
-                delayMicroseconds(receive_delay_us);
                 SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
                 _receiving_buffer[0] = '\0'; // Implicit char
                 #ifdef MASTER_CLASS_DEBUG
