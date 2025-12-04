@@ -3,8 +3,10 @@
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 #include "src/Master_class.hpp"
 
-const int SS_PIN = 10;  // Slave Select pin
-const int BUZZ_PIN = 2; // External BUZZER pin
+// ESP32 pins for external SPI
+const int SS_PIN = 5;  // Changed from 10 to 5 (ESP32 common)
+const int BUZZ_PIN = 2; // ESP32 built-in LED
+
 
 Master_class master_class = Master_class(SS_PIN);
 
