@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
-// #define MASTER_CLASS_DEBUG
+#define MASTER_CLASS_DEBUG
 
 
 // Pin definitions
@@ -171,7 +171,7 @@ private:
                     c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
                     if (c < 128) {   // Only accepts ASCII chars
                         _receiving_buffer[0] = c;   // First char received
-                        length = 0;
+                        length = 0;	// To be used as i - 1
                     } else if (c == NONE || c == VOID) {
                         #ifdef MASTER_CLASS_DEBUG
                         if (c == NONE) Serial.println("\t\tReceived NONE");
