@@ -22,7 +22,7 @@ void setup() {
 
 
 void loop() {
-    if(master_class.ready() || true) {
+    if(master_class.ready()) {
         Serial.println("----------------------------**TESTING**----------------------------");
         if(!master_class.test()) {
             Serial.println("----------------------------TEST FAILED----------------------------");

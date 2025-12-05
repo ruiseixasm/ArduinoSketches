@@ -267,9 +267,22 @@ private:
 				c = SPI.transfer(ACK);  // When the response is collected
 				
 				if (c == READY) {
+                	#ifdef MASTER_CLASS_DEBUG
+                	Serial.println("\t\tReceived READY");
+					#endif
 					acknowledge = true;
 				}
+				#ifdef MASTER_CLASS_DEBUG
+				else {
+					Serial.println("\t\tDidn't receive READY");
+				}
+				#endif
 			}
+            #ifdef MASTER_CLASS_DEBUG
+			else {
+                Serial.println("\t\tReceived VOID");
+			}
+			#endif
 
             delayMicroseconds(5);
             digitalWrite(_ss_pin, HIGH);
