@@ -1,8 +1,10 @@
 {
     "cSpell.words": [
 		"ARDUINOJSON",
+		"bblanchon",
 		"CPHA",
 		"DORD",
+		"espressif",
 		"Ethercard",
 		"HSPI",
 		"IMXRT",
@@ -16,6 +18,7 @@
 		"Seixas",
 		"SPCR",
 		"SPDR",
+		"sysdm",
 		"TEENSYDUINO",
 		"unmute",
 		"Unmutes",
