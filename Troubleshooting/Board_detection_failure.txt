@@ -1,0 +1,10 @@
+PROBLEM: ESP32 not working on desktop
+SOLUTION: Installed CP210x VCP driver WITHOUT enumeration
+DRIVER: CP210xVCPInstaller_SiliconLabs.exe
+DATE: $(date)
+NOTES: Enumeration driver was sending extra USB packets
+
+ALSO: Worked with a different USB cable
+
+DRIVER: https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads
+
