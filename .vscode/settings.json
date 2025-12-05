@@ -21,5 +21,6 @@
         "Unmutes",
         "vect",
         "VSPI"
-    ]
+    ],
+    "cmake.ignoreCMakeListsMissing": true
 }
