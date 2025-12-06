@@ -88,3 +88,6 @@ pio device monitor --port COM3 --baud 115200
 pio device monitor --port COM4 --baud 115200
 
 
+# Monitor Generic Output
+pio device monitor --project-dir .
+

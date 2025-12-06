@@ -1,99 +1,103 @@
 #include <Arduino.h>
-#include <SPI.h>
-#include "SPI_Comm.h"
+#include <soc/spi_reg.h>
+#include <soc/spi_struct.h>
+#include <driver/gpio.h>
 
-// ESP32 VSPI Pins (Slave)
-// VSPI: GPIO18(SCK), GPIO19(MISO), GPIO23(MOSI), GPIO5(SS)
-#define VSPI_SCK   18
-#define VSPI_MISO  19
-#define VSPI_MOSI  23
-#define VSPI_SS    5
+// VSPI pins for ESP32 Slave
+#define VSPI_MOSI   23  // Data from master
+#define VSPI_SCK    18  // Clock from master
+#define VSPI_SS      5  // Slave Select from master
 
-// Slave LED pin
-#define SLAVE_LED 2
+// LED to control
+#define LED_PIN 2
 
-// Create VSPI instance
-SPIClass* vspi = new SPIClass(VSPI);
-SPI_Comm spiSlave(vspi, SLAVE_LED);
-
-// Variables for SPI slave mode
-volatile bool spiCommandReceived = false;
-volatile uint8_t receivedCommand = 0;
-volatile uint8_t receivedData = 0;
-
-// Simple SPI Slave implementation
-void IRAM_ATTR spiSlaveISR() {
-    spiCommandReceived = true;
+// Simple bit-banged SPI slave receiver
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  
+  Serial.println("ESP32 Slave - Simple SPI Receiver");
+  
+  // Setup LED
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  
+  // Configure SPI pins
+  pinMode(VSPI_SS, INPUT_PULLUP);
+  pinMode(VSPI_SCK, INPUT);
+  pinMode(VSPI_MOSI, INPUT);
+  
+  Serial.println("Slave ready! Waiting for commands...");
 }
 
-void setup() {
-    Serial.begin(115200);
-    delay(1000);
+uint8_t readSPIByte() {
+  uint8_t byteReceived = 0;
+  
+  // Wait for SS to go low (master selects us)
+  while(digitalRead(VSPI_SS) == HIGH) {
+    delayMicroseconds(1);
+  }
+  
+  // Read 8 bits on SCK rising edges
+  for(int i = 7; i >= 0; i--) {
+    // Wait for clock low
+    while(digitalRead(VSPI_SCK) == HIGH) {
+      delayMicroseconds(1);
+    }
     
-    Serial.println("ESP32 SPI Slave Starting...");
-    Serial.println("Using VSPI for Slave");
+    // Wait for clock high (read on rising edge)
+    while(digitalRead(VSPI_SCK) == LOW) {
+      delayMicroseconds(1);
+    }
     
-    pinMode(SLAVE_LED, OUTPUT);
-    digitalWrite(SLAVE_LED, LOW);
-    
-    // Set up Slave Select pin with interrupt
-    pinMode(VSPI_SS, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(VSPI_SS), spiSlaveISR, FALLING);
-    
-    // Initialize SPI in Slave mode
-    SPI.begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI, VSPI_SS);
-    SPI.setDataMode(SPI_MODE0);
-    SPI.setBitOrder(MSBFIRST);
-    SPI.setFrequency(1000000);
-    
-    Serial.println("SPI Slave initialized");
-    Serial.println("Waiting for commands from Master...");
-    Serial.print("SS Pin: GPIO"); Serial.println(VSPI_SS);
-    Serial.println("=========================\n");
+    // Read MOSI bit
+    if(digitalRead(VSPI_MOSI) == HIGH) {
+      byteReceived |= (1 << i);
+    }
+  }
+  
+  // Wait for SS to go high (master deselects us)
+  while(digitalRead(VSPI_SS) == LOW) {
+    delayMicroseconds(1);
+  }
+  
+  return byteReceived;
 }
 
 void loop() {
-    // Simple SPI slave mode - listen for commands
-    static uint8_t lastCommand = 0;
-    static uint32_t lastCommandTime = 0;
+  // Check if master is selecting us
+  if(digitalRead(VSPI_SS) == LOW) {
+    // Read the byte
+    uint8_t command = readSPIByte();
     
-    // Manually check if SS is LOW (Master is selecting us)
-    if (digitalRead(VSPI_SS) == LOW) {
-        // Read command from Master
-        uint8_t cmd = SPI.transfer(0);
-        uint8_t data = SPI.transfer(0);
-        
-        // Process the command
-        uint8_t response = spiSlave.processCommand(cmd, data);
-        
-        // Send response back to Master
-        SPI.transfer(response);
-        
-        if (cmd != lastCommand || millis() - lastCommandTime > 1000) {
-            Serial.print("Command: 0x");
-            Serial.print(cmd, HEX);
-            Serial.print(", Response: 0x");
-            Serial.println(response, HEX);
-            
-            // Visual feedback
-            digitalWrite(SLAVE_LED, HIGH);
-            delay(20);
-            digitalWrite(SLAVE_LED, LOW);
-            
-            lastCommand = cmd;
-            lastCommandTime = millis();
-        }
+    // Process command
+    if(command == 1) {
+      digitalWrite(LED_PIN, HIGH);
+      Serial.println("Received: LED ON (1)");
+    } 
+    else if(command == 0) {
+      digitalWrite(LED_PIN, LOW);
+      Serial.println("Received: LED OFF (0)");
+    }
+    else {
+      Serial.print("Unknown command: ");
+      Serial.println(command);
     }
     
-    // Blink slave LED slowly to show it's alive
-    static unsigned long lastBlink = 0;
-    if (millis() - lastBlink > 2000) {
-        lastBlink = millis();
-        digitalWrite(SLAVE_LED, !digitalRead(SLAVE_LED));
-        Serial.print("Slave alive - LED: ");
-        Serial.println(digitalRead(SLAVE_LED) ? "ON" : "OFF");
-    }
-    
-    delay(10);
+    // Visual feedback
+    digitalWrite(LED_PIN, HIGH);
+    delay(50);
+    digitalWrite(LED_PIN, LOW);
+  }
+  
+  // Blink LED slowly when idle
+  static unsigned long lastBlink = 0;
+  if(millis() - lastBlink > 2000) {
+    lastBlink = millis();
+    digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+    Serial.println("Slave alive");
+  }
+  
+  delay(10);
 }
 
