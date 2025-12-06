@@ -44,7 +44,7 @@ void loop() {
             Serial.println("----------------------------TEST PASSED----------------------------");
         }
     } else {
-        Serial.println("---------------------------**NOT READY**----------------------------");
+        Serial.println("---------------------------**NOT READY**---------------------------");
         delay(60000);    // Avoids fast loops of tries
     }
 }
