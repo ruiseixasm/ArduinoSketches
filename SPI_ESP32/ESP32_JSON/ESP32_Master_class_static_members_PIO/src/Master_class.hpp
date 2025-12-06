@@ -69,10 +69,7 @@ private:
             for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
                 delayMicroseconds(send_delay_us);
                 if (i > 0) {
-                    if (c == VOID) {    // First time check
-                        length = 1; // Avoids another try
-                        break;
-                    } else if (command[i - 1] == '\0') {
+                    if (command[i - 1] == '\0') {
                         c = SPI.transfer(END);
                         if (c == '\0') {
                             length = i;
@@ -85,12 +82,25 @@ private:
                         c = SPI.transfer(command[i]);	// Receives the command[i - 1]
                     }
                     if (c != command[i - 1]) {    // Includes NACK situation
+                        #ifdef MASTER_CLASS_DEBUG
+                        if (c == NACK) Serial.println("\t\tReceived NACK");
+                        if (c == NONE) Serial.println("\t\tReceived NONE");
+                        #endif
                         length = 0;
                         break;
                     }
+				} else if (c == VOID) {
+                    #ifdef MASTER_CLASS_DEBUG
+                    Serial.println("\t\tReceived VOID");
+                    #endif
+					length = 1; // Avoids another try
+					break;
                 } else if (command[0] != '\0') {
                     c = SPI.transfer(command[0]);	// Doesn't check first char
                 } else {
+                    #ifdef MASTER_CLASS_DEBUG
+                    Serial.println("\t\tNothing to be sent");
+                    #endif
                     length = 1; // Nothing to be sent
                     break;
                 }
@@ -174,12 +184,17 @@ private:
                     if (c < 128) {   // Only accepts ASCII chars
                         _receiving_buffer[0] = c;   // First char received
                         length = 0;	// To be used as i - 1
-                    } else if (c == NONE || c == VOID) {
+                    } else if (c == NONE) {
                         #ifdef MASTER_CLASS_DEBUG
-                        if (c == NONE) Serial.println("\t\tReceived NONE");
-                        if (c == VOID) Serial.println("\t\tReceived VOID");
+                        Serial.println("\t\tReceived NONE");
                         #endif
                         _receiving_buffer[0] = '\0'; // Sets receiving as nothing (for prints)
+                        length = 1;
+                        break;
+                    } else if (c == VOID) {
+                        #ifdef MASTER_CLASS_DEBUG
+                        Serial.println("\t\tReceived VOID");
+                        #endif
                         length = 1;
                         break;
                     } else {    // Includes NACK (implicit)
