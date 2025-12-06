@@ -13,8 +13,6 @@ public:
         CMD_LED_OFF = 0x03,   // Turn LED OFF
         CMD_LED_TOGGLE = 0x04, // Toggle LED
         CMD_LED_STATUS = 0x05, // Get LED status
-        CMD_ACK = 0x06,       // Acknowledge
-        CMD_NACK = 0x07,      // Not acknowledge
         CMD_ERROR = 0x08      // Error
     };
 
@@ -29,20 +27,21 @@ public:
 private:
     uint8_t _ss_pin;
     SPIClass* _spi;
+    uint8_t _led_pin;
     
 public:
     // Constructor for Master
-    SPI_Comm(uint8_t ss_pin, SPIClass* spi = &SPI) 
-        : _ss_pin(ss_pin), _spi(spi) {
+    SPI_Comm(uint8_t ss_pin, SPIClass* spi = &SPI, uint8_t led_pin = 2) 
+        : _ss_pin(ss_pin), _spi(spi), _led_pin(led_pin) {
         
         pinMode(_ss_pin, OUTPUT);
         digitalWrite(_ss_pin, HIGH); // Deselect slave
     }
 
-    // Constructor for Slave (no SS pin needed)
-    SPI_Comm(SPIClass* spi = &SPI) 
-        : _ss_pin(0), _spi(spi) {
-        // Nothing to initialize for slave in this constructor
+    // Constructor for Slave
+    SPI_Comm(SPIClass* spi = &SPI, uint8_t led_pin = 2) 
+        : _ss_pin(0), _spi(spi), _led_pin(led_pin) {
+        // Slave constructor
     }
 
     // Master: Initialize SPI
@@ -54,10 +53,10 @@ public:
     }
 
     // Slave: Initialize SPI
-    void beginSlave() {
+    void beginSlave(uint8_t ss_pin) {
+        _ss_pin = ss_pin;
+        pinMode(_ss_pin, INPUT_PULLUP);
         _spi->begin();
-        // Set MISO as OUTPUT for slave
-        pinMode(_spi->pinSS(), INPUT_PULLUP);
     }
 
     // Master: Send command and get response
@@ -68,12 +67,12 @@ public:
         // Start SPI transaction
         _spi->beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
         
-        // Send command
-        uint8_t response1 = _spi->transfer(cmd);
+        // Send command and get response
+        uint8_t response = _spi->transfer(cmd);
         delayMicroseconds(10);
         
         // Send data
-        uint8_t response2 = _spi->transfer(data);
+        _spi->transfer(data);
         delayMicroseconds(10);
         
         _spi->endTransaction();
@@ -81,42 +80,42 @@ public:
         digitalWrite(_ss_pin, HIGH);
         delayMicroseconds(10);
         
-        return response2; // Return the actual response
+        return response;
     }
 
     // Process command (for Slave)
-    uint8_t processCommand(uint8_t cmd, uint8_t data, uint8_t led_pin = 2) {  // Default to GPIO2
+    uint8_t processCommand(uint8_t cmd, uint8_t data) {
         switch(cmd) {
             case CMD_PING:
                 return RESP_OK;
                 
             case CMD_LED_ON:
-                digitalWrite(led_pin, HIGH);
+                digitalWrite(_led_pin, HIGH);
                 return RESP_LED_ON;
                 
             case CMD_LED_OFF:
-                digitalWrite(led_pin, LOW);
+                digitalWrite(_led_pin, LOW);
                 return RESP_LED_OFF;
                 
             case CMD_LED_TOGGLE:
-                digitalWrite(led_pin, !digitalRead(led_pin));
-                return digitalRead(led_pin) ? RESP_LED_ON : RESP_LED_OFF;
+                digitalWrite(_led_pin, !digitalRead(_led_pin));
+                return digitalRead(_led_pin) ? RESP_LED_ON : RESP_LED_OFF;
                 
             case CMD_LED_STATUS:
-                return digitalRead(led_pin) ? RESP_LED_ON : RESP_LED_OFF;
+                return digitalRead(_led_pin) ? RESP_LED_ON : RESP_LED_OFF;
                 
             default:
                 return RESP_ERROR;
         }
     }
 
-    // Simple check if slave is responding
+    // Master: Check if slave is responding
     bool ping() {
         uint8_t response = sendCommand(CMD_PING);
         return (response == RESP_OK);
     }
 
-    // Control LED on slave
+    // Master: Control LED on slave
     bool ledOn() {
         uint8_t response = sendCommand(CMD_LED_ON);
         return (response == RESP_LED_ON);

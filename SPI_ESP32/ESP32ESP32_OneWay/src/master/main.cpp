@@ -2,7 +2,7 @@
 #include "SPI_Comm.h"
 
 // ESP32 HSPI Pins (Master)
-// HSPI: GPIO14(SCK), GPIO12(MISO), GPIO13(MOSI), GPIO15(SS)*
+// HSPI: GPIO14(SCK), GPIO12(MISO), GPIO13(MOSI), GPIO15(SS)
 #define HSPI_SCK   14
 #define HSPI_MISO  12
 #define HSPI_MOSI  13
@@ -13,7 +13,7 @@
 
 // Create HSPI instance
 SPIClass* hspi = new SPIClass(HSPI);
-SPI_Comm spiMaster(HSPI_SS, hspi);
+SPI_Comm spiMaster(HSPI_SS, hspi, MASTER_LED);
 
 void setup() {
     Serial.begin(115200);
@@ -109,7 +109,9 @@ void loop() {
                 break;
                 
             default:
-                Serial.println("Unknown command. Use 1-5");
+                if (command != ' ') {
+                    Serial.println("Unknown command. Use 1-5");
+                }
                 break;
         }
     }
