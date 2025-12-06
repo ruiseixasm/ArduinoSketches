@@ -1,0 +1,52 @@
+// COMPILE:
+// 		pio run --project-dir .
+// UPLOAD:
+// 		pio run -t upload --project-dir .
+// MONITOR:
+//		pio device monitor --project-dir .
+
+
+// SPI Master Code - Pure String Commands
+#include <SPI.h>
+#include <ArduinoJson.h>    // Include ArduinoJson Library
+#include "Master_class.hpp"
+
+// ESP32 pins for external SPI
+const int SS_PIN = 4;  // D4 because it's the specific case of the big board
+const int BLUE_LED = 2; // ESP32 built-in LED
+
+
+Master_class master_class = Master_class(SS_PIN);
+
+
+void setup() {
+    pinMode(BLUE_LED, OUTPUT);
+    digitalWrite(BLUE_LED, HIGH);
+    // Initialize serial
+    Serial.begin(115200);
+    delay(2000);    // Give some extra time to Slave start up completely
+    digitalWrite(BLUE_LED, LOW);
+
+    
+    Serial.println("\n\nSPI Master Initialized - JSON class Mode");
+}
+
+
+void loop() {
+    Serial.println("----------------------------**TESTING**----------------------------");
+    if(master_class.ready()) {
+        if(!master_class.test()) {
+            Serial.println("----------------------------TEST FAILED----------------------------");
+            digitalWrite(BLUE_LED, HIGH);
+            delay(60000);    // Avoids fast loops of failure
+            digitalWrite(BLUE_LED, LOW);
+        } else {
+            Serial.println("----------------------------TEST PASSED----------------------------");
+        }
+    } else {
+        Serial.println("---------------------------**NOT READY**---------------------------");
+        delay(60000);    // Avoids fast loops of tries
+    }
+}
+
+
