@@ -33,8 +33,8 @@ void setup() {
 
 
 void loop() {
+    Serial.println("----------------------------**TESTING**----------------------------");
     if(master_class.ready()) {
-        Serial.println("----------------------------**TESTING**----------------------------");
         if(!master_class.test()) {
             Serial.println("----------------------------TEST FAILED----------------------------");
             digitalWrite(BLUE_LED, HIGH);
