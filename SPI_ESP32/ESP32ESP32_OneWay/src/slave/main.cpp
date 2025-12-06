@@ -1,90 +1,52 @@
 #include <Arduino.h>
-#include <soc/spi_reg.h>
-#include <soc/spi_struct.h>
-#include <driver/gpio.h>
+#include <driver/spi_slave.h>
 
-// VSPI pins for ESP32 Slave
-#define VSPI_MOSI   23  // Data from master
-#define VSPI_SCK    18  // Clock from master
-#define VSPI_SS      5  // Slave Select from master
+#define VSPI_MOSI   23
+#define VSPI_MISO   19
+#define VSPI_SCK    18
+#define VSPI_SS      5
+#define LED_PIN      2
 
-// LED to control
-#define LED_PIN 2
-
-// Simple bit-banged SPI slave receiver
 void setup() {
   Serial.begin(115200);
-  delay(1000);
-  
-  Serial.println("ESP32 Slave - Simple SPI Receiver");
-  
-  // Setup LED
   pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
   
-  // Configure SPI pins
-  pinMode(VSPI_SS, INPUT_PULLUP);
-  pinMode(VSPI_SCK, INPUT);
-  pinMode(VSPI_MOSI, INPUT);
+  // Configure SPI slave - using proper struct initialization
+  spi_bus_config_t buscfg;
+  buscfg.mosi_io_num = VSPI_MOSI;
+  buscfg.miso_io_num = VSPI_MISO;
+  buscfg.sclk_io_num = VSPI_SCK;
+  buscfg.quadwp_io_num = -1;
+  buscfg.quadhd_io_num = -1;
   
-  Serial.println("Slave ready! Waiting for commands...");
-}
-
-uint8_t readSPIByte() {
-  uint8_t byteReceived = 0;
+  spi_slave_interface_config_t slvcfg;
+  slvcfg.mode = 0;
+  slvcfg.spics_io_num = VSPI_SS;
+  slvcfg.queue_size = 1;
+  slvcfg.flags = 0;
   
-  // Wait for SS to go low (master selects us)
-  while(digitalRead(VSPI_SS) == HIGH) {
-    delayMicroseconds(1);
-  }
+  spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
   
-  // Read 8 bits on SCK rising edges
-  for(int i = 7; i >= 0; i--) {
-    // Wait for clock low
-    while(digitalRead(VSPI_SCK) == HIGH) {
-      delayMicroseconds(1);
-    }
-    
-    // Wait for clock high (read on rising edge)
-    while(digitalRead(VSPI_SCK) == LOW) {
-      delayMicroseconds(1);
-    }
-    
-    // Read MOSI bit
-    if(digitalRead(VSPI_MOSI) == HIGH) {
-      byteReceived |= (1 << i);
-    }
-  }
-  
-  // Wait for SS to go high (master deselects us)
-  while(digitalRead(VSPI_SS) == LOW) {
-    delayMicroseconds(1);
-  }
-  
-  return byteReceived;
+  Serial.println("Slave Ready");
 }
 
 void loop() {
-  // Check if master is selecting us
-  if(digitalRead(VSPI_SS) == LOW) {
-    // Read the byte
-    uint8_t command = readSPIByte();
-    
-    // Process command
-    if(command == 1) {
+  uint8_t rx_data[1] = {0};
+  
+  spi_slave_transaction_t trans;
+  memset(&trans, 0, sizeof(trans));
+  trans.length = 8 * sizeof(rx_data);
+  trans.rx_buffer = rx_data;
+  
+  // Wait for data from master
+  if (spi_slave_transmit(VSPI_HOST, &trans, portMAX_DELAY) == ESP_OK) {
+    if (rx_data[0] == 1) {
       digitalWrite(LED_PIN, HIGH);
-      Serial.println("Received: LED ON (1)");
-    } 
-    else if(command == 0) {
+      Serial.println("LED ON");
+    } else if (rx_data[0] == 0) {
       digitalWrite(LED_PIN, LOW);
-      Serial.println("Received: LED OFF (0)");
-    }
-    else {
-      Serial.print("Unknown command: ");
-      Serial.println(command);
+      Serial.println("LED OFF");
     }
   }
-  
-  delay(10);
 }
 

@@ -1,83 +1,58 @@
 #include <Arduino.h>
 #include <driver/spi_master.h>
 
-// HSPI pins for ESP32 Master
-#define HSPI_MOSI   13  // Data to slave
-#define HSPI_SCK    14  // Clock
-#define HSPI_SS     15  // Slave Select
-
-// Built-in LED for feedback
-#define LED_PIN 2
+#define HSPI_MOSI   13
+#define HSPI_SCK    14
+#define HSPI_SS     15
+#define LED_PIN     2
 
 spi_device_handle_t spi;
 
 void setup() {
   Serial.begin(115200);
-  delay(1000);
-  
-  Serial.println("ESP32 Master - Simple SPI LED Control");
-  
-  // Initialize LED
   pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
   
-  // Configure SS pin
-  pinMode(HSPI_SS, OUTPUT);
-  digitalWrite(HSPI_SS, HIGH);
+  // Configure SPI
+  spi_bus_config_t buscfg = {};
+  buscfg.mosi_io_num = HSPI_MOSI;
+  buscfg.miso_io_num = -1;
+  buscfg.sclk_io_num = HSPI_SCK;
+  buscfg.quadwp_io_num = -1;
+  buscfg.quadhd_io_num = -1;
   
-  // ESP32 SPI Master configuration
-  spi_bus_config_t buscfg = {
-    .mosi_io_num = HSPI_MOSI,
-    .miso_io_num = -1,  // Not used for one-way
-    .sclk_io_num = HSPI_SCK,
-    .quadwp_io_num = -1,
-    .quadhd_io_num = -1,
-    .max_transfer_sz = 0
-  };
+  spi_device_interface_config_t devcfg = {};
+  devcfg.mode = 0;
+  devcfg.clock_speed_hz = 1000000;
+  devcfg.spics_io_num = HSPI_SS;
+  devcfg.queue_size = 1;
   
-  spi_device_interface_config_t devcfg = {
-    .mode = 0,  // SPI mode 0
-    .clock_speed_hz = 1000000,  // 1 MHz
-    .spics_io_num = HSPI_SS,
-    .flags = 0,
-    .queue_size = 1
-  };
-  
-  // Initialize SPI bus and device
   spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
   spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
   
-  Serial.println("Master ready!");
+  Serial.println("Master Ready");
 }
 
-void sendCommand(uint8_t command) {
-  spi_transaction_t t;
-  memset(&t, 0, sizeof(t));
+void loop() {
+  static bool led_state = false;
+  static uint32_t last_time = 0;
   
-  t.length = 8;  // 8 bits
-  t.tx_buffer = &command;
-  
-  // Select slave and send command
-  spi_device_transmit(spi, &t);
-}
-
-void loop() {  
-  // Blink LED to show it's alive
-  static unsigned long lastBlink = 0;
-  static int command = 0;
-  if (millis() - lastBlink > 1000) {
-	digitalWrite(LED_PIN, HIGH);
-    lastBlink = millis();
-	command = 1 - command;
-	if (command == 1) {
-		Serial.println("Sending: LED ON (1)");
-      	sendCommand(1);
-	} else {
-		Serial.println("Sending: LED OFF (0)");
-      	sendCommand(0);
-	}
-	delay(200);
-	digitalWrite(LED_PIN, LOW);
+  if (millis() - last_time > 1000) {
+    last_time = millis();
+    led_state = !led_state;
+    
+    uint8_t data = led_state ? 1 : 0;
+    
+    spi_transaction_t trans = {};
+    trans.length = 8;
+    trans.tx_buffer = &data;
+    
+    spi_device_transmit(spi, &trans);
+    
+    digitalWrite(LED_PIN, HIGH);
+    Serial.print("Sent: ");
+    Serial.println(data);
+    delay(100);
+    digitalWrite(LED_PIN, LOW);
   }
   
   delay(10);
