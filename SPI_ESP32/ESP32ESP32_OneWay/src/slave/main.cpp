@@ -10,43 +10,40 @@
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
-  
-  // Configure SPI slave - using proper struct initialization
-  spi_bus_config_t buscfg;
+
+  spi_bus_config_t buscfg = {};
   buscfg.mosi_io_num = VSPI_MOSI;
-  buscfg.miso_io_num = VSPI_MISO;
+  buscfg.miso_io_num = -1; // not used
   buscfg.sclk_io_num = VSPI_SCK;
   buscfg.quadwp_io_num = -1;
   buscfg.quadhd_io_num = -1;
-  
-  spi_slave_interface_config_t slvcfg;
-  slvcfg.mode = 0;
+
+  spi_slave_interface_config_t slvcfg = {};
   slvcfg.spics_io_num = VSPI_SS;
+  slvcfg.mode = 0;
   slvcfg.queue_size = 1;
   slvcfg.flags = 0;
-  
-  spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
-  
-  Serial.println("Slave Ready");
+
+  if (spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO) != ESP_OK) {
+    Serial.println("SPI Slave init failed");
+  } else {
+    Serial.println("Slave Ready");
+  }
 }
 
 void loop() {
-  uint8_t rx_data[1] = {0};
-  
-  spi_slave_transaction_t trans;
-  memset(&trans, 0, sizeof(trans));
-  trans.length = 8 * sizeof(rx_data);
-  trans.rx_buffer = rx_data;
-  
-  // Wait for data from master
-  if (spi_slave_transmit(VSPI_HOST, &trans, portMAX_DELAY) == ESP_OK) {
-    if (rx_data[0] == 1) {
-      digitalWrite(LED_PIN, HIGH);
-      Serial.println("LED ON");
-    } else if (rx_data[0] == 0) {
-      digitalWrite(LED_PIN, LOW);
-      Serial.println("LED OFF");
-    }
+  uint8_t rx_data = 0;
+
+  spi_slave_transaction_t trans = {};
+  trans.length = 8;          // 8 bits = 1 byte
+  trans.rx_buffer = &rx_data; // buffer to receive into
+
+  // Wait for master to send
+  esp_err_t ret = spi_slave_transmit(VSPI_HOST, &trans, portMAX_DELAY);
+  if (ret == ESP_OK) {
+    digitalWrite(LED_PIN, rx_data ? HIGH : LOW);
+    Serial.print("LED ");
+    Serial.println(rx_data ? "ON" : "OFF");
   }
 }
 
