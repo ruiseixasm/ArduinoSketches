@@ -18,6 +18,16 @@ which pio
 pip list | grep platformio
 
 
+# CLEAN CACHE
+
+## Clean PlatformIO Cache
+~/.platformio/penv/bin/pio system prune
+~/.platformio/penv/bin/pio system cleanup
+
+## Clear Package Cache
+### Remove downloaded package cache (This can free 500MB-1GB)
+rm -rf ~/.platformio/.cache
+
 
 # UNINSTALL
 
