@@ -259,12 +259,19 @@ private:
             delayMicroseconds(5);
 
             // Asks the Slave to acknowledge readiness
-            SPI.transfer(ACK);
-            delayMicroseconds(send_delay_us);
-            c = SPI.transfer(ACK);  // When the response is collected
-            
+            c = SPI.transfer(ACK);
+
+			#ifdef MASTER_CLASS_DEBUG
+			Serial.print("\tReceived from ACK: ");
+			Serial.println(c);
+			#endif
+
+			// VOID only happens if there is a pull up resistor (10k), because otherwise MISO is floating
 			if (c != VOID) {
 
+				delayMicroseconds(send_delay_us);
+				c = SPI.transfer(ACK);  // When the response is collected
+            
 				delayMicroseconds(send_delay_us);
 				c = SPI.transfer(ACK);  // When the response is collected
 				
