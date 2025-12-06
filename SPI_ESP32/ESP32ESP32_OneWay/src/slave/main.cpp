@@ -83,19 +83,6 @@ void loop() {
       Serial.print("Unknown command: ");
       Serial.println(command);
     }
-    
-    // Visual feedback
-    digitalWrite(LED_PIN, HIGH);
-    delay(50);
-    digitalWrite(LED_PIN, LOW);
-  }
-  
-  // Blink LED slowly when idle
-  static unsigned long lastBlink = 0;
-  if(millis() - lastBlink > 2000) {
-    lastBlink = millis();
-    digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-    Serial.println("Slave alive");
   }
   
   delay(10);
