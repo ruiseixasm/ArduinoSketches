@@ -18,3 +18,20 @@ idf.py -p COM4 monitor
 ## To exit from the monitor, press
 Ctrl+]
 
+
+# Linux
+
+## Source the export script (adjust path if different)
+source $HOME/esp/esp-idf/export.sh
+
+## Compile with
+idf.py build
+
+## Upload the build
+idf.py flash
+idf.py -p /dev/ttyUSB0 flash
+
+## Monitor while flashing
+idf.py flash monitor
+
+
