@@ -1,0 +1,26 @@
+# Build directories
+build/
+sdkconfig
+sdkconfig.old
+
+# Compiled files
+*.elf
+*.bin
+*.map
+*.list
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

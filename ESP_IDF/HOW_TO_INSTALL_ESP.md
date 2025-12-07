@@ -110,3 +110,37 @@ cd esp\esp-idf
 .\install.bat
 .\export.bat
 
+
+## Add this to your system PATH:
+
+Press Win + X → System → Advanced system settings
+Environment Variables → System variables → Path → Edit
+
+Add: C:\Users\rui\esp\esp-idf\tools
+Also add: C:\Users\rui\.espressif\tools\xtensa-esp32-elf\esp-2021r2-patch5-8.4.0\xtensa-esp32-elf\bin
+(The exact path might be different - check your .espressif folder)
+
+> But the simplest is just to remember: Always run export.bat first in each new Command Prompt session!
+
+
+
+
+
+
+
+
+
+
+## Create the batch file that sets up environment
+echo @echo off > esp-idf-cmd.bat
+echo echo Setting up ESP-IDF environment... >> esp-idf-cmd.bat
+echo call "%~dp0export.bat" >> esp-idf-cmd.bat
+echo cd /d %%USERPROFILE%%\esp >> esp-idf-cmd.bat
+echo echo ESP-IDF Command Prompt ^(version 5.1^) >> esp-idf-cmd.bat
+echo echo. >> esp-idf-cmd.bat
+echo cmd /k >> esp-idf-cmd.bat
+
+## Create Start Menu shortcut (run as Administrator)
+mkdir "%APPDATA%\Microsoft\Windows\Start Menu\Programs\ESP-IDF"
+mklink "%APPDATA%\Microsoft\Windows\Start Menu\Programs\ESP-IDF\ESP-IDF 5.1 CMD.lnk" "C:\Users\rui\esp\esp-idf\esp-idf-cmd.bat"
+
