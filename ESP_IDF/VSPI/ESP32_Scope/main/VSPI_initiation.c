@@ -1,9 +1,10 @@
+// SET ENVIRONMENT:
+//		C:\Users\rui\esp\esp-idf\export.bat
+//		source $HOME/esp/esp-idf/export.sh
 // COMPILE:
-// 		pio run --project-dir .
+// 		idf.py build
 // UPLOAD:
-// 		pio run -t upload --project-dir .
-// MONITOR:
-//		pio device monitor --project-dir .
+// 		idf.py flash
 
 // Taken from: https://github.com/SIMS-IOT-Devices/FreeRTOS-ESP-IDF-SPI/blob/main/1%20-%20VSPI_initiation.c
 
