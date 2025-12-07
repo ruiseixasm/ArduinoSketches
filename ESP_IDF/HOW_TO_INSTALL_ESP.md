@@ -99,19 +99,14 @@ python -m pip install virtualenv
 
 ## Open Power Shell as User and run:
 
-### Clone ESP-IDF
-
 cd ~
 mkdir esp
 cd esp
 git clone -b v5.1.3 --recursive https://github.com/espressif/esp-idf.git
 
+## Open Command Prompt as User and do:
 
-### Run Installer
-
-cd esp-idf
-install.bat
-export.bat
-
-
+cd esp\esp-idf
+.\install.bat
+.\export.bat
 
