@@ -1,5 +1,8 @@
 # WINDOWS
 
+## Important note
+Always prefer the Command Prompt to the Power Shell
+
 ## Always run
 C:\Users\rui\esp\esp-idf\export.bat
 
