@@ -171,7 +171,7 @@ private:
                     c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
                     if (c < 128) {   // Only accepts ASCII chars
                         // Avoids increment beyond the real string size
-                        if (i == 1 || _receiving_buffer[length] != '\0') {    // length == i - 1
+                        if (length == 0 || _receiving_buffer[length] != '\0') {    // length == i - 1
                             _receiving_buffer[length++] = c;        // length == i (also sets '\0')
                         }
                     } else if (c == END) {
