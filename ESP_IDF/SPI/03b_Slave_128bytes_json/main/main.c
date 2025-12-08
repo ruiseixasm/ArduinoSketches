@@ -384,8 +384,5 @@ void app_main() {
         }
         
         printf("=== END OF PACKET ===\n");
-        
-        // Small delay before next reception
-        delay_ms(10);
     }
 }
