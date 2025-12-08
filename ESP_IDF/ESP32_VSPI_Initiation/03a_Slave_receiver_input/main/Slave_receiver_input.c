@@ -25,11 +25,18 @@
 #include "esp_spi_flash.h"
 #include "driver/gpio.h"
 
-// Pins in use
-#define GPIO_MOSI 12
-#define GPIO_MISO 13
-#define GPIO_SCLK 15
-#define GPIO_CS 14
+
+// // Pins in use (VIDEO)
+// #define GPIO_MOSI 12
+// #define GPIO_MISO 13
+// #define GPIO_SCLK 15
+// #define GPIO_CS 14
+
+// Pins in use (MINE)
+#define GPIO_MOSI 13
+#define GPIO_MISO 12
+#define GPIO_SCLK 14
+#define GPIO_CS 15
 
 //Main application
 void app_main(void)
