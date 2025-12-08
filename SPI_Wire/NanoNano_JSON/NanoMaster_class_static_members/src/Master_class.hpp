@@ -171,8 +171,8 @@ private:
                     c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
                     if (c < 128) {   // Only accepts ASCII chars
                         // Avoids increment beyond the real string size
-                        if (_receiving_buffer[length] != '\0') {    // length == i - 1
-                            _receiving_buffer[++length] = c;        // length == i (also sets '\0')
+                        if (i == 1 || _receiving_buffer[length] != '\0') {    // length == i - 1
+                            _receiving_buffer[length++] = c;        // length == i (also sets '\0')
                         }
                     } else if (c == END) {
                         // // There is always some interrupts stacking, avoiding a tailing one makes no difference
@@ -183,6 +183,9 @@ private:
                         #endif
                         break;
                     } else {    // Includes NACK (implicit)
+                        #ifdef MASTER_CLASS_DEBUG
+                        Serial.println("\t\t\tNo END or Char received");
+                        #endif
                         length = 0;
                         break;
                     }

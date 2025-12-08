@@ -68,6 +68,7 @@ private:
     static char _sending_buffer[BUFFER_SIZE];
     volatile static uint8_t _receiving_index;
     volatile static uint8_t _sending_index;
+    volatile static uint8_t _send_iteration_i;
     volatile static MessageCode _transmission_mode;
     volatile static bool _process_message;
 
@@ -201,7 +202,7 @@ public:
 						break;
 					}
 					// Starts checking 2 indexes after
-					if (_sending_index > 1) {    // Two positions of delay
+					if (_send_iteration_i > 2) {    // Two positions of delay
 						if (c != _sending_buffer[_receiving_index]) {   // Also checks '\0' char
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
@@ -213,6 +214,7 @@ public:
 					if (_sending_buffer[_sending_index] != '\0') {
 						_sending_index++;
 					}
+                    _send_iteration_i++;
                     break;
                 default:
                     SPDR = NACK;
@@ -233,6 +235,7 @@ public:
                     _transmission_mode = SEND;
                     _sending_index = 0;
                     _receiving_index = 0;
+                    _send_iteration_i = 0;
                     break;
                 case END:
                     SPDR = ACK;
@@ -274,6 +277,7 @@ char Slave_class::_sending_buffer[BUFFER_SIZE] = {'\0'};
 
 volatile uint8_t Slave_class::_receiving_index = 0;
 volatile uint8_t Slave_class::_sending_index = 0;
+volatile uint8_t Slave_class::_send_iteration_i = 0;
 volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::MessageCode::NONE;
 volatile bool Slave_class::_process_message = false;
 
