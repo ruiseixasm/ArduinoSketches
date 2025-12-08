@@ -229,14 +229,10 @@ public:
                     _receiving_index = 0;
                     break;
                 case SEND:
-                    if (_sending_buffer[0] == '\0') {
-                        SPDR = NONE;    // Nothing to send
-                    } else {    // Starts sending right away, so, no ACK
-                        SPDR = _sending_buffer[0];
-                        _transmission_mode = SEND;
-                        _sending_index = 1;  // Skips to the next char
-                        _receiving_index = 0;
-                    }
+                    SPDR = ACK;
+                    _transmission_mode = SEND;
+                    _sending_index = 0;
+                    _receiving_index = 0;
                     break;
                 case END:
                     SPDR = ACK;

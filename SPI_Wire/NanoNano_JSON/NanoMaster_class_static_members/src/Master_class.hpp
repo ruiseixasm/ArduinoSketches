@@ -165,7 +165,7 @@ private:
             c = SPI.transfer(SEND);
                 
             // Starts to receive all chars here
-            for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
+            for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // First i isn't a char byte
                 delayMicroseconds(receive_delay_us);
                 if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
                     c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
@@ -188,25 +188,14 @@ private:
                     }
                 } else {
                     c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
-                    if (c < 128) {   // Only accepts ASCII chars
-                        _receiving_buffer[0] = c;   // First char received
-                        length = 0;	// To be used as i - 1
-                    } else if (c == NONE) {
+                    if (c != ACK) { // Not ACK means it isn't there
                         #ifdef MASTER_CLASS_DEBUG
-                        Serial.println("\t\tReceived NONE");
+                        Serial.println("\t\tDevice ACK NOT received");
                         #endif
-                        _receiving_buffer[0] = '\0'; // Sets receiving as nothing (for prints)
-                        length = 1;
+                        length = 1; // Nothing to be sent
                         break;
-                    } else if (c == VOID) {
-                        #ifdef MASTER_CLASS_DEBUG
-                        Serial.println("\t\tReceived VOID");
-                        #endif
-                        length = 1;
-                        break;
-                    } else {    // Includes NACK (implicit)
+                    } else {
                         length = 0;
-                        break;
                     }
                 }
             }
