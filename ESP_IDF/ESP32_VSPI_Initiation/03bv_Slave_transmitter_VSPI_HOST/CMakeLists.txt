@@ -1,3 +1,3 @@
 cmake_minimum_required(VERSION 3.16)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(Slave_transmitter)
+project(Slave_transmitter_VSPI_HOST)
