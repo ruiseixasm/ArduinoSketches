@@ -167,12 +167,12 @@ private:
             // Starts to receive all chars here
             for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // First i isn't a char byte
                 delayMicroseconds(receive_delay_us);
-                if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
+                if (i > 1) {    // The first response is discarded because it's unrelated (offset by 1 communication)
                     c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
                     if (c < 128) {   // Only accepts ASCII chars
                         // Avoids increment beyond the real string size
-                        if (_receiving_buffer[length] != '\0' || length == 0) {    // length == i - 1
-                            _receiving_buffer[length++] = c;        // length == i (also sets '\0')
+                        if (_receiving_buffer[length] != '\0') {    // length == i - 1
+                            _receiving_buffer[++length] = c;        // length == i (also sets '\0')
                         }
                     } else if (c == END) {
                         // // There is always some interrupts stacking, avoiding a tailing one makes no difference
@@ -190,16 +190,18 @@ private:
                         length = 0;
                         break;
                     }
+                } else if (i == 1) {    // The first sent char
+                    c = SPI.transfer('\0'); // Just starts the stream
+                    _receiving_buffer[0] = c;
+                    length = 0;
                 } else {
-                    c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
+                    c = SPI.transfer('\0');   // Dummy char to get the ACK
                     if (c != ACK) { // Not ACK means it isn't there
                         #ifdef MASTER_CLASS_DEBUG
                         Serial.println("\t\tDevice ACK NOT received");
                         #endif
                         length = 1; // Nothing to be sent
                         break;
-                    } else {
-                        length = 0;
                     }
                 }
             }
