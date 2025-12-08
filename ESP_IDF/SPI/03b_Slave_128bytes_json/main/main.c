@@ -5,7 +5,6 @@
 #include "driver/spi_slave.h"
 #include "driver/gpio.h"
 #include "esp_timer.h"
-#include "cJSON.h"
 
 // VSPI Pins (different from HSPI!)
 #define MOSI_PIN 23  // VSPI MOSI
