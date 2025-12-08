@@ -2,7 +2,9 @@
 pio run --project-dir .
 # UPLOAD
 pio run -t upload --project-dir .
+pio run -e master --target upload
+pio run -e master --target upload --upload-port COM4
 # MONITOR
 pio device monitor --project-dir .
-
-
+pio device monitor
+pio device monitor --port COM4 --baud 115200
