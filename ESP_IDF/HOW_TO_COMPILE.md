@@ -12,6 +12,10 @@ cd ESP_IDF\HelloWorld
 ## Compile with
 idf.py build
 
+## If needed it's possible to do a clean build
+idf.py clean
+idf.py fullclean
+
 ## Upload the build
 idf.py -p COM4 flash
 
