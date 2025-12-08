@@ -181,6 +181,7 @@ private:
                         #ifdef MASTER_CLASS_DEBUG
                         Serial.println("\t\t\tSent END");
                         #endif
+                        length++;   // Adds up the '\0' uncounted char
                         break;
                     } else {    // Includes NACK (implicit)
                         #ifdef MASTER_CLASS_DEBUG
