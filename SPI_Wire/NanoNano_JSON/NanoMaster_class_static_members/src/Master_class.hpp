@@ -184,7 +184,8 @@ private:
                         break;
                     } else {    // Includes NACK (implicit)
                         #ifdef MASTER_CLASS_DEBUG
-                        Serial.println("\t\t\tNo END or Char received");
+                        Serial.print("\t\t\tNo END or Char, instead, received: ");
+                        Serial.println(c, HEX);
                         #endif
                         length = 0;
                         break;
