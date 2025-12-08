@@ -1,4 +1,4 @@
-// Slave as a transmitter for SPI communitation
+// Slave as receiver for SPI communitation
 
 #include <stdio.h>
 #include <stdint.h>
@@ -22,19 +22,19 @@
 #include "soc/rtc_periph.h"
 #include "driver/spi_slave.h"
 #include "esp_log.h"
-#include "spi_flash_mmap.h"
+#include "esp_spi_flash.h"
 #include "driver/gpio.h"
 
 // Pins in use
-#define GPIO_MOSI 23
-#define GPIO_MISO 19
-#define GPIO_SCLK 18
-#define GPIO_CS 5
+#define GPIO_MOSI 12
+#define GPIO_MISO 13
+#define GPIO_SCLK 15
+#define GPIO_CS 14
 
-// Main application
+//Main application
 void app_main(void)
 {
-    // Configuration for the SPI bus
+    //Configuration for the SPI bus
     spi_bus_config_t buscfg={
         .mosi_io_num=GPIO_MOSI,
         .miso_io_num=GPIO_MISO,
@@ -43,7 +43,7 @@ void app_main(void)
         .quadhd_io_num = -1,
     };
 
-    // Configuration for the SPI slave interface
+    //Configuration for the SPI slave interface
     spi_slave_interface_config_t slvcfg={
         .mode=0,
         .spics_io_num=GPIO_CS,
@@ -51,20 +51,19 @@ void app_main(void)
         .flags=0,
     };
 
-    // Initialize SPI slave interface
-    spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
+    //Initialize SPI slave interface
+    spi_slave_initialize(HSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
 
-    // SPI variables 
-    uint8_t tx_data[] = {0xaa};
+    char recvbuf[129]="";
+    memset(recvbuf, 0, 33);
     spi_slave_transaction_t t;
     memset(&t, 0, sizeof(t));
-    
-    while (1)
-    {
-        t.length = sizeof(tx_data) * 8;
-        t.tx_buffer = tx_data;
-        spi_slave_transmit(VSPI_HOST, &t, portMAX_DELAY);
-        printf("Transmitted: %#x\n", tx_data[0]);
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+	printf("Slave output:\n");
+    while(1) {
+        t.length=128*8;
+        t.rx_buffer=recvbuf;
+        spi_slave_transmit(HSPI_HOST, &t, portMAX_DELAY);
+        printf("Received: %s\n", recvbuf);
     }
 }
