@@ -5,12 +5,17 @@
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
 #include "esp_timer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 // SPI Pins (HSPI)
 #define MOSI_PIN 13
 #define MISO_PIN 12
 #define SCLK_PIN 14
 #define CS_PIN   15
+
+// LED Pin (GPIO2 is typically the onboard blue LED)
+#define LED_PIN  2
 
 // 128 BYTES buffer (1024 bits)
 #define BUFFER_SIZE 128
@@ -22,7 +27,24 @@ const char* string_on = "{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':35407511
 const char* string_off = "{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}";
 
 void delay_ms(uint32_t ms) {
-    esp_rom_delay_us(ms * 1000);
+    vTaskDelay(pdMS_TO_TICKS(ms));
+}
+
+void setup_gpio() {
+    // Configure LED pin as output
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << LED_PIN),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE
+    };
+    gpio_config(&io_conf);
+    
+    // Turn off LED initially
+    gpio_set_level(LED_PIN, 0);
+    
+    printf("LED configured on GPIO%d\n", LED_PIN);
 }
 
 void setup_spi_master() {
@@ -66,6 +88,7 @@ void setup_spi_master() {
     printf("  MISO: GPIO%d\n", MISO_PIN);
     printf("  SCLK: GPIO%d\n", SCLK_PIN);
     printf("  CS:   GPIO%d\n", CS_PIN);
+    printf("  LED:  GPIO%d\n", LED_PIN);
     printf("  Clock: 8 MHz\n");
     printf("  Buffer: %d bytes (1024 bits)\n", BUFFER_SIZE);
     printf("  Transfer time: ~128µs at 8MHz\n\n");
@@ -104,7 +127,11 @@ void fill_buffer(uint8_t *buffer, uint32_t counter, bool send_on_string) {
     }
 }
 
-void send_128byte_buffer(uint8_t *buffer) {
+void send_128byte_buffer_with_led(uint8_t *buffer) {
+    // Turn ON LED at start of transmission
+    gpio_set_level(LED_PIN, 1);
+    printf("💡 LED ON - Starting transmission...\n");
+    
     spi_transaction_t trans = {
         .length = BUFFER_SIZE * 8,  // 128 bytes * 8 = 1024 bits
         .tx_buffer = buffer,
@@ -120,6 +147,19 @@ void send_128byte_buffer(uint8_t *buffer) {
     } else {
         printf("✗ SPI transmit failed: %s\n", esp_err_to_name(ret));
     }
+    
+    // Keep LED on for 100ms total (including transmission time)
+    uint64_t elapsed_time = esp_timer_get_time() - start;
+    int64_t remaining_time = 100000 - elapsed_time; // 100ms in microseconds
+    
+    if (remaining_time > 0) {
+        // Wait for remaining time to complete 100ms
+        esp_rom_delay_us(remaining_time);
+    }
+    
+    // Turn OFF LED after 100ms
+    gpio_set_level(LED_PIN, 0);
+    printf("💡 LED OFF after 100ms\n");
 }
 
 void print_buffer_preview(uint8_t *buffer, uint32_t counter, bool send_on_string) {
@@ -155,8 +195,13 @@ void app_main() {
     printf("\n================================\n");
     printf("ESP32 SPI Master - 128-BYTE Transmitter\n");
     printf("Sending ON/OFF strings alternatively every 2 seconds\n");
+    printf("Blue LED will blink for 100ms during each transfer\n");
     printf("================================\n\n");
     
+    // Setup GPIO for LED first
+    setup_gpio();
+    
+    // Setup SPI
     setup_spi_master();
     
     uint8_t tx_buffer[BUFFER_SIZE];
@@ -169,6 +214,14 @@ void app_main() {
     printf("String length - ON: %d chars, OFF: %d chars\n\n", 
            strlen(string_on), strlen(string_off));
     
+    // Blink LED 3 times quickly to indicate startup
+    for (int i = 0; i < 3; i++) {
+        gpio_set_level(LED_PIN, 1);
+        delay_ms(100);
+        gpio_set_level(LED_PIN, 0);
+        delay_ms(100);
+    }
+    
     while (1) {
         // Fill buffer with appropriate string
         fill_buffer(tx_buffer, counter, send_on_string);
@@ -176,8 +229,8 @@ void app_main() {
         // Show preview
         print_buffer_preview(tx_buffer, counter, send_on_string);
         
-        // Send the 128-byte buffer
-        send_128byte_buffer(tx_buffer);
+        // Send the 128-byte buffer with LED indication
+        send_128byte_buffer_with_led(tx_buffer);
         
         counter++;
         
