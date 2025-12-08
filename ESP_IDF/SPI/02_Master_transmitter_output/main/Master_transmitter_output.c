@@ -144,6 +144,11 @@ size_t sendString(const char* command) {
     return length;
 }
 
+void delay_ms(uint32_t milliseconds) {
+    uint64_t microseconds = (uint64_t)milliseconds * 1000;
+    esp_rom_delay_us(microseconds);
+}
+
 void app_main(void) {
     // Setup
     setup_spi();
@@ -156,10 +161,12 @@ void app_main(void) {
     while (1) {
         size_t len = sendString("TEST");
         printf("Sent length: %d\n", len);
+
+		delay_ms(2000);	// 2ms
         
-        // Wait 2 seconds (non-FreeRTOS)
-        for (int i = 0; i < 2000; i++) {
-            esp_rom_delay_us(1000);  // 1ms
-        }
+        // // Wait 2 seconds (non-FreeRTOS)
+        // for (int i = 0; i < 2000; i++) {
+        //     esp_rom_delay_us(1000);  // 1ms
+        // }
     }
 }
