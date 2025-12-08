@@ -10,14 +10,13 @@
 #define CS_PIN   GPIO_NUM_5   // VSPI CS
 
 // LED Pin
-#define LED_PIN  GPIO_NUM_2
+#ifndef LED_PIN
+#define LED_PIN  GPIO_NUM_2  // Default if not defined by build flags
+#endif
 
 // 128 BYTES buffer
 #define BUFFER_SIZE 128
 
-// The strings
-const char* string_on = "{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}";
-const char* string_off = "{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}";
 
 spi_slave_transaction_t slave_trans;
 uint8_t rx_buffer[BUFFER_SIZE];
