@@ -20,6 +20,7 @@ idf.py -p COM4 monitor
 
 ## To exit from the monitor, press
 Ctrl+]
+> Alternatively, you can use Ctrl+T Ctrl+X to exit.
 
 
 # Linux
