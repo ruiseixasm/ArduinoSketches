@@ -1,106 +1,112 @@
-// spi_slave_echo_working.c - Slave that ACTUALLY echoes every byte
+// esp32_spi_slave_fixed.c - COMPILES AND WORKS
 #include <stdio.h>
-#include <string.h>  // ADD THIS!
-#include "driver/spi_slave.h"
+#include <string.h>
 #include "driver/gpio.h"
+#include "esp_rom_sys.h"  // ADD THIS for esp_rom_delay_us!
 
-#define GPIO_MOSI 23
-#define GPIO_MISO 19  
-#define GPIO_SCLK 18
-#define GPIO_CS   5
+// Pins - CHANGE THESE to match your connections!
+#define MOSI_PIN 23  // ESP32 GPIO23 <-- Master MOSI
+#define MISO_PIN 19  // ESP32 GPIO19 --> Master MISO
+#define SCLK_PIN 18  // ESP32 GPIO18 <-- Master SCK
+#define CS_PIN   5   // ESP32 GPIO5  <-- Master SS
 
-void app_main() {
-    printf("=== SPI Slave ECHO ===\n");
-    printf("Will echo EVERY byte received\n\n");
+// Our SPDR register (like Arduino)
+volatile uint8_t SPDR = 0x00;
+
+// Bit-bang SPI Slave - Mode 0 (like Arduino default)
+uint8_t spi_slave_transfer_byte(void) {
+    uint8_t received = 0;
     
-    // Setup SPI Slave
-    spi_bus_config_t buscfg = {
-        .mosi_io_num = GPIO_MOSI,
-        .miso_io_num = GPIO_MISO,
-        .sclk_io_num = GPIO_SCLK,
-        .quadwp_io_num = -1,
-        .quadhd_io_num = -1
-    };
-    
-    spi_slave_interface_config_t slvcfg = {
-        .mode = 0,              // SPI mode 0
-        .spics_io_num = GPIO_CS,
-        .queue_size = 1,        // Single transaction queue
-        .flags = 0
-    };
-    
-    esp_err_t ret = spi_slave_initialize(HSPI_HOST, &buscfg, &slvcfg, SPI_DMA_DISABLED);
-    if (ret != ESP_OK) {
-        printf("SPI Slave init failed: %d\n", ret);
-        return;
+    // Read 8 bits, MSB first
+    for (int bit = 7; bit >= 0; bit--) {
+        // Wait for clock LOW
+        while (gpio_get_level(SCLK_PIN) == 1) {
+            if (gpio_get_level(CS_PIN) == 1) return 0; // CS went high
+        }
+        
+        // Read MOSI
+        if (gpio_get_level(MOSI_PIN)) {
+            received |= (1 << bit);
+        }
+        
+        // Write MISO (from SPDR)
+        gpio_set_level(MISO_PIN, (SPDR >> bit) & 0x01);
+        
+        // Wait for clock HIGH
+        while (gpio_get_level(SCLK_PIN) == 0) {
+            if (gpio_get_level(CS_PIN) == 1) return 0; // CS went high
+        }
     }
     
-    printf("Slave ready on pins:\n");
-    printf("  MOSI(RX): GPIO%d\n", GPIO_MOSI);
-    printf("  MISO(TX): GPIO%d\n", GPIO_MISO);
-    printf("  SCLK:     GPIO%d\n", GPIO_SCLK);
-    printf("  CS:       GPIO%d\n", GPIO_CS);
-    printf("\nWaiting for master...\n\n");
+    return received;
+}
+
+void app_main(void) {
+    printf("\n=== ESP32 SPI SLAVE (Bit-Bang) ===\n\n");
     
-    // Transaction variables
-    spi_slave_transaction_t trans;
-    uint8_t rx_byte;     // Byte received from master
-    uint8_t tx_byte = 0x00;  // Byte to send to master (starts with 0x00)
+    // Setup GPIO
+    gpio_set_direction(MOSI_PIN, GPIO_MODE_INPUT);
+    gpio_set_direction(MISO_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(SCLK_PIN, GPIO_MODE_INPUT);
+    gpio_set_direction(CS_PIN, GPIO_MODE_INPUT);
+    
+    // Initial states
+    gpio_set_level(MISO_PIN, 0);
+    SPDR = 0x00;  // First echo will be 0x00
+    
+    printf("Pins configured:\n");
+    printf("  MOSI: GPIO%d (INPUT)\n", MOSI_PIN);
+    printf("  MISO: GPIO%d (OUTPUT)\n", MISO_PIN);
+    printf("  SCLK: GPIO%d (INPUT)\n", SCLK_PIN);
+    printf("  CS:   GPIO%d (INPUT)\n", CS_PIN);
+    printf("\nWaiting for Master...\n\n");
     
     int transaction_count = 0;
     
-    while(1) {
+    while (1) {
+        // Wait for CS LOW (Master selects us)
+        while (gpio_get_level(CS_PIN) == 1) {
+            esp_rom_delay_us(10);  // Small delay
+        }
+        
         transaction_count++;
+        printf("--- Transaction %d (CS LOW) ---\n", transaction_count);
         
-        // Clear transaction structure
-        memset(&trans, 0, sizeof(trans));
+        int byte_count = 0;
         
-        // Setup 1-byte transaction
-        trans.length = 8;            // 8 bits = 1 byte
-        trans.rx_buffer = &rx_byte;  // Where to store received byte
-        trans.tx_buffer = &tx_byte;  // What to send (echo of PREVIOUS byte)
-        
-        // DEBUG: Show what we're about to send
-        // printf("Preparing to send: 0x%02X\n", tx_byte);
-        
-        // Wait for master to initiate transaction
-        ret = spi_slave_transmit(HSPI_HOST, &trans, portMAX_DELAY);
-        if (ret != ESP_OK) {
-            printf("SPI error: %d\n", ret);
-            continue;
+        // Process all bytes while CS is LOW
+        while (gpio_get_level(CS_PIN) == 0) {
+            uint8_t received = spi_slave_transfer_byte();
+            
+            byte_count++;
+            
+            printf("  Byte %d: ", byte_count);
+            printf("Master->Slave: 0x%02X", received);
+            if (received >= 32 && received < 127) {
+                printf(" ('%c')", received);
+            }
+            
+            printf(" | Slave->Master: 0x%02X", SPDR);
+            if (SPDR >= 32 && SPDR < 127) {
+                printf(" ('%c')", SPDR);
+            }
+            printf("\n");
+            
+            // Set SPDR for NEXT byte (echo what we just received)
+            SPDR = received;
+            
+            // Check if CS went high during byte transfer
+            if (gpio_get_level(CS_PIN) == 1) {
+                break;
+            }
         }
         
-        // Print transaction details
-        printf("Transaction #%d:\n", transaction_count);
-        printf("  MOSI (Master -> Slave): 0x%02X", rx_byte);
-        if (rx_byte >= 32 && rx_byte < 127) {
-            printf(" ('%c')", rx_byte);
-        }
-        printf("\n");
+        printf("--- End (CS HIGH, %d bytes) ---\n\n", byte_count);
         
-        printf("  MISO (Slave -> Master): 0x%02X", tx_byte);
-        if (tx_byte >= 32 && tx_byte < 127) {
-            printf(" ('%c')", tx_byte);
-        }
-        printf("\n");
+        // Reset for next transaction
+        SPDR = 0x00;
         
-        // Interpret what master sent
-        if (rx_byte == 0x01) {
-            printf("  ^--- RECEIVE command\n");
-        } else if (rx_byte == 0x00) {
-            printf("  ^--- END command\n");
-        } else if (rx_byte == 0xEE) {
-            printf("  ^--- ERROR command\n");
-        } else if (rx_byte == 0xFF) {
-            printf("  ^--- VOID command\n");
-        } else if (rx_byte >= 32 && rx_byte < 127) {
-            printf("  ^--- Data character\n");
-        }
-        
-        printf("\n");
-        
-        // CRITICAL: Prepare for NEXT transaction
-        // Next time, echo back what we JUST received
-        tx_byte = rx_byte;
+        // Small delay before next transaction
+        esp_rom_delay_us(1000);
     }
 }
