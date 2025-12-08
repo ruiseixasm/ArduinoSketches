@@ -202,7 +202,7 @@ public:
 						break;
 					}
 					// Starts checking 2 indexes after
-					if (_send_iteration_i > 2) {    // Two positions of delay
+					if (_send_iteration_i > 1) {    // Two positions of delay
 						if (c != _sending_buffer[_receiving_index]) {   // Also checks '\0' char
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
