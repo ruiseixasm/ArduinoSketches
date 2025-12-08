@@ -1,30 +1,28 @@
-// esp32_spi_master_128byte.c
+// esp32_spi_slave_128byte.c
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "driver/spi_master.h"
+#include "driver/spi_slave.h"
 #include "driver/gpio.h"
 #include "esp_timer.h"
 
-// SPI Pins (HSPI)
-#define MOSI_PIN 13
-#define MISO_PIN 12
-#define SCLK_PIN 14
-#define CS_PIN   15
+// VSPI Pins (different from HSPI!)
+#define MOSI_PIN 23  // VSPI MOSI
+#define MISO_PIN 19  // VSPI MISO  
+#define SCLK_PIN 18  // VSPI SCLK
+#define CS_PIN   5   // VSPI CS
 
-// 128 BYTES buffer (1024 bits)
+// 128 BYTES buffer (matching master)
 #define BUFFER_SIZE 128
-
-spi_device_handle_t spi;
 
 void delay_ms(uint32_t ms) {
     esp_rom_delay_us(ms * 1000);
 }
 
-void setup_spi_master() {
-    printf("Setting up SPI Master for 128-byte transfers...\n");
+void setup_spi_slave() {
+    printf("Setting up SPI Slave (VSPI) for 128-byte reception...\n");
     
-    // SPI bus configuration
+    // SPI bus configuration for VSPI
     spi_bus_config_t buscfg = {
         .mosi_io_num = MOSI_PIN,
         .miso_io_num = MISO_PIN,
@@ -34,93 +32,53 @@ void setup_spi_master() {
         .max_transfer_sz = BUFFER_SIZE  // 128 bytes
     };
     
-    // SPI device configuration - need DMA for large buffer
-    spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = 8000000,  // 8 MHz for faster transfer
-        .mode = 0,                  // SPI Mode 0
+    // SPI slave configuration
+    spi_slave_interface_config_t slvcfg = {
+        .mode = 0,                  // MUST match master's mode!
         .spics_io_num = CS_PIN,     // CS pin
-        .queue_size = 1,
-        .flags = 0
+        .queue_size = 2,            // Queue depth
+        .flags = 0,                 // No special flags
+        .post_setup_cb = NULL,      // No pre-callback
+        .post_trans_cb = NULL       // No post-callback
     };
     
-    // Initialize SPI bus WITH DMA for large transfers
-    esp_err_t ret = spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    // Initialize SPI slave WITH DMA for large transfers
+    esp_err_t ret = spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
     if (ret != ESP_OK) {
-        printf("SPI bus init failed: %s\n", esp_err_to_name(ret));
+        printf("SPI Slave init failed: %s\n", esp_err_to_name(ret));
         return;
     }
     
-    // Attach device
-    ret = spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
-    if (ret != ESP_OK) {
-        printf("SPI device add failed: %s\n", esp_err_to_name(ret));
-        return;
-    }
-    
-    printf("SPI Master initialized for 128-byte transfers:\n");
-    printf("  MOSI: GPIO%d\n", MOSI_PIN);
-    printf("  MISO: GPIO%d\n", MISO_PIN);
-    printf("  SCLK: GPIO%d\n", SCLK_PIN);
-    printf("  CS:   GPIO%d\n", CS_PIN);
-    printf("  Clock: 8 MHz\n");
-    printf("  Buffer: %d bytes (1024 bits)\n", BUFFER_SIZE);
-    printf("  Transfer time: ~128µs at 8MHz\n\n");
+    printf("SPI Slave (VSPI) initialized for 128-byte reception:\n");
+    printf("  MOSI (RX): GPIO%d <- Master MOSI\n", MOSI_PIN);
+    printf("  MISO (TX): GPIO%d -> Master MISO\n", MISO_PIN);
+    printf("  SCLK:      GPIO%d <- Master SCLK\n", SCLK_PIN);
+    printf("  CS:        GPIO%d <- Master CS\n", CS_PIN);
+    printf("  Mode:      0 (CPOL=0, CPHA=0)\n");
+    printf("  Buffer:    %d bytes (1024 bits)\n\n", BUFFER_SIZE);
 }
 
-void fill_buffer(uint8_t *buffer, uint32_t counter) {
-    // Fill with pattern: counter + incremental values
-    for (int i = 0; i < BUFFER_SIZE; i++) {
-        buffer[i] = (counter + i) & 0xFF;
-    }
+void print_buffer_preview(uint8_t *buffer, uint32_t packet_num, int bytes_received) {
+    printf("[Packet #%lu - %d bytes]\n", packet_num, bytes_received);
     
-    // Add some recognizable pattern
-    memcpy(&buffer[0], "START-", 6);
-    memcpy(&buffer[BUFFER_SIZE-7], "-END!", 6);
-    buffer[BUFFER_SIZE-1] = '\0';
-    
-    // Add timestamp at position 16-19
-    uint32_t timestamp = (uint32_t)time(NULL);
-    buffer[16] = (timestamp >> 24) & 0xFF;
-    buffer[17] = (timestamp >> 16) & 0xFF;
-    buffer[18] = (timestamp >> 8) & 0xFF;
-    buffer[19] = timestamp & 0xFF;
-}
-
-void send_128byte_buffer(uint8_t *buffer) {
-    spi_transaction_t trans = {
-        .length = BUFFER_SIZE * 8,  // 128 bytes * 8 = 1024 bits
-        .tx_buffer = buffer,
-        .rx_buffer = NULL
-    };
-    
-    uint64_t start = esp_timer_get_time();
-    esp_err_t ret = spi_device_transmit(spi, &trans);
-    uint64_t duration = esp_timer_get_time() - start;
-    
-    if (ret == ESP_OK) {
-        printf("✓ 128-byte buffer sent in %lluµs\n", duration);
-    } else {
-        printf("✗ SPI transmit failed: %s\n", esp_err_to_name(ret));
-    }
-}
-
-void print_buffer_preview(uint8_t *buffer, uint32_t counter) {
-    printf("[Transmission #%lu]\n", counter);
+    // Show first 16 bytes
     printf("First 16 bytes: ");
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 16 && i < bytes_received; i++) {
         printf("%02X ", buffer[i]);
     }
     printf("\n");
     
+    // Show last 16 bytes
     printf("Last 16 bytes:  ");
-    for (int i = BUFFER_SIZE-16; i < BUFFER_SIZE; i++) {
+    int start = (bytes_received > 16) ? bytes_received - 16 : 0;
+    for (int i = start; i < bytes_received; i++) {
         printf("%02X ", buffer[i]);
     }
     printf("\n");
     
     // Show as ASCII if printable
-    printf("As string: ");
-    for (int i = 0; i < 32 && i < BUFFER_SIZE; i++) {
+    printf("As string (first 32): ");
+    for (int i = 0; i < 32 && i < bytes_received; i++) {
         if (buffer[i] >= 32 && buffer[i] < 127) {
             printf("%c", buffer[i]);
         } else {
@@ -130,34 +88,118 @@ void print_buffer_preview(uint8_t *buffer, uint32_t counter) {
     printf("\n");
 }
 
+void analyze_packet(uint8_t *buffer, int bytes_received) {
+    // Check for our known pattern
+    if (bytes_received >= 6) {
+        if (memcmp(buffer, "START-", 6) == 0) {
+            printf("✓ Detected START pattern\n");
+        }
+    }
+    
+    if (bytes_received >= 7) {
+        if (memcmp(&buffer[bytes_received-6], "-END!", 6) == 0) {
+            printf("✓ Detected END pattern\n");
+        }
+    }
+    
+    // Extract timestamp if present (bytes 16-19)
+    if (bytes_received >= 20) {
+        uint32_t timestamp = (buffer[16] << 24) | (buffer[17] << 16) | 
+                            (buffer[18] << 8) | buffer[19];
+        printf("✓ Timestamp: %lu (", timestamp);
+        
+        // Convert to human readable
+        time_t ts = timestamp;
+        char time_str[32];
+        ctime_r(&ts, time_str);
+        time_str[strlen(time_str)-1] = '\0';  // Remove newline
+        printf("%s)\n", time_str);
+    }
+    
+    // Calculate checksum
+    uint8_t checksum = 0;
+    for (int i = 0; i < bytes_received; i++) {
+        checksum ^= buffer[i];
+    }
+    printf("✓ XOR Checksum: 0x%02X\n", checksum);
+}
+
 void app_main() {
     printf("\n================================\n");
-    printf("ESP32 SPI Master - 128-BYTE Transmitter\n");
-    printf("Sending 128-byte (1024-bit) buffer every 2 seconds\n");
+    printf("ESP32 SPI Slave (VSPI) - 128-byte Receiver\n");
+    printf("Receiving 128-byte buffers from master\n");
     printf("================================\n\n");
     
-    setup_spi_master();
+    setup_spi_slave();
     
-    uint8_t tx_buffer[BUFFER_SIZE];
-    uint32_t counter = 0;
+    uint8_t rx_buffer[BUFFER_SIZE];
+    uint8_t tx_buffer[BUFFER_SIZE];  // Optional: for sending response
     
-    printf("Starting 128-byte transmission loop...\n\n");
+    // Initialize TX buffer (optional echo/response)
+    memset(tx_buffer, 0x00, sizeof(tx_buffer));
+    memcpy(tx_buffer, "SLAVE-ACK-----", 14);  // Response pattern
+    
+    uint32_t packet_counter = 0;
+    uint64_t last_packet_time = 0;
+    
+    printf("Waiting for 128-byte packets from master...\n\n");
     
     while (1) {
-        // Fill buffer with new data
-        fill_buffer(tx_buffer, counter);
+        // Clear receive buffer
+        memset(rx_buffer, 0, sizeof(rx_buffer));
         
-        // Show preview
-        print_buffer_preview(tx_buffer, counter);
+        // Setup transaction for receiving 128 bytes
+        spi_slave_transaction_t trans = {
+            .length = BUFFER_SIZE * 8,  // 1024 bits
+            .rx_buffer = rx_buffer,
+            .tx_buffer = tx_buffer  // Optional: send response while receiving
+        };
         
-        // Send the 128-byte buffer
-        send_128byte_buffer(tx_buffer);
+        printf("Waiting for master to send 128-byte packet...\n");
         
-        counter++;
+        // Wait for master to initiate transfer (CS goes low)
+        uint64_t start_time = esp_timer_get_time();
+        esp_err_t ret = spi_slave_transmit(VSPI_HOST, &trans, portMAX_DELAY);
+        uint64_t transfer_time = esp_timer_get_time() - start_time;
         
-        printf("\nWaiting 2 seconds...\n\n");
+        if (ret != ESP_OK) {
+            printf("SPI Slave error: %s\n", esp_err_to_name(ret));
+            delay_ms(100);
+            continue;
+        }
         
-        // Wait exactly 2 seconds
-        delay_ms(2000);
+        packet_counter++;
+        
+        // Calculate actual bytes received
+        int bits_received = trans.trans_len;
+        int bytes_received = bits_received / 8;
+        
+        printf("\n=== PACKET RECEIVED ===\n");
+        printf("Transfer time: %lluµs\n", transfer_time);
+        
+        // Show what we received
+        print_buffer_preview(rx_buffer, packet_counter, bytes_received);
+        
+        // Analyze the packet
+        analyze_packet(rx_buffer, bytes_received);
+        
+        // Calculate time since last packet
+        if (last_packet_time > 0) {
+            uint64_t interval = esp_timer_get_time() - last_packet_time;
+            printf("Time since last packet: %llums\n", interval / 1000);
+        }
+        last_packet_time = esp_timer_get_time();
+        
+        // Update TX buffer for next transaction (optional)
+        // Could echo back checksum or status
+        if (bytes_received > 0) {
+            // Simple echo: next time send first byte of received data
+            tx_buffer[0] = rx_buffer[0];
+        }
+        
+        printf("=== END OF PACKET ===\n\n");
+        
+        // Small delay before next reception
+        delay_ms(10);
     }
 }
