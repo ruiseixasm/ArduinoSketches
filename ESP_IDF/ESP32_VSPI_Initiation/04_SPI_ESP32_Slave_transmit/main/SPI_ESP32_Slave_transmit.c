@@ -25,11 +25,17 @@
 #include "spi_flash_mmap.h"
 #include "driver/gpio.h"
 
-// Pins in use
-#define GPIO_MOSI 23
-#define GPIO_MISO 19
-#define GPIO_SCLK 18
-#define GPIO_CS 5
+// Pins in use (HSPI)
+#define GPIO_MOSI 12
+#define GPIO_MISO 13
+#define GPIO_SCLK 15
+#define GPIO_CS 14
+
+// // Pins in use (VSPI)
+// #define GPIO_MOSI 23
+// #define GPIO_MISO 19
+// #define GPIO_SCLK 18
+// #define GPIO_CS 5
 
 // Main application
 void app_main(void)
@@ -52,7 +58,7 @@ void app_main(void)
     };
 
     // Initialize SPI slave interface
-    spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
+    spi_slave_initialize(HSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
 
     // SPI variables 
     uint8_t tx_data[] = {0xaa};
@@ -63,7 +69,7 @@ void app_main(void)
     {
         t.length = sizeof(tx_data) * 8;
         t.tx_buffer = tx_data;
-        spi_slave_transmit(VSPI_HOST, &t, portMAX_DELAY);
+        spi_slave_transmit(HSPI_HOST, &t, portMAX_DELAY);
         printf("Transmitted: %#x\n", tx_data[0]);
         vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
