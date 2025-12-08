@@ -6,10 +6,21 @@
 #include "driver/gpio.h"
 #include "esp_timer.h"
 
+
+// // SPI pins in use (VSPI)
+// #define HOST VSPI_HOST
+// #define GPIO_MOSI 23
+// #define GPIO_MISO 19
+// #define GPIO_SCLK 18
+// #define GPIO_CS 5
+
+// SPI pins in use (HSPI)
+#define HOST HSPI_HOST
 #define GPIO_MOSI 13
 #define GPIO_MISO 12
 #define GPIO_SCLK 14
 #define GPIO_CS 15
+
 
 #define BUFFER_SIZE 64
 #define RECEIVE 0x01
@@ -28,14 +39,14 @@ void setup_spi() {
     };
     
     spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = 8000000,  // 8 MHz
+        .clock_speed_hz = 4000000,  // 4 MHz
         .mode = 0,
         .spics_io_num = GPIO_CS,
         .queue_size = 1
     };
     
-    spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_DISABLED);
-    spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
+    spi_bus_initialize(HOST, &buscfg, SPI_DMA_DISABLED);
+    spi_bus_add_device(HOST, &devcfg, &spi);
 }
 
 // Single byte transfer with timing control
@@ -49,7 +60,7 @@ uint8_t spi_transfer_timed(uint8_t data, uint64_t* last_time, uint32_t delay_us)
     }
     
     spi_transaction_t t = {
-        .length = 8,
+        .length = 8,	// 8 bits length (compatible with Arduino Nano)
         .tx_buffer = &data,
         .rx_buffer = &data
     };
@@ -68,7 +79,7 @@ size_t sendString(const char* command) {
     size_t length = 0;
     uint8_t c;
     uint64_t last_time = 0;
-    const uint32_t byte_delay_us = 10;  // 10µs between bytes
+    const uint32_t byte_delay_us = 10;  // 10µs between bytes (compatible with Arduino Nano)
     
     for (size_t s = 0; length == 0 && s < 3; s++) {
         // CS low
@@ -146,8 +157,8 @@ void app_main(void) {
         size_t len = sendString("TEST");
         printf("Sent length: %d\n", len);
         
-        // Wait 1 second (non-FreeRTOS)
-        for (int i = 0; i < 1000; i++) {
+        // Wait 2 seconds (non-FreeRTOS)
+        for (int i = 0; i < 2000; i++) {
             esp_rom_delay_us(1000);  // 1ms
         }
     }
