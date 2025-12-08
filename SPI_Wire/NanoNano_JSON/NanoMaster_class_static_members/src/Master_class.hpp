@@ -97,6 +97,13 @@ private:
 					break;
                 } else if (command[0] != '\0') {
                     c = SPI.transfer(command[0]);	// Doesn't check first char
+                    if (c != ACK) { // Not ACK means it isn't there
+                        #ifdef MASTER_CLASS_DEBUG
+                        Serial.println("\t\tDevice ACK NOT received");
+                        #endif
+                        length = 1; // Nothing to be sent
+                        break;
+                    }
                 } else {
                     #ifdef MASTER_CLASS_DEBUG
                     Serial.println("\t\tNothing to be sent");
