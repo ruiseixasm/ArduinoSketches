@@ -13,11 +13,31 @@
 #define SCLK_PIN 18  // VSPI SCLK
 #define CS_PIN   5   // VSPI CS
 
+// LED Pin (GPIO2 is typically the onboard blue LED)
+#define LED_PIN  2
+
 // 128 BYTES buffer (matching master)
 #define BUFFER_SIZE 128
 
 void delay_ms(uint32_t ms) {
     esp_rom_delay_us(ms * 1000);
+}
+
+void setup_gpio() {
+    // Configure LED pin as output
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << LED_PIN),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE
+    };
+    gpio_config(&io_conf);
+    
+    // Turn off LED initially
+    gpio_set_level(LED_PIN, 0);
+    
+    printf("LED configured on GPIO%d\n", LED_PIN);
 }
 
 void setup_spi_slave() {
@@ -267,10 +287,21 @@ void app_main() {
     printf("Receiving ON/OFF commands from master\n");
     printf("================================\n\n");
     
+    // Setup GPIO for LED first
+    setup_gpio();
+    
     setup_spi_slave();
     
     uint8_t rx_buffer[BUFFER_SIZE];
     uint8_t tx_buffer[BUFFER_SIZE];  // Optional: for sending response
+    
+    // Blink LED 3 times quickly to indicate startup
+    for (int i = 0; i < 3; i++) {
+        gpio_set_level(LED_PIN, 1);
+        delay_ms(100);
+        gpio_set_level(LED_PIN, 0);
+        delay_ms(100);
+    }
     
     // Initialize TX buffer (optional echo/response)
     memset(tx_buffer, 0x00, sizeof(tx_buffer));
@@ -343,8 +374,10 @@ void app_main() {
         // Update TX buffer for next transaction (echo back command status)
         memset(tx_buffer, 0, sizeof(tx_buffer));
         if (strstr((char*)rx_buffer, "'n':'ON'") != NULL) {
+        	gpio_set_level(LED_PIN, 1);
             snprintf((char*)tx_buffer, BUFFER_SIZE, "{'ack':'ON_RECEIVED','cnt':%lu}", packet_counter);
         } else if (strstr((char*)rx_buffer, "'n':'OFF'") != NULL) {
+        	gpio_set_level(LED_PIN, 0);
             snprintf((char*)tx_buffer, BUFFER_SIZE, "{'ack':'OFF_RECEIVED','cnt':%lu}", packet_counter);
         } else {
             snprintf((char*)tx_buffer, BUFFER_SIZE, "{'ack':'UNKNOWN','cnt':%lu}", packet_counter);
