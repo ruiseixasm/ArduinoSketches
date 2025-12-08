@@ -61,6 +61,7 @@ private:
 	static char _receiving_buffer[BUFFER_SIZE];
     static int _ss_pin;
 
+	
     size_t sendString(const char* command) {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
@@ -104,6 +105,13 @@ private:
 					break;
                 } else if (command[0] != '\0') {
                     c = SPI.transfer(command[0]);	// Doesn't check first char
+                    if (c != ACK) { // Not ACK means it isn't there
+                        #ifdef MASTER_CLASS_DEBUG
+                        Serial.println("\t\tDevice ACK NOT received");
+                        #endif
+                        length = 1; // Nothing to be sent
+                        break;
+                    }
                 } else {
                     #ifdef MASTER_CLASS_DEBUG
                     Serial.println("\t\tNothing to be sent");
@@ -165,9 +173,9 @@ private:
             c = SPI.transfer(SEND);
                 
             // Starts to receive all chars here
-            for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
+            for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // First i isn't a char byte
                 delayMicroseconds(receive_delay_us);
-                if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
+                if (i > 1) {    // The first response is discarded because it's unrelated (offset by 1 communication)
                     c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
                     if (c < 128) {   // Only accepts ASCII chars
                         // Avoids increment beyond the real string size
@@ -181,31 +189,27 @@ private:
                         #ifdef MASTER_CLASS_DEBUG
                         Serial.println("\t\t\tSent END");
                         #endif
+                        length++;   // Adds up the '\0' uncounted char
                         break;
                     } else {    // Includes NACK (implicit)
+                        #ifdef MASTER_CLASS_DEBUG
+                        Serial.print("\t\t\tNo END or Char, instead, received: ");
+                        Serial.println(c, HEX);
+                        #endif
                         length = 0;
                         break;
                     }
+                } else if (i == 1) {    // The first sent char
+                    c = SPI.transfer('\0'); // Just starts the stream
+                    _receiving_buffer[0] = c;
+                    length = 0;
                 } else {
-                    c = SPI.transfer('\0');   // Dummy char, not intended to be processed (Slave _sending_state == true)
-                    if (c < 128) {   // Only accepts ASCII chars
-                        _receiving_buffer[0] = c;   // First char received
-                        length = 0;	// To be used as i - 1
-                    } else if (c == NONE) {
+                    c = SPI.transfer('\0');   // Dummy char to get the ACK
+                    if (c != ACK) { // Not ACK means it isn't there
                         #ifdef MASTER_CLASS_DEBUG
-                        Serial.println("\t\tReceived NONE");
+                        Serial.println("\t\tDevice ACK NOT received");
                         #endif
-                        _receiving_buffer[0] = '\0'; // Sets receiving as nothing (for prints)
-                        length = 1;
-                        break;
-                    } else if (c == VOID) {
-                        #ifdef MASTER_CLASS_DEBUG
-                        Serial.println("\t\tReceived VOID");
-                        #endif
-                        length = 1;
-                        break;
-                    } else {    // Includes NACK (implicit)
-                        length = 0;
+                        length = 1; // Nothing to be sent
                         break;
                     }
                 }
@@ -268,17 +272,8 @@ private:
             // Asks the Slave to acknowledge readiness
             c = SPI.transfer(ACK);
 
-			#ifdef MASTER_CLASS_DEBUG
-			Serial.print("\tReceived from ACK: ");
-			Serial.println(c);
-			#endif
-
-			// VOID only happens if there is a pull up resistor (10k), because otherwise MISO is floating
 			if (c != VOID) {
 
-				delayMicroseconds(send_delay_us);
-				c = SPI.transfer(ACK);  // When the response is collected
-            
 				delayMicroseconds(send_delay_us);
 				c = SPI.transfer(ACK);  // When the response is collected
 				
