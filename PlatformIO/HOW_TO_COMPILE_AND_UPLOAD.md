@@ -3,6 +3,7 @@ pio run --project-dir .
 pio run -e master
 # UPLOAD
 pio run -t upload --project-dir .
+pio run -t upload --project-dir . --upload-port COM4
 pio run -e master --target upload
 pio run -e master --target upload --upload-port COM4
 # MONITOR
