@@ -164,7 +164,7 @@ protected:
 
     static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-    uint8_t _max_delay_ms = 5;
+    static uint8_t _max_delay_ms;
 
 
     virtual bool remoteReceive(JsonObject json_message, JsonTalker* talker, bool pre_validated) {

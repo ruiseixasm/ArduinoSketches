@@ -25,5 +25,5 @@ bool BroadcastSocket::_control_timing = false;
 uint32_t BroadcastSocket::_last_local_time = 0;
 uint32_t BroadcastSocket::_last_remote_time = 0;
 uint16_t BroadcastSocket::_drops_count = 0;
-
+uint8_t BroadcastSocket::_max_delay_ms = 5;
 

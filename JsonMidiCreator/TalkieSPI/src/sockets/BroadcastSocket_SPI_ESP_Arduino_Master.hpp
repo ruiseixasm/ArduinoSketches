@@ -219,10 +219,10 @@ public:
         // Need to call homologous method in super class first
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
-        for (auto key_value : *_talkers_ss_pins) {
-            // const char* key = key_value.key().c_str();
-            int ss_pin = key_value.value();
-        }
+        // for (auto key_value : *_talkers_ss_pins) {
+        //     // const char* key = key_value.key().c_str();
+        //     int ss_pin = key_value.value();
+        // }
 
 
         return length;   // nothing received

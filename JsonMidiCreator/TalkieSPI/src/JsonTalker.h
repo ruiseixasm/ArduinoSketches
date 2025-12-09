@@ -238,9 +238,8 @@ protected:
                 return true;
             }
             break;
-        
-        default: return false;  // Nothing done
         }
+		return false;  // Nothing done
     }
 
     
