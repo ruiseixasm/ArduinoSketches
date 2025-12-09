@@ -192,20 +192,19 @@ private:
                         length = 0;
                         break;
                     }
-                } else if (i == 1) {    // The first sent char
-                    c = SPI.transfer('\0'); // Just starts the stream
-                    length = 0;
-					if (c < 128) {	// Makes sure it's a char
-                    	_receiving_buffer[0] = c;
-					} else {
-						#ifdef MASTER_CLASS_DEBUG
-						Serial.println("\t\tNot a valid char (< 128)");
-						#endif
-						break;
-					}
                 } else {
                     c = SPI.transfer('\0');   // Dummy char to get the ACK
-                    if (c != ACK) { // Not ACK means it isn't there
+					if (i == 1) {
+                    	length = 0;
+						if (c < 128) {	// Makes sure it's an ASCII char
+							_receiving_buffer[0] = c;
+						} else {
+							#ifdef MASTER_CLASS_DEBUG
+							Serial.println("\t\tNot a valid char (< 128)");
+							#endif
+							break;
+						}
+					} else if (c != ACK) { // Not ACK means it isn't there
                         #ifdef MASTER_CLASS_DEBUG
                         Serial.println("\t\tDevice ACK NOT received");
                         #endif
