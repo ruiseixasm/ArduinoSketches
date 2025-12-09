@@ -167,13 +167,7 @@ protected:
     static uint8_t _max_delay_ms;
 
 
-    virtual bool remoteReceive(JsonObject json_message, JsonTalker* talker, bool pre_validated) {
-
-        return talker->processData(json_message, pre_validated);
-    }
-    
-
-    size_t triggerTalkers(size_t length) {
+    static size_t triggerTalkers(size_t length) {
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("T: "));
@@ -278,7 +272,7 @@ protected:
                     JsonObject json_message = message_doc.as<JsonObject>();
 
 					// A non static method
-                    pre_validated = remoteReceive(json_message, _json_talkers[talker_i], pre_validated);
+                    pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
                     if (!pre_validated) break;
                 }
                 
