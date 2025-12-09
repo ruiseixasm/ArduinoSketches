@@ -297,6 +297,7 @@ protected:
         }
 
 
+	// CAN'T BE STATIC
     // NOT Pure virtual methods anymores (= 0;)
     virtual size_t send(size_t length, bool as_reply = false) {
         (void)as_reply; // Silence unused parameter warning
@@ -346,7 +347,7 @@ public:
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
 
 
-
+	// CAN'T BE STATIC
     virtual size_t receive() {
         // In theory, a UDP packet on a local area network (LAN) could survive
         // for about 4.25 minutes (255 seconds).
