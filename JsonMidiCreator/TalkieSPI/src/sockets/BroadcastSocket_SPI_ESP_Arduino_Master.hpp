@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SOCKET_SPI_MASTER_HPP
-#define BROADCAST_SOCKET_SPI_MASTER_HPP
+#ifndef BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HPP
+#define BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HPP
 
 
 #include <SPI.h>
@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define receive_delay_us 10 // Receive needs more time to be processed
 
 
-class BroadcastSocket_SPI_Master : public BroadcastSocket {
+class BroadcastSocket_SPI_ESP_Arduino_Master : public BroadcastSocket {
 public:
 
     enum MessageCode : uint8_t {
@@ -54,7 +54,7 @@ private:
 protected:
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_SPI_Master(JsonTalker** json_talkers, uint8_t talker_count)
+    BroadcastSocket_SPI_ESP_Arduino_Master(JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
             
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
@@ -208,8 +208,8 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_SPI_Master& instance(JsonTalker** json_talkers, uint8_t talker_count) {
-        static BroadcastSocket_SPI_Master instance(json_talkers, talker_count);
+    static BroadcastSocket_SPI_ESP_Arduino_Master& instance(JsonTalker** json_talkers, uint8_t talker_count) {
+        static BroadcastSocket_SPI_ESP_Arduino_Master instance(json_talkers, talker_count);
         return instance;
     }
 
@@ -243,4 +243,4 @@ public:
     }
 };
 
-#endif // BROADCAST_SOCKET_SPI_MASTER_HPP
+#endif // BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HPP

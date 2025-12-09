@@ -16,7 +16,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.h"    // MUST include the full definition!
 
 
-BroadcastSocket* JsonTalker::_socket = nullptr;
 bool JsonTalker::_is_led_on = false;
 
 
