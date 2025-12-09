@@ -96,13 +96,13 @@ protected:
             },
             (const Command[]){  // gets
                 {"muted", "Returns 1 if muted and 0 if not"},
-                {"delay", "Gets the socket max delay"},
-                {"drops", "Gets total drops count"},
+                // {"delay", "Gets the socket max delay"},
+                // {"drops", "Gets total drops count"},
                 {"runs", "Gets total runs"}
             },
             4,
             1,
-            4
+            2
         };
 
         return _manifesto;
@@ -266,19 +266,19 @@ protected:
         case 0:
             return _muted;
             break;
+        // case 1:
+        //     {
+        //         return static_cast<uint32_t>(this->get_delay());
+        //     }
+        //     break;
+
+        // case 2:
+        //     {
+        //         return this->get_total_drops();
+        //     }
+        //     break;
+
         case 1:
-            {
-                return static_cast<uint32_t>(this->get_delay());
-            }
-            break;
-
-        case 2:
-            {
-                return this->get_total_drops();
-            }
-            break;
-
-        case 3:
             {
                 return _total_runs;
             }

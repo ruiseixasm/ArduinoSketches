@@ -26,7 +26,6 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket_EtherCard : public BroadcastSocket {
 private:
 
-    static BroadcastSocket_EtherCard* _self_instance;
     uint16_t _port = 5005;
     static uint8_t _source_ip[4];
     static size_t _data_length;
@@ -43,16 +42,10 @@ private:
         Serial.println();
         #endif
 
-        if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+        if (length < BROADCAST_SOCKET_BUFFER_SIZE) {
             memcpy(_receiving_buffer, data, length);
             memcpy(_source_ip, src_ip, 4);
-            if (_self_instance) {
-                _data_length = _self_instance->triggerTalkers(length);
-            } else {
-                #ifdef BROADCAST_ETHERCARD_DEBUG
-                Serial.println(F("Instance is NULL!"));
-                #endif
-            }
+            _data_length = length;
         }
     }
 
@@ -62,7 +55,7 @@ protected:
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
     BroadcastSocket_EtherCard(JsonTalker** json_talkers, size_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
-            _self_instance = this;
+			
         }
 
 public:
@@ -102,13 +95,12 @@ public:
 
     size_t receive() override {
         _data_length = BroadcastSocket::receive();  // Makes sure it's the Ethernet reading that sets it! (always returns 0)
-        ether.packetLoop(ether.packetReceive());
-        return _data_length;
+        ether.packetLoop(ether.packetReceive());	// Updates the _data_length variable
+        return BroadcastSocket::triggerTalkers(_data_length);
     }
 
 };
 
-BroadcastSocket_EtherCard* BroadcastSocket_EtherCard::_self_instance = nullptr;
 uint8_t BroadcastSocket_EtherCard::_source_ip[4] = {0};
 size_t BroadcastSocket_EtherCard::_data_length = 0;
 
