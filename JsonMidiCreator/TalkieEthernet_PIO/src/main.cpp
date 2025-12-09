@@ -147,24 +147,52 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x04};
 
 
 void setup() {
-    // Initialize pins FIRST before anything else
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW); // Start with LED off
+    // ============================================
+    // CRITICAL: DISABLE W5100 FIRST THING!
+    // ============================================
+    pinMode(10, OUTPUT);     // W5100 CS pin
+    digitalWrite(10, HIGH);  // IMMEDIATELY disable W5100
     
-    // Then start Serial
+    pinMode(53, OUTPUT);     // Mega SS pin (MUST be output)
+    digitalWrite(53, HIGH);  // Keep high
+    
+    // Optional: Disable other SPI devices
+    pinMode(4, OUTPUT);      // SD card CS if present
+    digitalWrite(4, HIGH);
+    
+    // ============================================
+    // LONG UPLOAD WINDOW - BEFORE ANYTHING ELSE!
+    // ============================================
+    // Blink LED rapidly for 8 seconds to show upload window
+    pinMode(LED_BUILTIN, OUTPUT);
+    
+    Serial.println("UPLOAD WINDOW OPEN - 8 seconds");
+    
+    unsigned long startTime = millis();
+    while (millis() - startTime < 4000) {
+        // Rapid blink: upload window is open
+        digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+        delay(200);  // Fast blink
+    }
+    
+    // ============================================
+    // NOW START NORMAL INITIALIZATION
+    // ============================================
     Serial.begin(115200);
-    delay(4000); // Important: Give time for serial to initialize (GIVES TIME FOR UPLOAD)
+    
+    // Wait a bit for Serial monitor
+    delay(2000);
+    
     Serial.println("\n=== ARDUINO MEGA W5100 STARTING ===");
-
-    // Add a small LED blink to confirm code is running
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(100);
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(100);
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(100);
-    digitalWrite(LED_BUILTIN, LOW);
-
+    
+    // Confirm startup with LED pattern
+    for (int i = 0; i < 3; i++) {
+        digitalWrite(LED_BUILTIN, HIGH);
+        delay(300);
+        digitalWrite(LED_BUILTIN, LOW);
+        delay(300);
+    }
+    
     // CRITICAL FOR MEGA: Set pin 53 as OUTPUT
     pinMode(53, OUTPUT);
     digitalWrite(53, HIGH);  // Not used as CS, but must be output
