@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../BroadcastSocket.h"
 
-// #define BROADCAST_ETHERNETENC_DEBUG
+#define BROADCAST_ETHERNETENC_DEBUG
 
 
 #define ENABLE_DIRECT_ADDRESSING
@@ -127,7 +127,7 @@ public:
             Serial.print(F(":"));
             Serial.print(_udp->remotePort());
             Serial.print(F(" -> "));
-            Serial.println(_received_data);
+            Serial.println(_receiving_buffer);
             #endif
             
             _source_ip = _udp->remoteIP();
