@@ -153,7 +153,7 @@ void setup() {
     
     // Then start Serial
     Serial.begin(115200);
-    delay(2000); // Important: Give time for serial to initialize
+    delay(4000); // Important: Give time for serial to initialize (GIVES TIME FOR UPLOAD)
     Serial.println("\n=== ARDUINO MEGA W5100 STARTING ===");
 
     // Add a small LED blink to confirm code is running
