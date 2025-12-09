@@ -63,6 +63,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Master.hpp"
+#include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Slave.hpp"
 #include "src/JsonTalker.h"
 #include "src/MultiPlayer.hpp"
 
@@ -74,7 +75,8 @@ const char player_desc[] = "I'm a player";
 MultiPlayer player = MultiPlayer(player_name, player_desc);
 JsonTalker* talkers[] = { &talker, &player.mute() };   // It's an array of pointers
 // Singleton requires the & (to get a reference variable)
-auto& broadcast_socket = BroadcastSocket_SPI_ESP_Arduino_Master::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+auto& broadcast_socket_master = BroadcastSocket_SPI_ESP_Arduino_Master::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+auto& broadcast_socket_slave = BroadcastSocket_SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
 
 
 // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
@@ -125,7 +127,7 @@ void setup() {
     talkers_ss_pins["a"] = 4;
     talkers_ss_pins["b"] = 16;
     Serial.println("Step 1: Starting SPI...");
-    broadcast_socket.setup(&talkers_ss_pins);
+    broadcast_socket_master.setup(&talkers_ss_pins);
     Serial.println("SPI started successfully");
     delay(1000);
 
@@ -144,6 +146,6 @@ void setup() {
 
 
 void loop() {
-    broadcast_socket.receive();
+    broadcast_socket_master.receive();
 }
 
