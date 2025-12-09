@@ -59,7 +59,7 @@ private:
     // 	'9' = 57
 
 
-    uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
+    static uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
         
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
