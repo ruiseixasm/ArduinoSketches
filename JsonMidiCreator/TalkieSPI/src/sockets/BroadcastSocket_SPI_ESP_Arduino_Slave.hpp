@@ -25,9 +25,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define ENABLE_DIRECT_ADDRESSING
 
 
-#define send_delay_us 10
-#define receive_delay_us 10 // Receive needs more time to be processed
-
 
 class BroadcastSocket_SPI_ESP_Arduino_Slave : public BroadcastSocket {
 public:
