@@ -76,6 +76,9 @@ public:
         
         uint8_t broadcastIp[4] = {255, 255, 255, 255};
         
+        // Need to call homologous method in super class first
+        length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
+
         #ifdef BROADCAST_ETHERCARD_DEBUG
         Serial.print(F("S: "));
         Serial.write(_sending_buffer, length);
