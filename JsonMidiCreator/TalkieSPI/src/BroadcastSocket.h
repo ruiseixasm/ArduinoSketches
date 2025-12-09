@@ -357,15 +357,6 @@ public:
         return 0;
     }
 
-
-    virtual bool sendJsonMessage(JsonObject json_message, bool as_reply = false) {
-        (void)json_message; // Silence unused parameter warning
-        (void)as_reply; // Silence unused parameter warning
-
-        // Give a chance for subclasses process it
-        return true;
-    }
-
     
     bool remoteSend(JsonObject json_message, bool as_reply = false) {
 
@@ -385,10 +376,6 @@ public:
         }
 
         json_message["c"] = 0;  // Makes sure `c` is set
-
-        // Give a chance for subclasses process it
-        if (!sendJsonMessage(json_message, as_reply))
-            return false;
 
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 

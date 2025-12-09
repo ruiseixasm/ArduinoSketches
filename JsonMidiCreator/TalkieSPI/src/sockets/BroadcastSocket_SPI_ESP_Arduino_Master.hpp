@@ -63,13 +63,6 @@ protected:
         }
 
 
-    bool sendJsonMessage(JsonObject json_message, bool as_reply = false) override {
-
-        
-        return BroadcastSocket::sendJsonMessage(json_message, as_reply);
-    }
-
-
     size_t send(size_t length, bool as_reply = false) override {
 
         // Need to call homologous method in super class first
