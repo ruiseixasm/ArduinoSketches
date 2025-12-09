@@ -70,42 +70,25 @@ protected:
     BroadcastSocket_SPI_ESP_Arduino_Master_HSPI(JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
             
-			// ================== INITIALIZE HSPI ==================
-			// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13
-			// This method signature is only available in ESP32 Arduino SPI library!
-			SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
-			
-			// Configure SPI settings
-			SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
-			SPI.setDataMode(SPI_MODE0);
-			SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
-			// SPI.setFrequency(1000000); // 1MHz if needed (optional)
-			// ====================================================
+            // ================== INITIALIZE HSPI ==================
+            // Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13
+            // This method signature is only available in ESP32 Arduino SPI library!
+            SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
+            
+            // Configure SPI settings
+            SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
+            SPI.setDataMode(SPI_MODE0);
+            SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
+            // SPI.setFrequency(1000000); // 1MHz if needed (optional)
+            // ====================================================
         
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
             // devices_ss_pins["initialized"] = true;
         }
 
-
-    size_t send(size_t length, bool as_reply = false) override {
-
-        // Need to call homologous method in super class first
-        length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
-
-        if (length > 0) {
-
-            
-
-
-        }
-
-        return length;
-    }
-
     
-	// Specific methods associated to Arduino SPI as Master
-
+    // Specific methods associated to Arduino SPI as Master
 
     size_t sendString(int ss_pin = SPI_SS) {
         size_t length = 0;	// No interrupts, so, not volatile
@@ -142,12 +125,12 @@ protected:
                         length = 0;
                         break;
                     }
-				} else if (c == VOID) {
+                } else if (c == VOID) {
                     #ifdef BROADCAST_SPI_DEBUG
                     Serial.println("\t\tReceived VOID");
                     #endif
-					length = 1; // Avoids another try
-					break;
+                    length = 1; // Avoids another try
+                    break;
                 } else if (_sending_buffer[0] != '\0') {
                     c = SPI.transfer(_sending_buffer[0]);	// Doesn't check first char
                     if (c != ACK) { // Not ACK means it isn't there
@@ -211,59 +194,59 @@ protected:
 
             // Asks the Slave to start receiving
             SPI.transfer(SEND);
-			
+            
             delayMicroseconds(receive_delay_us);
             c = SPI.transfer('\0');   // Dummy char to get the ACK
 
-			if (c == ACK) { // Makes sure there is an Acknowledge first
+            if (c == ACK) { // Makes sure there is an Acknowledge first
                 
-				// Starts to receive all chars here
-				for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
-					delayMicroseconds(receive_delay_us);
-					if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
-						c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
-						if (c < 128) {   // Only accepts ASCII chars
-							// Avoids increment beyond the real string size
-							if (_receiving_buffer[length] != '\0') {    // length == i - 1
-								_receiving_buffer[++length] = c;        // length == i (also sets '\0')
-							}
-						} else if (c == END) {
-							// // There is always some interrupts stacking, avoiding a tailing one makes no difference
-							// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
-							SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
-							#ifdef BROADCAST_SPI_DEBUG
-							Serial.println("\t\t\tSent END");
-							#endif
-							length++;   // Adds up the '\0' uncounted char
-							break;
-						} else {    // Includes NACK (implicit)
-							#ifdef BROADCAST_SPI_DEBUG
-							Serial.print("\t\t\tNo END or Char, instead, received: ");
-							Serial.println(c, HEX);
-							#endif
-							length = 0;
-							break;
-						}
-					} else {
-						c = SPI.transfer('\0');   // Dummy char to get the ACK
-						length = 0;
-						if (c < 128) {	// Makes sure it's an ASCII char
-							_receiving_buffer[0] = c;
-						} else {
-							#ifdef BROADCAST_SPI_DEBUG
-							Serial.println("\t\tNot a valid ASCII char (< 128)");
-							#endif
-							break;
-						}
-					}
-				}
-			} else {
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println("\t\tDevice ACK NOT received");
-				#endif
-				length = 1; // Nothing to be sent
-				break;
-			}
+                // Starts to receive all chars here
+                for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
+                    delayMicroseconds(receive_delay_us);
+                    if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
+                        c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
+                        if (c < 128) {   // Only accepts ASCII chars
+                            // Avoids increment beyond the real string size
+                            if (_receiving_buffer[length] != '\0') {    // length == i - 1
+                                _receiving_buffer[++length] = c;        // length == i (also sets '\0')
+                            }
+                        } else if (c == END) {
+                            // // There is always some interrupts stacking, avoiding a tailing one makes no difference
+                            // delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+                            SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+                            #ifdef BROADCAST_SPI_DEBUG
+                            Serial.println("\t\t\tSent END");
+                            #endif
+                            length++;   // Adds up the '\0' uncounted char
+                            break;
+                        } else {    // Includes NACK (implicit)
+                            #ifdef BROADCAST_SPI_DEBUG
+                            Serial.print("\t\t\tNo END or Char, instead, received: ");
+                            Serial.println(c, HEX);
+                            #endif
+                            length = 0;
+                            break;
+                        }
+                    } else {
+                        c = SPI.transfer('\0');   // Dummy char to get the ACK
+                        length = 0;
+                        if (c < 128) {	// Makes sure it's an ASCII char
+                            _receiving_buffer[0] = c;
+                        } else {
+                            #ifdef BROADCAST_SPI_DEBUG
+                            Serial.println("\t\tNot a valid ASCII char (< 128)");
+                            #endif
+                            break;
+                        }
+                    }
+                }
+            } else {
+                #ifdef BROADCAST_SPI_DEBUG
+                Serial.println("\t\tDevice ACK NOT received");
+                #endif
+                length = 1; // Nothing to be sent
+                break;
+            }
 
             if (length == 0) {
                 // // There is always some interrupts stacking, avoiding a tailing one makes no difference
@@ -313,28 +296,28 @@ protected:
             // Asks the Slave to acknowledge readiness
             c = SPI.transfer(ACK);
 
-			if (c != VOID) {
+            if (c != VOID) {
 
-				delayMicroseconds(send_delay_us);
-				c = SPI.transfer(ACK);  // When the response is collected
-				
-				if (c == READY) {
-                	#ifdef BROADCAST_SPI_DEBUG
-                	Serial.println("\t\tReceived READY");
-					#endif
-					acknowledge = true;
-				}
-				#ifdef BROADCAST_SPI_DEBUG
-				else {
-					Serial.println("\t\tDidn't receive READY");
-				}
-				#endif
-			}
+                delayMicroseconds(send_delay_us);
+                c = SPI.transfer(ACK);  // When the response is collected
+                
+                if (c == READY) {
+                    #ifdef BROADCAST_SPI_DEBUG
+                    Serial.println("\t\tReceived READY");
+                    #endif
+                    acknowledge = true;
+                }
+                #ifdef BROADCAST_SPI_DEBUG
+                else {
+                    Serial.println("\t\tDidn't receive READY");
+                }
+                #endif
+            }
             #ifdef BROADCAST_SPI_DEBUG
-			else {
+            else {
                 Serial.println("\t\tReceived VOID");
-			}
-			#endif
+            }
+            #endif
 
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
@@ -353,6 +336,27 @@ protected:
     }
 
 
+    size_t send(size_t length, bool as_reply = false) override {
+
+        // Need to call homologous method in super class first
+        length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
+
+        if (length > 0) {
+            if (as_reply) {
+                sendString(_actual_ss_pin);
+            } else {    // Broadcasts
+                for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+                    length = sendString(_talkers_ss_pins[ss_pin_i]);
+                    if (length > 0) {
+                        _actual_ss_pin = _talkers_ss_pins[ss_pin_i];
+                        BroadcastSocket::triggerTalkers(length);
+                    }
+                }
+            }
+        }
+        return length;
+    }
+
 public:
 
     // Move ONLY the singleton instance method to subclass
@@ -367,11 +371,13 @@ public:
         // Need to call homologous method in super class first
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
-        int ss_pin = _talkers_ss_pins[_actual_ss_pin];
-        _actual_ss_pin++;
-        _actual_ss_pin %= _ss_pins_count;
-        length = receiveString(ss_pin); // Calls it for each pin on each receive call
-
+        for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+            length = receiveString(_talkers_ss_pins[ss_pin_i]);
+            if (length > 0) {
+                _actual_ss_pin = _talkers_ss_pins[ss_pin_i];
+                BroadcastSocket::triggerTalkers(length);
+            }
+        }
         return length;   // nothing received
     }
 
