@@ -61,6 +61,8 @@ public:
 
 private:
     int* _talkers_ss_pins;
+    uint8_t _ss_pins_count = 0;
+    uint8_t _actual_ss_pin = SPI_SS;
 
 protected:
     // Needed for the compiler, the base class is the one being called though
@@ -361,18 +363,18 @@ public:
         // Need to call homologous method in super class first
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
-        // for (auto key_value : *_talkers_ss_pins) {
-        //     // const char* key = key_value.key().c_str();
-        //     int ss_pin = key_value.value();
-        // }
-
+        int ss_pin = _talkers_ss_pins[_actual_ss_pin];
+        _actual_ss_pin++;
+        _actual_ss_pin %= _ss_pins_count;
+        length = receiveString(ss_pin); // Calls it for each pin on each receive call
 
         return length;   // nothing received
     }
 
 
-    void setup(int* talkers_ss_pins) {
+    void setup(int* talkers_ss_pins, uint8_t ss_pins_count) {
         _talkers_ss_pins = talkers_ss_pins;
+        _ss_pins_count = ss_pins_count;
     }
 };
 

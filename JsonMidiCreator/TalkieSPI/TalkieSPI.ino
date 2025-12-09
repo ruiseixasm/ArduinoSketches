@@ -118,7 +118,7 @@ void setup() {
 	
     Serial.println("Step 1: Starting SPI...");
 	int talkers_spi_pins[] = {4, 16};
-    broadcast_socket_master.setup(talkers_spi_pins);
+    broadcast_socket_master.setup(talkers_spi_pins, sizeof(talkers_spi_pins)/sizeof(int));
     Serial.println("SPI started successfully");
     delay(1000);
 
