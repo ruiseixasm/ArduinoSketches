@@ -145,6 +145,7 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x04};
 // On the Mega, the hardware SS pin, 53, is not used to select either the W5100 or the SD card,
 // but it must be kept as an output or the SPI interface won't work.
 
+// Source: https://docs.arduino.cc/retired/shields/arduino-ethernet-shield-without-poe-module/
 
 void setup() {
     // ============================================
