@@ -62,8 +62,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
-#include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Master.hpp"
-#include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Slave.hpp"
+#include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Master_HSPI.hpp"
+// #include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Slave.hpp"
 #include "src/JsonTalker.h"
 #include "src/MultiPlayer.hpp"
 
@@ -75,18 +75,9 @@ const char player_desc[] = "I'm a player";
 MultiPlayer player = MultiPlayer(player_name, player_desc);
 JsonTalker* talkers[] = { &talker, &player.mute() };   // It's an array of pointers
 // Singleton requires the & (to get a reference variable)
-auto& broadcast_socket_master = BroadcastSocket_SPI_ESP_Arduino_Master::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
-auto& broadcast_socket_slave = BroadcastSocket_SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+auto& broadcast_socket_master = BroadcastSocket_SPI_ESP_Arduino_Master_HSPI::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+// auto& broadcast_socket_slave = BroadcastSocket_SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
 
-
-// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-#if ARDUINOJSON_VERSION_MAJOR >= 7
-JsonDocument ss_pins_doc;
-JsonObject talkers_ss_pins = ss_pins_doc.to<JsonObject>(); // NEW: Persistent object for device control
-#else
-StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> ss_pins_doc;
-JsonObject talkers_ss_pins = ss_pins_doc.to<JsonObject>();    // NEW
-#endif
 
 
 // Buzzer pin
@@ -124,10 +115,10 @@ void setup() {
 
     // STEP 1: Initialize SPI only
     // Defines the CS pin by Talker name here
-    talkers_ss_pins["a"] = 4;
-    talkers_ss_pins["b"] = 16;
+	
     Serial.println("Step 1: Starting SPI...");
-    broadcast_socket_master.setup(&talkers_ss_pins);
+	int talkers_spi_pins[] = {4, 16};
+    broadcast_socket_master.setup(talkers_spi_pins);
     Serial.println("SPI started successfully");
     delay(1000);
 

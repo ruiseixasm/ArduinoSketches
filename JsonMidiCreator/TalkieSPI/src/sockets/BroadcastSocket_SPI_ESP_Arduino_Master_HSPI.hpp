@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HPP
-#define BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HPP
+#ifndef BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HSPI_HPP
+#define BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HSPI_HPP
 
 
 #include <SPI.h>
@@ -25,11 +25,22 @@ https://github.com/ruiseixasm/JsonTalkie
 #define ENABLE_DIRECT_ADDRESSING
 
 
+// ================== HSPI PIN DEFINITIONS ==================
+// HSPI pins for ESP32 (alternative to default VSPI)
+#define SPI_MOSI 13    // GPIO13 for HSPI MOSI
+#define SPI_MISO 12    // GPIO12 for HSPI MISO
+#define SPI_SCK  14    // GPIO14 for HSPI SCK
+#define SPI_SS   15    // GPIO15 for HSPI SCK
+// SS pin can be any GPIO - kept as parameter
+// ==========================================================
+
+
+
 #define send_delay_us 10
 #define receive_delay_us 10 // Receive needs more time to be processed
 
 
-class BroadcastSocket_SPI_ESP_Arduino_Master : public BroadcastSocket {
+class BroadcastSocket_SPI_ESP_Arduino_Master_HSPI : public BroadcastSocket {
 public:
 
     enum MessageCode : uint8_t {
@@ -49,15 +60,26 @@ public:
 
 
 private:
-    JsonObject* _talkers_ss_pins;
-	int _ss_pin = 10;	// Arduino default SS pin
+    int* _talkers_ss_pins;
 
 protected:
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_SPI_ESP_Arduino_Master(JsonTalker** json_talkers, uint8_t talker_count)
+    BroadcastSocket_SPI_ESP_Arduino_Master_HSPI(JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
             
+			// ================== INITIALIZE HSPI ==================
+			// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13
+			// This method signature is only available in ESP32 Arduino SPI library!
+			SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
+			
+			// Configure SPI settings
+			SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
+			SPI.setDataMode(SPI_MODE0);
+			SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
+			// SPI.setFrequency(1000000); // 1MHz if needed (optional)
+			// ====================================================
+        
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
             // devices_ss_pins["initialized"] = true;
@@ -83,13 +105,13 @@ protected:
 	// Specific methods associated to Arduino SPI as Master
 
 
-    size_t sendString() {
+    size_t sendString(int ss_pin = SPI_SS) {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
         for (size_t s = 0; length == 0 && s < 3; s++) {
     
-            digitalWrite(_ss_pin, LOW);
+            digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
 
             // Asks the Slave to start receiving
@@ -150,7 +172,7 @@ protected:
             }
 
             delayMicroseconds(5);
-            digitalWrite(_ss_pin, HIGH);
+            digitalWrite(ss_pin, HIGH);
 
             if (length > 0) {
                 #ifdef BROADCAST_SPI_DEBUG
@@ -175,14 +197,14 @@ protected:
     }
 
 
-    size_t receiveString() {
+    size_t receiveString(int ss_pin = SPI_SS) {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
         _receiving_buffer[0] = '\0'; // Avoids garbage printing
 
         for (size_t r = 0; length == 0 && r < 3; r++) {
     
-            digitalWrite(_ss_pin, LOW);
+            digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
 
             // Asks the Slave to start receiving
@@ -248,7 +270,7 @@ protected:
             }
 
             delayMicroseconds(5);
-            digitalWrite(_ss_pin, HIGH);
+            digitalWrite(ss_pin, HIGH);
 
             if (length > 0) {
                 #ifdef BROADCAST_SPI_DEBUG
@@ -273,13 +295,13 @@ protected:
     }
 
 
-    bool acknowledgeReady() {
+    bool acknowledgeReady(int ss_pin = SPI_SS) {
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 
         for (size_t a = 0; !acknowledge && a < 3; a++) {
     
-            digitalWrite(_ss_pin, LOW);
+            digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
 
             // Asks the Slave to acknowledge readiness
@@ -309,7 +331,7 @@ protected:
 			#endif
 
             delayMicroseconds(5);
-            digitalWrite(_ss_pin, HIGH);
+            digitalWrite(ss_pin, HIGH);
 
         }
 
@@ -328,8 +350,8 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_SPI_ESP_Arduino_Master& instance(JsonTalker** json_talkers, uint8_t talker_count) {
-        static BroadcastSocket_SPI_ESP_Arduino_Master instance(json_talkers, talker_count);
+    static BroadcastSocket_SPI_ESP_Arduino_Master_HSPI& instance(JsonTalker** json_talkers, uint8_t talker_count) {
+        static BroadcastSocket_SPI_ESP_Arduino_Master_HSPI instance(json_talkers, talker_count);
         return instance;
     }
 
@@ -349,14 +371,9 @@ public:
     }
 
 
-    void setup(JsonObject* talkers_ss_pins) {
-        // Initialize SPI
-        SPI.begin();
-        SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
-        SPI.setDataMode(SPI_MODE0);
-        SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
+    void setup(int* talkers_ss_pins) {
         _talkers_ss_pins = talkers_ss_pins;
     }
 };
 
-#endif // BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HPP
+#endif // BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HSPI_HPP
