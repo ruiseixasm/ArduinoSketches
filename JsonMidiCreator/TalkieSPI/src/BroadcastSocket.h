@@ -29,12 +29,12 @@ private:
 
 
     // Pointer PRESERVE the polymorphism while objects don't!
-    JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
-    uint8_t _talker_count = 0;
-    bool _control_timing = false;
-    uint32_t _last_local_time = 0;
-    uint32_t _last_remote_time = 0;
-    uint16_t _drops_count = 0;
+    static JsonTalker** _json_talkers;   // It's a singleton, so, no need to be static
+    static uint8_t _talker_count;
+    static bool _control_timing;
+    static uint32_t _last_local_time;
+    static uint32_t _last_remote_time;
+    static uint16_t _drops_count;
 
 
     static uint16_t generateChecksum(const char* net_data, const size_t len) {
@@ -292,8 +292,9 @@ protected:
     }
 
 
-    BroadcastSocket(JsonTalker** json_talkers, uint8_t talker_count)
-        : _json_talkers(json_talkers), _talker_count(talker_count) {
+    BroadcastSocket(JsonTalker** json_talkers, uint8_t talker_count) {
+			_json_talkers = json_talkers;
+			_talker_count = talker_count;
             // Each talker has its remote connections, ONLY local connections are static
             for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
                 _json_talkers[talker_i]->setSocket(this);
@@ -303,8 +304,7 @@ protected:
 
     // NOT Pure virtual methods anymores (= 0;)
     virtual size_t send(size_t length, bool as_reply = false) {
-        // (void)as_reply; // Silence unused parameter warning
-
+        (void)as_reply; // Silence unused parameter warning
 
         if (length < 3*4 + 2) {
 
@@ -364,8 +364,8 @@ public:
 
 
     virtual bool sendJsonMessage(JsonObject json_message, bool as_reply = false) {
-        // (void)json_message; // Silence unused parameter warning
-        // (void)as_reply; // Silence unused parameter warning
+        (void)json_message; // Silence unused parameter warning
+        (void)as_reply; // Silence unused parameter warning
 
         // Give a chance for subclasses process it
         return true;
@@ -412,5 +412,8 @@ public:
     uint16_t get_drops_count() { return _drops_count; }
 
 };
+
+
+
 
 #endif // BROADCAST_SOCKET_H

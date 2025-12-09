@@ -19,4 +19,11 @@ https://github.com/ruiseixasm/JsonTalkie
 char BroadcastSocket::_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 char BroadcastSocket::_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
+JsonTalker** BroadcastSocket::_json_talkers = nullptr;   // It's a singleton, so, no need to be static
+uint8_t BroadcastSocket::_talker_count = 0;
+bool BroadcastSocket::_control_timing = false;
+uint32_t BroadcastSocket::_last_local_time = 0;
+uint32_t BroadcastSocket::_last_remote_time = 0;
+uint16_t BroadcastSocket::_drops_count = 0;
+
 
