@@ -385,7 +385,7 @@ public:
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-        return send(length, as_reply);
+        return send(length, as_reply);	// send is internally triggered, so, this method can hardly be static
     }
     
 
