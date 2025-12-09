@@ -139,6 +139,12 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x04};
 #define PORT 5005   // UDP port
 
 
+// Arduino communicates with both the W5100 and SD card using the SPI bus (through the ICSP header).
+// This is on digital pins 10, 11, 12, and 13 on the Uno and pins 50, 51, and 52 on the Mega. On both boards,
+// pin 10 is used to select the W5100 and pin 4 for the SD card. These pins cannot be used for general I/O.
+// On the Mega, the hardware SS pin, 53, is not used to select either the W5100 or the SD card,
+// but it must be kept as an output or the SPI interface won't work.
+
 
 void setup() {
     // Initialize pins FIRST before anything else
@@ -148,7 +154,7 @@ void setup() {
     // Then start Serial
     Serial.begin(115200);
     delay(2000); // Important: Give time for serial to initialize
-    Serial.println("\n\n=== ESP32 with EthernetENC STARTING ===");
+    Serial.println("\n=== ARDUINO MEGA W5100 STARTING ===");
 
     // Add a small LED blink to confirm code is running
     digitalWrite(LED_BUILTIN, HIGH);
@@ -158,11 +164,16 @@ void setup() {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(100);
     digitalWrite(LED_BUILTIN, LOW);
+
+    // CRITICAL FOR MEGA: Set pin 53 as OUTPUT
+    pinMode(53, OUTPUT);
+    digitalWrite(53, HIGH);  // Not used as CS, but must be output
     
     Serial.println("Pins initialized successfully");
 
     // STEP 1: Initialize SPI only
-    const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
+    // const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
+    const int CS_PIN = 10;  // Defines CS pin here (W5500/W5100)
     
     Serial.println("Step 1: Starting SPI...");
     SPI.begin();
