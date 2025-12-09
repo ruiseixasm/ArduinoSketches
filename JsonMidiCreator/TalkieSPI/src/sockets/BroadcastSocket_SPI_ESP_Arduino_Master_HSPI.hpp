@@ -178,7 +178,7 @@ protected:
 
         if (length > 0)
             length--;   // removes the '\0' from the length as final value
-        return length;
+        return 0;   // It's not full-duplex, meaning, nothing is received in exchange and thus, 0 is returned
     }
 
 
@@ -347,14 +347,17 @@ protected:
             } else {    // Broadcasts
                 for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
                     length = sendString(_talkers_ss_pins[ss_pin_i]);
-                    if (length > 0) {
+                    // This SPI communication isn't full-duplex so there is no receiving here (it will never happen)!
+                    if (length > 0) {   // Has to process it, otherwise it's lost (full duplex)
                         _actual_ss_pin = _talkers_ss_pins[ss_pin_i];
                         BroadcastSocket::triggerTalkers(length);
                     }
                 }
             }
         }
-        return length;
+        // Makes sure the _sending_buffer is reset with '\0'
+        _sending_buffer[0] = '\0';
+        return 0;   // Returns 0 because everything is dealt internally in this method
     }
 
 public:
@@ -378,7 +381,9 @@ public:
                 BroadcastSocket::triggerTalkers(length);
             }
         }
-        return length;   // nothing received
+        // Makes sure the _receiving_buffer is reset with '\0'
+        _receiving_buffer[0] = '\0';
+        return 0;   // Receives are all called internally in this method
     }
 
 
