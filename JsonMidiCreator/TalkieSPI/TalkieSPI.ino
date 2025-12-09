@@ -62,7 +62,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 
-#define BROADCAST_SOCKET 1
+#define BROADCAST_SOCKET 2
 //      1 - BroadcastSocket_SPI_ESP_Arduino_Master_HSPI
 //      2 - BroadcastSocket_SPI_ESP_Arduino_Slave
 
@@ -131,8 +131,10 @@ void setup() {
     // Defines the CS pin by Talker name here
 	
     Serial.println("Step 1: Starting SPI...");
+	#if BROADCAST_SOCKET == 1
 	int talkers_spi_pins[] = {4, 16};
     broadcast_socket.setup(talkers_spi_pins, sizeof(talkers_spi_pins)/sizeof(int));
+	#endif
     Serial.println("SPI started successfully");
     delay(1000);
 
