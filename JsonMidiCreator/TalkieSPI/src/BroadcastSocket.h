@@ -277,6 +277,7 @@ protected:
                     }
                     JsonObject json_message = message_doc.as<JsonObject>();
 
+					// A non static method
                     pre_validated = remoteReceive(json_message, _json_talkers[talker_i], pre_validated);
                     if (!pre_validated) break;
                 }
