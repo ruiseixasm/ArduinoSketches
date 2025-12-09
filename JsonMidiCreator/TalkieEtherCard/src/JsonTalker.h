@@ -40,20 +40,20 @@ public:
 
     virtual const char* class_name() const { return "JsonTalker"; }
 
-    enum class MessageCode {
-        talk,
-        list,
-        run,
-        set,
-        get,
-        sys,
-        echo,
-        error,
-        channel
+    enum MessageCode : int {
+        TALK,
+        LIST,
+        RUN,
+        SET,
+        GET,
+        SYS,
+        ECHO,
+        ERROR,
+        CHANNEL
     };
 
     
-    // Now without a method reference `bool (JsonTalker::*method)(JsonObject, long)`
+    // Now without a method reference `bool (JsonTalker::*method)(JsonObject, uint32_t)`
     struct Command {
         const char* name;
         const char* desc;
@@ -73,6 +73,7 @@ protected:
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
     uint8_t _channel = 0;
+    bool _muted = false;
 
 
     // Can't use method reference because these type of references are class designation dependent,
@@ -85,6 +86,8 @@ protected:
 
         static const Manifesto _manifesto = {
             (const Command[]){  // runs
+                {"mute", "Mutes this talker"},
+                {"unmute", "Unmutes this talker"},
                 {"on", "Turns led ON"},
                 {"off", "Turns led OFF"}
             },
@@ -92,20 +95,54 @@ protected:
                 {"delay", "Sets the socket max delay"}
             },
             (const Command[]){  // gets
+                {"muted", "Returns 1 if muted and 0 if not"},
                 {"delay", "Gets the socket max delay"},
                 {"drops", "Gets total drops count"},
                 {"runs", "Gets total runs"}
             },
-            2,
+            4,
             1,
-            3
+            4
         };
 
         return _manifesto;
     }
 
+
+    bool remoteSend(JsonObject json_message, bool as_reply = false);
+
+
+    bool localSend(JsonObject json_message, bool as_reply = false) {
+        (void)as_reply; // Silence unused parameter warning
+
+        json_message["f"] = _name;
+        json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
+        // Triggers all local Talkers to processes the json_message
+        bool pre_validated = false;
+        bool sent_message = false;
+        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+            if (_json_talkers[talker_i] != this) {  // Can't send to myself
+                pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+                sent_message = true;
+                if (!pre_validated) break;
+            }
+        }
+        return sent_message;
+    }
+
+
+    bool replyMessage(JsonObject json_message, bool as_reply = true) {
+        if (json_message["c"].is<uint16_t>()) {
+            uint16_t c = json_message["c"].as<uint16_t>();
+            if (c == 1) {   // c == 1 means a local message while 0 means a remote one
+                return localSend(json_message, as_reply);
+            }
+        }
+        return remoteSend(json_message, as_reply);
+    }
+
     
-    long _total_runs = 0;
+    uint16_t _total_runs = 0;
     // static becaus it's a shared state among all other talkers, device (board) parameter
     static bool _is_led_on;  // keep track of state yourself, by default it's off
 
@@ -117,15 +154,15 @@ protected:
         const Manifesto& my_manifesto = get_manifesto();
         switch (message_code)
         {
-        case MessageCode::run:
+        case MessageCode::RUN:
             command = my_manifesto.runs;
             count = my_manifesto.runs_count;
             break;
-        case MessageCode::set:
+        case MessageCode::SET:
             command = my_manifesto.sets;
             count = my_manifesto.sets_count;
             break;
-        case MessageCode::get:
+        case MessageCode::GET:
             command = my_manifesto.gets;
             count = my_manifesto.gets_count;
             break;
@@ -144,6 +181,13 @@ protected:
         switch (command_index)
         {
         case 0:
+            _muted = true;
+            break;
+        case 1:
+            _muted = false;
+            break;
+
+        case 2:
             {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(F("Case 0 - Turning LED ON"));
@@ -166,14 +210,14 @@ protected:
                 } else {
                     json_message["r"] = "Already On!";
                     if (_socket != nullptr)
-                        this->remoteSend(json_message);
+                        this->replyMessage(json_message, false);
                     return false;
                 }
                 return true;
             }
             break;
         
-        case 1:
+        case 3:
             {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(F("Case 1 - Turning LED OFF"));
@@ -188,20 +232,19 @@ protected:
                 } else {
                     json_message["r"] = "Already Off!";
                     if (_socket != nullptr)
-                        this->remoteSend(json_message);
+                        this->replyMessage(json_message, false);
                     return false;
                 }
                 return true;
             }
             break;
-        
-        default: return false;  // Nothing done
         }
+		return false;  // Nothing done
     }
 
     
     virtual bool command_set(const uint8_t command_index, JsonObject json_message) {
-        long json_value = json_message["v"].as<long>();
+        uint32_t json_value = json_message["v"].as<uint32_t>();
         switch (command_index)
         {
         case 0:
@@ -216,23 +259,26 @@ protected:
     }
 
     
-    virtual long command_get(const uint8_t command_index, JsonObject json_message) {
+    virtual uint32_t command_get(const uint8_t command_index, JsonObject json_message) {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
         case 0:
+            return _muted;
+            break;
+        case 1:
             {
-                return static_cast<long>(this->get_delay());
+                return static_cast<uint32_t>(this->get_delay());
             }
             break;
 
-        case 1:
+        case 2:
             {
                 return this->get_total_drops();
             }
             break;
 
-        case 2:
+        case 3:
             {
                 return _total_runs;
             }
@@ -271,8 +317,8 @@ protected:
 
     void set_delay(uint8_t delay);
     uint8_t get_delay();
-    long get_total_drops();
-    long get_total_runs() { return _total_runs; }
+    uint16_t get_total_drops();
+    uint16_t get_total_runs() { return _total_runs; }
 
 
 public:
@@ -300,25 +346,17 @@ public:
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
     
-
-    bool remoteSend(JsonObject json_message, bool as_reply = false);
-
-
-    bool localSend(JsonObject json_message) {
-        json_message["f"] = _name;
-        json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
-        // Triggers all local Talkers to processes the json_message
-        bool pre_validated = false;
-        bool sent_message = false;
-        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-            if (_json_talkers[talker_i] != this) {  // Can't send to myself
-                pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
-                sent_message = true;
-                if (!pre_validated) break;
-            }
-        }
-        return sent_message;
+    JsonTalker& mute() {    // It does NOT make a copy!
+        _muted = true;
+        return *this;
     }
+
+    JsonTalker& unmute() {
+        _muted = false;
+        return *this;
+    }
+
+    bool muted() { return _muted; }
 
     
     bool processData(JsonObject json_message, bool pre_validated) {
@@ -351,7 +389,7 @@ public:
                 json_message["t"] = json_message["f"];
                 json_message["e"] = 4;
                 
-                remoteSend(json_message, true);
+                replyMessage(json_message, true);
                 return false;
             }
         }
@@ -390,16 +428,16 @@ public:
         MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
         json_message["w"] = json_message["m"].as<int>();
         json_message["t"] = json_message["f"];
-        json_message["m"] = static_cast<int>(MessageCode::echo);
+        json_message["m"] = MessageCode::ECHO;
 
         switch (message_code)
         {
-        case MessageCode::talk:
+        case MessageCode::TALK:
             json_message["d"] = _desc;
-            remoteSend(json_message, true);
+            replyMessage(json_message, true);
             break;
         
-        case MessageCode::list:
+        case MessageCode::LIST:
             {   // Because of none_list !!!
                 bool none_list = true;
 
@@ -412,26 +450,26 @@ public:
             
                 const Manifesto& my_manifesto = get_manifesto();
 
-                json_message["w"] = static_cast<int>(MessageCode::run);
+                json_message["w"] = MessageCode::RUN;
                 for (size_t i = 0; i < my_manifesto.runs_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.runs[i].name;
                     json_message["d"] = my_manifesto.runs[i].desc;
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
-                json_message["w"] = static_cast<int>(MessageCode::set);
+                json_message["w"] = MessageCode::SET;
                 for (size_t i = 0; i < my_manifesto.sets_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.sets[i].name;
                     json_message["d"] = my_manifesto.sets[i].desc;
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
-                json_message["w"] = static_cast<int>(MessageCode::get);
+                json_message["w"] = MessageCode::GET;
                 for (size_t i = 0; i < my_manifesto.gets_count; ++i) {
                     none_list = false;
                     json_message["n"] = my_manifesto.gets[i].name;
                     json_message["d"] = my_manifesto.gets[i].desc;
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
                 if(none_list) {
                     json_message["g"] = 2;       // NONE
@@ -439,10 +477,10 @@ public:
             }
             break;
         
-        case MessageCode::run:
+        case MessageCode::RUN:
             if (json_message["n"].is<String>()) {
 
-                const uint8_t command_found_i = command_index(MessageCode::run, json_message);
+                const uint8_t command_found_i = command_index(MessageCode::RUN, json_message);
                 if (command_found_i < 255) {
 
                     #ifdef JSON_TALKER_DEBUG
@@ -450,53 +488,51 @@ public:
                     #endif
             
                     json_message["g"] = 0;       // ROGER
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                     // No memory leaks because message_doc exists in the listen() method stack
                     json_message.remove("g");
                     command_run(command_found_i, json_message);
                 } else {
                     json_message["g"] = 1;   // UNKNOWN
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
             }
             break;
         
-        case MessageCode::set:
-            if (json_message["n"].is<String>() && json_message["v"].is<long>()) {
+        case MessageCode::SET:
+            if (json_message["n"].is<String>() && json_message["v"].is<uint32_t>()) {
 
-                const uint8_t command_found_i = command_index(MessageCode::set, json_message);
+                const uint8_t command_found_i = command_index(MessageCode::SET, json_message);
                 if (command_found_i < 255) {
                     json_message["g"] = 0;       // ROGER
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                     // No memory leaks because message_doc exists in the listen() method stack
                     json_message.remove("g");
                     command_set(command_found_i, json_message);
                 } else {
                     json_message["g"] = 1;   // UNKNOWN
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
             }
             break;
         
-        case MessageCode::get:
+        case MessageCode::GET:
             if (json_message["n"].is<String>()) {
 
-                const uint8_t command_found_i = command_index(MessageCode::get, json_message);
+                const uint8_t command_found_i = command_index(MessageCode::GET, json_message);
                 if (command_found_i < 255) {
-                    json_message["g"] = 0;       // ROGER
-                    remoteSend(json_message, true);
                     // No memory leaks because message_doc exists in the listen() method stack
-                    json_message.remove("g");
+                    // The return of the value works as an implicit ROGER (avoids network flooding)
                     json_message["v"] = command_get(command_found_i, json_message);
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 } else {
                     json_message["g"] = 1;   // UNKNOWN
-                    remoteSend(json_message, true);
+                    replyMessage(json_message, true);
                 }
             }
             break;
         
-        case MessageCode::sys:
+        case MessageCode::SYS:
             {
             // AVR Boards (Uno, Nano, Mega) - Check RAM size
             #ifdef __AVR__
@@ -542,21 +578,21 @@ public:
 
             #endif
 
-                remoteSend(json_message, true);
+                replyMessage(json_message, true);
 
                 // TO INSERT HERE EXTRA DATA !!
             }
             break;
         
-        case MessageCode::echo:
+        case MessageCode::ECHO:
             this->echo(json_message);
             break;
         
-        case MessageCode::error:
+        case MessageCode::ERROR:
             this->error(json_message);
             break;
         
-        case MessageCode::channel:
+        case MessageCode::CHANNEL:
             if (json_message["b"].is<uint8_t>()) {
 
                 #ifdef JSON_TALKER_DEBUG
@@ -567,7 +603,7 @@ public:
                 _channel = json_message["b"].as<uint8_t>();
             }
             json_message["b"] = _channel;
-            remoteSend(json_message, true);
+            replyMessage(json_message, true);
             break;
         
         default:

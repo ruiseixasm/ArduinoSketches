@@ -79,7 +79,7 @@ public:
     }
 
     
-    bool send(size_t length, bool as_reply = false) override {
+    size_t send(size_t length, bool as_reply = false) override {
         
         uint8_t broadcastIp[4] = {255, 255, 255, 255};
         
@@ -96,7 +96,7 @@ public:
         ether.sendUdp(_sending_buffer, length, _port, broadcastIp, _port);
         #endif
 
-        return true;
+        return length;
     }
 
 

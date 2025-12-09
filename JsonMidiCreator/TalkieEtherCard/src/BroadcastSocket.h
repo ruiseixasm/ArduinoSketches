@@ -29,13 +29,12 @@ private:
 
 
     // Pointer PRESERVE the polymorphism while objects don't!
-    JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
-    uint8_t _talker_count = 0;
-    uint8_t _max_delay_ms = 5;
-    bool _control_timing = false;
-    uint32_t _last_local_time = 0;
-    uint32_t _last_remote_time = 0;
-    long _drops_count = 0;
+    static JsonTalker** _json_talkers;   // It's a singleton, so, no need to be static
+    static uint8_t _talker_count;
+    static bool _control_timing;
+    static uint32_t _last_local_time;
+    static uint32_t _last_remote_time;
+    static uint16_t _drops_count;
 
 
     static uint16_t generateChecksum(const char* net_data, const size_t len) {
@@ -60,7 +59,7 @@ private:
     // 	'9' = 57
 
 
-    uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
+    static uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
         
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
@@ -119,7 +118,7 @@ private:
         uint16_t checksum = generateChecksum(_sending_buffer, length);
 
         #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("S: Checksum is: "));
+        Serial.print(F("I: Checksum is: "));
         Serial.println(checksum);
         #endif
 
@@ -165,9 +164,10 @@ protected:
 
     static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    static uint8_t _max_delay_ms;
 
-    
-    size_t triggerTalkers(size_t length) {
+
+    static size_t triggerTalkers(size_t length) {
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("T: "));
@@ -210,7 +210,7 @@ protected:
 
                     JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(message_code_int);
 
-                    if (!(message_code < JsonTalker::MessageCode::run || message_code > JsonTalker::MessageCode::get)) {
+                    if (!(message_code < JsonTalker::MessageCode::RUN || message_code > JsonTalker::MessageCode::GET)) {
 
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.print(F("C: Message code requires delay check: "));
@@ -267,14 +267,15 @@ protected:
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.println(F("Failed to deserialize received data"));
                         #endif
-                        return false;
+                        return 0;
                     }
                     JsonObject json_message = message_doc.as<JsonObject>();
 
-
+					// A non static method
                     pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
                     if (!pre_validated) break;
                 }
+                
             } else {
                 #ifdef BROADCASTSOCKET_DEBUG
                 Serial.print(F("C: Validation of Checksum FAILED!!"));
@@ -286,8 +287,9 @@ protected:
     }
 
 
-    BroadcastSocket(JsonTalker** json_talkers, uint8_t talker_count)
-        : _json_talkers(json_talkers), _talker_count(talker_count) {
+    BroadcastSocket(JsonTalker** json_talkers, uint8_t talker_count) {
+			_json_talkers = json_talkers;
+			_talker_count = talker_count;
             // Each talker has its remote connections, ONLY local connections are static
             for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
                 _json_talkers[talker_i]->setSocket(this);
@@ -295,57 +297,10 @@ protected:
         }
 
 
-public:
-    // Delete copy/move operations
-    BroadcastSocket(const BroadcastSocket&) = delete;
-    BroadcastSocket& operator=(const BroadcastSocket&) = delete;
-    BroadcastSocket(BroadcastSocket&&) = delete;
-    BroadcastSocket& operator=(BroadcastSocket&&) = delete;
-
-
+	// CAN'T BE STATIC
     // NOT Pure virtual methods anymores (= 0;)
-    virtual bool send(size_t length, bool as_reply = false) {
-        (void)length; // Silence unused parameter warning
+    virtual size_t send(size_t length, bool as_reply = false) {
         (void)as_reply; // Silence unused parameter warning
-        return false;
-    }
-
-
-    virtual size_t receive() {
-        // In theory, a UDP packet on a local area network (LAN) could survive
-        // for about 4.25 minutes (255 seconds).
-        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
-        if (_control_timing && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
-            _control_timing = false;
-        }
-        return 0;
-    }
-
-    
-    bool remoteSend(JsonObject json_message, bool as_reply = false) {
-
-        JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
-        if (message_code != JsonTalker::MessageCode::echo && message_code != JsonTalker::MessageCode::error) {
-            json_message["i"] = (uint32_t)millis();
-
-        } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
-
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("R: Response message without an identifier (i)"));
-            serializeJson(json_message, Serial);
-            Serial.println();  // optional: just to add a newline after the JSON
-            #endif
-
-            return false;
-        }
-
-        size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("R: "));
-        serializeJson(json_message, Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
-        #endif
 
         if (length < 3*4 + 2) {
 
@@ -353,7 +308,7 @@ public:
             Serial.println(F("Error: Serialization failed"));
             #endif
 
-            return false;
+            return 0;
         }
 
         #ifdef BROADCASTSOCKET_DEBUG
@@ -370,7 +325,7 @@ public:
             Serial.println(F("Error: Message too big"));
             #endif
 
-            return false;
+            return 0;
         }
 
         #ifdef BROADCASTSOCKET_DEBUG
@@ -379,14 +334,69 @@ public:
         Serial.println();
         #endif
         
-        return send(length, as_reply);
+
+        return length;
+    }
+
+
+public:
+    // Delete copy/move operations
+    BroadcastSocket(const BroadcastSocket&) = delete;
+    BroadcastSocket& operator=(const BroadcastSocket&) = delete;
+    BroadcastSocket(BroadcastSocket&&) = delete;
+    BroadcastSocket& operator=(BroadcastSocket&&) = delete;
+
+
+	// CAN'T BE STATIC
+    virtual size_t receive() {
+        // In theory, a UDP packet on a local area network (LAN) could survive
+        // for about 4.25 minutes (255 seconds).
+        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
+        if (_control_timing && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
+            _control_timing = false;
+        }
+        return 0;
+    }
+
+    
+    bool remoteSend(JsonObject json_message, bool as_reply = false) {
+
+        JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
+        if (message_code != JsonTalker::MessageCode::ECHO && message_code != JsonTalker::MessageCode::ERROR) {
+            json_message["i"] = (uint32_t)millis();
+
+        } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
+
+            #ifdef BROADCASTSOCKET_DEBUG
+            Serial.print(F("R: Response message without an identifier (i)"));
+            serializeJson(json_message, Serial);
+            Serial.println();  // optional: just to add a newline after the JSON
+            #endif
+
+            return false;
+        }
+
+        json_message["c"] = 0;  // Makes sure `c` is set
+
+        size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+
+        #ifdef BROADCASTSOCKET_DEBUG
+        Serial.print(F("R: "));
+        serializeJson(json_message, Serial);
+        Serial.println();  // optional: just to add a newline after the JSON
+        #endif
+
+        return send(length, as_reply);	// send is internally triggered, so, this method can hardly be static
     }
     
 
     void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
     uint8_t get_max_delay() { return _max_delay_ms; }
-    long get_drops_count() { return _drops_count; }
+    uint16_t get_drops_count() { return _drops_count; }
 
 };
+
+
+
 
 #endif // BROADCAST_SOCKET_H
