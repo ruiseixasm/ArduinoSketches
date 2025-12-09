@@ -60,11 +60,14 @@ public:
     }
     
 
-    bool send(size_t length, bool as_reply = false) override {
+    size_t send(size_t length, bool as_reply = false) override {
         if (_udp == nullptr) return false;
 
         IPAddress broadcastIP(255, 255, 255, 255);
         
+        // Need to call homologous method in super class first
+        length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
+
         #ifdef ENABLE_DIRECT_ADDRESSING
         if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
             #ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -97,7 +100,7 @@ public:
         Serial.println();
         #endif
 
-        return true;
+        return length;
     }
 
 
