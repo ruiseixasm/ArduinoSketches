@@ -60,6 +60,12 @@ protected:
     BroadcastSocket_SPI_ESP_Arduino_Slave(JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
             
+			// Initialize SPI
+			SPI.begin();
+			SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
+			SPI.setDataMode(SPI_MODE0);
+			SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
+
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
             // devices_ss_pins["initialized"] = true;
@@ -82,13 +88,9 @@ protected:
     }
 
     
+public:
+
 	// Specific methods associated to Arduino SPI as Slave
-
-
-	// ISR(SPI_STC_vect) {
-	// 	BroadcastSocket_SPI_ESP_Arduino_Slave::handleSPI_Interrupt();
-	// }
-
 
     // Actual interrupt handler
     static void handleSPI_Interrupt() {
@@ -191,8 +193,6 @@ protected:
     }
 
 
-public:
-
     // Move ONLY the singleton instance method to subclass
     static BroadcastSocket_SPI_ESP_Arduino_Slave& instance(JsonTalker** json_talkers, uint8_t talker_count) {
         static BroadcastSocket_SPI_ESP_Arduino_Slave instance(json_talkers, talker_count);
@@ -205,24 +205,11 @@ public:
         // Need to call homologous method in super class first
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
-        // for (auto key_value : *_talkers_ss_pins) {
-        //     // const char* key = key_value.key().c_str();
-        //     int ss_pin = key_value.value();
-        // }
-
 
         return length;   // nothing received
     }
 
 
-    void setup(JsonObject* talkers_ss_pins) {
-        // Initialize SPI
-        SPI.begin();
-        SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
-        SPI.setDataMode(SPI_MODE0);
-        SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
-        _talkers_ss_pins = talkers_ss_pins;
-    }
 };
 
 
@@ -233,6 +220,11 @@ volatile BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode BroadcastSocket_SPI_
 																	= BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode::NONE;
 volatile bool BroadcastSocket_SPI_ESP_Arduino_Slave::_process_message = false;
 
-
+// Define ISR at GLOBAL SCOPE (outside the class)
+ISR(SPI_STC_vect) {
+    // You need a way to call your class method from here
+    // Possibly using a static method or singleton pattern
+    BroadcastSocket_SPI_ESP_Arduino_Slave::handleSPI_Interrupt();
+}
 
 #endif // BROADCAST_SOCKET_SPI_ESP_ARDUINO_SLAVE_HPP
