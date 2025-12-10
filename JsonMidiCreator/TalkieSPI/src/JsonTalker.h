@@ -217,7 +217,7 @@ protected:
                     _total_runs++;
                 } else {
                     json_message["r"] = "Already On!";
-                    if (_socket != nullptr)
+                    if (_socket)
                         this->replyMessage(json_message, false);
                     return false;
                 }
@@ -239,7 +239,7 @@ protected:
                     _total_runs++;
                 } else {
                     json_message["r"] = "Already Off!";
-                    if (_socket != nullptr)
+                    if (_socket)
                         this->replyMessage(json_message, false);
                     return false;
                 }

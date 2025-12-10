@@ -13,56 +13,46 @@ https://github.com/ruiseixasm/JsonTalkie
 */
 
 
-// LED_BUILTIN is already defined by ESP32 platform
+// GREEN_LED is already defined by ESP32 platform
 // Typically GPIO2 for most ESP32 boards
-#ifndef LED_BUILTIN
-  #define LED_BUILTIN 2  // Fallback definition if not already defined
+#ifndef GREEN_LED
+  #define GREEN_LED 2  // Fallback definition if not already defined
 #endif
 
 
 
 // COMPILE WITH ARDUINO BOARD
 #include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Slave.hpp"
-#include "src/JsonTalker.h"
+#include "src/GreenTalker.hpp"
 
-const char talker_name[] = "talker";
-const char talker_desc[] = "I'm a talker";
-JsonTalker talker = JsonTalker(talker_name, talker_desc);
-JsonTalker* talkers[] = { &talker };   // It's an array of pointers
+const char talker_name[] = "green";
+const char talker_desc[] = "I'm a green talker";
+GreenTalker talker = GreenTalker(talker_name, talker_desc);
+JsonTalker* talkers[] = { &talker };   // It's an array of pointers of JsonTalker (keep it as JsonTalker!)
 // Singleton requires the & (to get a reference variable)
 
-auto& broadcast_socket = BroadcastSocket_SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
-
-
-
-// Buzzer pin
-#define buzzer_pin 3
+auto& broadcast_socket = BroadcastSocket_SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(GreenTalker*));
 
 
 
 void setup() {
     // Initialize pins FIRST before anything else
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW); // Start with LED off
+    pinMode(GREEN_LED, OUTPUT);
+    digitalWrite(GREEN_LED, LOW); // Start with LED off
     
-    #ifndef BROADCAST_SOCKET_SERIAL_HPP
-    pinMode(buzzer_pin, OUTPUT);
-    digitalWrite(buzzer_pin, LOW);
-    #endif
-
     // Then start Serial
     Serial.begin(115200);
     delay(2000); // Important: Give time for serial to initialize
     Serial.println("\n\n=== ESP32 with EthernetENC STARTING ===");
 
     // Add a small LED blink to confirm code is running
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(GREEN_LED, HIGH);
     delay(100);
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(GREEN_LED, LOW);
     delay(100);
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(GREEN_LED, HIGH);
     delay(100);
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(GREEN_LED, LOW);
     
     Serial.println("Pins initialized successfully");
 
@@ -77,12 +67,12 @@ void setup() {
 
     // Connect the talkers with each other (static variable)
     Serial.println("Connecting Talkers with each other");
-    JsonTalker::connectTalkers(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+    GreenTalker::connectTalkers(talkers, sizeof(talkers)/sizeof(GreenTalker*));
 
     // Final startup indication
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(GREEN_LED, HIGH);
     delay(500);
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(GREEN_LED, LOW);
 
     Serial.println("Setup completed - Ready for JSON communication!");
 }
