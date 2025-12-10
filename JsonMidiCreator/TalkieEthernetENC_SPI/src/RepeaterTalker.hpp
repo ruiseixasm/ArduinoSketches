@@ -26,12 +26,12 @@ public:
         : JsonTalker(name, desc) {}
 
 
-	// Works as a router to LOCAL send
+	// Works as a router to LOCAL_C send
     bool processData(JsonObject& json_message, bool pre_validated = false) override {
         (void)pre_validated;	// Silence unused parameter warning
 
         uint16_t c = json_message["c"].as<uint16_t>();
-		if (c == LOCAL) {
+		if (c == LOCAL_C) {
 			return remoteSend(json_message);
 		}
 		return localSend(json_message);
