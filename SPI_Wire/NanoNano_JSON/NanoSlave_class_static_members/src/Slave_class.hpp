@@ -68,9 +68,9 @@ private:
     static char _sending_buffer[BUFFER_SIZE];
     volatile static uint8_t _receiving_index;
     volatile static uint8_t _sending_index;
+    volatile static uint8_t _validation_index;
     volatile static uint8_t _send_iteration_i;
     volatile static MessageCode _transmission_mode;
-    volatile static bool _process_message;
 
 
     void processMessage() {
@@ -192,7 +192,7 @@ public:
                 case SEND:
 					if (_sending_index < BUFFER_SIZE) {
 						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
-						if (_receiving_index > _sending_index) {	// Less missed sends this way
+						if (_validation_index > _sending_index) {	// Less missed sends this way
 							SPDR = END;	// All chars have been checked
 							break;
 						}
@@ -203,12 +203,12 @@ public:
 					}
 					// Starts checking 2 indexes after
 					if (_send_iteration_i > 1) {    // Two positions of delay
-						if (c != _sending_buffer[_receiving_index]) {   // Also checks '\0' char
+						if (c != _sending_buffer[_validation_index]) {   // Also checks '\0' char
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
 							break;
 						}
-						_receiving_index++; // Starts checking after two sent
+						_validation_index++; // Starts checking after two sent
 					}
 					// Only increments if NOT at the end of the string being sent
 					if (_sending_buffer[_sending_index] != '\0') {
@@ -234,15 +234,14 @@ public:
                     SPDR = ACK;
                     _transmission_mode = SEND;
                     _sending_index = 0;
-                    _receiving_index = 0;
+                    _validation_index = 0;
                     _send_iteration_i = 0;
                     break;
                 case END:
                     SPDR = ACK;
-                    if (_transmission_mode == RECEIVE) {
-                        _process_message = true;
-                    } else if (_transmission_mode == SEND) {
+                    if (_transmission_mode == SEND) {
                         _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
+						_sending_index = 0;
                     }
                     _transmission_mode = NONE;
                     break;
@@ -260,11 +259,15 @@ public:
         }
     }
 
+	void deleteReceived() {
+		_receiving_buffer[0] = '\0';
+		_receiving_index = 0;
+	}
 	
     void process() {
-        if (_process_message) {
+        if (_receiving_index) {
             processMessage();   // Called only once!
-            _process_message = false;    // Critical to avoid repeated calls over the ISR function
+			deleteReceived();	// Critical to avoid repeated calls over the ISR function
         }
     }
 
@@ -277,9 +280,9 @@ char Slave_class::_sending_buffer[BUFFER_SIZE] = {'\0'};
 
 volatile uint8_t Slave_class::_receiving_index = 0;
 volatile uint8_t Slave_class::_sending_index = 0;
+volatile uint8_t Slave_class::_validation_index = 0;
 volatile uint8_t Slave_class::_send_iteration_i = 0;
 volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::MessageCode::NONE;
-volatile bool Slave_class::_process_message = false;
 
 
 #endif // SLAVE_CLASS_HPP
