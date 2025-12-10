@@ -179,7 +179,7 @@ private:
 			
 			if (c != VOID) {
 
-				delayMicroseconds(receive_delay_us);
+				delayMicroseconds(10);	// Makes sure ACK is set by the slave (10us) (critical path)
 				c = SPI.transfer('\0');   // Dummy char to get the ACK
 
 				if (c == ACK) { // Makes sure there is an Acknowledge first
@@ -224,6 +224,12 @@ private:
 							}
 						}
 					}
+				} else if (c == NONE) {
+					#ifdef MASTER_CLASS_DEBUG
+					Serial.println("\t\tDevice has nothing to send");
+					#endif
+					length = 1; // Nothing to be sent
+					break;
 				} else {
 					#ifdef MASTER_CLASS_DEBUG
 					Serial.println("\t\tDevice ACK NOT received");
