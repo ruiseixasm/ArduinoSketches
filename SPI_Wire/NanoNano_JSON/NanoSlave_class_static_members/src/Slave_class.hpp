@@ -71,6 +71,7 @@ private:
     volatile static uint8_t _validation_index;
     volatile static uint8_t _send_iteration_i;
     volatile static MessageCode _transmission_mode;
+	volatile static bool _received_data;
 
 
     void processMessage() {
@@ -87,7 +88,7 @@ private:
 
         DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BUFFER_SIZE);
         if (error) {
-            return false;
+            return;
         }
         JsonObject json_message = message_doc.as<JsonObject>();
 
@@ -239,7 +240,9 @@ public:
                     break;
                 case END:
                     SPDR = ACK;
-                    if (_transmission_mode == SEND) {
+					if (_transmission_mode == RECEIVE) {
+						_received_data = true;
+                    } else if (_transmission_mode == SEND) {
                         _sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
 						_sending_index = 0;
                     }
@@ -265,11 +268,11 @@ public:
 
 	void deleteReceived() {
 		_receiving_buffer[0] = '\0';
-		_receiving_index = 0;
+		_received_data = false;
 	}
 	
     void process() {
-        if (_receiving_index) {
+        if (_received_data) {
             processMessage();   // Called only once!
 			deleteReceived();	// Critical to avoid repeated calls over the ISR function
         }
@@ -287,6 +290,7 @@ volatile uint8_t Slave_class::_sending_index = 0;
 volatile uint8_t Slave_class::_validation_index = 0;
 volatile uint8_t Slave_class::_send_iteration_i = 0;
 volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::MessageCode::NONE;
+volatile bool Slave_class::_received_data = false;
 
 
 #endif // SLAVE_CLASS_HPP
