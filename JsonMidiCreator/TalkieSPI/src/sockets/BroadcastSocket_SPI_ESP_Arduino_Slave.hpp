@@ -178,6 +178,10 @@ public:
                 case ERROR:
                 case FULL:
                     SPDR = ACK;
+                    if (_transmission_mode == RECEIVE) {
+                        _receiving_buffer[0] = '\0';	// Makes sure the receiving buffer is marked as empty in case of error
+						_receiving_index = 0;
+                    }
                     _transmission_mode = NONE;
                     break;
                 default:
