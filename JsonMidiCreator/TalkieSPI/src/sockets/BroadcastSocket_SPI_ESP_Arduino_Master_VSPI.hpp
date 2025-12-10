@@ -59,6 +59,7 @@ public:
 
 
 private:
+	bool _initiated = false;
     int* _talkers_ss_pins;
     uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = SPI_SS;
@@ -69,18 +70,6 @@ protected:
     BroadcastSocket_SPI_ESP_Arduino_Master_VSPI(JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
             
-            // ================== INITIALIZE HSPI ==================
-            // Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13
-            // This method signature is only available in ESP32 Arduino SPI library!
-            SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
-            
-            // Configure SPI settings
-            SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
-            SPI.setDataMode(SPI_MODE0);
-            SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
-            // SPI.setFrequency(1000000); // 1MHz if needed (optional)
-            // ====================================================
-        
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
             // devices_ss_pins["initialized"] = true;
@@ -360,28 +349,31 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) override {
 
-        // Need to call homologous method in super class first
-        length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
+		if (_initiated) {
 
-        if (length > 0) {
-            #ifdef ENABLE_DIRECT_ADDRESSING
-            if (as_reply) {
-                sendString(_actual_ss_pin);
-			} else if (target_index < _ss_pins_count) {
-				sendString(_talkers_ss_pins[target_index]);
-            } else {    // Broadcast mode
-                for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-                    sendString(_talkers_ss_pins[ss_pin_i]);
-                }
-            }
-            #else
-            for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-                sendString(_talkers_ss_pins[ss_pin_i]);
-            }
-            #endif
-        }
-        // Makes sure the _sending_buffer is reset with '\0'
-        _sending_buffer[0] = '\0';
+			// Need to call homologous method in super class first
+			length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
+
+			if (length > 0) {
+				#ifdef ENABLE_DIRECT_ADDRESSING
+				if (as_reply) {
+					sendString(_actual_ss_pin);
+				} else if (target_index < _ss_pins_count) {
+					sendString(_talkers_ss_pins[target_index]);
+				} else {    // Broadcast mode
+					for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+						sendString(_talkers_ss_pins[ss_pin_i]);
+					}
+				}
+				#else
+				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+					sendString(_talkers_ss_pins[ss_pin_i]);
+				}
+				#endif
+			}
+			// Makes sure the _sending_buffer is reset with '\0'
+			_sending_buffer[0] = '\0';
+		}
         return 0;   // Returns 0 because everything is dealt internally in this method
     }
 
@@ -397,25 +389,43 @@ public:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     size_t receive() override {
 
-        // Need to call homologous method in super class first
-        size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+		if (_initiated) {
 
-        for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-            length = receiveString(_talkers_ss_pins[ss_pin_i]);
-            if (length > 0) {
-                _actual_ss_pin = _talkers_ss_pins[ss_pin_i];
-                BroadcastSocket::triggerTalkers(length);
-            }
-        }
-        // Makes sure the _receiving_buffer is reset with '\0'
-        _receiving_buffer[0] = '\0';
+			// Need to call homologous method in super class first
+			size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+				length = receiveString(_talkers_ss_pins[ss_pin_i]);
+				if (length > 0) {
+					_actual_ss_pin = _talkers_ss_pins[ss_pin_i];
+					BroadcastSocket::triggerTalkers(length);
+				}
+			}
+			// Makes sure the _receiving_buffer is reset with '\0'
+			_receiving_buffer[0] = '\0';
+		}
+
         return 0;   // Receives are all called internally in this method
     }
 
 
     virtual void setup(int* talkers_ss_pins, uint8_t ss_pins_count) {
+		
+		// ================== INITIALIZE HSPI ==================
+		// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13
+		// This method signature is only available in ESP32 Arduino SPI library!
+		SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
+		
+		// Configure SPI settings
+		SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
+		SPI.setDataMode(SPI_MODE0);
+		SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
+		// SPI.setFrequency(1000000); // 1MHz if needed (optional)
+		// ====================================================
+        
         _talkers_ss_pins = talkers_ss_pins;
         _ss_pins_count = ss_pins_count;
+		_initiated = true;
     }
 };
 

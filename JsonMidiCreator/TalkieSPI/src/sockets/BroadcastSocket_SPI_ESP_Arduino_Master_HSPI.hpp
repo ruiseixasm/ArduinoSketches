@@ -45,18 +45,6 @@ public:
         static BroadcastSocket_SPI_ESP_Arduino_Master_HSPI instance(json_talkers, talker_count);
         return instance;
     }
-
-	// Override setup to use HSPI pins
-    void setup(int* talkers_ss_pins, uint8_t ss_pins_count) override {
-        // First, reinitialize SPI with HSPI pins
-        SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
-        SPI.setClockDivider(SPI_CLOCK_DIV4);
-        SPI.setDataMode(SPI_MODE0);
-        SPI.setBitOrder(MSBFIRST);
-        
-        // Then call parent setup
-        BroadcastSocket_SPI_ESP_Arduino_Master_VSPI::setup(talkers_ss_pins, ss_pins_count);
-    }
 };
 
 #endif // BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HSPI_HPP
