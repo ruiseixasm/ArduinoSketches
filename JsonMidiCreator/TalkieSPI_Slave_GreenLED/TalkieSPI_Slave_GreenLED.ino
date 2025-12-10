@@ -19,6 +19,10 @@ https://github.com/ruiseixasm/JsonTalkie
   #define GREEN_LED 2  // Fallback definition if not already defined
 #endif
 
+#ifndef YELLOW_LED_PIN
+#define YELLOW_LED_PIN 19   // A5
+#endif
+
 
 
 // COMPILE WITH ARDUINO BOARD
@@ -39,10 +43,14 @@ void setup() {
     // Initialize pins FIRST before anything else
     pinMode(GREEN_LED, OUTPUT);
     digitalWrite(GREEN_LED, LOW); // Start with LED off
-    
+	pinMode(YELLOW_LED_PIN, OUTPUT);
+	digitalWrite(YELLOW_LED_PIN, LOW);
+
     // Then start Serial
     Serial.begin(115200);
+    digitalWrite(YELLOW_LED_PIN, HIGH);
     delay(2000); // Important: Give time for serial to initialize
+    digitalWrite(YELLOW_LED_PIN, LOW);
     Serial.println("\n\n=== ESP32 with EthernetENC STARTING ===");
 
     // Add a small LED blink to confirm code is running
