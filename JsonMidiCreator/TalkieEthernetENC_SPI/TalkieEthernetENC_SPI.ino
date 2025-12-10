@@ -98,7 +98,8 @@ void setup() {
     // STEP 1: Initialize SPI only
     
     Serial.println("Step 1: Starting SPI...");
-    // SPI.begin();
+	int talkers_spi_pins[] = {4, 16};
+    spi_socket.setup(talkers_spi_pins, sizeof(talkers_spi_pins)/sizeof(int));
     Serial.println("SPI started successfully");
     delay(1000);
 

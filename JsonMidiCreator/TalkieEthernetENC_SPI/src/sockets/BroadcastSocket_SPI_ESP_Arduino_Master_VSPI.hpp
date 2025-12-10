@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
 #include "../BroadcastSocket.h"
 
-#define BROADCAST_SPI_DEBUG
+// #define BROADCAST_SPI_DEBUG
 
 
 #define ENABLE_DIRECT_ADDRESSING
