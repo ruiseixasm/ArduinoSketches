@@ -29,9 +29,9 @@ public:
 
 
 	// Works as a router to LOCAL send
-    bool processData(JsonObject json_message, bool pre_validated = false) override {
+    bool processData(JsonObject& json_message, bool pre_validated = false) override {
         (void)pre_validated;	// Silence unused parameter warning
-		
+
 		if (json_message["c"] == 0) {	// From outside
 			return localSend(json_message);
 		} else {	// From local

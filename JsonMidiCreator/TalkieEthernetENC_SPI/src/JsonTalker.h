@@ -109,10 +109,10 @@ protected:
     }
 
 
-    bool remoteSend(JsonObject json_message, bool as_reply = false, uint8_t target_index = 255);
+    bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255);
 
 
-    bool localSend(JsonObject json_message, bool as_reply = false, uint8_t target_index = 255) {
+    bool localSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
 
@@ -139,7 +139,7 @@ protected:
     }
 
 
-    bool replyMessage(JsonObject json_message, bool as_reply = true) {
+    bool replyMessage(JsonObject& json_message, bool as_reply = true) {
         if (json_message["c"].is<uint16_t>()) {
             uint16_t c = json_message["c"].as<uint16_t>();
             if (c == 1) {   // c == 1 means a local message while 0 means a remote one
@@ -155,7 +155,7 @@ protected:
     static bool _is_led_on;  // keep track of state yourself, by default it's off
 
 
-    uint8_t command_index(const MessageCode message_code, JsonObject json_message) {
+    uint8_t command_index(const MessageCode message_code, JsonObject& json_message) {
         const char* command_name = json_message["n"].as<const char*>();
         const Command* command = nullptr;
         uint8_t count = 0;
@@ -184,7 +184,7 @@ protected:
     }
 
 
-    virtual bool command_run(const uint8_t command_index, JsonObject json_message) {
+    virtual bool command_run(const uint8_t command_index, JsonObject& json_message) {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
@@ -251,7 +251,7 @@ protected:
     }
 
     
-    virtual bool command_set(const uint8_t command_index, JsonObject json_message) {
+    virtual bool command_set(const uint8_t command_index, JsonObject& json_message) {
         uint32_t json_value = json_message["v"].as<uint32_t>();
         switch (command_index)
         {
@@ -267,7 +267,7 @@ protected:
     }
 
     
-    virtual uint32_t command_get(const uint8_t command_index, JsonObject json_message) {
+    virtual uint32_t command_get(const uint8_t command_index, JsonObject& json_message) {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
@@ -296,7 +296,7 @@ protected:
         }
     }
 
-    bool echo(JsonObject json_message) {
+    bool echo(JsonObject& json_message) {
         Serial.print(json_message["f"].as<String>());
         Serial.print(" - ");
         if (json_message["r"].is<String>()) {
@@ -309,7 +309,7 @@ protected:
         return false;
     }
 
-    bool error(JsonObject json_message) {
+    bool error(JsonObject& json_message) {
         Serial.print(json_message["f"].as<String>());
         Serial.print(" - ");
         if (json_message["r"].is<String>()) {
@@ -367,7 +367,7 @@ public:
     bool muted() { return _muted; }
 
     
-    virtual bool processData(JsonObject json_message, bool pre_validated = false) {
+    virtual bool processData(JsonObject& json_message, bool pre_validated = false) {
 
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("Processing..."));
