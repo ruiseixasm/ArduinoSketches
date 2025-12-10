@@ -33,11 +33,10 @@ public:
         (void)pre_validated;	// Silence unused parameter warning
 
         uint16_t c = json_message["c"].as<uint16_t>();
-		if (c == 0) {	// From remote
-			return localSend(json_message);
-		} else {		// From local
+		if (c == LOCAL) {
 			return remoteSend(json_message);
 		}
+		return localSend(json_message);
 	}
 };
 

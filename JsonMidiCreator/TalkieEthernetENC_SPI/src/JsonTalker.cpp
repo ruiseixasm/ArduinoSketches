@@ -25,7 +25,7 @@ bool JsonTalker::_is_led_on = false;
 bool JsonTalker::remoteSend(JsonObject& json_message, bool as_reply, uint8_t target_index) {
     if (_muted || !_socket) return false;
     json_message["f"] = _name;
-    // 'c' = 0 means REMOTE communication (already set by socket's remoteSend)
+	json_message["c"] = REMOTE;	// 'c' = 0 means REMOTE communication
     return _socket->remoteSend(json_message, as_reply, target_index);
 }
 

@@ -377,8 +377,6 @@ public:
             return false;
         }
 
-        json_message["c"] = 0;  // Makes sure `c` is set
-
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
         #ifdef BROADCASTSOCKET_DEBUG
