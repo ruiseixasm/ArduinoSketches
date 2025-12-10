@@ -70,24 +70,12 @@ private:
                 delayMicroseconds(send_delay_us);
                 if (i > 0) {
                     if (command[i - 1] == '\0') {
-                        c = SPI.transfer(END);	// Checks the ACK response bellow
+                        c = SPI.transfer(END);
                         if (c == '\0') {
-                			delayMicroseconds(send_delay_us);
-                        	c = SPI.transfer(END);	// ACK response
-                        	#ifdef MASTER_CLASS_DEBUG
-							Serial.println("\t\tSent END");
-                        	#endif
-							if (c == ACK) {
-                        		#ifdef MASTER_CLASS_DEBUG
-								Serial.println("\t\tReceived ACK");
-                        		#endif
-                            	length = i;
-							} else {
-                        		#ifdef MASTER_CLASS_DEBUG
-								Serial.println("\t\tDid NOT received ACK");
-                        		#endif
-								length = 0;	// Try again
-							}
+							#ifdef MASTER_CLASS_DEBUG
+							Serial.println("\t\tSent completed");
+							#endif
+							length = i;
                             break;
                         } else {
                             length = 0;
