@@ -182,8 +182,8 @@ public:
 
             switch (_transmission_mode) {
                 case RECEIVE:
+					// Just returns same received char as receiving confirmation (echo) (no need to set SPDR)
                     if (_receiving_index < BUFFER_SIZE) {
-                        // Returns same received char as receiving confirmation (no need to set SPDR)
                         _receiving_buffer[_receiving_index++] = c;
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
