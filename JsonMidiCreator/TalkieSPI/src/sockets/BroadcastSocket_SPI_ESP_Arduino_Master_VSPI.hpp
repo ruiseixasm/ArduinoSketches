@@ -198,7 +198,6 @@ protected:
     size_t receiveString(int ss_pin = SPI_SS) {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
-        _receiving_buffer[0] = '\0'; // Avoids garbage printing
 
         for (size_t r = 0; length == 0 && r < 3; r++) {
     
