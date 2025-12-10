@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../BroadcastSocket.h"
 
-// #define BROADCAST_ETHERNETENC_DEBUG
+#define BROADCAST_ETHERNETENC_DEBUG
 
 
 #define ENABLE_DIRECT_ADDRESSING
