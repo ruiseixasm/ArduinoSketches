@@ -53,7 +53,6 @@ private:
     volatile static uint8_t _validation_index;
     volatile static uint8_t _send_iteration_i;
     volatile static MessageCode _transmission_mode;
-    volatile static bool _process_message;
 
 protected:
     // Needed for the compiler, the base class is the one being called though
