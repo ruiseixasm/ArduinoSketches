@@ -168,5 +168,6 @@ void loop() {
     Ethernet.maintain();
     
     ethernet_socket.receive();
+    spi_socket.receive();
 }
 

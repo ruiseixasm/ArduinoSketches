@@ -48,7 +48,8 @@ protected:
         : BroadcastSocket(json_talkers, talker_count) {}
 
 
-    size_t send(size_t length, bool as_reply = false) override {
+    size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) override {
+        (void)target_index; // Silence unused parameter warning
         if (_udp == nullptr) return false;
 
         // Need to call homologous method in super class first

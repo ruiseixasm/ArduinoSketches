@@ -32,7 +32,7 @@ public:
     bool processData(JsonObject json_message, bool pre_validated = false) override {
         (void)pre_validated;	// Silence unused parameter warning
 
-		return localSend(JsonTalker);
+		return localSend(json_message);
 	}
 };
 
