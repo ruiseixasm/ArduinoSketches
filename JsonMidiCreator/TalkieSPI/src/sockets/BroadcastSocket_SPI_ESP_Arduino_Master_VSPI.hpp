@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HSPI_HPP
-#define BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HSPI_HPP
+#ifndef BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_VSPI_HPP
+#define BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_VSPI_HPP
 
 
 #include <SPI.h>
@@ -413,10 +413,10 @@ public:
     }
 
 
-    void setup(int* talkers_ss_pins, uint8_t ss_pins_count) {
+    virtual void setup(int* talkers_ss_pins, uint8_t ss_pins_count) {
         _talkers_ss_pins = talkers_ss_pins;
         _ss_pins_count = ss_pins_count;
     }
 };
 
-#endif // BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HSPI_HPP
+#endif // BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_VSPI_HPP

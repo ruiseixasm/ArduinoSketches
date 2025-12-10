@@ -62,7 +62,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 
-#define BROADCAST_SOCKET 0
+#define BROADCAST_SOCKET 1
 //      0 - BroadcastSocket_SPI_ESP_Arduino_Master_VSPI
 //      1 - BroadcastSocket_SPI_ESP_Arduino_Master_HSPI
 //      2 - BroadcastSocket_SPI_ESP_Arduino_Slave
