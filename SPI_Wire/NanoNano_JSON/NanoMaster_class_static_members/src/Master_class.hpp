@@ -179,7 +179,7 @@ private:
 			
 			if (c != VOID) {
 
-				delayMicroseconds(10);	// Makes sure ACK is set by the slave (10us) (critical path)
+				delayMicroseconds(10);	// Makes sure ACK or NONE is set by the slave (10us) (critical path)
 				c = SPI.transfer('\0');   // Dummy char to get the ACK
 
 				if (c == ACK) { // Makes sure there is an Acknowledge first
