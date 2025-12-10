@@ -109,10 +109,10 @@ protected:
     }
 
 
-    bool remoteSend(JsonObject json_message, bool as_reply = false);
+    bool remoteSend(JsonObject json_message, bool as_reply = false, int target_index = -1);
 
 
-    bool localSend(JsonObject json_message, bool as_reply = false) {
+    bool localSend(JsonObject json_message, bool as_reply = false, int target_index = -1) {
         (void)as_reply; // Silence unused parameter warning
 
         json_message["f"] = _name;

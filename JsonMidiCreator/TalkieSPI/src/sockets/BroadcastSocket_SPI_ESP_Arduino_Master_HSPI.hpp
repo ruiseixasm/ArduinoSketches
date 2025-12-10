@@ -340,7 +340,7 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t send(size_t length, bool as_reply = false) override {
+    size_t send(size_t length, bool as_reply = false, int target_index = -1) override {
 
         // Need to call homologous method in super class first
         length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!

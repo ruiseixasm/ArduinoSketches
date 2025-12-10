@@ -22,7 +22,7 @@ bool JsonTalker::_is_led_on = false;
 
 
 
-bool JsonTalker::remoteSend(JsonObject json_message, bool as_reply) {
+bool JsonTalker::remoteSend(JsonObject json_message, bool as_reply, int target_index = -1) {
     if (_muted || _socket == nullptr) return false;
     json_message["f"] = _name;
     // 'c' = 0 means REMOTE communication (already set by socket's remoteSend)

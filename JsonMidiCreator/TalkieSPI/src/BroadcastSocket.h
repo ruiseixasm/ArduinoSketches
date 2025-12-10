@@ -359,7 +359,7 @@ public:
     }
 
     
-    bool remoteSend(JsonObject json_message, bool as_reply = false) {
+    bool remoteSend(JsonObject json_message, bool as_reply = false, int target_index = -1) {
 
         JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
         if (message_code != JsonTalker::MessageCode::ECHO && message_code != JsonTalker::MessageCode::ERROR) {
