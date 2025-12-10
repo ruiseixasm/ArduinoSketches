@@ -66,7 +66,7 @@ private:
             // Asks the Slave to start receiving
             c = SPI.transfer(RECEIVE);
             
-            for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
+            for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
                 delayMicroseconds(send_delay_us);
                 if (i > 0) {
                     if (command[i - 1] == '\0') {

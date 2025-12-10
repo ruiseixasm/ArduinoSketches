@@ -36,7 +36,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
-#define send_delay_us 8
+#define send_delay_us 9
 #define receive_delay_us 10 // Receive needs more time to be processed
 
 
@@ -102,13 +102,28 @@ protected:
             // Asks the Slave to start receiving
             c = SPI.transfer(RECEIVE);
             
-            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
+            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
                 delayMicroseconds(send_delay_us);
                 if (i > 0) {
                     if (_sending_buffer[i - 1] == '\0') {
-                        c = SPI.transfer(END);
+                        c = SPI.transfer(END);	// Checks the ACK response bellow
                         if (c == '\0') {
-                            length = i;
+                			delayMicroseconds(send_delay_us);
+                        	c = SPI.transfer(END);	// ACK response
+                        	#ifdef BROADCAST_SPI_DEBUG
+							Serial.println("\t\tSent END");
+                        	#endif
+							if (c == ACK) {
+                        		#ifdef BROADCAST_SPI_DEBUG
+								Serial.println("\t\tReceived ACK");
+                        		#endif
+                            	length = i;
+							} else {
+                        		#ifdef BROADCAST_SPI_DEBUG
+								Serial.println("\t\tDid NOT received ACK");
+                        		#endif
+								length = 0;	// Try again
+							}
                             break;
                         } else {
                             length = 0;
