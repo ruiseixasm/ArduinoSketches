@@ -23,22 +23,21 @@ https://github.com/ruiseixasm/JsonTalkie
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
 #include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Master_HSPI.hpp"
-#include "src/LocalTalker.hpp"
-#include "src/RemoteTalker.hpp"
+#include "src/RepeaterTalker.hpp"
 
 
-const char local_name[] = "local";
-const char local_desc[] = "I'm a local talker";
-LocalTalker local = LocalTalker(local_name, local_desc);
-const char remote_name[] = "remote";
-const char remote_desc[] = "I'm a remote";
-RemoteTalker remote = RemoteTalker(remote_name, remote_desc);
-JsonTalker* local_talkers[] = { &local };   // It's an array of pointers
-JsonTalker* remote_talkers[] = { &remote };   // It's an array of pointers
+const char t_ethernet_name[] = "t_ethernet";
+const char t_ethernet_desc[] = "I'm an Ethernet talker";
+RepeaterTalker t_ethernet = RepeaterTalker(t_ethernet_name, t_ethernet_desc);
+const char t_spi_name[] = "t_spi";
+const char t_spi_desc[] = "I'm a SPI talker";
+RepeaterTalker t_spi = RepeaterTalker(t_spi_name, t_spi_desc);
+JsonTalker* t_ethernet_talkers[] = { &t_ethernet };   // It's an array of pointers
+JsonTalker* t_spi_talkers[] = { &t_spi };   // It's an array of pointers
 // Singleton requires the & (to get a reference variable)
-auto& ethernet_socket = BroadcastSocket_EthernetENC::instance(local_talkers, sizeof(local_talkers)/sizeof(JsonTalker*));
-auto& spi_socket = BroadcastSocket_SPI_ESP_Arduino_Master_HSPI::instance(remote_talkers, sizeof(remote_talkers)/sizeof(JsonTalker*));
-JsonTalker* talkers[] = { &local, &remote };   // It's an array of pointers
+auto& ethernet_socket = BroadcastSocket_EthernetENC::instance(t_ethernet_talkers, sizeof(t_ethernet_talkers)/sizeof(JsonTalker*));
+auto& spi_socket = BroadcastSocket_SPI_ESP_Arduino_Master_HSPI::instance(t_spi_talkers, sizeof(t_spi_talkers)/sizeof(JsonTalker*));
+JsonTalker* talkers[] = { &t_ethernet, &t_spi };   // It's an array of pointers
 
 
 

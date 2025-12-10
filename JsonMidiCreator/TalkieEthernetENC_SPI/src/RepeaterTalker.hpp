@@ -11,24 +11,22 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef REMOTE_TALKER_HPP
-#define REMOTE_TALKER_HPP
+#ifndef REPEATER_TALKER_HPP
+#define REPEATER_TALKER_HPP
 
 #include "JsonTalker.h"         // Includes the ArduinoJson Library
 
-// #define MULTI_PLAYER_DEBUG
 
-
-class RemoteTalker : public JsonTalker {
+class RepeaterTalker : public JsonTalker {
 public:
 
-    const char* class_name() const override { return "RemoteTalker"; }
+    const char* class_name() const override { return "RepeaterTalker"; }
 
-    RemoteTalker(const char* name, const char* desc)
+    RepeaterTalker(const char* name, const char* desc)
         : JsonTalker(name, desc) {}
 
 
-	// Works as a router to SPI send
+	// Works as a router to LOCAL send
     bool processData(JsonObject& json_message, bool pre_validated = false) override {
         (void)pre_validated;	// Silence unused parameter warning
 
@@ -41,4 +39,4 @@ public:
 };
 
 
-#endif // REMOTE_TALKER_HPP
+#endif // REPEATER_TALKER_HPP
