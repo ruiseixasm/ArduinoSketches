@@ -32,7 +32,11 @@ public:
     bool processData(JsonObject json_message, bool pre_validated = false) override {
         (void)pre_validated;	// Silence unused parameter warning
 
-		return remoteSend(json_message);
+		if (json_message["c"] == 0) {	// From outside
+			return localSend(json_message);
+		} else {	// From local
+			return remoteSend(json_message);
+		}
 	}
 };
 
