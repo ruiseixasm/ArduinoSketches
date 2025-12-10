@@ -72,20 +72,10 @@ protected:
         }
 
 
-    size_t send(size_t length, bool as_reply = false) override {
+	//
+	// No need for send override, the handleSPI_Interrupt handles the sending
+	//
 
-        // Need to call homologous method in super class first
-        length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
-
-        if (length > 0) {
-
-            
-
-
-        }
-
-        return length;
-    }
 
 	void deleteReceived() {
 		_receiving_buffer[0] = '\0';
@@ -209,10 +199,14 @@ public:
         // Need to call homologous method in super class first
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
+		length = _receiving_index;
+		if (length) {
+			BroadcastSocket::triggerTalkers(length);
+			deleteReceived();
+		}
 
-        return length;   // nothing received
+        return length;
     }
-
 
 };
 
