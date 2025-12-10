@@ -109,10 +109,10 @@ protected:
     }
 
 
-    bool remoteSend(JsonObject json_message, bool as_reply = false, int target_index = -1);
+    bool remoteSend(JsonObject json_message, bool as_reply = false, uint8_t target_index = 255);
 
 
-    bool localSend(JsonObject json_message, bool as_reply = false, int target_index = -1) {
+    bool localSend(JsonObject json_message, bool as_reply = false, uint8_t target_index = 255) {
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
 
@@ -120,7 +120,7 @@ protected:
         json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
         // Triggers all local Talkers to processes the json_message
         bool sent_message = false;
-		if (!(target_index < 0 || target_index > _talker_count - 1)) {
+		if (target_index < _talker_count) {
 			if (_json_talkers[target_index] != this) {  // Can't send to myself
 				_json_talkers[target_index]->processData(json_message);
 				sent_message = true;

@@ -299,7 +299,7 @@ protected:
 
 	// CAN'T BE STATIC
     // NOT Pure virtual methods anymores (= 0;)
-    virtual size_t send(size_t length, bool as_reply = false, int target_index = -1) {
+    virtual size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) {
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
 
@@ -360,7 +360,7 @@ public:
     }
 
     
-    bool remoteSend(JsonObject json_message, bool as_reply = false, int target_index = -1) {
+    bool remoteSend(JsonObject json_message, bool as_reply = false, uint8_t target_index = 255) {
 
         JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
         if (message_code != JsonTalker::MessageCode::ECHO && message_code != JsonTalker::MessageCode::ERROR) {

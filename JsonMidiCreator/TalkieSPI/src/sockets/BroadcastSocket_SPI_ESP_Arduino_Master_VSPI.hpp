@@ -339,7 +339,7 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t send(size_t length, bool as_reply = false, int target_index = -1) override {
+    size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) override {
 
         // Need to call homologous method in super class first
         length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
@@ -348,7 +348,7 @@ protected:
             #ifdef ENABLE_DIRECT_ADDRESSING
             if (as_reply) {
                 sendString(_actual_ss_pin);
-			} else if (!(target_index < 0 || target_index > _ss_pins_count - 1)) {
+			} else if (target_index < _ss_pins_count) {
 				sendString(_talkers_ss_pins[target_index]);
             } else {    // Broadcast mode
                 for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
