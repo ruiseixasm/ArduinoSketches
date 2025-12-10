@@ -240,7 +240,7 @@ public:
                 case END:
                     SPDR = ACK;
                     if (_transmission_mode == SEND) {
-                        _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
+                        _sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
 						_sending_index = 0;
                     }
                     _transmission_mode = NONE;
@@ -251,6 +251,10 @@ public:
                 case ERROR:
                 case FULL:
                     SPDR = ACK;
+                    if (_transmission_mode == RECEIVE) {
+                        _receiving_buffer[0] = '\0';	// Makes sure the receiving buffer is marked as empty in case of error
+						_receiving_index = 0;
+                    }
                     _transmission_mode = NONE;
                     break;
                 default:
