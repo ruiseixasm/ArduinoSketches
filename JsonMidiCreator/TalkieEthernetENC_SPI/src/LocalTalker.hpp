@@ -11,30 +11,30 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef SPI_TALKER_HPP
-#define SPI_TALKER_HPP
+#ifndef LOCAL_TALKER_HPP
+#define LOCAL_TALKER_HPP
 
 #include "JsonTalker.h"         // Includes the ArduinoJson Library
 
 // #define MULTI_PLAYER_DEBUG
 
 
-class SPI_Talker : public JsonTalker {
+class LocalTalker : public JsonTalker {
 public:
 
-    const char* class_name() const override { return "SPI_Talker"; }
+    const char* class_name() const override { return "LocalTalker"; }
 
-    SPI_Talker(const char* name, const char* desc)
+    LocalTalker(const char* name, const char* desc)
         : JsonTalker(name, desc) {}
 
 
-	// Works as a router to SPI send
+	// Works as a router to LOCAL send
     bool processData(JsonObject json_message, bool pre_validated = false) override {
         (void)pre_validated;	// Silence unused parameter warning
 
-		return remoteSend(JsonTalker);
+		return localSend(JsonTalker);
 	}
 };
 
 
-#endif // SPI_TALKER_HPP
+#endif // LOCAL_TALKER_HPP
