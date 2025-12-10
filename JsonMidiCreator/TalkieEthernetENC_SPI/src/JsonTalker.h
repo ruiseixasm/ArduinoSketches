@@ -122,14 +122,44 @@ protected:
         bool sent_message = false;
 		if (target_index < _talker_count) {
 			if (_json_talkers[target_index] != this) {  // Can't send to myself
-				_json_talkers[target_index]->processData(json_message);
+
+				// CREATE COPY for each talker
+				// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+				#if ARDUINOJSON_VERSION_MAJOR >= 7
+				JsonDocument doc_copy;
+				#else
+				StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
+				#endif
+				JsonObject json_copy = doc_copy.to<JsonObject>();
+				
+				// Copy all data from original
+				for (JsonPair kv : json_message) {
+					json_copy[kv.key()] = kv.value();
+				}
+            
+				_json_talkers[target_index]->processData(json_copy);
 				sent_message = true;
 			}
 		} else {
 			bool pre_validated = false;
 			for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
 				if (_json_talkers[talker_i] != this) {  // Can't send to myself
-					pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+
+					// CREATE COPY for each talker
+					// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+					#if ARDUINOJSON_VERSION_MAJOR >= 7
+					JsonDocument doc_copy;
+					#else
+					StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
+					#endif
+					JsonObject json_copy = doc_copy.to<JsonObject>();
+					
+					// Copy all data from original
+					for (JsonPair kv : json_message) {
+						json_copy[kv.key()] = kv.value();
+					}
+				
+					pre_validated = _json_talkers[talker_i]->processData(json_copy, pre_validated);
 					sent_message = true;
 					if (!pre_validated) break;
 				}
