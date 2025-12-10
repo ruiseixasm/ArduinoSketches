@@ -36,7 +36,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
-#define send_delay_us 10
+#define send_delay_us 8
 #define receive_delay_us 10 // Receive needs more time to be processed
 
 
@@ -178,7 +178,7 @@ protected:
 
         if (length > 0)
             length--;   // removes the '\0' from the length as final value
-        return 0;   // It's not full-duplex, meaning, nothing is received in exchange and thus, 0 is returned
+        return length;
     }
 
 
@@ -335,25 +335,27 @@ protected:
         return acknowledge;
     }
 
-
+    
+    // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     size_t send(size_t length, bool as_reply = false) override {
 
         // Need to call homologous method in super class first
         length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
 
         if (length > 0) {
+            #ifdef ENABLE_DIRECT_ADDRESSING
             if (as_reply) {
                 sendString(_actual_ss_pin);
-            } else {    // Broadcasts
+            } else {    // Broadcast mode
                 for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-                    length = sendString(_talkers_ss_pins[ss_pin_i]);
-                    // This SPI communication isn't full-duplex so there is no receiving here (it will never happen)!
-                    if (length > 0) {   // Has to process it, otherwise it's lost (full duplex)
-                        _actual_ss_pin = _talkers_ss_pins[ss_pin_i];
-                        BroadcastSocket::triggerTalkers(length);
-                    }
+                    sendString(_talkers_ss_pins[ss_pin_i]); // It's always Half-Duplex
                 }
             }
+            #else
+            for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+                sendString(_talkers_ss_pins[ss_pin_i]); // It's always Half-Duplex
+            }
+            #endif
         }
         // Makes sure the _sending_buffer is reset with '\0'
         _sending_buffer[0] = '\0';
@@ -369,6 +371,7 @@ public:
     }
 
 
+    // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     size_t receive() override {
 
         // Need to call homologous method in super class first
