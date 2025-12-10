@@ -60,7 +60,7 @@ private:
 		if (command[0] != '\0') {	// Don't send empty strings
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
-			
+
 			for (size_t s = 0; length == 0 && s < 3; s++) {
 		
 				digitalWrite(_ss_pin, LOW);
@@ -71,7 +71,7 @@ private:
 
 				if (c != VOID) {
 
-					delayMicroseconds(10);	// Makes sure ACK is set by the slave (10)
+					delayMicroseconds(8);	// Makes sure ACK is set by the slave (8)
 					c = SPI.transfer(command[0]);	// Doesn't check first char
 
 					if (c == ACK) {
@@ -88,7 +88,8 @@ private:
 								break;
 							}
 							if (command[i] == '\0') {
-								delayMicroseconds(send_delay_us);
+								// // There is always some interrupts stacking, avoiding a tailing one makes no difference
+								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
 								c = SPI.transfer(END);
 								if (c == '\0') {
 									#ifdef MASTER_CLASS_DEBUG
@@ -103,7 +104,6 @@ private:
 									length = 0;
 									break;
 								}
-							} else {
 							}
 						}
 					} else {
