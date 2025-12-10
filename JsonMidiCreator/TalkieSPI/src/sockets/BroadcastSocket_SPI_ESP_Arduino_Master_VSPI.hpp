@@ -348,14 +348,16 @@ protected:
             #ifdef ENABLE_DIRECT_ADDRESSING
             if (as_reply) {
                 sendString(_actual_ss_pin);
+			} else if (!(target_index < 0 || target_index > _ss_pins_count - 1)) {
+				sendString(_talkers_ss_pins[target_index]);
             } else {    // Broadcast mode
                 for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-                    sendString(_talkers_ss_pins[ss_pin_i]); // It's always Half-Duplex
+                    sendString(_talkers_ss_pins[ss_pin_i]);
                 }
             }
             #else
             for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-                sendString(_talkers_ss_pins[ss_pin_i]); // It's always Half-Duplex
+                sendString(_talkers_ss_pins[ss_pin_i]);
             }
             #endif
         }

@@ -113,20 +113,20 @@ protected:
 
 
     bool localSend(JsonObject json_message, bool as_reply = false, int target_index = -1) {
-        (void)as_reply; // Silence unused parameter warning
+        (void)as_reply; 	// Silence unused parameter warning
+        (void)target_index; // Silence unused parameter warning
 
         json_message["f"] = _name;
         json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
         // Triggers all local Talkers to processes the json_message
-        bool pre_validated = false;
         bool sent_message = false;
 		if (!(target_index < 0 || target_index > _talker_count - 1)) {
 			if (_json_talkers[target_index] != this) {  // Can't send to myself
-				pre_validated = _json_talkers[target_index]->processData(json_message, pre_validated);
+				_json_talkers[target_index]->processData(json_message);
 				sent_message = true;
-				if (!pre_validated) break;
 			}
 		} else {
+			bool pre_validated = false;
 			for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
 				if (_json_talkers[talker_i] != this) {  // Can't send to myself
 					pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
@@ -367,7 +367,7 @@ public:
     bool muted() { return _muted; }
 
     
-    bool processData(JsonObject json_message, bool pre_validated) {
+    bool processData(JsonObject json_message, bool pre_validated = false) {
 
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("Processing..."));

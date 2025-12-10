@@ -299,8 +299,9 @@ protected:
 
 	// CAN'T BE STATIC
     // NOT Pure virtual methods anymores (= 0;)
-    virtual size_t send(size_t length, bool as_reply = false) {
-        (void)as_reply; // Silence unused parameter warning
+    virtual size_t send(size_t length, bool as_reply = false, int target_index = -1) {
+        (void)as_reply; 	// Silence unused parameter warning
+        (void)target_index; // Silence unused parameter warning
 
         if (length < 3*4 + 2) {
 
@@ -386,7 +387,7 @@ public:
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-        return send(length, as_reply);	// send is internally triggered, so, this method can hardly be static
+        return send(length, as_reply, target_index);	// send is internally triggered, so, this method can hardly be static
     }
     
 
