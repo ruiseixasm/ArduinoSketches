@@ -53,6 +53,7 @@ private:
     volatile static uint8_t _validation_index;
     volatile static uint8_t _send_iteration_i;
     volatile static MessageCode _transmission_mode;
+	volatile static bool _received_data;
 
 protected:
     // Needed for the compiler, the base class is the one being called though
@@ -79,7 +80,7 @@ protected:
 
 	void deleteReceived() {
 		_receiving_buffer[0] = '\0';
-		_receiving_index = 0;
+		_received_data = false;
 	}
 	
     
@@ -166,8 +167,10 @@ public:
                     break;
                 case END:
                     SPDR = ACK;
-                    if (_transmission_mode == SEND) {
-                        _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
+					if (_transmission_mode == RECEIVE) {
+						_received_data = true;
+                    } else if (_transmission_mode == SEND) {
+                        _sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
 						_sending_index = 0;
                     }
                     _transmission_mode = NONE;
@@ -203,9 +206,8 @@ public:
         // Need to call homologous method in super class first
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
-		length = _receiving_index;
-		if (length) {
-			BroadcastSocket::triggerTalkers(length);
+		if (_received_data) {
+			length = BroadcastSocket::triggerTalkers(_receiving_index);
 			deleteReceived();
 		}
 
@@ -221,6 +223,7 @@ volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_validation_index = 0;
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_send_iteration_i = 0;
 volatile BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode BroadcastSocket_SPI_ESP_Arduino_Slave::_transmission_mode 
 																	= BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode::NONE;
+volatile bool BroadcastSocket_SPI_ESP_Arduino_Slave::_received_data = false;
 
 // Define ISR at GLOBAL SCOPE (outside the class)
 ISR(SPI_STC_vect) {
