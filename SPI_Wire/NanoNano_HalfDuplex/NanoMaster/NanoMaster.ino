@@ -116,7 +116,7 @@ bool sendString(const char* command) {
 }
 
 
-#define receive_delay_us 10 // Receive needs more time to be processed
+#define receive_delay_us 10
 
 bool receiveString() {
     uint8_t c; // Avoid using 'char' while using values above 127

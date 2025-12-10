@@ -35,8 +35,8 @@ https://github.com/ruiseixasm/JsonTalkie
 // ==========================================================
 
 
-#define send_delay_us 9
-#define receive_delay_us 10 // Receive needs more time to be processed
+#define send_delay_us 10
+#define receive_delay_us 10
 
 
 class BroadcastSocket_SPI_ESP_Arduino_Master_HSPI : public BroadcastSocket {
