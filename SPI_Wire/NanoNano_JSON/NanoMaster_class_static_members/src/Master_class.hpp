@@ -228,13 +228,14 @@ private:
 					#ifdef MASTER_CLASS_DEBUG
 					Serial.println("\t\tDevice has nothing to send");
 					#endif
-					length = 1; // Nothing to be sent
+					_receiving_buffer[0] = '\0';
+					length = 1; // Nothing received
 					break;
 				} else {
 					#ifdef MASTER_CLASS_DEBUG
 					Serial.println("\t\tDevice ACK NOT received");
 					#endif
-					length = 1; // Nothing to be sent
+					length = 1; // Nothing received
 					break;
 				}
 
