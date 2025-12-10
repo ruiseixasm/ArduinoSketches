@@ -50,6 +50,7 @@ private:
 	
     volatile static uint8_t _receiving_index;
     volatile static uint8_t _sending_index;
+    volatile static uint8_t _validation_index;
     volatile static uint8_t _send_iteration_i;
     volatile static MessageCode _transmission_mode;
     volatile static bool _process_message;
@@ -87,6 +88,11 @@ protected:
         return length;
     }
 
+	void deleteReceived() {
+		_receiving_buffer[0] = '\0';
+		_receiving_index = 0;
+	}
+	
     
 public:
 
@@ -124,7 +130,7 @@ public:
                 case SEND:
 					if (_sending_index < BROADCAST_SOCKET_BUFFER_SIZE) {
 						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
-						if (_receiving_index > _sending_index) {	// Less missed sends this way
+						if (_validation_index > _sending_index) {	// Less missed sends this way
 							SPDR = END;	// All chars have been checked
 							break;
 						}
@@ -135,12 +141,12 @@ public:
 					}
 					// Starts checking 2 indexes after
 					if (_send_iteration_i > 1) {    // Two positions of delay
-						if (c != _sending_buffer[_receiving_index]) {   // Also checks '\0' char
+						if (c != _sending_buffer[_validation_index]) {   // Also checks '\0' char
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
 							break;
 						}
-						_receiving_index++; // Starts checking after two sent
+						_validation_index++; // Starts checking after two sent
 					}
 					// Only increments if NOT at the end of the string being sent
 					if (_sending_buffer[_sending_index] != '\0') {
@@ -166,15 +172,14 @@ public:
                     SPDR = ACK;
                     _transmission_mode = SEND;
                     _sending_index = 0;
-                    _receiving_index = 0;
+                    _validation_index = 0;
                     _send_iteration_i = 0;
                     break;
                 case END:
                     SPDR = ACK;
-                    if (_transmission_mode == RECEIVE) {
-                        _process_message = true;
-                    } else if (_transmission_mode == SEND) {
+                    if (_transmission_mode == SEND) {
                         _sending_buffer[0] = '\0';  // Makes sure the sending buffer is marked as empty (NONE next time)
+						_sending_index = 0;
                     }
                     _transmission_mode = NONE;
                     break;
@@ -215,10 +220,10 @@ public:
 
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_receiving_index = 0;
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_sending_index = 0;
+volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_validation_index = 0;
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_send_iteration_i = 0;
 volatile BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode BroadcastSocket_SPI_ESP_Arduino_Slave::_transmission_mode 
 																	= BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode::NONE;
-volatile bool BroadcastSocket_SPI_ESP_Arduino_Slave::_process_message = false;
 
 // Define ISR at GLOBAL SCOPE (outside the class)
 ISR(SPI_STC_vect) {

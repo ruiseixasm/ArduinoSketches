@@ -62,14 +62,16 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 
-#define BROADCAST_SOCKET 1
+#define BROADCAST_SOCKET 2
 //      1 - BroadcastSocket_SPI_ESP_Arduino_Master_HSPI
 //      2 - BroadcastSocket_SPI_ESP_Arduino_Slave
 
 
 #if BROADCAST_SOCKET == 1
+// COMPILE WITH ESP32 BOARD
 #include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Master_HSPI.hpp"
 #elif BROADCAST_SOCKET == 2
+// COMPILE WITH ARDUINO BOARD
 #include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Slave.hpp"
 #endif
 
