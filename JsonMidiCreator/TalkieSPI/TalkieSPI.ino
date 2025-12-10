@@ -62,12 +62,16 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 
-#define BROADCAST_SOCKET 1
+#define BROADCAST_SOCKET 0
+//      0 - BroadcastSocket_SPI_ESP_Arduino_Master_VSPI
 //      1 - BroadcastSocket_SPI_ESP_Arduino_Master_HSPI
 //      2 - BroadcastSocket_SPI_ESP_Arduino_Slave
 
 
-#if BROADCAST_SOCKET == 1
+#if BROADCAST_SOCKET == 0
+// COMPILE WITH ESP32 BOARD
+#include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Master_VSPI.hpp"
+#elif BROADCAST_SOCKET == 1
 // COMPILE WITH ESP32 BOARD
 #include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Master_HSPI.hpp"
 #elif BROADCAST_SOCKET == 2
@@ -88,7 +92,9 @@ MultiPlayer player = MultiPlayer(player_name, player_desc);
 JsonTalker* talkers[] = { &talker, &player.mute() };   // It's an array of pointers
 // Singleton requires the & (to get a reference variable)
 
-#if BROADCAST_SOCKET == 1
+#if BROADCAST_SOCKET == 0
+auto& broadcast_socket = BroadcastSocket_SPI_ESP_Arduino_Master_VSPI::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+#elif BROADCAST_SOCKET == 1
 auto& broadcast_socket = BroadcastSocket_SPI_ESP_Arduino_Master_HSPI::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
 #elif BROADCAST_SOCKET == 2
 auto& broadcast_socket = BroadcastSocket_SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
