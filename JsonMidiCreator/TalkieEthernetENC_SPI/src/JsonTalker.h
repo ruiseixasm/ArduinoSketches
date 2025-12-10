@@ -339,7 +339,7 @@ public:
     bool muted() { return _muted; }
 
     
-    bool processData(JsonObject json_message, bool pre_validated) {
+    virtual bool processData(JsonObject json_message, bool pre_validated) {
 
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("Processing..."));
