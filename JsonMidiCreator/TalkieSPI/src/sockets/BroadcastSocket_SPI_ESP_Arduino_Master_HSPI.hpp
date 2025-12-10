@@ -36,7 +36,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
-#define send_delay_us 10
+#define send_delay_us 5
 #define receive_delay_us 10
 
 
@@ -92,92 +92,103 @@ protected:
 
     size_t sendString(int ss_pin = SPI_SS) {
         size_t length = 0;	// No interrupts, so, not volatile
-        uint8_t c; // Avoid using 'char' while using values above 127
+		
+		if (_sending_buffer[0] != '\0') {	// Don't send empty strings
+			
+			uint8_t c; // Avoid using 'char' while using values above 127
 
-        for (size_t s = 0; length == 0 && s < 3; s++) {
-    
-            digitalWrite(ss_pin, LOW);
-            delayMicroseconds(5);
+			for (size_t s = 0; length == 0 && s < 3; s++) {
+		
+				digitalWrite(ss_pin, LOW);
+				delayMicroseconds(5);
 
-            // Asks the Slave to start receiving
-            c = SPI.transfer(RECEIVE);
-            
-            for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
-                delayMicroseconds(send_delay_us);
-                if (i > 0) {
-                    if (_sending_buffer[i - 1] == '\0') {
-                        c = SPI.transfer(END);
-                        if (c == '\0') {
-							#ifdef BROADCAST_SPI_DEBUG
-							Serial.println("\t\tSent completed");
-							#endif
-							length = i;
-                            break;
-                        } else {
-                            length = 0;
-                            break;
-                        }
-                    } else {
-                        c = SPI.transfer(_sending_buffer[i]);	// Receives the _sending_buffer[i - 1]
-                    }
-                    if (c != _sending_buffer[i - 1]) {    // Includes NACK situation
-                        #ifdef BROADCAST_SPI_DEBUG
-                        if (c == NACK) Serial.println("\t\tReceived NACK");
-                        if (c == NONE) Serial.println("\t\tReceived NONE");
-                        #endif
-                        length = 0;
-                        break;
-                    }
-                } else if (c == VOID) {
-                    #ifdef BROADCAST_SPI_DEBUG
-                    Serial.println("\t\tReceived VOID");
-                    #endif
-                    length = 1; // Avoids another try
-                    break;
-                } else if (_sending_buffer[0] != '\0') {
-                    c = SPI.transfer(_sending_buffer[0]);	// Doesn't check first char
-                    if (c != ACK) { // Not ACK means it isn't there
-                        #ifdef BROADCAST_SPI_DEBUG
-                        Serial.println("\t\tDevice ACK NOT received");
-                        #endif
-                        length = 1; // Nothing to be sent
-                        break;
-                    }
-                } else {
-                    #ifdef BROADCAST_SPI_DEBUG
-                    Serial.println("\t\tNothing to be sent");
-                    #endif
-                    length = 1; // Nothing to be sent
-                    break;
-                }
-            }
+				// Asks the Slave to start receiving
+				c = SPI.transfer(RECEIVE);
 
-            if (length == 0) {
-                // // There is always some interrupts stacking, avoiding a tailing one makes no difference
-                // delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
-                SPI.transfer(ERROR);
-                _receiving_buffer[0] = '\0'; // Implicit char
-            }
+				if (c != VOID) {
 
-            delayMicroseconds(5);
-            digitalWrite(ss_pin, HIGH);
+					delayMicroseconds(8);	// Makes sure ACK is set by the slave (8)
+					c = SPI.transfer(_sending_buffer[0]);	// Doesn't check first char
 
-            if (length > 0) {
-                #ifdef BROADCAST_SPI_DEBUG
-                if (length > 1) {
-                    Serial.print("Command successfully sent: ");
-                    Serial.println(_sending_buffer);
-                } else {
-                    Serial.println("\tNothing sent");
-                }
-                #endif
-            } else {
-                #ifdef BROADCAST_SPI_DEBUG
-                Serial.print("\t\tCommand NOT successfully sent on try: ");
-                Serial.println(s + 1);
-                #endif
-            }
-        }
+					if (c == ACK) {
+					
+						for (uint8_t i = 1; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
+							delayMicroseconds(send_delay_us);
+							c = SPI.transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
+							if (c != _sending_buffer[i - 1]) {    // Includes NACK situation
+								#ifdef BROADCAST_SPI_DEBUG
+								Serial.print("\t\tChar miss match at: ");
+								Serial.println("i");
+								#endif
+								length = 0;
+								break;
+							}
+							if (_sending_buffer[i] == '\0') {
+								// // There is always some interrupts stacking, avoiding a tailing one makes no difference
+								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+								c = SPI.transfer(END);
+								if (c == '\0') {
+									#ifdef BROADCAST_SPI_DEBUG
+									Serial.println("\t\tSent completed");
+									#endif
+									length = i;
+									break;
+								} else {
+									#ifdef BROADCAST_SPI_DEBUG
+									Serial.println("\t\tLast char '\\0' NOT received");
+									#endif
+									length = 0;
+									break;
+								}
+							}
+						}
+					} else {
+						#ifdef BROADCAST_SPI_DEBUG
+						Serial.println("\t\tDevice ACK NOT received");
+						#endif
+						length = 1; // Nothing to be sent
+					}
+
+				} else {
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println("\t\tReceived VOID");
+					#endif
+					length = 1; // Avoids another try
+				}
+
+				if (length == 0) {
+					// // There is always some interrupts stacking, avoiding a tailing one makes no difference
+					// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+					SPI.transfer(ERROR);
+					// _receiving_buffer[0] = '\0'; // Implicit char
+				}
+
+				delayMicroseconds(5);
+				digitalWrite(ss_pin, HIGH);
+
+				if (length > 0) {
+					#ifdef BROADCAST_SPI_DEBUG
+					if (length > 1) {
+						Serial.print("Command successfully sent: ");
+						Serial.println(_sending_buffer);
+					} else {
+						Serial.println("\tNothing sent");
+					}
+					#endif
+				} else {
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.print("\t\tCommand NOT successfully sent on try: ");
+					Serial.println(s + 1);
+					#endif
+				}
+			}
+
+        } else {
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.println("\t\tNothing to be sent");
+			#endif
+			length = 1; // Nothing to be sent
+		}
 
         if (length > 0)
             length--;   // removes the '\0' from the length as final value
@@ -188,7 +199,6 @@ protected:
     size_t receiveString(int ss_pin = SPI_SS) {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
-        _receiving_buffer[0] = '\0'; // Avoids garbage printing
 
         for (size_t r = 0; length == 0 && r < 3; r++) {
     
@@ -196,70 +206,79 @@ protected:
             delayMicroseconds(5);
 
             // Asks the Slave to start receiving
-            SPI.transfer(SEND);
-            
-            delayMicroseconds(receive_delay_us);
-            c = SPI.transfer('\0');   // Dummy char to get the ACK
+            c = SPI.transfer(SEND);
+			
+			if (c != VOID) {
 
-            if (c == ACK) { // Makes sure there is an Acknowledge first
-                
-                // Starts to receive all chars here
-                for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
-                    delayMicroseconds(receive_delay_us);
-                    if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
-                        c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
-                        if (c < 128) {   // Only accepts ASCII chars
-                            // Avoids increment beyond the real string size
-                            if (_receiving_buffer[length] != '\0') {    // length == i - 1
-                                _receiving_buffer[++length] = c;        // length == i (also sets '\0')
-                            }
-                        } else if (c == END) {
-                            // // There is always some interrupts stacking, avoiding a tailing one makes no difference
-                            // delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
-                            SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
-                            #ifdef BROADCAST_SPI_DEBUG
-                            Serial.println("\t\t\tSent END");
-                            #endif
-                            length++;   // Adds up the '\0' uncounted char
-                            break;
-                        } else {    // Includes NACK (implicit)
-                            #ifdef BROADCAST_SPI_DEBUG
-                            Serial.print("\t\t\tNo END or Char, instead, received: ");
-                            Serial.println(c, HEX);
-                            #endif
-                            length = 0;
-                            break;
-                        }
-                    } else {
-                        c = SPI.transfer('\0');   // Dummy char to get the ACK
-                        length = 0;
-                        if (c < 128) {	// Makes sure it's an ASCII char
-                            _receiving_buffer[0] = c;
-                        } else {
-                            #ifdef BROADCAST_SPI_DEBUG
-                            Serial.println("\t\tNot a valid ASCII char (< 128)");
-                            #endif
-                            break;
-                        }
-                    }
-                }
-            } else {
-                #ifdef BROADCAST_SPI_DEBUG
-                Serial.println("\t\tDevice ACK NOT received");
-                #endif
-                length = 1; // Nothing to be sent
-                break;
-            }
+				delayMicroseconds(receive_delay_us);
+				c = SPI.transfer('\0');   // Dummy char to get the ACK
 
-            if (length == 0) {
-                // // There is always some interrupts stacking, avoiding a tailing one makes no difference
-                // delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
-                SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
-                _receiving_buffer[0] = '\0'; // Implicit char
-                #ifdef BROADCAST_SPI_DEBUG
-                Serial.println("\t\t\tSent ERROR");
-                #endif
-            }
+				if (c == ACK) { // Makes sure there is an Acknowledge first
+					
+					// Starts to receive all chars here
+					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
+						delayMicroseconds(receive_delay_us);
+						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
+							c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
+							if (c < 128) {   // Only accepts ASCII chars
+								// Avoids increment beyond the real string size
+								if (_receiving_buffer[length] != '\0') {    // length == i - 1
+									_receiving_buffer[++length] = c;        // length == i (also sets '\0')
+								}
+							} else if (c == END) {
+								// // There is always some interrupts stacking, avoiding a tailing one makes no difference
+								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+								SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+								#ifdef BROADCAST_SPI_DEBUG
+								Serial.println("\t\t\tSent END");
+								#endif
+								length++;   // Adds up the '\0' uncounted char
+								break;
+							} else {    // Includes NACK (implicit)
+								#ifdef BROADCAST_SPI_DEBUG
+								Serial.print("\t\t\tNo END or Char, instead, received: ");
+								Serial.println(c, HEX);
+								#endif
+								length = 0;
+								break;
+							}
+						} else {
+							c = SPI.transfer('\0');   // Dummy char to get the ACK
+							length = 0;
+							if (c < 128) {	// Makes sure it's an ASCII char
+								_receiving_buffer[0] = c;
+							} else {
+								#ifdef BROADCAST_SPI_DEBUG
+								Serial.println("\t\tNot a valid ASCII char (< 128)");
+								#endif
+								break;
+							}
+						}
+					}
+				} else {
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println("\t\tDevice ACK NOT received");
+					#endif
+					length = 1; // Nothing to be sent
+					break;
+				}
+
+				if (length == 0) {
+					// // There is always some interrupts stacking, avoiding a tailing one makes no difference
+					// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+					SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
+					_receiving_buffer[0] = '\0'; // Implicit char
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println("\t\t\tSent ERROR");
+					#endif
+				}
+				
+			} else {
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.println("\t\tReceived VOID");
+				#endif
+				length = 1; // Avoids another try
+			}
 
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
