@@ -120,13 +120,21 @@ protected:
         // Triggers all local Talkers to processes the json_message
         bool pre_validated = false;
         bool sent_message = false;
-        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-            if (_json_talkers[talker_i] != this) {  // Can't send to myself
-                pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
-                sent_message = true;
-                if (!pre_validated) break;
-            }
-        }
+		if (!(target_index < 0 || target_index > _talker_count - 1)) {
+			if (_json_talkers[target_index] != this) {  // Can't send to myself
+				pre_validated = _json_talkers[target_index]->processData(json_message, pre_validated);
+				sent_message = true;
+				if (!pre_validated) break;
+			}
+		} else {
+			for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+				if (_json_talkers[talker_i] != this) {  // Can't send to myself
+					pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+					sent_message = true;
+					if (!pre_validated) break;
+				}
+			}
+		}
         return sent_message;
     }
 
