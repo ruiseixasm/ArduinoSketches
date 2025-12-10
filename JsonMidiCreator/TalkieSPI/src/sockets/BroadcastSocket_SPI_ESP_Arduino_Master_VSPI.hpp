@@ -96,7 +96,7 @@ protected:
 				if (c != VOID) {
 
 					delayMicroseconds(10);	// Makes sure ACK is set by the slave (10us) (critical path)
-					c = SPI.transfer(_sending_buffer[0]);	// Doesn't check first char
+					c = SPI.transfer(_sending_buffer[0]);
 
 					if (c == ACK) {
 					
