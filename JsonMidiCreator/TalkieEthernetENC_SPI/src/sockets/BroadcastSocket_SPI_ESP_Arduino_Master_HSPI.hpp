@@ -51,7 +51,7 @@ public:
     const char* class_name() const override { return "BroadcastSocket_SPI_ESP_Arduino_Master_HSPI"; }
 
 
-    virtual void begin() {
+    void begin() override {
 		
 		// ================== INITIALIZE HSPI ==================
 		// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13
