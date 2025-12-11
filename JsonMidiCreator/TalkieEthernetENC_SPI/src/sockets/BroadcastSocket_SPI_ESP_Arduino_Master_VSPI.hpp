@@ -78,7 +78,7 @@ protected:
     
     // Specific methods associated to Arduino SPI as Master
 
-    size_t sendString(int ss_pin = VSPI_SS) {
+    size_t sendString(int ss_pin) {
         size_t length = 0;	// No interrupts, so, not volatile
 		
 		#ifdef BROADCAST_SPI_DEBUG
@@ -187,7 +187,7 @@ protected:
     }
 
 
-    size_t receiveString(int ss_pin = VSPI_SS) {
+    size_t receiveString(int ss_pin) {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
@@ -307,7 +307,7 @@ protected:
     }
 
 
-    bool acknowledgeReady(int ss_pin = VSPI_SS) {
+    bool acknowledgeReady(int ss_pin) {
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 

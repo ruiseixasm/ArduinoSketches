@@ -22,7 +22,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
-#include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Master_HSPI.hpp"
+#include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Master.hpp"
 #include "src/RepeaterTalker.hpp"
 
 
@@ -38,7 +38,7 @@ JsonTalker* t_spi_talkers[] = { &t_spi };   // It's an array of pointers
 auto& ethernet_socket = BroadcastSocket_EthernetENC::instance(t_ethernet_talkers, sizeof(t_ethernet_talkers)/sizeof(JsonTalker*));
 // int talkers_spi_pins[] = {4, 16};
 int talkers_spi_pins[] = {4};
-auto& spi_socket = BroadcastSocket_SPI_ESP_Arduino_Master_HSPI::instance(t_spi_talkers, talkers_spi_pins, sizeof(t_spi_talkers)/sizeof(JsonTalker*));
+auto& spi_socket = BroadcastSocket_SPI_ESP_Arduino_Master::instance(t_spi_talkers, talkers_spi_pins, sizeof(t_spi_talkers)/sizeof(JsonTalker*));
 JsonTalker* talkers[] = { &t_ethernet, &t_spi };   // It's an array of pointers
 
 
@@ -96,12 +96,13 @@ void setup() {
     
 	// STEP 1: Initiate the SPI Socket
     Serial.println("Step 1: Initializing SPI Socket...");
-    spi_socket.begin();
+	SPIClass* hspi = new SPIClass(HSPI);  // heap variable!
+    spi_socket.begin(hspi);
 
     // STEP 2: Initialize Ethernet with CS pin
     const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
     Serial.println("Step 2: Initializing EthernetENC...");
-    Ethernet.init(CS_PIN);
+    Ethernet.init(CS_PIN);	// Uses global SPI (VSPI)
     Serial.println("Ethernet initialized successfully");
     delay(500);
 

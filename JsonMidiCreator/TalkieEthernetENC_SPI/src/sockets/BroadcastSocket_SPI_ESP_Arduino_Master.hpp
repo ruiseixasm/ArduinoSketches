@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define receive_delay_us 10
 
 
-class BroadcastSocket_SPI_ESP_Arduino_Master_VSPI : public BroadcastSocket {
+class BroadcastSocket_SPI_ESP_Arduino_Master : public BroadcastSocket {
 public:
 
     enum MessageCode : uint8_t {
@@ -53,11 +53,11 @@ protected:
 	SPIClass* _spi_instance;  // Pointer to SPI instance
 	bool _initiated = false;
     int* _talkers_ss_pins;
-    uint8_t _actual_ss_pin = VSPI_SS;
+    uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_SPI_ESP_Arduino_Master_VSPI(JsonTalker** json_talkers, int* talkers_ss_pins, uint8_t talker_count)
+    BroadcastSocket_SPI_ESP_Arduino_Master(JsonTalker** json_talkers, int* talkers_ss_pins, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
             
         	_talkers_ss_pins = talkers_ss_pins;
@@ -69,7 +69,7 @@ protected:
     
     // Specific methods associated to Arduino SPI as Master
 
-    size_t sendString(int ss_pin = VSPI_SS) {
+    size_t sendString(int ss_pin) {
         size_t length = 0;	// No interrupts, so, not volatile
 		
 		#ifdef BROADCAST_SPI_DEBUG
@@ -178,7 +178,7 @@ protected:
     }
 
 
-    size_t receiveString(int ss_pin = VSPI_SS) {
+    size_t receiveString(int ss_pin) {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
@@ -298,7 +298,7 @@ protected:
     }
 
 
-    bool acknowledgeReady(int ss_pin = VSPI_SS) {
+    bool acknowledgeReady(int ss_pin) {
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 
@@ -412,7 +412,7 @@ protected:
 				}
 			}
 		}
-		
+
 		#ifdef BROADCAST_SPI_DEBUG
 		if (_initiated) {
 			Serial.println("Socket initiated!");
@@ -426,13 +426,13 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_SPI_ESP_Arduino_Master_VSPI& instance(JsonTalker** json_talkers, int* talkers_ss_pins, uint8_t talker_count) {
-        static BroadcastSocket_SPI_ESP_Arduino_Master_VSPI instance(json_talkers, talkers_ss_pins, talker_count);
+    static BroadcastSocket_SPI_ESP_Arduino_Master& instance(JsonTalker** json_talkers, int* talkers_ss_pins, uint8_t talker_count) {
+        static BroadcastSocket_SPI_ESP_Arduino_Master instance(json_talkers, talkers_ss_pins, talker_count);
 
         return instance;
     }
 
-    const char* class_name() const override { return "BroadcastSocket_SPI_ESP_Arduino_Master_VSPI"; }
+    const char* class_name() const override { return "BroadcastSocket_SPI_ESP_Arduino_Master"; }
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
