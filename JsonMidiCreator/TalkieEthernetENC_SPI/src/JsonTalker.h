@@ -117,7 +117,6 @@ protected:
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
 
-        json_message["f"] = _name;
         json_message["c"] = LOCAL_C;	// 'c' = 1 means LOCAL_C communication
         // Triggers all local Talkers to processes the json_message
         bool sent_message = false;
@@ -171,12 +170,13 @@ protected:
 
 
     bool replyMessage(JsonObject& json_message, bool as_reply = true) {
-        if (json_message["c"].is<uint16_t>()) {
-            uint16_t c = json_message["c"].as<uint16_t>();
-            if (c == LOCAL_C) {	// c == 1 means a local message while 0 means a remote one
-                return localSend(json_message, as_reply);
-            }
-        }
+		// Does a targets swap first
+        json_message["t"] = json_message["f"];
+		json_message["f"] = _name;
+		uint16_t c = json_message["c"].as<uint16_t>();
+		if (c == LOCAL_C) {	// c == 1 means a local message while 0 means a remote one
+			return localSend(json_message, as_reply);
+		}
         return remoteSend(json_message, as_reply);
     }
 
@@ -425,10 +425,9 @@ public:
                 Serial.println(4);
                 #endif
                 json_message["m"] = 7;   // error
-                json_message["t"] = json_message["f"];
                 json_message["e"] = 4;
-                
-                replyMessage(json_message, true);
+
+                replyMessage(json_message, true);	// Includes reply swap
                 return false;
             }
         }
@@ -466,14 +465,13 @@ public:
 
         MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
         json_message["w"] = json_message["m"].as<int>();
-        json_message["t"] = json_message["f"];
         json_message["m"] = MessageCode::ECHO;
 
         switch (message_code)
         {
         case MessageCode::TALK:
             json_message["d"] = _desc;
-            replyMessage(json_message, true);
+            replyMessage(json_message, true);	// Includes reply swap
             break;
         
         case MessageCode::LIST:
