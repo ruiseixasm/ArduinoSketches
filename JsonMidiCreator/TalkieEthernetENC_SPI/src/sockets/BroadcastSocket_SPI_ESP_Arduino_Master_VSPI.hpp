@@ -455,6 +455,14 @@ public:
 		// SPI.setFrequency(1000000); // 1MHz if needed (optional)
 		// ====================================================
         
+		// ================== CONFIGURE SS PINS ==================
+		// CRITICAL: Configure all SS pins as outputs and set HIGH
+		for (uint8_t i = 0; i < _talker_count; i++) {
+			pinMode(_talkers_ss_pins[i], OUTPUT);
+			digitalWrite(_talkers_ss_pins[i], HIGH);
+			delayMicroseconds(10); // Small delay between pins
+		}
+
 		#ifdef BROADCAST_SPI_DEBUG
 		Serial.println("Pins set for VSPI:");
 		Serial.print("\tVSPI_SCK: ");

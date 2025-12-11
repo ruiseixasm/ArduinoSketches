@@ -98,8 +98,7 @@ void setup() {
 
     // STEP 1: Initialize SPI only
     
-    Serial.println("Step 1: Starting SPI...");
-    Serial.println("SPI started successfully");
+    spi_socket.begin();
     delay(1000);
 
     // STEP 2: Initialize Ethernet with CS pin
@@ -147,7 +146,6 @@ void setup() {
     Serial.println("Setting up broadcast sockets...");
     ethernet_socket.set_port(PORT);
     ethernet_socket.set_udp(&udp);
-    spi_socket.begin();
 
     Serial.println("Talker ready with EthernetENC!");
     Serial.println("Connecting Talkers with each other");
