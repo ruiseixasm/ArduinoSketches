@@ -81,6 +81,11 @@ protected:
     size_t sendString(int ss_pin = SPI_SS) {
         size_t length = 0;	// No interrupts, so, not volatile
 		
+		#ifdef BROADCAST_SPI_DEBUG
+		Serial.print("\tSending on pin: ");
+		Serial.println(ss_pin);
+		#endif
+
 		if (_sending_buffer[0] != '\0') {	// Don't send empty strings
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
@@ -117,7 +122,7 @@ protected:
 								c = SPI.transfer(END);
 								if (c == '\0') {
 									#ifdef BROADCAST_SPI_DEBUG
-									Serial.println("\t\tSent completed");
+									Serial.println("\t\tSend completed");
 									#endif
 									length = i;
 									break;
@@ -132,7 +137,7 @@ protected:
 						}
 					} else {
 						#ifdef BROADCAST_SPI_DEBUG
-						Serial.println("\t\tSEND: Device ACK NOT received");
+						Serial.println("\t\tDevice ACK NOT received");
 						#endif
 						length = 1; // Nothing to be sent
 					}
@@ -188,6 +193,11 @@ protected:
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
+		#ifdef BROADCAST_SPI_DEBUG
+		Serial.print("\tReceiving on pin: ");
+		Serial.println(ss_pin);
+		#endif
+
         for (size_t r = 0; length == 0 && r < 3; r++) {
     
             digitalWrite(ss_pin, LOW);
@@ -198,7 +208,7 @@ protected:
 			
 			if (c != VOID) {
 
-				delayMicroseconds(receive_delay_us);
+				delayMicroseconds(10);	// Makes sure ACK or NONE is set by the slave (10us) (critical path)
 				c = SPI.transfer('\0');   // Dummy char to get the ACK
 
 				if (c == ACK) { // Makes sure there is an Acknowledge first
@@ -218,7 +228,7 @@ protected:
 								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
 								SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
 								#ifdef BROADCAST_SPI_DEBUG
-								Serial.println("\t\t\tSent END");
+								Serial.println("\t\tReceive completed");
 								#endif
 								length++;   // Adds up the '\0' uncounted char
 								break;
@@ -243,11 +253,18 @@ protected:
 							}
 						}
 					}
+				} else if (c == NONE) {
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println("\t\tThere is nothing to be received");
+					#endif
+					_receiving_buffer[0] = '\0';
+					length = 1; // Nothing received
+					break;
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println("\t\tRECEIVE: Device ACK NOT received");
+					Serial.println("\t\tSlave ACK or NONE was NOT received");
 					#endif
-					length = 1; // Nothing to be sent
+					length = 1; // Nothing received
 					break;
 				}
 
@@ -260,7 +277,7 @@ protected:
 					Serial.println("\t\t\tSent ERROR");
 					#endif
 				}
-				
+
 			} else {
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println("\t\tReceived VOID");
@@ -298,6 +315,11 @@ protected:
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 
+		#ifdef BROADCAST_SPI_DEBUG
+		Serial.print("\tAcknowledging on pin: ");
+		Serial.println(ss_pin);
+		#endif
+
         for (size_t a = 0; !acknowledge && a < 3; a++) {
     
             digitalWrite(ss_pin, LOW);
@@ -306,28 +328,28 @@ protected:
             // Asks the Slave to acknowledge readiness
             c = SPI.transfer(ACK);
 
-            if (c != VOID) {
+			if (c != VOID) {
 
-                delayMicroseconds(send_delay_us);
-                c = SPI.transfer(ACK);  // When the response is collected
-                
-                if (c == READY) {
-                    #ifdef BROADCAST_SPI_DEBUG
-                    Serial.println("\t\tReceived READY");
-                    #endif
-                    acknowledge = true;
-                }
-                #ifdef BROADCAST_SPI_DEBUG
-                else {
-                    Serial.println("\t\tDidn't receive READY");
-                }
-                #endif
-            }
+				delayMicroseconds(send_delay_us);
+				c = SPI.transfer(ACK);  // When the response is collected
+				
+				if (c == READY) {
+                	#ifdef BROADCAST_SPI_DEBUG
+                	Serial.println("\t\tAcknowledge with READY");
+					#endif
+					acknowledge = true;
+				}
+				#ifdef BROADCAST_SPI_DEBUG
+				else {
+					Serial.println("\t\tNOT acknowledge");
+				}
+				#endif
+			}
             #ifdef BROADCAST_SPI_DEBUG
-            else {
+			else {
                 Serial.println("\t\tReceived VOID");
-            }
-            #endif
+			}
+			#endif
 
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
