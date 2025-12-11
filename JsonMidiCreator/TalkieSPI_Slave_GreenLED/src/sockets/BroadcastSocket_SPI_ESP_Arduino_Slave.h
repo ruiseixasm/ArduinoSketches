@@ -228,12 +228,18 @@ public:
 		if (_received_data) {
 			
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print("Received message: ");
+			Serial.print("\tReceived message: ");
 			Serial.println(_isr_receiving_buffer);
 			#endif
 
-			length = _receiving_index + 1;	// Makes sure everything is included, doesn't exclude the '\0' char
-			memcpy(_receiving_buffer, _isr_receiving_buffer, length);
+			memcpy(_receiving_buffer, _isr_receiving_buffer, _receiving_index);
+			length = _receiving_index - 1;	// length excludes the char '\0'
+			
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print("\tReceived length: ");
+			Serial.println(length);
+			#endif
+
 			length = BroadcastSocket::triggerTalkers(length);
 			_received_data = false;
 		}

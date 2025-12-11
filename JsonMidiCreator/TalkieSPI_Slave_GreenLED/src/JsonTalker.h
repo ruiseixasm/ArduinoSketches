@@ -588,14 +588,14 @@ public:
             {
             // AVR Boards (Uno, Nano, Mega) - Check RAM size
             #ifdef __AVR__
-                uint16_t ramSize = RAMEND - RAMSTART + 1;
-                if (ramSize == 2048)
-                    json_message["d"] = F("Arduino Uno/Nano (ATmega328P)");
-                else if (ramSize == 8192)
-                    json_message["d"] = F("Arduino Mega (ATmega2560)");
-                else
-                    json_message["d"] = F("Unknown AVR Board");
-                
+				#if (RAMEND - RAMSTART + 1) == 2048
+					json_message["d"] = "Arduino Uno/Nano (ATmega328P)";
+				#elif (RAMEND - RAMSTART + 1) == 8192
+					json_message["d"] = "Arduino Mega (ATmega2560)";
+				#else
+					json_message["d"] = "Unknown AVR Board";
+				#endif
+				
             // ESP8266
             #elif defined(ESP8266)
                 json_message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";

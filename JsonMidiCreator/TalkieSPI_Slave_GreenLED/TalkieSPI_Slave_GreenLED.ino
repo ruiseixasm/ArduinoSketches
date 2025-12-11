@@ -51,7 +51,7 @@ void setup() {
     digitalWrite(YELLOW_LED_PIN, HIGH);
     delay(2000); // Important: Give time for serial to initialize
     digitalWrite(YELLOW_LED_PIN, LOW);
-    Serial.println("\n\n=== ESP32 with EthernetENC STARTING ===");
+    Serial.println("\n\n=== Arduino with SPI STARTING ===");
 
     // Add a small LED blink to confirm code is running
     digitalWrite(GREEN_LED, HIGH);
