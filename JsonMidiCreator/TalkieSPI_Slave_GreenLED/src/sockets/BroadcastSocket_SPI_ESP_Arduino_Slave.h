@@ -20,7 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"
 
 
-#define BROADCAST_SPI_DEBUG
+// #define BROADCAST_SPI_DEBUG
 
 
 class BroadcastSocket_SPI_ESP_Arduino_Slave : public BroadcastSocket {
