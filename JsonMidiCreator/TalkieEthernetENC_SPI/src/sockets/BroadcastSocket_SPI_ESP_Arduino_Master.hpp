@@ -25,16 +25,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define ENABLE_DIRECT_ADDRESSING
 
 
-// ================== VSPI PIN DEFINITIONS ==================
-// VSPI pins for ESP32
-#define VSPI_MOSI 23	// GPIO23 for VSPI MOSI
-#define VSPI_MISO 19    // GPIO19 for VSPI MISO
-#define VSPI_SCK  18    // GPIO18 for VSPI SCK
-#define VSPI_SS   5     // GPIO5 for VSPI SCK
-// SS pin can be any GPIO - kept as parameter
-// ==========================================================
-
-
 #define send_delay_us 5
 #define receive_delay_us 10
 
@@ -60,6 +50,7 @@ public:
 
 protected:
 
+	SPIClass* _spi_instance;  // Pointer to SPI instance
 	bool _initiated = false;
     int* _talkers_ss_pins;
     uint8_t _actual_ss_pin = VSPI_SS;
@@ -96,18 +87,18 @@ protected:
 				delayMicroseconds(5);
 
 				// Asks the Slave to start receiving
-				c = SPI.transfer(RECEIVE);
+				c = _spi_instance->transfer(RECEIVE);
 
 				if (c != VOID) {
 
 					delayMicroseconds(10);	// Makes sure ACK is set by the slave (10us) (critical path)
-					c = SPI.transfer(_sending_buffer[0]);
+					c = _spi_instance->transfer(_sending_buffer[0]);
 
 					if (c == ACK) {
 					
 						for (uint8_t i = 1; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
 							delayMicroseconds(send_delay_us);
-							c = SPI.transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
+							c = _spi_instance->transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
 							if (c != _sending_buffer[i - 1]) {    // Includes NACK situation
 								#ifdef BROADCAST_SPI_DEBUG
 								Serial.print("\t\tChar miss match at: ");
@@ -118,7 +109,7 @@ protected:
 							}
 							if (_sending_buffer[i] == '\0') {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
-								c = SPI.transfer(END);
+								c = _spi_instance->transfer(END);
 								if (c == '\0') {
 									#ifdef BROADCAST_SPI_DEBUG
 									Serial.println("\t\tSend completed");
@@ -150,7 +141,7 @@ protected:
 
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
-					SPI.transfer(ERROR);
+					_spi_instance->transfer(ERROR);
 					// _receiving_buffer[0] = '\0'; // Implicit char
 				}
 
@@ -202,12 +193,12 @@ protected:
             delayMicroseconds(5);
 
             // Asks the Slave to start receiving
-            c = SPI.transfer(SEND);
+            c = _spi_instance->transfer(SEND);
 			
 			if (c != VOID) {
 
 				delayMicroseconds(10);	// Makes sure ACK or NONE is set by the slave (10us) (critical path)
-				c = SPI.transfer('\0');   // Dummy char to get the ACK
+				c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
 
 				if (c == ACK) { // Makes sure there is an Acknowledge first
 					
@@ -215,7 +206,7 @@ protected:
 					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
-							c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
+							c = _spi_instance->transfer(_receiving_buffer[length]);    // length == i - 1
 							if (c < 128) {   // Only accepts ASCII chars
 								// Avoids increment beyond the real string size
 								if (_receiving_buffer[length] != '\0') {    // length == i - 1
@@ -223,7 +214,7 @@ protected:
 								}
 							} else if (c == END) {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
-								SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+								_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
 								#ifdef BROADCAST_SPI_DEBUG
 								Serial.println("\t\tReceive completed");
 								#endif
@@ -238,7 +229,7 @@ protected:
 								break;
 							}
 						} else {
-							c = SPI.transfer('\0');   // Dummy char to get the ACK
+							c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
 							length = 0;
 							if (c < 128) {	// Makes sure it's an ASCII char
 								_receiving_buffer[0] = c;
@@ -267,7 +258,7 @@ protected:
 
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
-					SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
+					_spi_instance->transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
 					_receiving_buffer[0] = '\0'; // Implicit char
 					#ifdef BROADCAST_SPI_DEBUG
 					Serial.println("\t\t\tSent ERROR");
@@ -322,12 +313,12 @@ protected:
             delayMicroseconds(5);
 
             // Asks the Slave to acknowledge readiness
-            c = SPI.transfer(ACK);
+            c = _spi_instance->transfer(ACK);
 
 			if (c != VOID) {
 
 				delayMicroseconds(10);
-				c = SPI.transfer(ACK);  // When the response is collected
+				c = _spi_instance->transfer(ACK);  // When the response is collected
 				
 				if (c == READY) {
                 	#ifdef BROADCAST_SPI_DEBUG
@@ -397,25 +388,28 @@ protected:
 
 	bool initiate() {
 		
-		// Configure SPI settings
-		SPI.setDataMode(SPI_MODE0);
-		SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
-		SPI.setFrequency(4000000); 	// 4MHz if needed (optional)
-		// ====================================================
-        
-		// ================== CONFIGURE SS PINS ==================
-		// CRITICAL: Configure all SS pins as outputs and set HIGH
-		for (uint8_t i = 0; i < _talker_count; i++) {
-			pinMode(_talkers_ss_pins[i], OUTPUT);
-			digitalWrite(_talkers_ss_pins[i], HIGH);
-			delayMicroseconds(10); // Small delay between pins
-		}
+		if (_spi_instance) {
 
-		_initiated = true;
-		for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-			if (!acknowledgeReady(_talkers_ss_pins[ss_pin_i])) {
-				_initiated = false;
-				break;
+			// Configure SPI settings
+			_spi_instance->setDataMode(SPI_MODE0);
+			_spi_instance->setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
+			_spi_instance->setFrequency(4000000); 	// 4MHz if needed (optional)
+			// ====================================================
+			
+			// ================== CONFIGURE SS PINS ==================
+			// CRITICAL: Configure all SS pins as outputs and set HIGH
+			for (uint8_t i = 0; i < _talker_count; i++) {
+				pinMode(_talkers_ss_pins[i], OUTPUT);
+				digitalWrite(_talkers_ss_pins[i], HIGH);
+				delayMicroseconds(10); // Small delay between pins
+			}
+
+			_initiated = true;
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
+				if (!acknowledgeReady(_talkers_ss_pins[ss_pin_i])) {
+					_initiated = false;
+					break;
+				}
 			}
 		}
 		
@@ -463,25 +457,9 @@ public:
     }
 
 
-    virtual void begin() {
+    virtual void begin(SPIClass* spi_instance) {
 		
-		#ifdef BROADCAST_SPI_DEBUG
-		Serial.println("Pins set for VSPI:");
-		Serial.print("\tVSPI_SCK: ");
-		Serial.println(VSPI_SCK);
-		Serial.print("\tVSPI_MISO: ");
-		Serial.println(VSPI_MISO);
-		Serial.print("\tVSPI_MOSI: ");
-		Serial.println(VSPI_MOSI);
-		Serial.print("\tVSPI_SS: ");
-		Serial.println(VSPI_SS);
-		#endif
-
-		// ================== INITIALIZE HSPI ==================
-		// Initialize SPI with VSPI pins: SCK=18, MISO=19, MOSI=23
-		// This method signature is only available in ESP32 Arduino SPI library!
-		SPI.begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI);
-		
+		_spi_instance = spi_instance;
 		initiate();
     }
 };
