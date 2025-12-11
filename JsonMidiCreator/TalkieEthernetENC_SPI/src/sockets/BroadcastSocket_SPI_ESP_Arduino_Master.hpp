@@ -152,7 +152,7 @@ protected:
 				if (length > 0) {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					if (length > 1) {
-						Serial.print("Command successfully sent: ");
+						Serial.print("Sent message: ");
 						Serial.println(_sending_buffer);
 					} else {
 						Serial.println("\tNothing sent");
