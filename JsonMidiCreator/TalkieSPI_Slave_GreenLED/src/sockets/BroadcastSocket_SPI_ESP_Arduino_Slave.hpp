@@ -159,11 +159,15 @@ public:
                     _receiving_index = 0;
                     break;
                 case SEND:
-                    SPDR = ACK;
-                    _transmission_mode = SEND;
-                    _sending_index = 0;
-                    _validation_index = 0;
-                    _send_iteration_i = 0;
+                    if (_sending_buffer[0] == '\0') {
+                        SPDR = NONE;
+                    } else {
+                        SPDR = ACK;
+                        _transmission_mode = SEND;
+                        _sending_index = 0;
+                        _validation_index = 0;
+                        _send_iteration_i = 0;
+                    }
                     break;
                 case END:
                     SPDR = ACK;
