@@ -117,6 +117,11 @@ protected:
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
 
+		#ifdef JSON_TALKER_DEBUG
+		Serial.print(_name);
+		Serial.print(F(": "));
+		Serial.println(F("Sending a LOCAL message"));
+		#endif
         json_message["c"] = LOCAL_C;	// 'c' = 1 means LOCAL_C communication
         // Triggers all local Talkers to processes the json_message
         bool sent_message = false;
