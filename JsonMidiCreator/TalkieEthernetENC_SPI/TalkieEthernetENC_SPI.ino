@@ -38,7 +38,7 @@ JsonTalker* t_spi_talkers[] = { &t_spi };   // It's an array of pointers
 auto& ethernet_socket = BroadcastSocket_EthernetENC::instance(t_ethernet_talkers, sizeof(t_ethernet_talkers)/sizeof(JsonTalker*));
 // int talkers_spi_pins[] = {4, 16};
 int talkers_spi_pins[] = {4};
-auto& spi_socket = BroadcastSocket_SPI_ESP_Arduino_Master_HSPI::instance(t_spi_talkers, sizeof(t_spi_talkers)/sizeof(JsonTalker*));
+auto& spi_socket = BroadcastSocket_SPI_ESP_Arduino_Master_HSPI::instance(t_spi_talkers, talkers_spi_pins, sizeof(t_spi_talkers)/sizeof(JsonTalker*));
 JsonTalker* talkers[] = { &t_ethernet, &t_spi };   // It's an array of pointers
 
 
@@ -99,7 +99,7 @@ void setup() {
     // STEP 1: Initialize SPI only
     
     Serial.println("Step 1: Starting SPI...");
-    spi_socket.setup(talkers_spi_pins, sizeof(talkers_spi_pins)/sizeof(int));
+    spi_socket.begin();
     Serial.println("SPI started successfully");
     delay(1000);
 

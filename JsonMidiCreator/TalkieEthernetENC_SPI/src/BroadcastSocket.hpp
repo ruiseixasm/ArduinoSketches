@@ -25,11 +25,14 @@ https://github.com/ruiseixasm/JsonTalkie
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
 class BroadcastSocket {
-private:
+protected:
 
-
+    char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+    char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+	
     // Pointer PRESERVE the polymorphism while objects don't!
     JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
+    uint8_t _max_delay_ms = 5;
     uint8_t _talker_count = 0;
     bool _control_timing = false;
     uint32_t _last_local_time = 0;
@@ -160,13 +163,6 @@ private:
     }
 
     
-protected:
-
-    char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-    char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-    uint8_t _max_delay_ms = 5;
-
-
     size_t triggerTalkers(size_t length) {
 
 		#ifdef BROADCASTSOCKET_DEBUG

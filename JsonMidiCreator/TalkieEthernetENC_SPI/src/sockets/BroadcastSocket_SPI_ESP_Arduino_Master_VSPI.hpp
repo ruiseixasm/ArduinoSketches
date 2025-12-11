@@ -27,10 +27,10 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // ================== VSPI PIN DEFINITIONS ==================
 // VSPI pins for ESP32
-#define SPI_MOSI 23    // GPIO23 for VSPI MOSI
-#define SPI_MISO 19    // GPIO19 for VSPI MISO
-#define SPI_SCK  18    // GPIO18 for VSPI SCK
-#define SPI_SS   5     // GPIO5 for VSPI SCK
+#define VSPI_MOSI 23	// GPIO23 for VSPI MOSI
+#define VSPI_MISO 19    // GPIO19 for VSPI MISO
+#define VSPI_SCK  18    // GPIO18 for VSPI SCK
+#define VSPI_SS   5     // GPIO5 for VSPI SCK
 // SS pin can be any GPIO - kept as parameter
 // ==========================================================
 
@@ -58,18 +58,18 @@ public:
     };
 
 
-private:
+protected:
+
 	bool _initiated = false;
     int* _talkers_ss_pins;
-    uint8_t _ss_pins_count = 0;
-    uint8_t _actual_ss_pin = SPI_SS;
+    uint8_t _actual_ss_pin = VSPI_SS;
 
-protected:
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_SPI_ESP_Arduino_Master_VSPI(JsonTalker** json_talkers, uint8_t talker_count)
+    BroadcastSocket_SPI_ESP_Arduino_Master_VSPI(JsonTalker** json_talkers, int* talkers_ss_pins, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
             
+        	_talkers_ss_pins = talkers_ss_pins;
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
             // devices_ss_pins["initialized"] = true;
@@ -78,7 +78,7 @@ protected:
     
     // Specific methods associated to Arduino SPI as Master
 
-    size_t sendString(int ss_pin = SPI_SS) {
+    size_t sendString(int ss_pin = VSPI_SS) {
         size_t length = 0;	// No interrupts, so, not volatile
 		
 		#ifdef BROADCAST_SPI_DEBUG
@@ -189,7 +189,7 @@ protected:
     }
 
 
-    size_t receiveString(int ss_pin = SPI_SS) {
+    size_t receiveString(int ss_pin = VSPI_SS) {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
@@ -311,7 +311,7 @@ protected:
     }
 
 
-    bool acknowledgeReady(int ss_pin = SPI_SS) {
+    bool acknowledgeReady(int ss_pin = VSPI_SS) {
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 
@@ -380,15 +380,15 @@ protected:
 				#ifdef ENABLE_DIRECT_ADDRESSING
 				if (as_reply) {
 					sendString(_actual_ss_pin);
-				} else if (target_index < _ss_pins_count) {
+				} else if (target_index < _talker_count) {
 					sendString(_talkers_ss_pins[target_index]);
 				} else {    // Broadcast mode
-					for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+					for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
 						sendString(_talkers_ss_pins[ss_pin_i]);
 					}
 				}
 				#else
-				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+				for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
 					sendString(_talkers_ss_pins[ss_pin_i]);
 				}
 				#endif
@@ -402,8 +402,9 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_SPI_ESP_Arduino_Master_VSPI& instance(JsonTalker** json_talkers, uint8_t talker_count) {
-        static BroadcastSocket_SPI_ESP_Arduino_Master_VSPI instance(json_talkers, talker_count);
+    static BroadcastSocket_SPI_ESP_Arduino_Master_VSPI& instance(JsonTalker** json_talkers, int* talkers_ss_pins, uint8_t talker_count) {
+        static BroadcastSocket_SPI_ESP_Arduino_Master_VSPI instance(json_talkers, talkers_ss_pins, talker_count);
+
         return instance;
     }
 
@@ -418,7 +419,7 @@ public:
 			// Need to call homologous method in super class first
 			size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
 				length = receiveString(_talkers_ss_pins[ss_pin_i]);
 				if (length > 0) {
 					_actual_ss_pin = _talkers_ss_pins[ss_pin_i];
@@ -433,12 +434,12 @@ public:
     }
 
 
-    virtual void setup(int* talkers_ss_pins, uint8_t ss_pins_count) {
+    virtual void begin() {
 		
 		// ================== INITIALIZE HSPI ==================
 		// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13
 		// This method signature is only available in ESP32 Arduino SPI library!
-		SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
+		SPI.begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI);
 		
 		// Configure SPI settings
 		SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
@@ -447,8 +448,6 @@ public:
 		// SPI.setFrequency(1000000); // 1MHz if needed (optional)
 		// ====================================================
         
-        _talkers_ss_pins = talkers_ss_pins;
-        _ss_pins_count = ss_pins_count;
 		_initiated = true;
     }
 };
