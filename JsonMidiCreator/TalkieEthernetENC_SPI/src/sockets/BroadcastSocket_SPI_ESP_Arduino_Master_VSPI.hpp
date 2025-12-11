@@ -326,7 +326,7 @@ protected:
 
 			if (c != VOID) {
 
-				delayMicroseconds(send_delay_us);
+				delayMicroseconds(10);
 				c = SPI.transfer(ACK);  // When the response is collected
 				
 				if (c == READY) {

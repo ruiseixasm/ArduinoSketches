@@ -242,7 +242,7 @@ private:
 
             // Asks the Slave to acknowledge readiness
             SPI.transfer(ACK);
-            delayMicroseconds(send_delay_us);
+            delayMicroseconds(10);
             c = SPI.transfer(ACK);  // When the response is collected
             
             if (c == READY) {
