@@ -19,7 +19,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
 #include "../BroadcastSocket.hpp"
 
-#define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG_1
+// #define BROADCAST_SPI_DEBUG_2
 
 
 #define ENABLE_DIRECT_ADDRESSING
@@ -72,7 +73,7 @@ protected:
     size_t sendString(int ss_pin) {
         size_t length = 0;	// No interrupts, so, not volatile
 		
-		#ifdef BROADCAST_SPI_DEBUG
+		#ifdef BROADCAST_SPI_DEBUG_1
 		Serial.print("\tSending on pin: ");
 		Serial.println(ss_pin);
 		#endif
@@ -100,7 +101,7 @@ protected:
 							delayMicroseconds(send_delay_us);
 							c = _spi_instance->transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
 							if (c != _sending_buffer[i - 1]) {    // Includes NACK situation
-								#ifdef BROADCAST_SPI_DEBUG
+								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.print("\t\tChar miss match at: ");
 								Serial.println("i");
 								#endif
@@ -111,13 +112,13 @@ protected:
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
 								c = _spi_instance->transfer(END);
 								if (c == '\0') {
-									#ifdef BROADCAST_SPI_DEBUG
+									#ifdef BROADCAST_SPI_DEBUG_1
 									Serial.println("\t\tSend completed");
 									#endif
 									length = i;
 									break;
 								} else {
-									#ifdef BROADCAST_SPI_DEBUG
+									#ifdef BROADCAST_SPI_DEBUG_1
 									Serial.println("\t\tLast char '\\0' NOT received");
 									#endif
 									length = 0;
@@ -126,14 +127,14 @@ protected:
 							}
 						}
 					} else {
-						#ifdef BROADCAST_SPI_DEBUG
+						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println("\t\tDevice ACK NOT received");
 						#endif
 						length = 1; // Nothing to be sent
 					}
 
 				} else {
-					#ifdef BROADCAST_SPI_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println("\t\tReceived VOID");
 					#endif
 					length = 1; // Avoids another try
@@ -149,7 +150,7 @@ protected:
 				digitalWrite(ss_pin, HIGH);
 
 				if (length > 0) {
-					#ifdef BROADCAST_SPI_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_1
 					if (length > 1) {
 						Serial.print("Command successfully sent: ");
 						Serial.println(_sending_buffer);
@@ -158,7 +159,7 @@ protected:
 					}
 					#endif
 				} else {
-					#ifdef BROADCAST_SPI_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.print("\t\tCommand NOT successfully sent on try: ");
 					Serial.println(s + 1);
 					#endif
@@ -166,7 +167,7 @@ protected:
 			}
 
         } else {
-			#ifdef BROADCAST_SPI_DEBUG
+			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.println("\t\tNothing to be sent");
 			#endif
 			length = 1; // Nothing to be sent
@@ -182,7 +183,7 @@ protected:
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
-		#ifdef BROADCAST_SPI_DEBUG
+		#ifdef BROADCAST_SPI_DEBUG_2
 		Serial.print("\tReceiving on pin: ");
 		Serial.println(ss_pin);
 		#endif
@@ -215,13 +216,13 @@ protected:
 							} else if (c == END) {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
 								_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
-								#ifdef BROADCAST_SPI_DEBUG
+								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.println("\t\tReceive completed");
 								#endif
 								length++;   // Adds up the '\0' uncounted char
 								break;
 							} else {    // Includes NACK (implicit)
-								#ifdef BROADCAST_SPI_DEBUG
+								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.print("\t\t\tNo END or Char, instead, received: ");
 								Serial.println(c, HEX);
 								#endif
@@ -234,7 +235,7 @@ protected:
 							if (c < 128) {	// Makes sure it's an ASCII char
 								_receiving_buffer[0] = c;
 							} else {
-								#ifdef BROADCAST_SPI_DEBUG
+								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.println("\t\tNot a valid ASCII char (< 128)");
 								#endif
 								break;
@@ -242,14 +243,14 @@ protected:
 						}
 					}
 				} else if (c == NONE) {
-					#ifdef BROADCAST_SPI_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_2
 					Serial.println("\t\tThere is nothing to be received");
 					#endif
 					_receiving_buffer[0] = '\0';
 					length = 1; // Nothing received
 					break;
 				} else {
-					#ifdef BROADCAST_SPI_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println("\t\tSlave ACK or NONE was NOT received");
 					#endif
 					length = 1; // Nothing received
@@ -260,13 +261,13 @@ protected:
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
 					_receiving_buffer[0] = '\0'; // Implicit char
-					#ifdef BROADCAST_SPI_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println("\t\t\tSent ERROR");
 					#endif
 				}
 
 			} else {
-				#ifdef BROADCAST_SPI_DEBUG
+				#ifdef BROADCAST_SPI_DEBUG_1
 				Serial.println("\t\tReceived VOID");
 				#endif
 				length = 1; // Avoids another try
@@ -276,16 +277,18 @@ protected:
             digitalWrite(ss_pin, HIGH);
 
             if (length > 0) {
-                #ifdef BROADCAST_SPI_DEBUG
+                #ifdef BROADCAST_SPI_DEBUG_1
                 if (length > 1) {
                     Serial.print("Received message: ");
                     Serial.println(_receiving_buffer);
                 } else {
+                	#ifdef BROADCAST_SPI_DEBUG_2
                     Serial.println("\tNothing received");
+                	#endif
                 }
                 #endif
             } else {
-                #ifdef BROADCAST_SPI_DEBUG
+                #ifdef BROADCAST_SPI_DEBUG_1
                 Serial.print("\t\tMessage NOT successfully received on try: ");
                 Serial.println(r + 1);
                 #endif
@@ -302,7 +305,7 @@ protected:
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 
-		#ifdef BROADCAST_SPI_DEBUG
+		#ifdef BROADCAST_SPI_DEBUG_1
 		Serial.print("\tAcknowledging on pin: ");
 		Serial.println(ss_pin);
 		#endif
@@ -321,18 +324,18 @@ protected:
 				c = _spi_instance->transfer(ACK);  // When the response is collected
 				
 				if (c == READY) {
-                	#ifdef BROADCAST_SPI_DEBUG
+                	#ifdef BROADCAST_SPI_DEBUG_1
                 	Serial.println("\t\tAcknowledge with READY");
 					#endif
 					acknowledge = true;
 				}
-				#ifdef BROADCAST_SPI_DEBUG
+				#ifdef BROADCAST_SPI_DEBUG_1
 				else {
 					Serial.println("\t\tNOT acknowledge");
 				}
 				#endif
 			}
-            #ifdef BROADCAST_SPI_DEBUG
+            #ifdef BROADCAST_SPI_DEBUG_1
 			else {
                 Serial.println("\t\tReceived VOID");
 			}
@@ -343,7 +346,7 @@ protected:
 
         }
 
-        #ifdef BROADCAST_SPI_DEBUG
+        #ifdef BROADCAST_SPI_DEBUG_1
         if (acknowledge) {
             Serial.println("Slave is ready!");
         } else {
@@ -413,7 +416,7 @@ protected:
 			}
 		}
 
-		#ifdef BROADCAST_SPI_DEBUG
+		#ifdef BROADCAST_SPI_DEBUG_1
 		if (_initiated) {
 			Serial.println("Socket initiated!");
 		} else {

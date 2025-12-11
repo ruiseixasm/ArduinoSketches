@@ -94,17 +94,9 @@ void setup() {
     delay(100);
     digitalWrite(LED_BUILTIN, LOW);
     
-	// STEP 1: Initiate the SPI Socket
-    Serial.println("Step 1: Initializing SPI Socket...");
-	SPIClass* hspi = new SPIClass(HSPI);  // heap variable!
-	// ================== INITIALIZE HSPI ==================
-	// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13, SS=15
-	hspi->begin(14, 12, 13, 15);  // SCK, MISO, MOSI, SS
-    spi_socket.begin(hspi);
-
-    // STEP 2: Initialize Ethernet with CS pin
+    // STEP 1: Initialize Ethernet with CS pin
     const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
-    Serial.println("Step 2: Initializing EthernetENC...");
+    Serial.println("Step 1: Initializing EthernetENC...");
 	// This forces the Ethernet to use the default SPI
     Ethernet.init(CS_PIN);	// Uses global SPI (VSPI)
 	// // As alternative it is possible to give a specific SPI
@@ -114,8 +106,8 @@ void setup() {
     Serial.println("Ethernet initialized successfully");
     delay(500);
 
-    // STEP 3: Begin Ethernet connection with DHCP
-    Serial.println("Step 3: Starting Ethernet connection with DHCP...");
+    // STEP 2: Begin Ethernet connection with DHCP
+    Serial.println("Step 2: Starting Ethernet connection with DHCP...");
     if (Ethernet.begin(mac) == 0) {
         Serial.println("Failed to configure Ethernet using DHCP");
         // Optional: Fallback to static IP
@@ -130,8 +122,8 @@ void setup() {
     // Give Ethernet time to stabilize
     delay(1500);
 
-    // STEP 4: Check connection status
-    Serial.println("Step 4: Checking Ethernet status...");
+    // STEP 3: Check connection status
+    Serial.println("Step 3: Checking Ethernet status...");
     Serial.print("Local IP: ");
     Serial.println(Ethernet.localIP());
     Serial.print("Subnet Mask: ");
@@ -141,16 +133,21 @@ void setup() {
     Serial.print("DNS Server: ");
     Serial.println(Ethernet.dnsServerIP());
 
-    // STEP 5: Initialize UDP and broadcast socket
-    Serial.println("Step 5: Initializing UDP...");
+    // STEP 4: Initialize UDP and broadcast socket
+    Serial.println("Step 4: Initializing UDP...");
     if (udp.begin(PORT)) {
         Serial.println("UDP started successfully on port " + String(PORT));
     } else {
         Serial.println("Failed to start UDP!");
     }
 
-    // STEP 6: Setting up broadcast sockets
-    Serial.println("Step 6: Setting up broadcast sockets...");
+    // STEP 5: Setting up broadcast sockets
+    Serial.println("Step 5: Setting up broadcast sockets...");
+	SPIClass* hspi = new SPIClass(HSPI);  // heap variable!
+	// ================== INITIALIZE HSPI ==================
+	// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13, SS=15
+	hspi->begin(14, 12, 13, 15);  // SCK, MISO, MOSI, SS
+    spi_socket.begin(hspi);
     ethernet_socket.set_port(PORT);
     ethernet_socket.set_udp(&udp);
 
