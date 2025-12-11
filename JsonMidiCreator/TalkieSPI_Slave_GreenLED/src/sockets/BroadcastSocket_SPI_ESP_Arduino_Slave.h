@@ -217,7 +217,7 @@ public:
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
 		if (_received_data) {
-			length = _receiving_index + 1;
+			length = _receiving_index + 1;	// Makes sure everything is included, doesn-t exclude the '\0' char
 			memcpy(_receiving_buffer, _isr_receiving_buffer, length);
 			length = BroadcastSocket::triggerTalkers(length);
 			_received_data = false;
