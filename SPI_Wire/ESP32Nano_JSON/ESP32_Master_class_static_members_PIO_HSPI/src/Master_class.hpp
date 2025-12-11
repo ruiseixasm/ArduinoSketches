@@ -34,7 +34,7 @@ extern const int BLUE_LED;  // Declare as external (defined elsewhere)
 #define BUFFER_SIZE 128
 
 // To make this value the minimum possible, always place the setting SPDR on top in the Slave code (SPDR =)
-#define send_delay_us 10
+#define send_delay_us 5
 #define receive_delay_us 10
 
 class Master_class
