@@ -94,22 +94,15 @@ void setup() {
     delay(100);
     digitalWrite(LED_BUILTIN, LOW);
     
-    Serial.println("Pins initialized successfully");
-
-    // STEP 1: Initialize SPI only
-    
-    spi_socket.begin();
-    delay(1000);
-
-    // STEP 2: Initialize Ethernet with CS pin
+    // STEP 1: Initialize Ethernet with CS pin
     const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
-    Serial.println("Step 2: Initializing EthernetENC...");
+    Serial.println("Step 1: Initializing EthernetENC...");
     Ethernet.init(CS_PIN);
     Serial.println("Ethernet initialized successfully");
     delay(500);
 
-    // STEP 3: Begin Ethernet connection with DHCP
-    Serial.println("Step 3: Starting Ethernet connection with DHCP...");
+    // STEP 2: Begin Ethernet connection with DHCP
+    Serial.println("Step 2: Starting Ethernet connection with DHCP...");
     if (Ethernet.begin(mac) == 0) {
         Serial.println("Failed to configure Ethernet using DHCP");
         // Optional: Fallback to static IP
@@ -124,8 +117,8 @@ void setup() {
     // Give Ethernet time to stabilize
     delay(1500);
 
-    // STEP 4: Check connection status
-    Serial.println("Step 4: Checking Ethernet status...");
+    // STEP 3: Check connection status
+    Serial.println("Step 3: Checking Ethernet status...");
     Serial.print("Local IP: ");
     Serial.println(Ethernet.localIP());
     Serial.print("Subnet Mask: ");
@@ -135,17 +128,19 @@ void setup() {
     Serial.print("DNS Server: ");
     Serial.println(Ethernet.dnsServerIP());
 
-    // STEP 5: Initialize UDP and broadcast socket
-    Serial.println("Step 5: Initializing UDP...");
+    // STEP 4: Initialize UDP and broadcast socket
+    Serial.println("Step 4: Initializing UDP...");
     if (udp.begin(PORT)) {
         Serial.println("UDP started successfully on port " + String(PORT));
     } else {
         Serial.println("Failed to start UDP!");
     }
 
-    Serial.println("Setting up broadcast sockets...");
+    // STEP 5: Setting up broadcast sockets
+    Serial.println("Step 5: Setting up broadcast sockets...");
     ethernet_socket.set_port(PORT);
     ethernet_socket.set_udp(&udp);
+    spi_socket.begin();
 
     Serial.println("Talker ready with EthernetENC!");
     Serial.println("Connecting Talkers with each other");
