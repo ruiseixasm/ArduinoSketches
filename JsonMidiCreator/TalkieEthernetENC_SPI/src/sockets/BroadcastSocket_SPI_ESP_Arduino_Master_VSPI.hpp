@@ -397,6 +397,32 @@ protected:
 
 	bool initiate() {
 		
+		#ifdef BROADCAST_SPI_DEBUG
+		Serial.println("Pins set for VSPI:");
+		Serial.print("\tVSPI_SCK: ");
+		Serial.println(VSPI_SCK);
+		Serial.print("\tVSPI_MISO: ");
+		Serial.println(VSPI_MISO);
+		Serial.print("\tVSPI_MOSI: ");
+		Serial.println(VSPI_MOSI);
+		Serial.print("\tVSPI_SS: ");
+		Serial.println(VSPI_SS);
+		#endif
+
+		// Configure SPI settings
+		SPI.setDataMode(SPI_MODE0);
+		SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
+		SPI.setFrequency(4000000); 	// 4MHz if needed (optional)
+		// ====================================================
+        
+		// ================== CONFIGURE SS PINS ==================
+		// CRITICAL: Configure all SS pins as outputs and set HIGH
+		for (uint8_t i = 0; i < _talker_count; i++) {
+			pinMode(_talkers_ss_pins[i], OUTPUT);
+			digitalWrite(_talkers_ss_pins[i], HIGH);
+			delayMicroseconds(10); // Small delay between pins
+		}
+
 		for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
 			if (!acknowledgeReady(_talkers_ss_pins[ss_pin_i])) return false;
 		}
@@ -440,36 +466,10 @@ public:
     void begin() override {
 		
 		// ================== INITIALIZE HSPI ==================
-		// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13
+		// Initialize SPI with VSPI pins: SCK=18, MISO=19, MOSI=23
 		// This method signature is only available in ESP32 Arduino SPI library!
 		SPI.begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI);
 		
-		// Configure SPI settings
-		SPI.setDataMode(SPI_MODE0);
-		SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
-		SPI.setFrequency(4000000); 	// 4MHz if needed (optional)
-		// ====================================================
-        
-		// ================== CONFIGURE SS PINS ==================
-		// CRITICAL: Configure all SS pins as outputs and set HIGH
-		for (uint8_t i = 0; i < _talker_count; i++) {
-			pinMode(_talkers_ss_pins[i], OUTPUT);
-			digitalWrite(_talkers_ss_pins[i], HIGH);
-			delayMicroseconds(10); // Small delay between pins
-		}
-
-		#ifdef BROADCAST_SPI_DEBUG
-		Serial.println("Pins set for VSPI:");
-		Serial.print("\tVSPI_SCK: ");
-		Serial.println(VSPI_SCK);
-		Serial.print("\tVSPI_MISO: ");
-		Serial.println(VSPI_MISO);
-		Serial.print("\tVSPI_MOSI: ");
-		Serial.println(VSPI_MOSI);
-		Serial.print("\tVSPI_SS: ");
-		Serial.println(VSPI_SS);
-		#endif
-
 		_initiated = initiate();
 		
 		#ifdef BROADCAST_SPI_DEBUG

@@ -58,33 +58,6 @@ public:
 		// This method signature is only available in ESP32 Arduino SPI library!
 		SPI.begin(HSPI_SCK, HSPI_MISO, HSPI_MOSI);
 		
-		// Configure SPI settings
-		SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
-		SPI.setDataMode(SPI_MODE0);
-		SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
-		// SPI.setFrequency(1000000); // 1MHz if needed (optional)
-		// ====================================================
-        
-		// ================== CONFIGURE SS PINS ==================
-		// CRITICAL: Configure all SS pins as outputs and set HIGH
-		for (uint8_t i = 0; i < _talker_count; i++) {
-			pinMode(_talkers_ss_pins[i], OUTPUT);
-			digitalWrite(_talkers_ss_pins[i], HIGH);
-			delayMicroseconds(10); // Small delay between pins
-		}
-
-		#ifdef BROADCAST_SPI_DEBUG
-		Serial.println("Pins set for HSPI:");
-		Serial.print("\tHSPI_SCK: ");
-		Serial.println(HSPI_SCK);
-		Serial.print("\tHSPI_MISO: ");
-		Serial.println(HSPI_MISO);
-		Serial.print("\tHSPI_MOSI: ");
-		Serial.println(HSPI_MOSI);
-		Serial.print("\tHSPI_SS: ");
-		Serial.println(HSPI_SS);
-		#endif
-
 		_initiated = initiate();
 		
 		#ifdef BROADCAST_SPI_DEBUG
