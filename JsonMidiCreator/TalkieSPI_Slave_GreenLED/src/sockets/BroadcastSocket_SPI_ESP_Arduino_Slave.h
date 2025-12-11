@@ -22,8 +22,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define BROADCAST_SPI_DEBUG
 
 
-#define ENABLE_DIRECT_ADDRESSING
-
 
 
 class BroadcastSocket_SPI_ESP_Arduino_Slave : public BroadcastSocket {
@@ -75,17 +73,22 @@ protected:
         }
 
 
-	//
-	// No need for send override, the handleSPI_Interrupt handles the sending
-	//
+    // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
+    size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) override {
+        (void)as_reply; 	// Silence unused parameter warning
+        (void)target_index; // Silence unused parameter warning
+
+		// Need to call homologous method in super class first
+		length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
+
+		if (length > 0) {
+			memcpy(_isr_sending_buffer, _sending_buffer, length);
+		}
+
+        return length;
+    }
 
 
-	void deleteReceived() {
-		_isr_receiving_buffer[0] = '\0';
-		_received_data = false;
-	}
-	
-    
 public:
 
 	// Specific methods associated to Arduino SPI as Slave
@@ -214,8 +217,10 @@ public:
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
 		if (_received_data) {
-			length = BroadcastSocket::triggerTalkers(_receiving_index);
-			deleteReceived();
+			length = _receiving_index + 1;
+			memcpy(_receiving_buffer, _isr_receiving_buffer, length);
+			length = BroadcastSocket::triggerTalkers(length);
+			_received_data = false;
 		}
 
         return length;
