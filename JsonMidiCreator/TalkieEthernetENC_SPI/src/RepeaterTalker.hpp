@@ -16,6 +16,8 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "JsonTalker.h"         // Includes the ArduinoJson Library
 
+#define REPEATER_TALKER_DEBUG
+
 
 class RepeaterTalker : public JsonTalker {
 public:
@@ -30,10 +32,20 @@ public:
     bool processData(JsonObject& json_message, bool pre_validated = false) override {
         (void)pre_validated;	// Silence unused parameter warning
 
+		#ifdef REPEATER_TALKER_DEBUG
+		Serial.print(_name);
+		Serial.print(F(": "));
+		#endif
         uint16_t c = json_message["c"].as<uint16_t>();
 		if (c == LOCAL_C) {
+			#ifdef REPEATER_TALKER_DEBUG
+			Serial.println(F("Received a LOCAL message"));
+			#endif
 			return remoteSend(json_message);
 		}
+		#ifdef REPEATER_TALKER_DEBUG
+		Serial.println(F("Received a REMOTE message"));
+		#endif
 		return localSend(json_message);
 	}
 };

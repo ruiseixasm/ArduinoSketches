@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
-// #define JSON_TALKER_DEBUG
+#define JSON_TALKER_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -170,13 +170,23 @@ protected:
 
 
     bool replyMessage(JsonObject& json_message, bool as_reply = true) {
+		#ifdef JSON_TALKER_DEBUG
+		Serial.print(_name);
+		Serial.print(F(": "));
+		#endif
 		// Does a targets swap first
         json_message["t"] = json_message["f"];
 		json_message["f"] = _name;
 		uint16_t c = json_message["c"].as<uint16_t>();
 		if (c == LOCAL_C) {	// c == 1 means a local message while 0 means a remote one
+			#ifdef JSON_TALKER_DEBUG
+			Serial.println(F("Replied a LOCAL message"));
+			#endif
 			return localSend(json_message, as_reply);
 		}
+		#ifdef JSON_TALKER_DEBUG
+		Serial.println(F("Replied a REMOTE message"));
+		#endif
         return remoteSend(json_message, as_reply);
     }
 
