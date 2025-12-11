@@ -78,6 +78,11 @@ public:
 		#endif
 
 		_initiated = initiate();
+		
+		#ifdef BROADCAST_SPI_DEBUG
+		if (!_initiated)
+			Serial.println("Socket NOT initiated!");
+		#endif
     }
 };
 

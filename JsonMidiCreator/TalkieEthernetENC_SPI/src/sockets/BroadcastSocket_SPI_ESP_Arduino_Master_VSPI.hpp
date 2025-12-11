@@ -395,10 +395,6 @@ protected:
 			}
 			// Makes sure the _sending_buffer is reset with '\0'
 			_sending_buffer[0] = '\0';
-		#ifdef BROADCAST_SPI_DEBUG
-		} else {
-			Serial.println("Socket NOT initiated!");
-		#endif
 		}
         return 0;   // Returns 0 because everything is dealt internally in this method
     }
@@ -440,13 +436,7 @@ public:
 			}
 			// Makes sure the _receiving_buffer is reset with '\0'
 			_receiving_buffer[0] = '\0';
-
-		#ifdef BROADCAST_SPI_DEBUG
-		} else {
-			Serial.println("Socket NOT initiated!");
-		#endif
 		}
-
         return 0;   // Receives are all called internally in this method
     }
 
@@ -478,6 +468,14 @@ public:
 		#endif
 
 		_initiated = initiate();
+		
+		#ifdef BROADCAST_SPI_DEBUG
+		if (_initiated) {
+			Serial.println("Socket initiated!");
+		} else {
+			Serial.println("Socket NOT initiated!");
+		}
+		#endif
     }
 };
 
