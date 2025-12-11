@@ -97,6 +97,9 @@ void setup() {
 	// STEP 1: Initiate the SPI Socket
     Serial.println("Step 1: Initializing SPI Socket...");
 	SPIClass* hspi = new SPIClass(HSPI);  // heap variable!
+	// ================== INITIALIZE HSPI ==================
+	// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13, SS=15
+	hspi->begin(14, 12, 13, 15);  // SCK, MISO, MOSI, SS
     spi_socket.begin(hspi);
 
     // STEP 2: Initialize Ethernet with CS pin
