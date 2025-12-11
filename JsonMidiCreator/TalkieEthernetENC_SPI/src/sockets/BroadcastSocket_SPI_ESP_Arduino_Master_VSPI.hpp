@@ -445,10 +445,9 @@ public:
 		SPI.begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI);
 		
 		// Configure SPI settings
-		SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
 		SPI.setDataMode(SPI_MODE0);
 		SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
-		// SPI.setFrequency(1000000); // 1MHz if needed (optional)
+		SPI.setFrequency(4000000); 	// 4MHz if needed (optional)
 		// ====================================================
         
 		// ================== CONFIGURE SS PINS ==================

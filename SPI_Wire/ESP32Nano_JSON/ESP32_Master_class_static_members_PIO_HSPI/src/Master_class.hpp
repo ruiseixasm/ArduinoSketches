@@ -361,7 +361,7 @@ public:
         // Configure SPI settings
         SPI.setDataMode(SPI_MODE0);
         SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
-        // SPI.setFrequency(1000000); // 1MHz if needed (optional)
+        SPI.setFrequency(4000000); 	// 4MHz if needed (optional)
         // ====================================================
         
         // Enable the SS pin
