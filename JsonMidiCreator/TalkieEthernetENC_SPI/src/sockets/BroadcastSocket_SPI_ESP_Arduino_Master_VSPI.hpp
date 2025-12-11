@@ -423,10 +423,22 @@ protected:
 			delayMicroseconds(10); // Small delay between pins
 		}
 
+		_initiated = true;
 		for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-			if (!acknowledgeReady(_talkers_ss_pins[ss_pin_i])) return false;
+			if (!acknowledgeReady(_talkers_ss_pins[ss_pin_i])) {
+				_initiated = false;
+				break;
+			}
 		}
-		return true;
+		
+		#ifdef BROADCAST_SPI_DEBUG
+		if (_initiated) {
+			Serial.println("Socket initiated!");
+		} else {
+			Serial.println("Socket NOT initiated!");
+		}
+		#endif
+		return _initiated;
 	}
 
 public:
@@ -470,15 +482,7 @@ public:
 		// This method signature is only available in ESP32 Arduino SPI library!
 		SPI.begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI);
 		
-		_initiated = initiate();
-		
-		#ifdef BROADCAST_SPI_DEBUG
-		if (_initiated) {
-			Serial.println("Socket initiated!");
-		} else {
-			Serial.println("Socket NOT initiated!");
-		}
-		#endif
+		initiate();
     }
 };
 

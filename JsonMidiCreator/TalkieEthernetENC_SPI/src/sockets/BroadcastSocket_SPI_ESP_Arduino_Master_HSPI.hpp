@@ -58,15 +58,7 @@ public:
 		// This method signature is only available in ESP32 Arduino SPI library!
 		SPI.begin(HSPI_SCK, HSPI_MISO, HSPI_MOSI);
 		
-		_initiated = initiate();
-		
-		#ifdef BROADCAST_SPI_DEBUG
-		if (_initiated) {
-			Serial.println("Socket initiated!");
-		} else {
-			Serial.println("Socket NOT initiated!");
-		}
-		#endif
+		initiate();
     }
 };
 
