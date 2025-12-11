@@ -99,7 +99,6 @@ void setup() {
     // STEP 1: Initialize SPI only
     
     Serial.println("Step 1: Starting SPI...");
-    spi_socket.begin();
     Serial.println("SPI started successfully");
     delay(1000);
 
@@ -145,9 +144,10 @@ void setup() {
         Serial.println("Failed to start UDP!");
     }
 
-    Serial.println("Setting up broadcast socket...");
+    Serial.println("Setting up broadcast sockets...");
     ethernet_socket.set_port(PORT);
     ethernet_socket.set_udp(&udp);
+    spi_socket.begin();
 
     Serial.println("Talker ready with EthernetENC!");
     Serial.println("Connecting Talkers with each other");
