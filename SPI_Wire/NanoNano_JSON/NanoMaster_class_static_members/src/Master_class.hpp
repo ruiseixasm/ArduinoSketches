@@ -58,8 +58,8 @@ private:
         size_t length = 0;	// No interrupts, so, not volatile
 		
 		#ifdef MASTER_CLASS_DEBUG
-		Serial.print("\tSending command: ");
-		Serial.println(command);
+		Serial.print("\tSending on pin: ");
+		Serial.println(_ss_pin);
 		#endif
 
 		if (command[0] != '\0') {	// Don't send empty strings
@@ -175,7 +175,8 @@ private:
         uint8_t c; // Avoid using 'char' while using values above 127
 
 		#ifdef MASTER_CLASS_DEBUG
-		Serial.println("\tReceiving...");
+		Serial.print("\tReceiving on pin: ");
+		Serial.println(_ss_pin);
 		#endif
 
         for (size_t r = 0; length == 0 && r < 3; r++) {
@@ -304,6 +305,11 @@ private:
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 
+		#ifdef MASTER_CLASS_DEBUG
+		Serial.print("\tAcknowledging on pin: ");
+		Serial.println(_ss_pin);
+		#endif
+
         for (size_t a = 0; !acknowledge && a < 3; a++) {
     
             digitalWrite(_ss_pin, LOW);
@@ -319,13 +325,13 @@ private:
 				
 				if (c == READY) {
                 	#ifdef MASTER_CLASS_DEBUG
-                	Serial.println("\t\tReceived READY");
+                	Serial.println("\t\tAcknowledge with READY");
 					#endif
 					acknowledge = true;
 				}
 				#ifdef MASTER_CLASS_DEBUG
 				else {
-					Serial.println("\t\tDidn't receive READY");
+					Serial.println("\t\tNOT acknowledge");
 				}
 				#endif
 			}
