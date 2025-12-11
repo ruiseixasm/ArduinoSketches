@@ -64,94 +64,107 @@ private:
 	
     size_t sendString(const char* command) {
         size_t length = 0;	// No interrupts, so, not volatile
-        uint8_t c; // Avoid using 'char' while using values above 127
+		
+		#ifdef MASTER_CLASS_DEBUG
+		Serial.print("\tSending on pin: ");
+		Serial.println(_ss_pin);
+		#endif
 
-        for (size_t s = 0; length == 0 && s < 3; s++) {
-    
-            digitalWrite(_ss_pin, LOW);
-            delayMicroseconds(5);
+		if (command[0] != '\0') {	// Don't send empty strings
+			
+			uint8_t c; // Avoid using 'char' while using values above 127
 
-            // Asks the Slave to start receiving
-            c = SPI.transfer(RECEIVE);
-            
-            for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // Has to let '\0' pass, thus the (+ 1)
-                delayMicroseconds(send_delay_us);
-                if (i > 0) {
-                    if (command[i - 1] == '\0') {
-                        c = SPI.transfer(END);
-                        if (c == '\0') {
-                            length = i;
-                            break;
-                        } else {
-                            length = 0;
-                            break;
-                        }
-                    } else {
-                        c = SPI.transfer(command[i]);	// Receives the command[i - 1]
-                    }
-                    if (c != command[i - 1]) {    // Includes NACK situation
-                        #ifdef MASTER_CLASS_DEBUG
-                        if (c == NACK) Serial.println("\t\tReceived NACK");
-                        if (c == NONE) Serial.println("\t\tReceived NONE");
-                        #endif
-                        length = 0;
-                        break;
-                    }
-				} else if (c == VOID) {
-                    #ifdef MASTER_CLASS_DEBUG
-                    Serial.println("\t\tReceived VOID");
-                    #endif
+			for (size_t s = 0; length == 0 && s < 3; s++) {
+		
+				digitalWrite(_ss_pin, LOW);
+				delayMicroseconds(5);
+
+				// Asks the Slave to start receiving
+				c = SPI.transfer(RECEIVE);
+
+				if (c != VOID) {
+
+					delayMicroseconds(10);	// Makes sure ACK is set by the slave (10us) (critical path)
+					c = SPI.transfer(command[0]);
+
+					if (c == ACK) {
+					
+						for (uint8_t i = 1; i < BUFFER_SIZE; i++) {
+							delayMicroseconds(send_delay_us);
+							c = SPI.transfer(command[i]);	// Receives the echoed command[i - 1]
+							if (c != command[i - 1]) {    // Includes NACK situation
+								#ifdef MASTER_CLASS_DEBUG
+								Serial.print("\t\tChar miss match at: ");
+								Serial.println("i");
+								#endif
+								length = 0;
+								break;
+							}
+							if (command[i] == '\0') {
+								// // There is always some interrupts stacking, avoiding a tailing one makes no difference
+								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+								c = SPI.transfer(END);
+								if (c == '\0') {
+									#ifdef MASTER_CLASS_DEBUG
+									Serial.println("\t\tSend completed");
+									#endif
+									length = i;
+									break;
+								} else {
+									#ifdef MASTER_CLASS_DEBUG
+									Serial.println("\t\tLast char '\\0' NOT received");
+									#endif
+									length = 0;
+									break;
+								}
+							}
+						}
+					} else {
+						#ifdef MASTER_CLASS_DEBUG
+						Serial.println("\t\tDevice ACK NOT received");
+						#endif
+						length = 1; // Nothing to be sent
+					}
+
+				} else {
+					#ifdef MASTER_CLASS_DEBUG
+					Serial.println("\t\tReceived VOID");
+					#endif
 					length = 1; // Avoids another try
-					break;
-                } else if (command[0] != '\0') {
-                    c = SPI.transfer(command[0]);	// Doesn't check first char
-                    if (c != ACK) { // Not ACK means it isn't there
-                        #ifdef MASTER_CLASS_DEBUG
-                        Serial.println("\t\tDevice ACK NOT received");
-                        #endif
-                        length = 1; // Nothing to be sent
-                        break;
-                    }
-                } else {
-                    #ifdef MASTER_CLASS_DEBUG
-                    Serial.println("\t\tNothing to be sent");
-                    #endif
-                    length = 1; // Nothing to be sent
-                    break;
-                }
-            }
+				}
 
-            if (length == 0) {
-                // // There is always some interrupts stacking, avoiding a tailing one makes no difference
-                // delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
-                SPI.transfer(ERROR);
-                // _receiving_buffer[0] = '\0'; // Implicit char
-            }
+				if (length == 0) {
+					// // There is always some interrupts stacking, avoiding a tailing one makes no difference
+					// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+					SPI.transfer(ERROR);
+					// _receiving_buffer[0] = '\0'; // Implicit char
+				}
 
-            delayMicroseconds(5);
-            digitalWrite(_ss_pin, HIGH);
+				delayMicroseconds(5);
+				digitalWrite(_ss_pin, HIGH);
 
-            if (length > 0) {
-                #ifdef MASTER_CLASS_DEBUG
-                if (length > 1) {
-                    Serial.print("Command successfully sent: ");
-                    Serial.println(command);
-                } else {
-                    Serial.println("\tNothing sent");
-                }
-                #endif
-            } else {
-                #ifdef MASTER_CLASS_DEBUG
-                Serial.print("\t\tCommand NOT successfully sent on try: ");
-                Serial.println(s + 1);
-                Serial.println("\t\tBUZZER activated for 10ms!");
-                #endif
-                digitalWrite(BLUE_LED, HIGH);
-                delay(10);  // Buzzer on for 10ms
-                digitalWrite(BLUE_LED, LOW);
-                delay(500);
-            }
-        }
+				if (length > 0) {
+					#ifdef MASTER_CLASS_DEBUG
+					if (length > 1) {
+						Serial.print("Command successfully sent: ");
+						Serial.println(command);
+					} else {
+						Serial.println("\tNothing sent");
+					}
+					#endif
+				} else {
+					#ifdef MASTER_CLASS_DEBUG
+					Serial.print("\t\tCommand NOT successfully sent on try: ");
+					Serial.println(s + 1);
+					Serial.println("\t\tBUZZER activated for 10ms!");
+					#endif
+					digitalWrite(BLUE_LED, HIGH);
+					delay(10);  // Buzzer on for 10ms
+					digitalWrite(BLUE_LED, LOW);
+					delay(500);
+				}
+			}
+		}
 
         if (length > 0)
             length--;   // removes the '\0' from the length as final value
@@ -162,7 +175,11 @@ private:
     size_t receiveString() {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
-        _receiving_buffer[0] = '\0'; // Avoids garbage printing
+		
+		#ifdef MASTER_CLASS_DEBUG
+		Serial.print("\tReceiving on pin: ");
+		Serial.println(_ss_pin);
+		#endif
 
         for (size_t r = 0; length == 0 && r < 3; r++) {
     
@@ -171,65 +188,85 @@ private:
 
             // Asks the Slave to start receiving
             c = SPI.transfer(SEND);
-                
-            // Starts to receive all chars here
-            for (uint8_t i = 0; i < BUFFER_SIZE + 1; i++) { // First i isn't a char byte
-                delayMicroseconds(receive_delay_us);
-                if (i > 1) {    // The first response is discarded because it's unrelated (offset by 1 communication)
-                    c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
-                    if (c < 128) {   // Only accepts ASCII chars
-                        // Avoids increment beyond the real string size
-                        if (_receiving_buffer[length] != '\0') {    // length == i - 1
-                            _receiving_buffer[++length] = c;        // length == i (also sets '\0')
-                        }
-                    } else if (c == END) {
-                        // // There is always some interrupts stacking, avoiding a tailing one makes no difference
-                        // delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
-                        SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
-                        #ifdef MASTER_CLASS_DEBUG
-                        Serial.println("\t\t\tSent END");
-                        #endif
-                        length++;   // Adds up the '\0' uncounted char
-                        break;
-                    } else {    // Includes NACK (implicit)
-                        #ifdef MASTER_CLASS_DEBUG
-                        Serial.print("\t\t\tNo END or Char, instead, received: ");
-                        Serial.println(c, HEX);
-                        #endif
-                        length = 0;
-                        break;
-                    }
-                } else {
-                    c = SPI.transfer('\0');   // Dummy char to get the ACK
-					if (i == 1) {
-                    	length = 0;
-						if (c < 128) {	// Makes sure it's an ASCII char
-							_receiving_buffer[0] = c;
-						} else {
-							#ifdef MASTER_CLASS_DEBUG
-							Serial.println("\t\tNot a valid char (< 128)");
-							#endif
-							break;
-						}
-					} else if (c != ACK) { // Not ACK means it isn't there
-                        #ifdef MASTER_CLASS_DEBUG
-                        Serial.println("\t\tDevice ACK NOT received");
-                        #endif
-                        length = 1; // Nothing to be sent
-                        break;
-                    }
-                }
-            }
+			
+			if (c != VOID) {
 
-            if (length == 0) {
-                // // There is always some interrupts stacking, avoiding a tailing one makes no difference
-                // delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
-                SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
-                _receiving_buffer[0] = '\0'; // Implicit char
-                #ifdef MASTER_CLASS_DEBUG
-                Serial.println("\t\t\tSent ERROR");
-                #endif
-            }
+				delayMicroseconds(10);	// Makes sure ACK or NONE is set by the slave (10us) (critical path)
+				c = SPI.transfer('\0');   // Dummy char to get the ACK
+
+				if (c == ACK) { // Makes sure there is an Acknowledge first
+					
+					// Starts to receive all chars here
+					for (uint8_t i = 0; i < BUFFER_SIZE; i++) { // First i isn't a char byte
+						delayMicroseconds(receive_delay_us);
+						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
+							c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
+							if (c < 128) {   // Only accepts ASCII chars
+								// Avoids increment beyond the real string size
+								if (_receiving_buffer[length] != '\0') {    // length == i - 1
+									_receiving_buffer[++length] = c;        // length == i (also sets '\0')
+								}
+							} else if (c == END) {
+								// // There is always some interrupts stacking, avoiding a tailing one makes no difference
+								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+								SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+								#ifdef MASTER_CLASS_DEBUG
+								Serial.println("\t\tReceive completed");
+								#endif
+								length++;   // Adds up the '\0' uncounted char
+								break;
+							} else {    // Includes NACK (implicit)
+								#ifdef MASTER_CLASS_DEBUG
+								Serial.print("\t\t\tNo END or Char, instead, received: ");
+								Serial.println(c, HEX);
+								#endif
+								length = 0;
+								break;
+							}
+						} else {
+							c = SPI.transfer('\0');   // Dummy char to get the ACK
+							length = 0;
+							if (c < 128) {	// Makes sure it's an ASCII char
+								_receiving_buffer[0] = c;
+							} else {
+								#ifdef MASTER_CLASS_DEBUG
+								Serial.println("\t\tNot a valid ASCII char (< 128)");
+								#endif
+								break;
+							}
+						}
+					}
+				} else if (c == NONE) {
+					#ifdef MASTER_CLASS_DEBUG
+					Serial.println("\t\tThere is nothing to be received");
+					#endif
+					_receiving_buffer[0] = '\0';
+					length = 1; // Nothing received
+					break;
+				} else {
+					#ifdef MASTER_CLASS_DEBUG
+					Serial.println("\t\tSlave ACK or NONE was NOT received");
+					#endif
+					length = 1; // Nothing received
+					break;
+				}
+
+				if (length == 0) {
+					// // There is always some interrupts stacking, avoiding a tailing one makes no difference
+					// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+					SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
+					_receiving_buffer[0] = '\0'; // Implicit char
+					#ifdef MASTER_CLASS_DEBUG
+					Serial.println("\t\t\tSent ERROR");
+					#endif
+				}
+
+			} else {
+				#ifdef MASTER_CLASS_DEBUG
+				Serial.println("\t\tReceived VOID");
+				#endif
+				length = 1; // Avoids another try
+			}
 
             delayMicroseconds(5);
             digitalWrite(_ss_pin, HIGH);
