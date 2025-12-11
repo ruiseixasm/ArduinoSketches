@@ -105,7 +105,12 @@ void setup() {
     // STEP 2: Initialize Ethernet with CS pin
     const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
     Serial.println("Step 2: Initializing EthernetENC...");
+	// This forces the Ethernet to use the default SPI
     Ethernet.init(CS_PIN);	// Uses global SPI (VSPI)
+	// // As alternative it is possible to give a specific SPI
+	// SPIClass* ethSPI = new SPIClass(HSPI);
+	// ethSPI->begin(14, 12, 13, 15);  // SCK, MISO, MOSI, SS (dummy)
+	// EthernetENC(uint8_t csPin, SPIClass* ethSPI)
     Serial.println("Ethernet initialized successfully");
     delay(500);
 
