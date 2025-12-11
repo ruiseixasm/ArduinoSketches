@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonTalker.h"
 
 
-// #define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -167,7 +167,13 @@ protected:
     static uint8_t _max_delay_ms;
 
 
-    static size_t triggerTalkers(size_t length) {
+    size_t triggerTalkers(size_t length) {
+
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.print(class_name());
+		Serial.print(F(" has a Talkers count of: "));
+		Serial.println(_talker_count);
+		#endif
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("T: "));
@@ -177,11 +183,6 @@ protected:
 
         if (length > 3*4 + 2) {
             
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("C: Total Talkers count: "));
-            Serial.println(_talker_count);
-            #endif
-
             int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
             uint32_t remote_time = 0;
             uint16_t received_checksum = extractChecksum(&length, &message_code_int, &remote_time);
@@ -271,6 +272,11 @@ protected:
                     }
                     JsonObject json_message = message_doc.as<JsonObject>();
 
+					#ifdef BROADCASTSOCKET_DEBUG
+					Serial.print(F("Triggering the talker: "));
+					Serial.println(_json_talkers[talker_i]->get_name());
+					#endif
+
 					// A non static method
                     pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
                     if (!pre_validated) break;
@@ -346,6 +352,8 @@ public:
     BroadcastSocket& operator=(const BroadcastSocket&) = delete;
     BroadcastSocket(BroadcastSocket&&) = delete;
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
+
+    virtual const char* class_name() const { return "BroadcastSocket"; }
 
 
 	// CAN'T BE STATIC

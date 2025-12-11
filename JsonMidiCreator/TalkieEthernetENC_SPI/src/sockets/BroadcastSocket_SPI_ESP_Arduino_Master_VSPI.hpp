@@ -385,6 +385,8 @@ public:
         return instance;
     }
 
+    const char* class_name() const override { return "BroadcastSocket_SPI_ESP_Arduino_Master_VSPI"; }
+
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     size_t receive() override {

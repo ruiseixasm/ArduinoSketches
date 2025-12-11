@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../BroadcastSocket.h"
 
-#define BROADCAST_ETHERNETENC_DEBUG
+// #define BROADCAST_ETHERNETENC_DEBUG
 
 
 #define ENABLE_DIRECT_ADDRESSING
@@ -104,6 +104,8 @@ public:
         static BroadcastSocket_EthernetENC instance(json_talkers, talker_count);
         return instance;
     }
+
+    const char* class_name() const override { return "BroadcastSocket_EthernetENC"; }
 
 
     void set_port(uint16_t port) {

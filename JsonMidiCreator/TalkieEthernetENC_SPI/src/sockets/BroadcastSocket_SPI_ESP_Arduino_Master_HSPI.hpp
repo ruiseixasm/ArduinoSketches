@@ -45,6 +45,9 @@ public:
         static BroadcastSocket_SPI_ESP_Arduino_Master_HSPI instance(json_talkers, talker_count);
         return instance;
     }
+	
+    const char* class_name() const override { return "BroadcastSocket_SPI_ESP_Arduino_Master_HSPI"; }
+
 };
 
 #endif // BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_HSPI_HPP
