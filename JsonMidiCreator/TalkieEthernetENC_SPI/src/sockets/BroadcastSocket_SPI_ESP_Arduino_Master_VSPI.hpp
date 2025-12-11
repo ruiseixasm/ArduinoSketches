@@ -117,8 +117,7 @@ protected:
 								break;
 							}
 							if (_sending_buffer[i] == '\0') {
-								// // There is always some interrupts stacking, avoiding a tailing one makes no difference
-								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+								delayMicroseconds(10);    // Makes sure the Status Byte is sent
 								c = SPI.transfer(END);
 								if (c == '\0') {
 									#ifdef BROADCAST_SPI_DEBUG
@@ -150,8 +149,7 @@ protected:
 				}
 
 				if (length == 0) {
-					// // There is always some interrupts stacking, avoiding a tailing one makes no difference
-					// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					SPI.transfer(ERROR);
 					// _receiving_buffer[0] = '\0'; // Implicit char
 				}
@@ -224,8 +222,7 @@ protected:
 									_receiving_buffer[++length] = c;        // length == i (also sets '\0')
 								}
 							} else if (c == END) {
-								// // There is always some interrupts stacking, avoiding a tailing one makes no difference
-								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+								delayMicroseconds(10);    // Makes sure the Status Byte is sent
 								SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
 								#ifdef BROADCAST_SPI_DEBUG
 								Serial.println("\t\tReceive completed");
@@ -269,8 +266,7 @@ protected:
 				}
 
 				if (length == 0) {
-					// // There is always some interrupts stacking, avoiding a tailing one makes no difference
-					// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
 					_receiving_buffer[0] = '\0'; // Implicit char
 					#ifdef BROADCAST_SPI_DEBUG

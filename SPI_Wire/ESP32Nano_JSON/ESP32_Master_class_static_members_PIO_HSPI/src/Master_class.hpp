@@ -101,8 +101,7 @@ private:
 								break;
 							}
 							if (command[i] == '\0') {
-								// // There is always some interrupts stacking, avoiding a tailing one makes no difference
-								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+								delayMicroseconds(10);    // Makes sure the Status Byte is sent
 								c = SPI.transfer(END);
 								if (c == '\0') {
 									#ifdef MASTER_CLASS_DEBUG
@@ -134,8 +133,7 @@ private:
 				}
 
 				if (length == 0) {
-					// // There is always some interrupts stacking, avoiding a tailing one makes no difference
-					// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					SPI.transfer(ERROR);
 					// _receiving_buffer[0] = '\0'; // Implicit char
 				}
@@ -175,7 +173,7 @@ private:
     size_t receiveString() {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
-		
+
 		#ifdef MASTER_CLASS_DEBUG
 		Serial.print("\tReceiving on pin: ");
 		Serial.println(_ss_pin);
@@ -207,8 +205,7 @@ private:
 									_receiving_buffer[++length] = c;        // length == i (also sets '\0')
 								}
 							} else if (c == END) {
-								// // There is always some interrupts stacking, avoiding a tailing one makes no difference
-								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+								delayMicroseconds(10);    // Makes sure the Status Byte is sent
 								SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
 								#ifdef MASTER_CLASS_DEBUG
 								Serial.println("\t\tReceive completed");
@@ -252,8 +249,7 @@ private:
 				}
 
 				if (length == 0) {
-					// // There is always some interrupts stacking, avoiding a tailing one makes no difference
-					// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
+					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
 					_receiving_buffer[0] = '\0'; // Implicit char
 					#ifdef MASTER_CLASS_DEBUG
