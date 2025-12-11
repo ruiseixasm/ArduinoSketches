@@ -25,16 +25,20 @@ https://github.com/ruiseixasm/JsonTalkie
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
 class BroadcastSocket {
-private:
+protected:
 
-
+	// Single core processing, in sequence, no two socket instances intercalate
+    static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+	
     // Pointer PRESERVE the polymorphism while objects don't!
-    static JsonTalker** _json_talkers;   // It's a singleton, so, no need to be static
-    static uint8_t _talker_count;
-    static bool _control_timing;
-    static uint32_t _last_local_time;
-    static uint32_t _last_remote_time;
-    static uint16_t _drops_count;
+    JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
+    uint8_t _max_delay_ms = 5;
+    uint8_t _talker_count = 0;
+    bool _control_timing = false;
+    uint32_t _last_local_time = 0;
+    uint32_t _last_remote_time = 0;
+    uint16_t _drops_count = 0;
 
 
     static uint16_t generateChecksum(const char* net_data, const size_t len) {
@@ -59,7 +63,7 @@ private:
     // 	'9' = 57
 
 
-    static uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
+    uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
         
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
@@ -113,7 +117,7 @@ private:
     }
 
 
-    static size_t insertChecksum(size_t length) {
+    size_t insertChecksum(size_t length) {
 
         uint16_t checksum = generateChecksum(_sending_buffer, length);
 
@@ -160,14 +164,13 @@ private:
     }
 
     
-protected:
+    size_t triggerTalkers(size_t length) {
 
-    static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-    static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-    static uint8_t _max_delay_ms;
-
-
-    static size_t triggerTalkers(size_t length) {
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.print(class_name());
+		Serial.print(F(" has a Talkers count of: "));
+		Serial.println(_talker_count);
+		#endif
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("T: "));
@@ -177,11 +180,6 @@ protected:
 
         if (length > 3*4 + 2) {
             
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("C: Total Talkers count: "));
-            Serial.println(_talker_count);
-            #endif
-
             int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
             uint32_t remote_time = 0;
             uint16_t received_checksum = extractChecksum(&length, &message_code_int, &remote_time);
@@ -271,6 +269,11 @@ protected:
                     }
                     JsonObject json_message = message_doc.as<JsonObject>();
 
+					#ifdef BROADCASTSOCKET_DEBUG
+					Serial.print(F("Triggering the talker: "));
+					Serial.println(_json_talkers[talker_i]->get_name());
+					#endif
+
 					// A non static method
                     pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
                     if (!pre_validated) break;
@@ -347,6 +350,8 @@ public:
     BroadcastSocket(BroadcastSocket&&) = delete;
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
 
+    virtual const char* class_name() const { return "BroadcastSocket"; }
+
 
 	// CAN'T BE STATIC
     virtual size_t receive() {
@@ -360,7 +365,7 @@ public:
     }
 
     
-    bool remoteSend(JsonObject json_message, bool as_reply = false, uint8_t target_index = 255) {
+    bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
 
         JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
         if (message_code != JsonTalker::MessageCode::ECHO && message_code != JsonTalker::MessageCode::ERROR) {
@@ -376,8 +381,6 @@ public:
 
             return false;
         }
-
-        json_message["c"] = 0;  // Makes sure `c` is set
 
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
@@ -396,7 +399,6 @@ public:
     uint16_t get_drops_count() { return _drops_count; }
 
 };
-
 
 
 

@@ -64,7 +64,7 @@ protected:
 
     uint16_t _bpm_10 = 1200;
 
-    bool command_run(const uint8_t command_index, JsonObject json_message) override {
+    bool command_run(const uint8_t command_index, JsonObject& json_message) override {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
@@ -126,7 +126,7 @@ protected:
     }
 
     
-    bool command_set(const uint8_t command_index, JsonObject json_message) override {
+    bool command_set(const uint8_t command_index, JsonObject& json_message) override {
         uint32_t json_value = json_message["v"].as<uint32_t>();
         switch (command_index)
         {
@@ -142,7 +142,7 @@ protected:
     }
 
     
-    uint32_t command_get(const uint8_t command_index, JsonObject json_message) override {
+    uint32_t command_get(const uint8_t command_index, JsonObject& json_message) override {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {

@@ -200,6 +200,7 @@ public:
 
     // Move ONLY the singleton instance method to subclass
     static BroadcastSocket_SPI_ESP_Arduino_Slave& instance(JsonTalker** json_talkers, uint8_t talker_count) {
+
         static BroadcastSocket_SPI_ESP_Arduino_Slave instance(json_talkers, talker_count);
         return instance;
     }

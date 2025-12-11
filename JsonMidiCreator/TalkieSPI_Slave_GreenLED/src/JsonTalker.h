@@ -18,11 +18,12 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
-// #define JSON_TALKER_DEBUG
+#define JSON_TALKER_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
-
+#define REMOTE_C ((uint16_t)0)
+#define LOCAL_C ((uint16_t)1)
 
 class BroadcastSocket;
 
@@ -109,27 +110,61 @@ protected:
     }
 
 
-    bool remoteSend(JsonObject json_message, bool as_reply = false, uint8_t target_index = 255);
+    bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255);
 
 
-    bool localSend(JsonObject json_message, bool as_reply = false, uint8_t target_index = 255) {
+    bool localSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
 
-        json_message["f"] = _name;
-        json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
+		#ifdef JSON_TALKER_DEBUG
+		Serial.print(_name);
+		Serial.print(F(": "));
+		Serial.println(F("Sending a LOCAL message"));
+		#endif
+        json_message["c"] = LOCAL_C;	// 'c' = 1 means LOCAL_C communication
         // Triggers all local Talkers to processes the json_message
         bool sent_message = false;
 		if (target_index < _talker_count) {
 			if (_json_talkers[target_index] != this) {  // Can't send to myself
-				_json_talkers[target_index]->processData(json_message);
+
+				// CREATE COPY for each talker
+				// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+				#if ARDUINOJSON_VERSION_MAJOR >= 7
+				JsonDocument doc_copy;
+				#else
+				StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
+				#endif
+				JsonObject json_copy = doc_copy.to<JsonObject>();
+				
+				// Copy all data from original
+				for (JsonPair kv : json_message) {
+					json_copy[kv.key()] = kv.value();
+				}
+            
+				_json_talkers[target_index]->processData(json_copy);
 				sent_message = true;
 			}
 		} else {
 			bool pre_validated = false;
 			for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
 				if (_json_talkers[talker_i] != this) {  // Can't send to myself
-					pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+
+					// CREATE COPY for each talker
+					// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+					#if ARDUINOJSON_VERSION_MAJOR >= 7
+					JsonDocument doc_copy;
+					#else
+					StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
+					#endif
+					JsonObject json_copy = doc_copy.to<JsonObject>();
+					
+					// Copy all data from original
+					for (JsonPair kv : json_message) {
+						json_copy[kv.key()] = kv.value();
+					}
+				
+					pre_validated = _json_talkers[talker_i]->processData(json_copy, pre_validated);
 					sent_message = true;
 					if (!pre_validated) break;
 				}
@@ -139,13 +174,24 @@ protected:
     }
 
 
-    bool replyMessage(JsonObject json_message, bool as_reply = true) {
-        if (json_message["c"].is<uint16_t>()) {
-            uint16_t c = json_message["c"].as<uint16_t>();
-            if (c == 1) {   // c == 1 means a local message while 0 means a remote one
-                return localSend(json_message, as_reply);
-            }
-        }
+    bool replyMessage(JsonObject& json_message, bool as_reply = true) {
+		#ifdef JSON_TALKER_DEBUG
+		Serial.print(_name);
+		Serial.print(F(": "));
+		#endif
+		// Does a targets swap first
+        json_message["t"] = json_message["f"];
+		json_message["f"] = _name;
+		uint16_t c = json_message["c"].as<uint16_t>();
+		if (c == LOCAL_C) {	// c == 1 means a local message while 0 means a remote one
+			#ifdef JSON_TALKER_DEBUG
+			Serial.println(F("Replied a LOCAL message"));
+			#endif
+			return localSend(json_message, as_reply);
+		}
+		#ifdef JSON_TALKER_DEBUG
+		Serial.println(F("Replied a REMOTE message"));
+		#endif
         return remoteSend(json_message, as_reply);
     }
 
@@ -155,7 +201,7 @@ protected:
     static bool _is_led_on;  // keep track of state yourself, by default it's off
 
 
-    uint8_t command_index(const MessageCode message_code, JsonObject json_message) {
+    uint8_t command_index(const MessageCode message_code, JsonObject& json_message) {
         const char* command_name = json_message["n"].as<const char*>();
         const Command* command = nullptr;
         uint8_t count = 0;
@@ -184,7 +230,7 @@ protected:
     }
 
 
-    virtual bool command_run(const uint8_t command_index, JsonObject json_message) {
+    virtual bool command_run(const uint8_t command_index, JsonObject& json_message) {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
@@ -251,7 +297,7 @@ protected:
     }
 
     
-    virtual bool command_set(const uint8_t command_index, JsonObject json_message) {
+    virtual bool command_set(const uint8_t command_index, JsonObject& json_message) {
         uint32_t json_value = json_message["v"].as<uint32_t>();
         switch (command_index)
         {
@@ -267,7 +313,7 @@ protected:
     }
 
     
-    virtual uint32_t command_get(const uint8_t command_index, JsonObject json_message) {
+    virtual uint32_t command_get(const uint8_t command_index, JsonObject& json_message) {
         (void)json_message; // Silence unused parameter warning
         switch (command_index)
         {
@@ -296,7 +342,7 @@ protected:
         }
     }
 
-    bool echo(JsonObject json_message) {
+    bool echo(JsonObject& json_message) {
         Serial.print(json_message["f"].as<String>());
         Serial.print(" - ");
         if (json_message["r"].is<String>()) {
@@ -309,7 +355,7 @@ protected:
         return false;
     }
 
-    bool error(JsonObject json_message) {
+    bool error(JsonObject& json_message) {
         Serial.print(json_message["f"].as<String>());
         Serial.print(" - ");
         if (json_message["r"].is<String>()) {
@@ -367,7 +413,7 @@ public:
     bool muted() { return _muted; }
 
     
-    virtual bool processData(JsonObject json_message, bool pre_validated = false) {
+    virtual bool processData(JsonObject& json_message, bool pre_validated = false) {
 
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("Processing..."));
@@ -394,10 +440,9 @@ public:
                 Serial.println(4);
                 #endif
                 json_message["m"] = 7;   // error
-                json_message["t"] = json_message["f"];
                 json_message["e"] = 4;
-                
-                replyMessage(json_message, true);
+
+                replyMessage(json_message, true);	// Includes reply swap
                 return false;
             }
         }
@@ -435,14 +480,13 @@ public:
 
         MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
         json_message["w"] = json_message["m"].as<int>();
-        json_message["t"] = json_message["f"];
         json_message["m"] = MessageCode::ECHO;
 
         switch (message_code)
         {
         case MessageCode::TALK:
             json_message["d"] = _desc;
-            replyMessage(json_message, true);
+            replyMessage(json_message, true);	// Includes reply swap
             break;
         
         case MessageCode::LIST:
