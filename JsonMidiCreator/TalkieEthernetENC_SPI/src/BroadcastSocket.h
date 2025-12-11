@@ -29,7 +29,7 @@ private:
 
 
     // Pointer PRESERVE the polymorphism while objects don't!
-    static JsonTalker** _json_talkers;   // It's a singleton, so, no need to be static
+    JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
     static uint8_t _talker_count;
     static bool _control_timing;
     static uint32_t _last_local_time;
