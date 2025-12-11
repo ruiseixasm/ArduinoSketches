@@ -59,7 +59,7 @@ private:
     // 	'9' = 57
 
 
-    static uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
+    uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
         
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
@@ -113,7 +113,7 @@ private:
     }
 
 
-    static size_t insertChecksum(size_t length) {
+    size_t insertChecksum(size_t length) {
 
         uint16_t checksum = generateChecksum(_sending_buffer, length);
 
@@ -164,7 +164,7 @@ protected:
 
     static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-    static uint8_t _max_delay_ms;
+    uint8_t _max_delay_ms = 5;
 
 
     size_t triggerTalkers(size_t length) {
