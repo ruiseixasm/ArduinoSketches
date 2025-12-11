@@ -108,7 +108,7 @@ private:
 						}
 					} else {
 						#ifdef MASTER_CLASS_DEBUG
-						Serial.println("\t\tDevice ACK NOT received");
+						Serial.println("\t\tSEND: Device ACK NOT received");
 						#endif
 						length = 1; // Nothing to be sent
 					}
@@ -233,7 +233,7 @@ private:
 					break;
 				} else {
 					#ifdef MASTER_CLASS_DEBUG
-					Serial.println("\t\tDevice ACK NOT received");
+					Serial.println("\t\tRECEIVE: Device ACK NOT received");
 					#endif
 					length = 1; // Nothing received
 					break;
