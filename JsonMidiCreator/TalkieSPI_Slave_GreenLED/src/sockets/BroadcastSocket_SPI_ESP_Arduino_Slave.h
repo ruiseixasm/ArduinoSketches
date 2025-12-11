@@ -91,7 +91,15 @@ protected:
 		length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
 
 		if (length > 0) {
-			memcpy(_isr_sending_buffer, _sending_buffer, length);
+			memcpy(_isr_sending_buffer, _sending_buffer, length + 1);	// (+ 1) to include the '\0'
+			
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print(F("\tSent message: "));
+			Serial.println(_isr_sending_buffer);
+			Serial.print(F("\tSent length: "));
+			Serial.println(length);
+			#endif
+
 		}
 
         return length;
@@ -228,7 +236,7 @@ public:
 		if (_received_data) {
 			
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print("\tReceived message: ");
+			Serial.print(F("\tReceived message: "));
 			Serial.println(_isr_receiving_buffer);
 			#endif
 
@@ -236,7 +244,7 @@ public:
 			length = _receiving_index - 1;	// length excludes the char '\0'
 			
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print("\tReceived length: ");
+			Serial.print(F("\tReceived length: "));
 			Serial.println(length);
 			#endif
 
