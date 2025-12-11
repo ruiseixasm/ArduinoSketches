@@ -397,6 +397,10 @@ public:
     uint8_t get_max_delay() { return _max_delay_ms; }
     uint16_t get_drops_count() { return _drops_count; }
 
+
+    virtual void begin() {
+		
+    }
 };
 
 

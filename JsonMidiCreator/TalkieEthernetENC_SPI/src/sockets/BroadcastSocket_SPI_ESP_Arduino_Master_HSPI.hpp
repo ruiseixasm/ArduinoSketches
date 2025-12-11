@@ -65,7 +65,19 @@ public:
 		// SPI.setFrequency(1000000); // 1MHz if needed (optional)
 		// ====================================================
         
-		_initiated = true;
+		#ifdef BROADCAST_SPI_DEBUG
+		Serial.println("Pins set for HSPI:");
+		Serial.print("\tHSPI_SCK: ");
+		Serial.println(HSPI_SCK);
+		Serial.print("\tHSPI_MISO: ");
+		Serial.println(HSPI_MISO);
+		Serial.print("\tHSPI_MOSI: ");
+		Serial.println(HSPI_MOSI);
+		Serial.print("\tHSPI_SS: ");
+		Serial.println(HSPI_SS);
+		#endif
+
+		_initiated = initiate();
     }
 };
 

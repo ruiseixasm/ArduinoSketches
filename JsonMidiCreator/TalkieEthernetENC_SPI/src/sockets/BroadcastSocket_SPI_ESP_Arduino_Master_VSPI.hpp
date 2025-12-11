@@ -395,9 +395,21 @@ protected:
 			}
 			// Makes sure the _sending_buffer is reset with '\0'
 			_sending_buffer[0] = '\0';
+		#ifdef BROADCAST_SPI_DEBUG
+		} else {
+			Serial.println("Socket NOT initiated!");
+		#endif
 		}
         return 0;   // Returns 0 because everything is dealt internally in this method
     }
+
+	bool initiate() {
+		
+		for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
+			if (!acknowledgeReady(_talkers_ss_pins[ss_pin_i])) return false;
+		}
+		return true;
+	}
 
 public:
 
@@ -428,13 +440,18 @@ public:
 			}
 			// Makes sure the _receiving_buffer is reset with '\0'
 			_receiving_buffer[0] = '\0';
+
+		#ifdef BROADCAST_SPI_DEBUG
+		} else {
+			Serial.println("Socket NOT initiated!");
+		#endif
 		}
 
         return 0;   // Receives are all called internally in this method
     }
 
 
-    virtual void begin() {
+    void begin() override {
 		
 		// ================== INITIALIZE HSPI ==================
 		// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13
@@ -448,7 +465,19 @@ public:
 		// SPI.setFrequency(1000000); // 1MHz if needed (optional)
 		// ====================================================
         
-		_initiated = true;
+		#ifdef BROADCAST_SPI_DEBUG
+		Serial.println("Pins set for VSPI:");
+		Serial.print("\tVSPI_SCK: ");
+		Serial.println(VSPI_SCK);
+		Serial.print("\tVSPI_MISO: ");
+		Serial.println(VSPI_MISO);
+		Serial.print("\tVSPI_MOSI: ");
+		Serial.println(VSPI_MOSI);
+		Serial.print("\tVSPI_SS: ");
+		Serial.println(VSPI_SS);
+		#endif
+
+		_initiated = initiate();
     }
 };
 
