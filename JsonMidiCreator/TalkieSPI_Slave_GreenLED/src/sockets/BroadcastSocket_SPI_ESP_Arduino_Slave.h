@@ -84,11 +84,9 @@ protected:
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) override {
-        (void)as_reply; 	// Silence unused parameter warning
-        (void)target_index; // Silence unused parameter warning
 
 		// Need to call homologous method in super class first
-		length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
+		length = BroadcastSocket::send(length, as_reply, target_index); // Very important pre processing !!
 
 		if (length > 0) {
 			memcpy(_isr_sending_buffer, _sending_buffer, length + 1);	// (+ 1) to include the '\0'

@@ -290,7 +290,7 @@ protected:
                 
             } else {
                 #ifdef BROADCASTSOCKET_DEBUG
-                Serial.print(F("triggerTalkers9: Validation of Checksum FAILED!!"));
+                Serial.print(F("triggerTalkers9: Validation of Checksum FAILED: "));
                 Serial.println(checksum);
                 #endif
             }

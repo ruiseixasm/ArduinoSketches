@@ -49,7 +49,7 @@ void setup() {
     // Then start Serial
     Serial.begin(115200);
     digitalWrite(YELLOW_LED_PIN, HIGH);
-    delay(2000); // Important: Give time for serial to initialize
+    delay(1000); // Important: Give time for serial to initialize
     digitalWrite(YELLOW_LED_PIN, LOW);
     Serial.println("\n\n=== Arduino with SPI STARTING ===");
 
