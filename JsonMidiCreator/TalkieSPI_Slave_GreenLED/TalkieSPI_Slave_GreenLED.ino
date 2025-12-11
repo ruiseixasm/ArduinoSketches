@@ -35,7 +35,7 @@ GreenTalker talker = GreenTalker(talker_name, talker_desc);
 JsonTalker* talkers[] = { &talker };   // It's an array of pointers of JsonTalker (keep it as JsonTalker!)
 // Singleton requires the & (to get a reference variable)
 
-auto& broadcast_socket = BroadcastSocket_SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(GreenTalker*));
+auto& spi_socket = BroadcastSocket_SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(GreenTalker*));
 
 
 
@@ -88,6 +88,6 @@ void setup() {
 
 
 void loop() {
-    broadcast_socket.receive();
+    spi_socket.receive();
 }
 

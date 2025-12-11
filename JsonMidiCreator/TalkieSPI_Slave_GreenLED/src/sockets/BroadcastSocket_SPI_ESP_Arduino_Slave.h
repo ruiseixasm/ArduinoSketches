@@ -19,9 +19,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
 #include "../BroadcastSocket.hpp"
 
+
 #define BROADCAST_SPI_DEBUG
-
-
 
 
 class BroadcastSocket_SPI_ESP_Arduino_Slave : public BroadcastSocket {
@@ -66,6 +65,16 @@ protected:
 			SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
 			SPI.setDataMode(SPI_MODE0);
 			SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
+
+			pinMode(MISO, OUTPUT);  // MISO must be OUTPUT for Slave to send data!
+			
+			// Initialize SPI as slave - EXPLICIT MSB FIRST
+			SPCR = 0;  // Clear register
+			SPCR |= _BV(SPE);    // SPI Enable
+			SPCR |= _BV(SPIE);   // SPI Interrupt Enable  
+			SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
+			SPCR &= ~_BV(CPOL);  // Clock polarity 0
+			SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
 
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
@@ -217,6 +226,12 @@ public:
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
 		if (_received_data) {
+			
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print("Received message: ");
+			Serial.println(_isr_receiving_buffer);
+			#endif
+
 			length = _receiving_index + 1;	// Makes sure everything is included, doesn't exclude the '\0' char
 			memcpy(_receiving_buffer, _isr_receiving_buffer, length);
 			length = BroadcastSocket::triggerTalkers(length);
