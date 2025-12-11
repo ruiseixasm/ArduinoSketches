@@ -57,6 +57,11 @@ private:
     size_t sendString(const char* command) {
         size_t length = 0;	// No interrupts, so, not volatile
 		
+		#ifdef MASTER_CLASS_DEBUG
+		Serial.print("\tSending command: ");
+		Serial.println(command);
+		#endif
+
 		if (command[0] != '\0') {	// Don't send empty strings
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
@@ -108,7 +113,7 @@ private:
 						}
 					} else {
 						#ifdef MASTER_CLASS_DEBUG
-						Serial.println("\t\tSEND: Device ACK NOT received");
+						Serial.println("\t\tDevice ACK NOT received");
 						#endif
 						length = 1; // Nothing to be sent
 					}
@@ -169,6 +174,10 @@ private:
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
+		#ifdef MASTER_CLASS_DEBUG
+		Serial.println("\tReceiving...");
+		#endif
+
         for (size_t r = 0; length == 0 && r < 3; r++) {
     
             digitalWrite(_ss_pin, LOW);
@@ -199,7 +208,7 @@ private:
 								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
 								SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
 								#ifdef MASTER_CLASS_DEBUG
-								Serial.println("\t\t\tSent END");
+								Serial.println("\t\tDevice has sent");
 								#endif
 								length++;   // Adds up the '\0' uncounted char
 								break;
@@ -233,7 +242,7 @@ private:
 					break;
 				} else {
 					#ifdef MASTER_CLASS_DEBUG
-					Serial.println("\t\tRECEIVE: Device ACK NOT received");
+					Serial.println("\t\tDevice ACK NOT received");
 					#endif
 					length = 1; // Nothing received
 					break;
