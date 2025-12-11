@@ -53,6 +53,18 @@ public:
 
     void begin() override {
 		
+		#ifdef BROADCAST_SPI_DEBUG
+		Serial.println("Pins set for HSPI:");
+		Serial.print("\tHSPI_SCK: ");
+		Serial.println(HSPI_SCK);
+		Serial.print("\tHSPI_MISO: ");
+		Serial.println(HSPI_MISO);
+		Serial.print("\tHSPI_MOSI: ");
+		Serial.println(HSPI_MOSI);
+		Serial.print("\tHSPI_SS: ");
+		Serial.println(HSPI_SS);
+		#endif
+
 		// ================== INITIALIZE HSPI ==================
 		// Initialize SPI with HSPI pins: SCK=14, MISO=12, MOSI=13
 		// This method signature is only available in ESP32 Arduino SPI library!

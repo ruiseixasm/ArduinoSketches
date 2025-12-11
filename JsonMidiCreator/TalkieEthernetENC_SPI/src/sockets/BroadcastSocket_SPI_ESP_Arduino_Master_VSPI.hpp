@@ -397,18 +397,6 @@ protected:
 
 	bool initiate() {
 		
-		#ifdef BROADCAST_SPI_DEBUG
-		Serial.println("Pins set for VSPI:");
-		Serial.print("\tVSPI_SCK: ");
-		Serial.println(VSPI_SCK);
-		Serial.print("\tVSPI_MISO: ");
-		Serial.println(VSPI_MISO);
-		Serial.print("\tVSPI_MOSI: ");
-		Serial.println(VSPI_MOSI);
-		Serial.print("\tVSPI_SS: ");
-		Serial.println(VSPI_SS);
-		#endif
-
 		// Configure SPI settings
 		SPI.setDataMode(SPI_MODE0);
 		SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
@@ -477,6 +465,18 @@ public:
 
     void begin() override {
 		
+		#ifdef BROADCAST_SPI_DEBUG
+		Serial.println("Pins set for VSPI:");
+		Serial.print("\tVSPI_SCK: ");
+		Serial.println(VSPI_SCK);
+		Serial.print("\tVSPI_MISO: ");
+		Serial.println(VSPI_MISO);
+		Serial.print("\tVSPI_MOSI: ");
+		Serial.println(VSPI_MOSI);
+		Serial.print("\tVSPI_SS: ");
+		Serial.println(VSPI_SS);
+		#endif
+
 		// ================== INITIALIZE HSPI ==================
 		// Initialize SPI with VSPI pins: SCK=18, MISO=19, MOSI=23
 		// This method signature is only available in ESP32 Arduino SPI library!
