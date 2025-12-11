@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
 #include "../BroadcastSocket.hpp"
 
-// #define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG
 
 
 #define ENABLE_DIRECT_ADDRESSING
@@ -132,7 +132,7 @@ protected:
 						}
 					} else {
 						#ifdef BROADCAST_SPI_DEBUG
-						Serial.println("\t\tDevice ACK NOT received");
+						Serial.println("\t\tSEND: Device ACK NOT received");
 						#endif
 						length = 1; // Nothing to be sent
 					}
@@ -245,7 +245,7 @@ protected:
 					}
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println("\t\tDevice ACK NOT received");
+					Serial.println("\t\tRECEIVE: Device ACK NOT received");
 					#endif
 					length = 1; // Nothing to be sent
 					break;
