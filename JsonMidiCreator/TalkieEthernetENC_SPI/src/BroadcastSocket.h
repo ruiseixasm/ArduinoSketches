@@ -30,11 +30,11 @@ private:
 
     // Pointer PRESERVE the polymorphism while objects don't!
     JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
-    static uint8_t _talker_count;
-    static bool _control_timing;
-    static uint32_t _last_local_time;
-    static uint32_t _last_remote_time;
-    static uint16_t _drops_count;
+    uint8_t _talker_count = 0;
+    bool _control_timing = false;
+    uint32_t _last_local_time = 0;
+    uint32_t _last_remote_time = 0;
+    uint16_t _drops_count = 0;
 
 
     static uint16_t generateChecksum(const char* net_data, const size_t len) {
