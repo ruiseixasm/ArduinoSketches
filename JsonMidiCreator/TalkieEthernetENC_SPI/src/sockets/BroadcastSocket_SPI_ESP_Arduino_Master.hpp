@@ -160,7 +160,7 @@ protected:
 					#endif
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.print("\t\tCommand NOT successfully sent on try: ");
+					Serial.print("\t\tMessage NOT successfully sent on try: ");
 					Serial.println(s + 1);
 					#endif
 				}
