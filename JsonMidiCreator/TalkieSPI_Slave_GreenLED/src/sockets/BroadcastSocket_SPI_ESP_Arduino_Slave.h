@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <SPI.h>
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
-#include "../BroadcastSocket.h"
+#include "../BroadcastSocket.hpp"
 
 #define BROADCAST_SPI_DEBUG
 
@@ -46,7 +46,9 @@ public:
 
 
 private:
-    JsonObject* _talkers_ss_pins;
+
+    static char _isr_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    static char _isr_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 	
     volatile static uint8_t _receiving_index;
     volatile static uint8_t _sending_index;
@@ -79,7 +81,7 @@ protected:
 
 
 	void deleteReceived() {
-		_receiving_buffer[0] = '\0';
+		_isr_receiving_buffer[0] = '\0';
 		_received_data = false;
 	}
 	
@@ -111,7 +113,7 @@ public:
                 case RECEIVE:
                     if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
                         // Returns same received char as receiving confirmation (no need to set SPDR)
-                        _receiving_buffer[_receiving_index++] = c;
+                        _isr_receiving_buffer[_receiving_index++] = c;
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
                         _transmission_mode = NONE;
@@ -119,7 +121,7 @@ public:
                     break;
                 case SEND:
 					if (_sending_index < BROADCAST_SOCKET_BUFFER_SIZE) {
-						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
+						SPDR = _isr_sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
 						if (_validation_index > _sending_index) {	// Less missed sends this way
 							SPDR = END;	// All chars have been checked
 							break;
@@ -131,7 +133,7 @@ public:
 					}
 					// Starts checking 2 indexes after
 					if (_send_iteration_i > 1) {    // Two positions of delay
-						if (c != _sending_buffer[_validation_index]) {   // Also checks '\0' char
+						if (c != _isr_sending_buffer[_validation_index]) {   // Also checks '\0' char
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
 							break;
@@ -139,7 +141,7 @@ public:
 						_validation_index++; // Starts checking after two sent
 					}
 					// Only increments if NOT at the end of the string being sent
-					if (_sending_buffer[_sending_index] != '\0') {
+					if (_isr_sending_buffer[_sending_index] != '\0') {
 						_sending_index++;
 					}
                     _send_iteration_i++;
@@ -159,7 +161,7 @@ public:
                     _receiving_index = 0;
                     break;
                 case SEND:
-                    if (_sending_buffer[0] == '\0') {
+                    if (_isr_sending_buffer[0] == '\0') {
                         SPDR = NONE;
                     } else {
                         SPDR = ACK;
@@ -174,7 +176,7 @@ public:
 					if (_transmission_mode == RECEIVE) {
 						_received_data = true;
                     } else if (_transmission_mode == SEND) {
-                        _sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
+                        _isr_sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
 						_sending_index = 0;
                     }
                     _transmission_mode = NONE;
@@ -186,7 +188,7 @@ public:
                 case FULL:
                     SPDR = ACK;
                     if (_transmission_mode == RECEIVE) {
-                        _receiving_buffer[0] = '\0';	// Makes sure the receiving buffer is marked as empty in case of error
+                        _isr_receiving_buffer[0] = '\0';	// Makes sure the receiving buffer is marked as empty in case of error
 						_receiving_index = 0;
                     }
                     _transmission_mode = NONE;
@@ -221,20 +223,5 @@ public:
 
 };
 
-
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_receiving_index = 0;
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_sending_index = 0;
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_validation_index = 0;
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_send_iteration_i = 0;
-volatile BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode BroadcastSocket_SPI_ESP_Arduino_Slave::_transmission_mode 
-																	= BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode::NONE;
-volatile bool BroadcastSocket_SPI_ESP_Arduino_Slave::_received_data = false;
-
-// Define ISR at GLOBAL SCOPE (outside the class)
-ISR(SPI_STC_vect) {
-    // You need a way to call your class method from here
-    // Possibly using a static method or singleton pattern
-    BroadcastSocket_SPI_ESP_Arduino_Slave::handleSPI_Interrupt();
-}
 
 #endif // BROADCAST_SOCKET_SPI_ESP_ARDUINO_SLAVE_HPP

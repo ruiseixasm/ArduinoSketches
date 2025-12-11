@@ -27,9 +27,8 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 protected:
 
-	// Single core processing, in sequence, no two socket instances intercalate
-    static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-    static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+    char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 	
     // Pointer PRESERVE the polymorphism while objects don't!
     JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
@@ -399,6 +398,7 @@ public:
     uint16_t get_drops_count() { return _drops_count; }
 
 };
+
 
 
 

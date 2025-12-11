@@ -26,7 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // COMPILE WITH ARDUINO BOARD
-#include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Slave.hpp"
+#include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Slave.h"
 #include "src/GreenTalker.hpp"
 
 const char talker_name[] = "green";

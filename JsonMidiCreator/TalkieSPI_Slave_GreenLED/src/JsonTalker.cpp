@@ -13,7 +13,7 @@ https://github.com/ruiseixasm/JsonTalkie
 */
 
 #include "JsonTalker.h"         // Includes the ArduinoJson Library
-#include "BroadcastSocket.h"    // MUST include the full definition!
+#include "BroadcastSocket.hpp"    // MUST include the full definition!
 
 
 JsonTalker** JsonTalker::_json_talkers = nullptr;
