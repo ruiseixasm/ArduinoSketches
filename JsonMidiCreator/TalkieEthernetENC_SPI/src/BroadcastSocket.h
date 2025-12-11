@@ -162,8 +162,8 @@ private:
     
 protected:
 
-    static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-    static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+    char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
     uint8_t _max_delay_ms = 5;
 
 
