@@ -383,8 +383,6 @@ protected:
 				}
 				#endif
 			}
-			// Makes sure the _sending_buffer is reset with '\0'
-			_sending_buffer[0] = '\0';
 		}
         return 0;   // Returns 0 because everything is dealt internally in this method
     }
@@ -449,12 +447,17 @@ public:
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
 				length = receiveString(_talkers_ss_pins[ss_pin_i]);
 				if (length > 0) {
+					
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.print(class_name());
+					Serial.print(F(" is triggering the talkers from the SS pin: "));
+					Serial.println(_talkers_ss_pins[ss_pin_i]);
+					#endif
+
 					_actual_ss_pin = _talkers_ss_pins[ss_pin_i];
-					BroadcastSocket::triggerTalkers(length);
+					triggerTalkers(length);
 				}
 			}
-			// Makes sure the _receiving_buffer is reset with '\0'
-			_receiving_buffer[0] = '\0';
 		}
         return 0;   // Receives are all called internally in this method
     }
