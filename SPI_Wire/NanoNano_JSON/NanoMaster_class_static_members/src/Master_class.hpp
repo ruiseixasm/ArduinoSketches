@@ -98,7 +98,7 @@ private:
 								c = SPI.transfer(END);
 								if (c == '\0') {
 									#ifdef MASTER_CLASS_DEBUG
-									Serial.println("\t\tSent completed");
+									Serial.println("\t\tSend completed");
 									#endif
 									length = i;
 									break;
@@ -208,7 +208,7 @@ private:
 								// delayMicroseconds(receive_delay_us);    // Avoids interrupts stacking on Slave side
 								SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
 								#ifdef MASTER_CLASS_DEBUG
-								Serial.println("\t\tDevice has sent");
+								Serial.println("\t\tReceive completed");
 								#endif
 								length++;   // Adds up the '\0' uncounted char
 								break;
@@ -235,14 +235,14 @@ private:
 					}
 				} else if (c == NONE) {
 					#ifdef MASTER_CLASS_DEBUG
-					Serial.println("\t\tDevice has nothing to send");
+					Serial.println("\t\tThere is nothing to be received");
 					#endif
 					_receiving_buffer[0] = '\0';
 					length = 1; // Nothing received
 					break;
 				} else {
 					#ifdef MASTER_CLASS_DEBUG
-					Serial.println("\t\tDevice ACK NOT received");
+					Serial.println("\t\tSlave ACK or NONE was NOT received");
 					#endif
 					length = 1; // Nothing received
 					break;
