@@ -180,7 +180,7 @@ public:
 
             switch (c) {
                 case RECEIVE:
-                    if (_ptr_receiving_buffer && _transmission_mode == NONE) {
+                    if (_ptr_receiving_buffer && _transmission_mode == NONE && !_received_data) {
                         SPDR = READY;
                         _transmission_mode = RECEIVE;
                         _receiving_index = 0;
@@ -260,7 +260,7 @@ public:
 			#endif
 
 			length = BroadcastSocket::triggerTalkers(length);
-			_received_data = false;
+			_received_data = false;	// Allows the device to receive more data
 		}
 
         return length;
