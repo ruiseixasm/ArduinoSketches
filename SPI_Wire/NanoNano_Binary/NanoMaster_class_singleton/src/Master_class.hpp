@@ -56,15 +56,6 @@ public:
 	const char* command_off = "{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}";
 
 
-
-	// // ArduinoJson requires fields with "" instead of ''
-	// const char* command_on =
-	// 	"{\"t\":\"Nano\",\"m\":2,\"n\":\"ON\",\"f\":\"Talker-9f\",\"i\":3540751170,\"c\":24893}";
-
-	// const char* command_off =
-	// 	"{\"t\":\"Nano\",\"m\":2,\"n\":\"OFF\",\"f\":\"Talker-9f\",\"i\":3540751170,\"c\":24893}";
-
-
 protected:
 
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
@@ -126,11 +117,11 @@ protected:
 							if (_sending_buffer[i] == '\0') {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
 								c = _spi_instance->transfer(END);
-								if (c == '\0') {
+								if (c == _sending_buffer[i]) {	// Last char
 									#ifdef BROADCAST_SPI_DEBUG_1
 									Serial.println(F("\t\tSend completed"));
 									#endif
-									length = i;
+									length = i + 1;	// Goes beyond i
 									break;
 								} else {
 									#ifdef BROADCAST_SPI_DEBUG_1
@@ -174,8 +165,11 @@ protected:
 				if (length > 0) {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					if (length > 1) {
-						Serial.print(F("Command successfully sent: "));
-						Serial.println(_sending_buffer);
+						Serial.print(F("\tSent message: "));
+						Serial.write(_sending_buffer, length - 1);
+						Serial.println();
+						Serial.print(F("\tSent length: "));
+						Serial.println(length - 1);
 					} else {
 						Serial.println(F("\tNothing sent"));
 					}
@@ -305,8 +299,11 @@ protected:
             if (length > 0) {
                 #ifdef BROADCAST_SPI_DEBUG_1
                 if (length > 1) {
-                    Serial.print(F("Received message: "));
-                    Serial.println(_receiving_buffer);
+                    Serial.print(F("\tReceived message: "));
+					Serial.write(_receiving_buffer, length - 1);
+                    Serial.println();
+					Serial.print(F("\tReceived length: "));
+					Serial.println(length - 1);
                 } else {
                 	#ifdef BROADCAST_SPI_DEBUG_2
                     Serial.println(F("\tNothing received"));
