@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "JsonTalker.h"         // Includes the ArduinoJson Library
 
-// #define MULTI_PLAYER_DEBUG
+#define GREEN_TALKER_DEBUG
 
 
 class GreenTalker : public JsonTalker {
@@ -40,6 +40,8 @@ protected:
 
         static const Manifesto _manifesto = {
             (const Command[]){  // runs
+                {"mute", "Mutes this talker"},
+                {"unmute", "Unmutes this talker"},
                 {"on", "Turns led ON"},
                 {"off", "Turns led OFF"}
             },
@@ -53,7 +55,7 @@ protected:
                 {"runs", "Gets total runs"},
                 {"bpm_10", "Gets the Tempo in BPM x 10"}
             },
-            2,
+            4,
             2,
             4
         };
@@ -70,20 +72,20 @@ protected:
         {
         case 2:
             {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("Case 0 - Turning LED ON"));
+                #ifdef GREEN_TALKER_DEBUG
+                Serial.println(F("\tCase 0 - Turning LED ON"));
                 #endif
         
                 if (!_is_led_on) {
                 #ifdef GREEN_LED
-                    #ifdef JSON_TALKER_DEBUG
-                        Serial.print(F("GREEN_LED IS DEFINED as: "));
+                    #ifdef GREEN_TALKER_DEBUG
+                        Serial.print(F("\tGREEN_LED IS DEFINED as: "));
                         Serial.println(GREEN_LED);
                     #endif
                     digitalWrite(GREEN_LED, HIGH);
                 #else
-                    #ifdef JSON_TALKER_DEBUG
-                        Serial.println(F("GREEN_LED IS NOT DEFINED in this context!"));
+                    #ifdef GREEN_TALKER_DEBUG
+                        Serial.println(F("\tGREEN_LED IS NOT DEFINED in this context!"));
                     #endif
                 #endif
                     _is_led_on = true;
@@ -100,8 +102,8 @@ protected:
         
         case 3:
             {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("Case 1 - Turning LED OFF"));
+                #ifdef GREEN_TALKER_DEBUG
+                Serial.println(F("\tCase 1 - Turning LED OFF"));
                 #endif
         
                 if (_is_led_on) {

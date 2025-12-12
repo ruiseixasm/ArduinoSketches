@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
-// #define JSON_TALKER_DEBUG
+#define JSON_TALKER_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -118,6 +118,7 @@ protected:
         (void)target_index; // Silence unused parameter warning
 
 		#ifdef JSON_TALKER_DEBUG
+		Serial.print(F("\t"));
 		Serial.print(_name);
 		Serial.print(F(": "));
 		Serial.println(F("Sending a LOCAL message"));
@@ -176,6 +177,7 @@ protected:
 
     bool replyMessage(JsonObject& json_message, bool as_reply = true) {
 		#ifdef JSON_TALKER_DEBUG
+		Serial.print(F("\t"));
 		Serial.print(_name);
 		Serial.print(F(": "));
 		#endif
@@ -185,12 +187,12 @@ protected:
 		uint16_t c = json_message["c"].as<uint16_t>();
 		if (c == LOCAL_C) {	// c == 1 means a local message while 0 means a remote one
 			#ifdef JSON_TALKER_DEBUG
-			Serial.println(F("Replied a LOCAL message"));
+			Serial.println(F("\tReplied a LOCAL message"));
 			#endif
 			return localSend(json_message, as_reply);
 		}
 		#ifdef JSON_TALKER_DEBUG
-		Serial.println(F("Replied a REMOTE message"));
+		Serial.println(F("\tReplied a REMOTE message"));
 		#endif
         return remoteSend(json_message, as_reply);
     }
@@ -244,19 +246,19 @@ protected:
         case 2:
             {
                 #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("Case 0 - Turning LED ON"));
+                Serial.println(F("\tCase 0 - Turning LED ON"));
                 #endif
         
                 if (!_is_led_on) {
                 #ifdef LED_BUILTIN
                     #ifdef JSON_TALKER_DEBUG
-                        Serial.print(F("LED_BUILTIN IS DEFINED as: "));
+                        Serial.print(F("\tLED_BUILTIN IS DEFINED as: "));
                         Serial.println(LED_BUILTIN);
                     #endif
                     digitalWrite(LED_BUILTIN, HIGH);
                 #else
                     #ifdef JSON_TALKER_DEBUG
-                        Serial.println(F("LED_BUILTIN IS NOT DEFINED in this context!"));
+                        Serial.println(F("\tLED_BUILTIN IS NOT DEFINED in this context!"));
                     #endif
                 #endif
                     _is_led_on = true;
@@ -274,7 +276,7 @@ protected:
         case 3:
             {
                 #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("Case 1 - Turning LED OFF"));
+                Serial.println(F("\tCase 1 - Turning LED OFF"));
                 #endif
         
                 if (_is_led_on) {
@@ -416,7 +418,7 @@ public:
     virtual bool processData(JsonObject& json_message, bool pre_validated = false) {
 
         #ifdef JSON_TALKER_DEBUG
-        Serial.println(F("Processing..."));
+        Serial.println(F("\tProcessing JSON message..."));
         #endif
         
         // Error types:
@@ -457,7 +459,7 @@ public:
         } else if (json_message["t"].is<String>()) {
             if (json_message["t"] != _name) {
                 #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("Message NOT for me!"));
+                Serial.println(F("\tMessage NOT for me!"));
                 #endif
                 return true;    // It's still validated (just not for me as a target)
             } else {
@@ -472,7 +474,7 @@ public:
         //     2 - NONE
 
         #ifdef JSON_TALKER_DEBUG
-        Serial.print(F("Process: "));
+        Serial.print(F("\tProcess: "));
         serializeJson(json_message, Serial);
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
@@ -496,7 +498,7 @@ public:
                 // In your list handler:
                 
                 #ifdef JSON_TALKER_DEBUG
-                Serial.print("=== This object is: ");
+                Serial.print("\t=== This object is: ");
                 Serial.println(class_name());
                 #endif
             
@@ -536,7 +538,9 @@ public:
                 if (command_found_i < 255) {
 
                     #ifdef JSON_TALKER_DEBUG
-                    Serial.println(F("RUN found, now being processed..."));
+                    Serial.print(F("\tRUN found at "));
+                    Serial.print(command_found_i);
+                    Serial.println(F(", now being processed..."));
                     #endif
             
                     json_message["g"] = 0;       // ROGER
@@ -648,7 +652,7 @@ public:
             if (json_message["b"].is<uint8_t>()) {
 
                 #ifdef JSON_TALKER_DEBUG
-                Serial.print(F("Channel B value is an <uint8_t>: "));
+                Serial.print(F("\tChannel B value is an <uint8_t>: "));
                 Serial.println(json_message["b"].is<uint8_t>());
                 #endif
 
