@@ -97,7 +97,21 @@ protected:
         DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.println(F("ERROR: Failed to deserialize JSON"));
+			Serial.print(F("ERROR: Failed to deserialize JSON: "));
+			Serial.print(error.c_str());
+			Serial.print(F(" - Code: "));
+			Serial.println(error.code());
+			
+			// What ArduinoJson sees
+			Serial.print(F("Input length: "));
+			Serial.println(strlen(_receiving_buffer));
+			
+			// Test with simple JSON
+			const char* test_simple = "{}";
+			JsonDocument test_doc;
+			DeserializationError test_err = deserializeJson(test_doc, test_simple);
+			Serial.print(F("Simple {} test: "));
+			Serial.println(test_err.c_str());
 			#endif
             return;
         }
