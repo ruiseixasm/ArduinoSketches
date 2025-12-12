@@ -86,9 +86,9 @@ protected:
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
     volatile static uint8_t _send_iteration_i;
+	volatile static uint8_t _sending_length;
     volatile static MessageCode _transmission_mode;
 	volatile static bool _received_data;
-	volatile static bool _ready_to_send;
 
 
     void processMessage() {
@@ -135,8 +135,8 @@ protected:
             digitalWrite(GREEN_LED_PIN, HIGH);
 			digitalWrite(YELLOW_LED_PIN, LOW);
             json_message["n"] = "OK_ON";
-            size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-			if (length == 0) {
+            _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			if (!_sending_length) {
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
@@ -145,13 +145,13 @@ protected:
             Serial.print(F("LED is ON"));
             Serial.print(F(" | Sending: "));
             Serial.println(_sending_buffer);
-
+			
         } else if (strcmp(command_name, "OFF") == 0) {
             digitalWrite(GREEN_LED_PIN, LOW);
     		digitalWrite(YELLOW_LED_PIN, LOW);
             json_message["n"] = "OK_OFF";
-            size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-			if (length == 0) {
+            _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			if (!_sending_length) {
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
@@ -163,8 +163,8 @@ protected:
 
         } else {
             json_message["n"] = "BUZZ";
-            size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-			if (length == 0) {
+            _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			if (!_sending_length) {
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
@@ -173,6 +173,7 @@ protected:
             Serial.print(F(" | Sending: "));
             Serial.println(_sending_buffer);
     		digitalWrite(YELLOW_LED_PIN, HIGH);
+			
         }
     }
 
@@ -322,7 +323,7 @@ public:
                     break;
                 case SEND:
                     if (_ptr_sending_buffer) {
-                        if (_ready_to_send) {
+                        if (_sending_length) {
 							if (_transmission_mode == NONE) {
 								SPDR = READY;
 								_transmission_mode = SEND;
@@ -358,7 +359,7 @@ public:
 						Serial.println(F("\tReceived message"));
 						#endif
                     } else if (_transmission_mode == SEND) {
-                        _ready_to_send = false;	// Makes sure the sending buffer is tagged as sent
+                        _sending_length = 0;	// Makes sure the sending buffer is zeroed
 						#ifdef BROADCAST_SPI_DEBUG
 						Serial.println(F("\tSent message"));
 						#endif
@@ -384,9 +385,8 @@ public:
 
 	
     void process() {
-        if (_received_data && !_ready_to_send) {
+        if (_received_data && !_sending_length) {
             processMessage();   // Called only once!
-			_ready_to_send = true;
 			_received_data = false;
         }
     }
@@ -402,9 +402,9 @@ volatile uint8_t Slave_class::_receiving_index = 0;
 volatile uint8_t Slave_class::_sending_index = 0;
 volatile uint8_t Slave_class::_validation_index = 0;
 volatile uint8_t Slave_class::_send_iteration_i = 0;
+volatile uint8_t Slave_class::_sending_length = 0;
 volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::MessageCode::NONE;
 volatile bool Slave_class::_received_data = false;
-volatile bool Slave_class::_ready_to_send = false;
 
 
 #endif // SLAVE_CLASS_HPP
