@@ -47,6 +47,7 @@ public:
         NONE    = 0xF8, // Means nothing to send
         FULL    = 0xF9, // Signals the buffer as full
         BUSY    = 0xFA, // Tells the Master to wait a little
+		LAST	= 0xFB,	// Asks for the last char
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
@@ -109,10 +110,11 @@ protected:
 							delayMicroseconds(send_delay_us);
 							c = _spi_instance->transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
 							if (c < 128) {
-								if (c != _sending_buffer[i - 1]) {    // Includes NACK situation
+								// Offset of 2 picks all mismatches than an offset of 1
+								if (i > 1 && c != _sending_buffer[i - 2]) {
 									#ifdef BROADCAST_SPI_DEBUG_1
 									Serial.print(F("\t\tChar miss match at: "));
-									Serial.println(i);
+									Serial.println(i - 2);
 									#endif
 									size = 0;
 									break;
@@ -125,6 +127,17 @@ protected:
 								size = 0;
 								break;
 							}
+						}
+						// Checks the last 2 chars still to be checked
+						delayMicroseconds(10);    // Makes sure the Status Byte is sent
+						c = _spi_instance->transfer(LAST);
+						if (c != _sending_buffer[length - 2]) {
+							#ifdef BROADCAST_SPI_DEBUG_1
+							Serial.print(F("\t\tChar miss match at: "));
+							Serial.println(length - 2);
+							#endif
+							size = 0;
+							break;
 						}
 						delayMicroseconds(10);    // Makes sure the Status Byte is sent
 						c = _spi_instance->transfer(END);

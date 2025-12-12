@@ -59,6 +59,7 @@ public:
         NONE    = 0xF8, // Means nothing to send
         FULL    = 0xF9, // Signals the buffer as full
         BUSY    = 0xFA, // Tells the Master to wait a little
+		LAST	= 0xFB,	// Asks for the last char
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
@@ -245,11 +246,11 @@ public:
 
             switch (_transmission_mode) {
                 case RECEIVE:
-					// Makes sure it retuns ERROR if unable to set the buffer (best way to avoid buffer corruption)
-					SPDR = ERROR;
                     if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
                         _ptr_receiving_buffer[_receiving_index] = c;
-						SPDR = _ptr_receiving_buffer[_receiving_index];	// Char set correctly for sure
+						if (_receiving_index > 0) {
+							SPDR = _ptr_receiving_buffer[_receiving_index - 1];	// Char sent with an offset to guarantee matching
+						}
 						_receiving_index++;
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
@@ -332,6 +333,13 @@ public:
                         }
                     } else {
                         SPDR = VOID;
+                    }
+                    break;
+                case LAST:
+					if (_transmission_mode == RECEIVE) {
+						SPDR = _ptr_receiving_buffer[_receiving_index - 1];
+                    } else if (_transmission_mode == SEND) {
+						SPDR = _ptr_sending_buffer[_sending_index];
                     }
                     break;
                 case END:
