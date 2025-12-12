@@ -69,6 +69,13 @@ protected:
 	// Just create a pointer to the existing SPI object
 	SPIClass* _spi_instance = &SPI;  // Alias pointer
 
+	// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+	#if ARDUINOJSON_VERSION_MAJOR >= 7
+	JsonDocument message_doc;
+	#else
+	StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+	#endif
+
 	
     uint8_t sendString(uint8_t length, int ss_pin) {
         uint8_t size = 0;	// No interrupts, so, not volatile
@@ -466,13 +473,6 @@ public:
         delay(1000);
         length = receiveString(_ss_pin);
         if (length == 0) return false;
-
-        // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-        #if ARDUINOJSON_VERSION_MAJOR >= 7
-        JsonDocument message_doc;
-        #else
-        StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
-        #endif
 
         DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
         if (error) {

@@ -89,19 +89,19 @@ protected:
     volatile static MessageCode _transmission_mode;
 	volatile static bool _received_data;
 
+	// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+	#if ARDUINOJSON_VERSION_MAJOR >= 7
+	JsonDocument message_doc;
+	#else
+	StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+	#endif
+
 
     void processMessage() {
 
         Serial.print(F("Processed command: "));
 		Serial.write(_receiving_buffer, received_length());
 		Serial.println();
-
-        // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-        #if ARDUINOJSON_VERSION_MAJOR >= 7
-        JsonDocument message_doc;
-        #else
-        StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
-        #endif
 
         DeserializationError error = deserializeJson(message_doc, _receiving_buffer, received_length());
         if (error) {
