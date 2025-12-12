@@ -64,9 +64,14 @@ public:
     };
 
 private:
+
+    char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+    char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+
     // Buffers and state variables
-    static char _ptr_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-    static char _ptr_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    static char* _ptr_receiving_buffer;
+    static char* _ptr_sending_buffer;
+
     volatile static uint8_t _receiving_index;
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
@@ -138,6 +143,10 @@ private:
 public:
 
     Slave_class() {
+
+		// For static access to the buffers
+		_ptr_receiving_buffer = _receiving_buffer;
+		_ptr_sending_buffer = _sending_buffer;
 
         // Initialize pins
         pinMode(GREEN_LED_PIN, OUTPUT);
@@ -288,8 +297,8 @@ public:
 
 
 // Initialize static members
-char Slave_class::_ptr_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-char Slave_class::_ptr_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+char* Slave_class::_ptr_receiving_buffer = nullptr;
+char* Slave_class::_ptr_sending_buffer = nullptr;
 
 volatile uint8_t Slave_class::_receiving_index = 0;
 volatile uint8_t Slave_class::_sending_index = 0;
