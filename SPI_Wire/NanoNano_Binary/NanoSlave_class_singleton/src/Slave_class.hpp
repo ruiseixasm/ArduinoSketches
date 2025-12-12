@@ -20,7 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>
 
 
-// #define SLAVE_CLASS_DEBUG
+#define BROADCAST_SPI_DEBUG
 
 
 // Pin definitions - define these in your main sketch
