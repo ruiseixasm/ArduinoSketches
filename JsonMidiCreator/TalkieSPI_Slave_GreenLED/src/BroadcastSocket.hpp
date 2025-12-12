@@ -309,8 +309,6 @@ protected:
         }
 
 
-	// CAN'T BE STATIC
-    // NOT Pure virtual methods anymores (= 0;)
     virtual size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) {
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
@@ -382,7 +380,7 @@ public:
         } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
 
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("R: Response message without an identifier (i)"));
+            Serial.print(F("ERROR: Response message without an identifier (i)"));
             serializeJson(json_message, Serial);
             Serial.println();  // optional: just to add a newline after the JSON
             #endif
@@ -390,15 +388,25 @@ public:
             return false;
         }
 
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.print(F("remoteSend1: "));
+		serializeJson(json_message, Serial);
+		Serial.println();  // optional: just to add a newline after the JSON
+		#endif
+
 		// This length excludes the '\0' char
 		// serializeJson() returns length without \0, but adds \0 to the buffer. Your SPI code should send until it finds \0.
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
         #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("remoteSend: "));
-        Serial.print(_sending_buffer);
-        Serial.println();  // optional: just to add a newline after the JSON
+        Serial.print(F("remoteSend2: "));
+        Serial.println(_sending_buffer);
         #endif
+
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.print(F("remoteSend3: JSON length: "));
+		Serial.println(length);
+		#endif
 
         return send(length, as_reply, target_index);	// send is internally triggered, so, this method can hardly be static
     }

@@ -607,26 +607,26 @@ public:
             // Teensy Boards
             #elif defined(TEENSYDUINO)
                 #if defined(__IMXRT1062__)
-                    json_message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
+                    json_message["d"] = "Teensy 4.0/4.1 (i.MX RT1062)";
                 #elif defined(__MK66FX1M0__)
-                    json_message["d"] = F("Teensy 3.6 (MK66FX1M0)");
+                    json_message["d"] = "Teensy 3.6 (MK66FX1M0)";
                 #elif defined(__MK64FX512__)
-                    json_message["d"] = F("Teensy 3.5 (MK64FX512)");
+                    json_message["d"] = "Teensy 3.5 (MK64FX512)";
                 #elif defined(__MK20DX256__)
-                    json_message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
+                    json_message["d"] = "Teensy 3.2/3.1 (MK20DX256)";
                 #elif defined(__MKL26Z64__)
-                    json_message["d"] = F("Teensy LC (MKL26Z64)");
+                    json_message["d"] = "Teensy LC (MKL26Z64)";
                 #else
-                    json_message["d"] = F("Unknown Teensy Board");
+                    json_message["d"] = "Unknown Teensy Board";
                 #endif
 
             // ARM (Due, Zero, etc.)
             #elif defined(__arm__)
-                json_message["d"] = F("ARM-based Board");
+                json_message["d"] = "ARM-based Board";
 
             // Unknown Board
             #else
-                json_message["d"] = F("Unknown Board");
+                json_message["d"] = "Unknown Board";
 
             #endif
 
