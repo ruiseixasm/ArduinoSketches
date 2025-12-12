@@ -40,7 +40,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define YELLOW_LED_PIN 19   // A5
 #endif
 
-#define BUFFER_SIZE 128
+#define BROADCAST_SOCKET_BUFFER_SIZE 128
 
 
 class Slave_class
@@ -52,41 +52,43 @@ public:
         END     = 0xF1, // End of transmission
         ACK     = 0xF2, // Acknowledge
         NACK    = 0xF3, // Not acknowledged
-        READY   = 0xF4, // Slave has response ready
+        READY   = 0xF4, // Slave is ready
         ERROR   = 0xF5, // Error frame
         RECEIVE = 0xF6, // Asks the receiver to start receiving
         SEND    = 0xF7, // Asks the receiver to start sending
         NONE    = 0xF8, // Means nothing to send
         FULL    = 0xF9, // Signals the buffer as full
+        BUSY    = 0xFA, // Tells the Master to wait a little
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
 
 private:
     // Buffers and state variables
-    static char _receiving_buffer[BUFFER_SIZE];
-    static char _sending_buffer[BUFFER_SIZE];
+    static char _ptr_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    static char _ptr_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     volatile static uint8_t _receiving_index;
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
     volatile static uint8_t _send_iteration_i;
     volatile static MessageCode _transmission_mode;
 	volatile static bool _received_data;
+	volatile static bool _ready_to_send;
 
 
     void processMessage() {
 
         Serial.print("Processed command: ");
-        Serial.println(_receiving_buffer);
+        Serial.println(_ptr_receiving_buffer);
 
         // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
         #if ARDUINOJSON_VERSION_MAJOR >= 7
         JsonDocument message_doc;
         #else
-        StaticJsonDocument<BUFFER_SIZE> message_doc;
+        StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
         #endif
 
-        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BUFFER_SIZE);
+        DeserializationError error = deserializeJson(message_doc, _ptr_receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (error) {
             return;
         }
@@ -98,24 +100,24 @@ private:
         if (strcmp(command_name, "ON") == 0) {
             digitalWrite(GREEN_LED_PIN, HIGH);
             json_message["n"] = "OK_ON";
-            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
+            size_t length = serializeJson(json_message, _ptr_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
             Serial.print("LED is ON");
             Serial.print(" | Sending: ");
-            Serial.println(_sending_buffer);
+            Serial.println(_ptr_sending_buffer);
 
         } else if (strcmp(command_name, "OFF") == 0) {
             digitalWrite(GREEN_LED_PIN, LOW);
             json_message["n"] = "OK_OFF";
-            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
+            size_t length = serializeJson(json_message, _ptr_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
             Serial.print("LED is OFF");
             Serial.print(" | Sending: ");
-            Serial.println(_sending_buffer);
+            Serial.println(_ptr_sending_buffer);
         } else {
             json_message["n"] = "BUZZ";
-            size_t length = serializeJson(json_message, _sending_buffer, BUFFER_SIZE);
+            size_t length = serializeJson(json_message, _ptr_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
             Serial.print("Unknown command");
             Serial.print(" | Sending: ");
-            Serial.println(_sending_buffer);
+            Serial.println(_ptr_sending_buffer);
         }
     }
 
@@ -183,16 +185,16 @@ public:
             switch (_transmission_mode) {
                 case RECEIVE:
 					// Just returns same received char as receiving confirmation (echo) (no need to set SPDR)
-                    if (_receiving_index < BUFFER_SIZE) {
-                        _receiving_buffer[_receiving_index++] = c;
+                    if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
+                        _ptr_receiving_buffer[_receiving_index++] = c;
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
                         _transmission_mode = NONE;
                     }
                     break;
                 case SEND:
-					if (_sending_index < BUFFER_SIZE) {
-						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
+					if (_sending_index < BROADCAST_SOCKET_BUFFER_SIZE) {
+						SPDR = _ptr_sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
 						if (_validation_index > _sending_index) {	// Less missed sends this way
 							SPDR = END;	// All chars have been checked
 							break;
@@ -204,7 +206,7 @@ public:
 					}
 					// Starts checking 2 indexes after
 					if (_send_iteration_i > 1) {    // Two positions of delay
-						if (c != _sending_buffer[_validation_index]) {   // Also checks '\0' char
+						if (c != _ptr_sending_buffer[_validation_index]) {   // Also checks '\0' char
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
 							break;
@@ -212,7 +214,7 @@ public:
 						_validation_index++; // Starts checking after two sent
 					}
 					// Only increments if NOT at the end of the string being sent
-					if (_sending_buffer[_sending_index] != '\0') {
+					if (_ptr_sending_buffer[_sending_index] != '\0') {
 						_sending_index++;
 					}
                     _send_iteration_i++;
@@ -232,7 +234,7 @@ public:
                     _receiving_index = 0;
                     break;
                 case SEND:
-                    if (_sending_buffer[0] == '\0') {
+                    if (_ptr_sending_buffer[0] == '\0') {
                         SPDR = NONE;
                     } else {
                         SPDR = ACK;
@@ -247,7 +249,7 @@ public:
 					if (_transmission_mode == RECEIVE) {
 						_received_data = true;
                     } else if (_transmission_mode == SEND) {
-                        _sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
+                        _ptr_sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
 						_sending_index = 0;
                     }
                     _transmission_mode = NONE;
@@ -259,7 +261,7 @@ public:
                 case FULL:
                     SPDR = ACK;
                     if (_transmission_mode == RECEIVE) {
-                        _receiving_buffer[0] = '\0';	// Makes sure the receiving buffer is marked as empty in case of error
+                        _ptr_receiving_buffer[0] = '\0';	// Makes sure the receiving buffer is marked as empty in case of error
 						_receiving_index = 0;
                     }
                     _transmission_mode = NONE;
@@ -271,7 +273,7 @@ public:
     }
 
 	void deleteReceived() {
-		_receiving_buffer[0] = '\0';
+		_ptr_receiving_buffer[0] = '\0';
 		_received_data = false;
 	}
 	
@@ -286,8 +288,8 @@ public:
 
 
 // Initialize static members
-char Slave_class::_receiving_buffer[BUFFER_SIZE] = {'\0'};
-char Slave_class::_sending_buffer[BUFFER_SIZE] = {'\0'};
+char Slave_class::_ptr_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+char Slave_class::_ptr_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
 volatile uint8_t Slave_class::_receiving_index = 0;
 volatile uint8_t Slave_class::_sending_index = 0;
@@ -295,6 +297,7 @@ volatile uint8_t Slave_class::_validation_index = 0;
 volatile uint8_t Slave_class::_send_iteration_i = 0;
 volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::MessageCode::NONE;
 volatile bool Slave_class::_received_data = false;
+volatile bool Slave_class::_ready_to_send = false;
 
 
 #endif // SLAVE_CLASS_HPP

@@ -24,7 +24,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // Pin definitions
 extern const int BUZZ_PIN;  // Declare as external (defined elsewhere)
 
-#define BUFFER_SIZE 128
+#define BROADCAST_SOCKET_BUFFER_SIZE 128
 
 // To make this value the minimum possible, always place the setting SPDR on top in the Slave code (SPDR =)
 #define send_delay_us 5
@@ -39,19 +39,20 @@ public:
         END     = 0xF1, // End of transmission
         ACK     = 0xF2, // Acknowledge
         NACK    = 0xF3, // Not acknowledged
-        READY   = 0xF4, // Slave has response ready
+        READY   = 0xF4, // Slave is ready
         ERROR   = 0xF5, // Error frame
         RECEIVE = 0xF6, // Asks the receiver to start receiving
         SEND    = 0xF7, // Asks the receiver to start sending
         NONE    = 0xF8, // Means nothing to send
         FULL    = 0xF9, // Signals the buffer as full
+        BUSY    = 0xFA, // Tells the Master to wait a little
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
 
 private:
 
-	static char _receiving_buffer[BUFFER_SIZE];
+	static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     static int _ss_pin;
 
     size_t sendString(const char* command) {
@@ -81,7 +82,7 @@ private:
 
 					if (c == ACK) {
 					
-						for (uint8_t i = 1; i < BUFFER_SIZE; i++) {
+						for (uint8_t i = 1; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
 							delayMicroseconds(send_delay_us);
 							c = SPI.transfer(command[i]);	// Receives the echoed command[i - 1]
 							if (c != command[i - 1]) {    // Includes NACK situation
@@ -193,7 +194,7 @@ private:
 				if (c == ACK) { // Makes sure there is an Acknowledge first
 					
 					// Starts to receive all chars here
-					for (uint8_t i = 0; i < BUFFER_SIZE; i++) { // First i isn't a char byte
+					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
 							c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
@@ -426,7 +427,7 @@ public:
 };
 
 
-char Master_class::_receiving_buffer[BUFFER_SIZE] = {'\0'};
+char Master_class::_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 int Master_class::_ss_pin = 10;
 
 #endif // MASTER_CLASS_HPP
