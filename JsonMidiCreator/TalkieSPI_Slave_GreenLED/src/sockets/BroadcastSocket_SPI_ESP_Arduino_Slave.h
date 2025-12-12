@@ -37,7 +37,7 @@ public:
         SEND    = 0xF7, // Asks the receiver to start sending
         NONE    = 0xF8, // Means nothing to send
         FULL    = 0xF9, // Signals the buffer as full
-        WAIT    = 0xFA, // Tells the Master to wait a little
+        BUSY    = 0xFA, // Tells the Master to wait a little
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
@@ -187,7 +187,7 @@ public:
 							_transmission_mode = RECEIVE;
 							_receiving_index = 0;
 						} else {
-                        	SPDR = WAIT;
+                        	SPDR = BUSY;
 						}
                     } else {
                         SPDR = VOID;
@@ -203,7 +203,7 @@ public:
 								_validation_index = 0;
 								_send_iteration_i = 0;
 							} else {
-								SPDR = WAIT;
+								SPDR = BUSY;
 							}
                         } else {
                             SPDR = NONE;
@@ -225,7 +225,7 @@ public:
 					if (_transmission_mode == NONE) {
                     	SPDR = READY;
 					} else {
-                        SPDR = WAIT;
+                        SPDR = BUSY;
 					}
                     break;
                 case ERROR:
