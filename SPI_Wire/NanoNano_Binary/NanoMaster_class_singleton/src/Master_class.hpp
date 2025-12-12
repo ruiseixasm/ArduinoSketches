@@ -54,7 +54,7 @@ public:
 	const char* command_on = "{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}";
 	const char* command_off = "{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}";
 
-private:
+protected:
 
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
@@ -391,8 +391,6 @@ private:
     }
 
 
-public:
-
     Master_class(int ss_pin = 10) {
 
         _ss_pin = ss_pin;
@@ -412,6 +410,19 @@ public:
         // This returns the pin to exact power-on state:
         pinMode(_ss_pin, INPUT);
         digitalWrite(_ss_pin, LOW);  // Important: disables any pull-up
+    }
+
+
+public:
+
+	// // Master_class master_class = Master_class(SS_PIN);  // WRONG!
+	// Master_class& master_class = Master_class::instance(SS_PIN);  // CORRECT!
+	
+    // Move ONLY the singleton instance method to subclass
+    static Master_class& instance(int ss_pin = 10) {
+
+        static Master_class instance(ss_pin);
+        return instance;
     }
 
     

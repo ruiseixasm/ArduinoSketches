@@ -6,8 +6,8 @@
 const int SS_PIN = 10;  // Slave Select pin
 const int BUZZ_PIN = 2; // External BUZZER pin
 
-Master_class master_class = Master_class(SS_PIN);
-
+// Master_class master_class = Master_class(SS_PIN);  // WRONG!
+Master_class& master_class = Master_class::instance(SS_PIN);  // CORRECT!
 
 void setup() {
     // Initialize serial
