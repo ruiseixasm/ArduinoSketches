@@ -267,31 +267,23 @@ public:
                     }
                     break;
                 case SEND:
-					if (_sending_index < BROADCAST_SOCKET_BUFFER_SIZE) {
+					if (_sending_index < _sending_length) {
 						SPDR = _ptr_sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
-						if (_validation_index > _sending_index) {	// Less missed sends this way
-							SPDR = END;	// All chars have been checked
-							break;
-						}
-					} else {
-						SPDR = FULL;
-						_transmission_mode = NONE;
-						break;
+					} else if (_sending_index == _sending_length) {
+						SPDR = LAST;	// Asks for the LAST char
+					} else {	// Less missed sends this way
+						SPDR = END;		// All chars have been checked
 					}
 					// Starts checking 2 indexes after
-					if (_send_iteration_i > 1) {    // Two positions of delay
-						if (c != _ptr_sending_buffer[_validation_index]) {   // Also checks '\0' char
+					if (_sending_index > 1) {    // Two positions of delay
+						if (c != _ptr_sending_buffer[_validation_index]) {	// Checks all chars
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
 							break;
 						}
 						_validation_index++; // Starts checking after two sent
 					}
-					// Only increments if NOT at the end of the string being sent
-					if (_ptr_sending_buffer[_sending_index] != '\0') {
-						_sending_index++;
-					}
-                    _send_iteration_i++;
+					_sending_index++;
                     break;
                 default:
                     SPDR = NACK;
@@ -323,7 +315,7 @@ public:
                     break;
                 case SEND:
                     if (_ptr_sending_buffer) {
-                        if (_sending_length) {
+                        if (_sending_length && _sending_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 							if (_transmission_mode == NONE) {
 								SPDR = READY;
 								_transmission_mode = SEND;
@@ -336,6 +328,7 @@ public:
 							}
                         } else {
                             SPDR = NONE;
+							_sending_length = 0;
 							#ifdef BROADCAST_SPI_DEBUG
 							Serial.println(F("\tNothing to be sent"));
 							#endif

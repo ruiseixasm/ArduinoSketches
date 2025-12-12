@@ -254,26 +254,23 @@ protected:
 					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
-							c = _spi_instance->transfer(_receiving_buffer[size]);    // size == i - 1
+							c = _spi_instance->transfer(_receiving_buffer[i - 1]);
 							if (c < 128) {   // Only accepts ASCII chars
-								// Avoids increment beyond the real string size
-								if (_receiving_buffer[size] != '\0') {    // size == i - 1
-									_receiving_buffer[++size] = c;        // size == i (also sets '\0')
-								}
-							} else if (c == END) {
-								delayMicroseconds(10);    // Makes sure the Status Byte is sent
-								_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+								_receiving_buffer[i] = c;
+							} else if (c == LAST) {
+								delayMicroseconds(receive_delay_us);    // Makes sure the Status Byte is sent
+								c = _spi_instance->transfer(_receiving_buffer[i]);  // Replies the last char to trigger END in return
+								size = i + 1;	// size equivalent to 'length + 1'
 								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.println(F("\t\tReceive completed"));
+								Serial.println(F("\t\tReceived LAST"));
 								#endif
-								size++;   // Adds up the '\0' uncounted char
 								break;
 							} else {    // Includes NACK (implicit)
+								size = 0;
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.print(F("\t\t\tNo END or Char, instead, received: "));
 								Serial.println(c, HEX);
 								#endif
-								size = 0;
 								break;
 							}
 						} else {
@@ -288,6 +285,14 @@ protected:
 								break;
 							}
 						}
+					}
+					if (c == END) {
+						delayMicroseconds(10);    // Makes sure the Status Byte is sent
+						_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println(F("\t\tReceive completed"));
+						#endif
+						size++;   // Adds up the '\0' uncounted char
 					}
 				} else if (c == NONE) {
 					#ifdef BROADCAST_SPI_DEBUG_2
@@ -479,7 +484,7 @@ public:
         StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
         #endif
 
-        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.print(F("ERROR (ON): "));
@@ -529,7 +534,7 @@ public:
         length = receiveString(_ss_pin);
         if (length == 0) return false;
 
-        error = deserializeJson(message_doc, _receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        error = deserializeJson(message_doc, _receiving_buffer, length);
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.println(F("ERROR (OFF): Failed to deserialize JSON"));
