@@ -20,7 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"
 
 
-// #define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG
 
 
 class BroadcastSocket_SPI_ESP_Arduino_Slave : public BroadcastSocket {
@@ -76,7 +76,7 @@ protected:
 			SPCR &= ~_BV(CPOL);  // Clock polarity 0
 			SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
 
-            // For static access
+            // For static access to the buffers
             _ptr_receiving_buffer = _receiving_buffer;
             _ptr_sending_buffer = _sending_buffer;
 
@@ -246,14 +246,11 @@ public:
 
 		if (_received_data) {
 			
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tReceived message: "));
-			Serial.println(_ptr_receiving_buffer);
-			#endif
-
 			length = _receiving_index - 1;	// length excludes the char '\0'
 			
 			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print(F("\tReceived message: "));
+			Serial.println(_ptr_receiving_buffer);
 			Serial.print(F("\tReceived length: "));
 			Serial.println(length);
 			#endif

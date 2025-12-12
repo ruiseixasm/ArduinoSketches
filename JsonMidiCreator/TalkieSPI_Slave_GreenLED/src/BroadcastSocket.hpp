@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonTalker.h"
 
 
-// #define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
