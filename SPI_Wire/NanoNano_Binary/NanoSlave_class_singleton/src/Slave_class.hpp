@@ -124,6 +124,8 @@ private:
             Serial.print(" | Sending: ");
             Serial.println(_ptr_sending_buffer);
         }
+
+		_ready_to_send = true;
     }
 
 
@@ -193,8 +195,8 @@ public:
 
             switch (_transmission_mode) {
                 case RECEIVE:
-					// Just returns same received char as receiving confirmation (echo) (no need to set SPDR)
                     if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
+                        // Returns same received char as receiving confirmation (no need to set SPDR)
                         _ptr_receiving_buffer[_receiving_index++] = c;
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
@@ -238,19 +240,35 @@ public:
 
             switch (c) {
                 case RECEIVE:
-                    SPDR = ACK;
-                    _transmission_mode = RECEIVE;
-                    _receiving_index = 0;
+                    if (_ptr_receiving_buffer) {
+						if (_transmission_mode == NONE && !_received_data) {
+							SPDR = READY;
+							_transmission_mode = RECEIVE;
+							_receiving_index = 0;
+						} else {
+                        	SPDR = BUSY;
+						}
+                    } else {
+                        SPDR = VOID;
+                    }
                     break;
                 case SEND:
-                    if (_ptr_sending_buffer[0] == '\0') {
-                        SPDR = NONE;
+                    if (_ptr_sending_buffer) {
+                        if (_ready_to_send) {
+							if (_transmission_mode == NONE) {
+								SPDR = READY;
+								_transmission_mode = SEND;
+								_sending_index = 0;
+								_validation_index = 0;
+								_send_iteration_i = 0;
+							} else {
+								SPDR = BUSY;
+							}
+                        } else {
+                            SPDR = NONE;
+                        }
                     } else {
-                        SPDR = ACK;
-                        _transmission_mode = SEND;
-                        _sending_index = 0;
-                        _validation_index = 0;
-                        _send_iteration_i = 0;
+                        SPDR = VOID;
                     }
                     break;
                 case END:
@@ -258,13 +276,16 @@ public:
 					if (_transmission_mode == RECEIVE) {
 						_received_data = true;
                     } else if (_transmission_mode == SEND) {
-                        _ptr_sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
-						_sending_index = 0;
+                        _ready_to_send = false;	// Makes sure the sending buffer is tagged as sent
                     }
                     _transmission_mode = NONE;
                     break;
                 case ACK:
-                    SPDR = READY;
+					if (_transmission_mode == NONE) {
+                    	SPDR = READY;
+					} else {
+                        SPDR = BUSY;
+					}
                     break;
                 case ERROR:
                 case FULL:
@@ -281,15 +302,11 @@ public:
         }
     }
 
-	void deleteReceived() {
-		_ptr_receiving_buffer[0] = '\0';
-		_received_data = false;
-	}
 	
     void process() {
         if (_received_data) {
             processMessage();   // Called only once!
-			deleteReceived();	// Critical to avoid repeated calls over the ISR function
+			_received_data = false;
         }
     }
 
