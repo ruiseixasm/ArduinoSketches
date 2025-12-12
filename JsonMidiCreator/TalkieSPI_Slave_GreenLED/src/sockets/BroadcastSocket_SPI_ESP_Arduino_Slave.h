@@ -189,8 +189,8 @@ public:
                     }
                     break;
                 case SEND:
-                    if (_ptr_sending_buffer) {
-                        if (_ready_to_send && _transmission_mode == NONE) {
+                    if (_ptr_sending_buffer && _transmission_mode == NONE) {
+                        if (_ready_to_send) {
                             SPDR = READY;
                             _transmission_mode = SEND;
                             _sending_index = 0;
