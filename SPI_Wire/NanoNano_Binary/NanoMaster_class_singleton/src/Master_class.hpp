@@ -498,7 +498,11 @@ public:
 
         JsonObject json_message = message_doc.as<JsonObject>();
 		const char* command_name = json_message["n"].as<const char*>();
-		if(strcmp(command_name, "OK_ON") != 0) return false;
+		if(strcmp(command_name, "OK_ON") != 0) {
+			
+			Serial.print(F("Didn't receive 'OK_ON' from Slave as expected"));
+			return false;
+		}
 
         length = receiveString(_ss_pin);
         if (length > 0) return false;
@@ -533,7 +537,12 @@ public:
         }
         json_message = message_doc.as<JsonObject>();
 		command_name = json_message["n"].as<const char*>();
-		if(strcmp(command_name, "OK_OFF") != 0) return false;
+
+		if(strcmp(command_name, "OK_OFF") != 0) {
+			
+			Serial.print(F("Didn't receive 'OK_OFF' from Slave as expected"));
+			return false;
+		}
 
         length = receiveString(_ss_pin);
         if (length > 0) return false;
