@@ -62,7 +62,7 @@ private:
     static char* _ptr_receiving_buffer;
     static char* _ptr_sending_buffer;
 
-    static int _ss_pin;
+    int _ss_pin = 10;
 
     size_t sendString() {
         size_t length = 0;	// No interrupts, so, not volatile
@@ -368,6 +368,7 @@ public:
 
     Master_class(int ss_pin = 10) {
 
+        _ss_pin = ss_pin;
 		// For static access to the buffers
 		_ptr_receiving_buffer = _receiving_buffer;
 		_ptr_sending_buffer = _sending_buffer;
@@ -381,7 +382,6 @@ public:
         pinMode(ss_pin, OUTPUT);
         digitalWrite(ss_pin, HIGH);
         // Sets the class SS pin
-        _ss_pin = ss_pin;
     }
 
     ~Master_class() {
@@ -454,7 +454,5 @@ public:
 // Initialize static members
 char* Master_class::_ptr_receiving_buffer = nullptr;
 char* Master_class::_ptr_sending_buffer = nullptr;
-
-int Master_class::_ss_pin = 10;
 
 #endif // MASTER_CLASS_HPP
