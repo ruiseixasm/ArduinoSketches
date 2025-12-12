@@ -96,13 +96,20 @@ protected:
 
 		if (length > 0) {
             
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print(F("\tsend1: Sending buffer: "));
+			Serial.println(_sending_buffer);
+			Serial.print(F("\tsend1: Pointer buffer: "));
+			Serial.println(_ptr_sending_buffer);
+			Serial.print(F("\tsend1: Sent length: "));
+			Serial.println(length);
+			#endif
+
             _ready_to_send = true;
 			
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tSent message: "));
+			Serial.print(F("\tsend2: Sent message: "));
 			Serial.println(_ptr_sending_buffer);
-			Serial.print(F("\tSent length: "));
-			Serial.println(length);
 			#endif
 
 		}

@@ -147,7 +147,7 @@ protected:
 			Serial.println(length);
 			#endif
 
-            if (length > BROADCAST_SOCKET_BUFFER_SIZE)
+            if (length > BROADCAST_SOCKET_BUFFER_SIZE - 1)
                 return length;  // buffer overflow
 
             bool at_c = false;
@@ -324,16 +324,15 @@ protected:
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("send1: "));
-        Serial.write(_sending_buffer, length);
-        Serial.println();
+        Serial.println(_sending_buffer);
         #endif
 
         length = insertChecksum(length);
         
-        if (length > BROADCAST_SOCKET_BUFFER_SIZE) {
+        if (length > BROADCAST_SOCKET_BUFFER_SIZE - 1) {
 
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("Error: Message too big"));
+            Serial.println(F("ERROR: Message too big"));
             #endif
 
             return 0;
@@ -341,8 +340,7 @@ protected:
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("send2: "));
-        Serial.write(_sending_buffer, length);
-        Serial.println();
+        Serial.println(_sending_buffer);
         #endif
         
 
