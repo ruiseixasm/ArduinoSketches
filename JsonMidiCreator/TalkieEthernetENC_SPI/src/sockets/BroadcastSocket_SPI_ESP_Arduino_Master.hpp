@@ -95,7 +95,7 @@ protected:
 					delayMicroseconds(10);	// Makes sure ACK is set by the slave (10us) (critical path)
 					c = _spi_instance->transfer(_sending_buffer[0]);
 
-					if (c == ACK) {
+					if (c == READY) {	// Makes sure the Slave it's ready first
 					
 						for (uint8_t i = 1; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
 							delayMicroseconds(send_delay_us);
@@ -128,7 +128,7 @@ protected:
 						}
 					} else {
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println("\t\tDevice ACK NOT received");
+						Serial.println("\t\tDevice NOT ready");
 						#endif
 						length = 1; // Nothing to be sent
 					}
@@ -201,7 +201,7 @@ protected:
 				delayMicroseconds(10);	// Makes sure ACK or NONE is set by the slave (10us) (critical path)
 				c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
 
-				if (c == ACK) { // Makes sure there is an Acknowledge first
+				if (c == READY) {	// Makes sure the Slave it's ready first
 					
 					// Starts to receive all chars here
 					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
@@ -251,7 +251,7 @@ protected:
 					break;
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println("\t\tSlave ACK or NONE was NOT received");
+					Serial.println("\t\tDevice NOT ready");
 					#endif
 					length = 1; // Nothing received
 					break;
