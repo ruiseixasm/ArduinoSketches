@@ -294,7 +294,10 @@ public:
             switch (c) {
                 case RECEIVE:
                     if (_ptr_receiving_buffer) {
-						if (_transmission_mode == NONE && !_received_data) {
+						if (_transmission_mode != NONE) {
+                        	SPDR = ERROR;
+                    		_transmission_mode = NONE;	// Breaks existing transmission, avoids deadlocks this way
+						} else if (!_received_data) {
 							SPDR = READY;
 							_transmission_mode = RECEIVE;
 							_receiving_index = 0;
@@ -318,10 +321,8 @@ public:
 								_validation_index = 0;
 								_send_iteration_i = 0;
 							} else {
-								SPDR = BUSY;
-								#ifdef BROADCAST_SPI_DEBUG
-								Serial.println(F("\tI'm busy (SEND)"));
-								#endif
+								SPDR = ERROR;
+								_transmission_mode = NONE;	// Breaks existing transmission, avoids deadlocks this way
 							}
                         } else {
                             SPDR = NONE;
@@ -367,7 +368,7 @@ public:
 
 	
     void process() {
-        if (_received_data) {
+        if (_received_data && !_ready_to_send) {
             processMessage();   // Called only once!
 			_ready_to_send = true;
 			_received_data = false;
