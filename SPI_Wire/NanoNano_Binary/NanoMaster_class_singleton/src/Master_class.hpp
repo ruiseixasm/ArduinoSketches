@@ -106,9 +106,18 @@ protected:
 						for (uint8_t i = 1; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
 							delayMicroseconds(send_delay_us);
 							c = _spi_instance->transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
-							if (c != _sending_buffer[i - 1]) {    // Includes NACK situation
+							if (c < 128) {
+								if (c != _sending_buffer[i - 1]) {    // Includes NACK situation
+									#ifdef BROADCAST_SPI_DEBUG_1
+									Serial.print(F("\t\tChar miss match at: "));
+									Serial.println(i);
+									#endif
+									length = 0;
+									break;
+								}
+							} else {
 								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.print(F("\t\tChar miss match at: "));
+								Serial.print(F("\t\tERROR at: "));
 								Serial.println(i);
 								#endif
 								length = 0;
