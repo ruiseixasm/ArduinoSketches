@@ -69,7 +69,7 @@ public:
 	}
 
 	uint8_t sending_length() {
-		return _sending_index + 1;
+		return _sending_length;
 	}
 
 protected:
@@ -94,7 +94,8 @@ protected:
     void processMessage() {
 
         Serial.print(F("Processed command: "));
-        Serial.println(_receiving_buffer);
+		Serial.write(_receiving_buffer, received_length());
+		Serial.println();
 
         // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
         #if ARDUINOJSON_VERSION_MAJOR >= 7
@@ -103,7 +104,7 @@ protected:
         StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
         #endif
 
-        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, received_length());
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("ERROR: Failed to deserialize JSON: "));
@@ -144,7 +145,8 @@ protected:
 			}
             Serial.print(F("LED is ON"));
             Serial.print(F(" | Sending: "));
-            Serial.println(_sending_buffer);
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
 			
         } else if (strcmp(command_name, "OFF") == 0) {
             digitalWrite(GREEN_LED_PIN, LOW);
@@ -159,7 +161,8 @@ protected:
 			}
             Serial.print(F("LED is OFF"));
             Serial.print(F(" | Sending: "));
-            Serial.println(_sending_buffer);
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
 
         } else {
             json_message["n"] = "BUZZ";
@@ -171,7 +174,8 @@ protected:
 			}
             Serial.print(F("Unknown command"));
             Serial.print(F(" | Sending: "));
-            Serial.println(_sending_buffer);
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
     		digitalWrite(YELLOW_LED_PIN, HIGH);
 			
         }
