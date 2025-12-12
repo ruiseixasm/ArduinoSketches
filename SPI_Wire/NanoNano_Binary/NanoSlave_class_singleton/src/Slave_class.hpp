@@ -64,6 +64,14 @@ public:
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
 
+	uint8_t received_length() {
+		return _receiving_index;
+	}
+
+	uint8_t sending_length() {
+		return _sending_index + 1;
+	}
+
 protected:
 
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
