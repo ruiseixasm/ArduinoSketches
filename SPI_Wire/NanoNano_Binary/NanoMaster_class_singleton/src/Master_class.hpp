@@ -64,7 +64,7 @@ private:
 
     static int _ss_pin;
 
-    size_t sendString(const char* command) {
+    size_t sendString() {
         size_t length = 0;	// No interrupts, so, not volatile
 		
 		#ifdef MASTER_CLASS_DEBUG
@@ -72,7 +72,7 @@ private:
 		Serial.println(_ss_pin);
 		#endif
 
-		if (command[0] != '\0') {	// Don't send empty strings
+		if (_ptr_sending_buffer[0] != '\0') {	// Don't send empty strings
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
 
@@ -87,14 +87,14 @@ private:
 				if (c != VOID) {
 
 					delayMicroseconds(10);	// Makes sure ACK is set by the slave (10us) (critical path)
-					c = SPI.transfer(command[0]);
+					c = SPI.transfer(_ptr_sending_buffer[0]);
 
 					if (c == ACK) {
 					
 						for (uint8_t i = 1; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
 							delayMicroseconds(send_delay_us);
-							c = SPI.transfer(command[i]);	// Receives the echoed command[i - 1]
-							if (c != command[i - 1]) {    // Includes NACK situation
+							c = SPI.transfer(_ptr_sending_buffer[i]);	// Receives the echoed _ptr_sending_buffer[i - 1]
+							if (c != _ptr_sending_buffer[i - 1]) {    // Includes NACK situation
 								#ifdef MASTER_CLASS_DEBUG
 								Serial.print("\t\tChar miss match at: ");
 								Serial.println("i");
@@ -102,7 +102,7 @@ private:
 								length = 0;
 								break;
 							}
-							if (command[i] == '\0') {
+							if (_ptr_sending_buffer[i] == '\0') {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
 								c = SPI.transfer(END);
 								if (c == '\0') {
@@ -147,7 +147,7 @@ private:
 					#ifdef MASTER_CLASS_DEBUG
 					if (length > 1) {
 						Serial.print("Command successfully sent: ");
-						Serial.println(command);
+						Serial.println(_ptr_sending_buffer);
 					} else {
 						Serial.println("\tNothing sent");
 					}
@@ -400,7 +400,7 @@ public:
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_on, BROADCAST_SOCKET_BUFFER_SIZE);
 
-        length = sendString("{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}");
+        length = sendString();
         if (length == 0) return false;
         delay(1000);
         length = receiveString();
@@ -408,7 +408,8 @@ public:
         length = receiveString();
         if (length > 0) return false;
 
-        length = sendString("");    // Testing sending nothing at all
+		_sending_buffer[0] = '\0';	// Clears buffer
+        length = sendString();    // Testing sending nothing at all
         if (length > 0) return false;
         delay(1000);
         length = receiveString();   // Testing that receiving nothing also works
@@ -422,7 +423,7 @@ public:
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_off, BROADCAST_SOCKET_BUFFER_SIZE);
 
-        length = sendString("{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}");
+        length = sendString();
         if (length == 0) return false;
         delay(1000);
         length = receiveString();
@@ -430,7 +431,8 @@ public:
         length = receiveString();
         if (length > 0) return false;
 
-        length = sendString("");
+		_sending_buffer[0] = '\0';	// Clears buffer
+        length = sendString();
         if (length > 0) return false;
         delay(1000);
         length = receiveString();
