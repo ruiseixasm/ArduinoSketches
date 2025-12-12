@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #define BROADCAST_SPI_DEBUG_1
-// #define BROADCAST_SPI_DEBUG_2
+#define BROADCAST_SPI_DEBUG_2
 
 
 // Pin definitions

@@ -247,6 +247,9 @@ public:
 							_receiving_index = 0;
 						} else {
                         	SPDR = BUSY;
+							#ifdef BROADCAST_SPI_DEBUG
+							Serial.println("\tI'm busy");
+							#endif
 						}
                     } else {
                         SPDR = VOID;
@@ -263,9 +266,15 @@ public:
 								_send_iteration_i = 0;
 							} else {
 								SPDR = BUSY;
+								#ifdef BROADCAST_SPI_DEBUG
+								Serial.println("\tI'm busy");
+								#endif
 							}
                         } else {
                             SPDR = NONE;
+							#ifdef BROADCAST_SPI_DEBUG
+							Serial.println("\tNothing to be sent");
+							#endif
                         }
                     } else {
                         SPDR = VOID;
@@ -275,8 +284,14 @@ public:
                     SPDR = ACK;
 					if (_transmission_mode == RECEIVE) {
 						_received_data = true;
+						#ifdef BROADCAST_SPI_DEBUG
+						Serial.println("\tReceived message");
+						#endif
                     } else if (_transmission_mode == SEND) {
                         _ready_to_send = false;	// Makes sure the sending buffer is tagged as sent
+						#ifdef BROADCAST_SPI_DEBUG
+						Serial.println("\tSent message");
+						#endif
                     }
                     _transmission_mode = NONE;
                     break;
@@ -285,16 +300,18 @@ public:
                     	SPDR = READY;
 					} else {
                         SPDR = BUSY;
+						#ifdef BROADCAST_SPI_DEBUG
+						Serial.println("\tI'm busy");
+						#endif
 					}
                     break;
                 case ERROR:
                 case FULL:
                     SPDR = ACK;
-                    if (_transmission_mode == RECEIVE) {
-                        _ptr_receiving_buffer[0] = '\0';	// Makes sure the receiving buffer is marked as empty in case of error
-						_receiving_index = 0;
-                    }
                     _transmission_mode = NONE;
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println("\tTransmission ended");
+					#endif
                     break;
                 default:
                     SPDR = NACK;
