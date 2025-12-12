@@ -84,7 +84,7 @@ protected:
 
     void processMessage() {
 
-        Serial.print("Processed command: ");
+        Serial.print(F("Processed command: "));
         Serial.println(_receiving_buffer);
 
         // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
@@ -97,7 +97,7 @@ protected:
         DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.println("ERROR: Failed to deserialize JSON");
+			Serial.println(F("ERROR: Failed to deserialize JSON"));
 			#endif
             return;
         }
@@ -113,12 +113,12 @@ protected:
             size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 			if (length == 0) {
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println("ERROR: Failed to serialize JSON");
+				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
     			digitalWrite(YELLOW_LED_PIN, HIGH);
 			}
-            Serial.print("LED is ON");
-            Serial.print(" | Sending: ");
+            Serial.print(F("LED is ON"));
+            Serial.print(F(" | Sending: "));
             Serial.println(_sending_buffer);
 
         } else if (strcmp(command_name, "OFF") == 0) {
@@ -128,12 +128,12 @@ protected:
             size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 			if (length == 0) {
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println("ERROR: Failed to serialize JSON");
+				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
     			digitalWrite(YELLOW_LED_PIN, HIGH);
 			}
-            Serial.print("LED is OFF");
-            Serial.print(" | Sending: ");
+            Serial.print(F("LED is OFF"));
+            Serial.print(F(" | Sending: "));
             Serial.println(_sending_buffer);
 
         } else {
@@ -141,11 +141,11 @@ protected:
             size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 			if (length == 0) {
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println("ERROR: Failed to serialize JSON");
+				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
 			}
-            Serial.print("Unknown command");
-            Serial.print(" | Sending: ");
+            Serial.print(F("Unknown command"));
+            Serial.print(F(" | Sending: "));
             Serial.println(_sending_buffer);
     		digitalWrite(YELLOW_LED_PIN, HIGH);
         }
@@ -282,7 +282,7 @@ public:
 						} else {
                         	SPDR = BUSY;
 							#ifdef BROADCAST_SPI_DEBUG
-							Serial.println("\tI'm busy (RECEIVE)");
+							Serial.println(F("\tI'm busy (RECEIVE)"));
 							#endif
 						}
                     } else {
@@ -301,13 +301,13 @@ public:
 							} else {
 								SPDR = BUSY;
 								#ifdef BROADCAST_SPI_DEBUG
-								Serial.println("\tI'm busy (SEND)");
+								Serial.println(F("\tI'm busy (SEND)"));
 								#endif
 							}
                         } else {
                             SPDR = NONE;
 							#ifdef BROADCAST_SPI_DEBUG
-							Serial.println("\tNothing to be sent");
+							Serial.println(F("\tNothing to be sent"));
 							#endif
                         }
                     } else {
@@ -319,12 +319,12 @@ public:
 					if (_transmission_mode == RECEIVE) {
 						_received_data = true;
 						#ifdef BROADCAST_SPI_DEBUG
-						Serial.println("\tReceived message");
+						Serial.println(F("\tReceived message"));
 						#endif
                     } else if (_transmission_mode == SEND) {
                         _ready_to_send = false;	// Makes sure the sending buffer is tagged as sent
 						#ifdef BROADCAST_SPI_DEBUG
-						Serial.println("\tSent message");
+						Serial.println(F("\tSent message"));
 						#endif
                     }
                     _transmission_mode = NONE;
@@ -337,7 +337,7 @@ public:
                     SPDR = ACK;
                     _transmission_mode = NONE;
 					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println("\tTransmission ended");
+					Serial.println(F("\tTransmission ended"));
 					#endif
                     break;
                 default:

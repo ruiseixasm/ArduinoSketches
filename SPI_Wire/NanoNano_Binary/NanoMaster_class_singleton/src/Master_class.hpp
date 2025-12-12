@@ -80,7 +80,7 @@ protected:
         size_t length = 0;	// No interrupts, so, not volatile
 		
 		#ifdef BROADCAST_SPI_DEBUG_1
-		Serial.print("\tSending on pin: ");
+		Serial.print(F("\tSending on pin: "));
 		Serial.println(ss_pin);
 		#endif
 
@@ -108,8 +108,8 @@ protected:
 							c = _spi_instance->transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
 							if (c != _sending_buffer[i - 1]) {    // Includes NACK situation
 								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.print("\t\tChar miss match at: ");
-								Serial.println("i");
+								Serial.print(F("\t\tChar miss match at: "));
+								Serial.println(i);
 								#endif
 								length = 0;
 								break;
@@ -119,13 +119,13 @@ protected:
 								c = _spi_instance->transfer(END);
 								if (c == '\0') {
 									#ifdef BROADCAST_SPI_DEBUG_1
-									Serial.println("\t\tSend completed");
+									Serial.println(F("\t\tSend completed"));
 									#endif
 									length = i;
 									break;
 								} else {
 									#ifdef BROADCAST_SPI_DEBUG_1
-									Serial.println("\t\tLast char '\\0' NOT received");
+									Serial.println(F("\t\tLast char '\\0' NOT received"));
 									#endif
 									length = 0;
 									break;
@@ -134,7 +134,7 @@ protected:
 						}
 					} else if (c == BUSY) {
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println("\t\tSlave is busy, waiting a little.");
+						Serial.println(F("\t\tSlave is busy, waiting a little."));
 						#endif
 						delayMicroseconds(5);
 						digitalWrite(ss_pin, HIGH);
@@ -142,14 +142,14 @@ protected:
 						continue;
 					} else {
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println("\t\tDevice NOT ready");
+						Serial.println(F("\t\tDevice NOT ready"));
 						#endif
 						length = 1; // Nothing to be sent
 					}
 
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println("\t\tReceived VOID");
+					Serial.println(F("\t\tReceived VOID"));
 					#endif
 					length = 1; // Avoids another try
 				}
@@ -165,17 +165,17 @@ protected:
 				if (length > 0) {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					if (length > 1) {
-						Serial.print("Command successfully sent: ");
+						Serial.print(F("Command successfully sent: "));
 						Serial.println(_sending_buffer);
 					} else {
-						Serial.println("\tNothing sent");
+						Serial.println(F("\tNothing sent"));
 					}
 					#endif
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.print("\t\tCommand NOT successfully sent on try: ");
+					Serial.print(F("\t\tCommand NOT successfully sent on try: "));
 					Serial.println(s + 1);
-					Serial.println("\t\tBUZZER activated for 10ms!");
+					Serial.println(F("\t\tBUZZER activated for 10ms!"));
 					#endif
 					digitalWrite(BUZZ_PIN, HIGH);
 					delay(10);  // Buzzer on for 10ms
@@ -186,7 +186,7 @@ protected:
 
         } else {
 			#ifdef BROADCAST_SPI_DEBUG_1
-			Serial.println("\t\tNothing to be sent");
+			Serial.println(F("\t\tNothing to be sent"));
 			#endif
 			length = 1; // Nothing to be sent
 		}
@@ -202,7 +202,7 @@ protected:
         uint8_t c; // Avoid using 'char' while using values above 127
 
 		#ifdef BROADCAST_SPI_DEBUG_2
-		Serial.print("\tReceiving on pin: ");
+		Serial.print(F("\tReceiving on pin: "));
 		Serial.println(ss_pin);
 		#endif
 
@@ -235,13 +235,13 @@ protected:
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
 								_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
 								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.println("\t\tReceive completed");
+								Serial.println(F("\t\tReceive completed"));
 								#endif
 								length++;   // Adds up the '\0' uncounted char
 								break;
 							} else {    // Includes NACK (implicit)
 								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.print("\t\t\tNo END or Char, instead, received: ");
+								Serial.print(F("\t\t\tNo END or Char, instead, received: "));
 								Serial.println(c, HEX);
 								#endif
 								length = 0;
@@ -254,7 +254,7 @@ protected:
 								_receiving_buffer[0] = c;
 							} else {
 								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.println("\t\tNot a valid ASCII char (< 128)");
+								Serial.println(F("\t\tNot a valid ASCII char (< 128)"));
 								#endif
 								break;
 							}
@@ -262,14 +262,14 @@ protected:
 					}
 				} else if (c == NONE) {
 					#ifdef BROADCAST_SPI_DEBUG_2
-					Serial.println("\t\tThere is nothing to be received");
+					Serial.println(F("\t\tThere is nothing to be received"));
 					#endif
 					_receiving_buffer[0] = '\0';
 					length = 1; // Nothing received
 					break;
 				} else if (c == BUSY) {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println("\t\tSlave is busy, waiting a little.");
+					Serial.println(F("\t\tSlave is busy, waiting a little."));
 					#endif
             		delayMicroseconds(5);
             		digitalWrite(ss_pin, HIGH);
@@ -277,7 +277,7 @@ protected:
 					continue;
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println("\t\tDevice NOT ready");
+					Serial.println(F("\t\tDevice NOT ready"));
 					#endif
 					length = 1; // Nothing received
 					break;
@@ -287,13 +287,13 @@ protected:
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println("\t\t\tSent ERROR");
+					Serial.println(F("\t\t\tSent ERROR"));
 					#endif
 				}
 
 			} else {
 				#ifdef BROADCAST_SPI_DEBUG_1
-				Serial.println("\t\tReceived VOID");
+				Serial.println(F("\t\tReceived VOID"));
 				#endif
 				length = 1; // Avoids another try
 			}
@@ -304,19 +304,19 @@ protected:
             if (length > 0) {
                 #ifdef BROADCAST_SPI_DEBUG_1
                 if (length > 1) {
-                    Serial.print("Received message: ");
+                    Serial.print(F("Received message: "));
                     Serial.println(_receiving_buffer);
                 } else {
                 	#ifdef BROADCAST_SPI_DEBUG_2
-                    Serial.println("\tNothing received");
+                    Serial.println(F("\tNothing received"));
                 	#endif
                 }
                 #endif
             } else {
                 #ifdef BROADCAST_SPI_DEBUG_1
-                Serial.print("\t\tMessage NOT successfully received on try: ");
+                Serial.print(F("\t\tMessage NOT successfully received on try: "));
                 Serial.println(r + 1);
-                Serial.println("\t\tBUZZER activated for 2 x 10ms!");
+                Serial.println(F("\t\tBUZZER activated for 2 x 10ms!"));
                 #endif
                 digitalWrite(BUZZ_PIN, HIGH);
                 delay(10);  // Buzzer on for 10ms
@@ -340,7 +340,7 @@ protected:
         bool acknowledge = false;
 
 		#ifdef BROADCAST_SPI_DEBUG_1
-		Serial.print("\tAcknowledging on pin: ");
+		Serial.print(F("\tAcknowledging on pin: "));
 		Serial.println(ss_pin);
 		#endif
 
@@ -359,19 +359,19 @@ protected:
 				
 				if (c == ACK) {
                 	#ifdef BROADCAST_SPI_DEBUG_1
-                	Serial.println("\t\tAcknowledged");
+                	Serial.println(F("\t\tAcknowledged"));
 					#endif
 					acknowledge = true;
 				}
 				#ifdef BROADCAST_SPI_DEBUG_1
 				else {
-					Serial.println("\t\tNOT acknowledged");
+					Serial.println(F("\t\tNOT acknowledged"));
 				}
 				#endif
 			}
             #ifdef BROADCAST_SPI_DEBUG_1
 			else {
-                Serial.println("\t\tReceived VOID");
+                Serial.println(F("\t\tReceived VOID"));
 			}
 			#endif
 
@@ -382,9 +382,9 @@ protected:
 
         #ifdef BROADCAST_SPI_DEBUG_1
         if (acknowledge) {
-            Serial.println("Slave is ready!");
+            Serial.println(F("Slave is ready!"));
         } else {
-            Serial.println("Slave is NOT ready!");
+            Serial.println(F("Slave is NOT ready!"));
         }
         #endif
 
@@ -442,7 +442,6 @@ public:
         length = receiveString(_ss_pin);
         if (length == 0) return false;
 
-
         // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
         #if ARDUINOJSON_VERSION_MAJOR >= 7
         JsonDocument message_doc;
@@ -453,7 +452,21 @@ public:
         DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG_1
-			Serial.println("ERROR (ON): Failed to deserialize JSON");
+			Serial.print(F("ERROR (ON): "));
+			Serial.print(error.c_str());
+			Serial.print(F(" - Code: "));
+			Serial.println(error.code());
+			
+			// What ArduinoJson sees
+			Serial.print(F("Input length: "));
+			Serial.println(strlen(_receiving_buffer));
+			
+			// Test with simple JSON
+			const char* test_simple = "{}";
+			JsonDocument test_doc;
+			DeserializationError test_err = deserializeJson(test_doc, test_simple);
+			Serial.print(F("Simple {} test: "));
+			Serial.println(test_err.c_str());
 			#endif
             return false;
         }
@@ -489,7 +502,7 @@ public:
         error = deserializeJson(message_doc, _receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG_1
-			Serial.println("ERROR (OFF): Failed to deserialize JSON");
+			Serial.println(F("ERROR (OFF): Failed to deserialize JSON"));
 			#endif
             return false;
         }
