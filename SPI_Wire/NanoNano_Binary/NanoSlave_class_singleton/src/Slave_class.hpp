@@ -63,7 +63,7 @@ public:
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
 
-private:
+protected:
 
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
@@ -185,6 +185,17 @@ public:
 
         pinMode(YELLOW_LED_PIN, INPUT);
         digitalWrite(YELLOW_LED_PIN, LOW);
+    }
+
+
+	// // Slave_class Slave_class = Slave_class();  // WRONG!
+	// Slave_class& Slave_class = Slave_class::instance();  // CORRECT!
+	
+    // Move ONLY the singleton instance method to subclass
+    static Slave_class& instance() {
+
+        static Slave_class instance;  	// ← No parentheses! Creates OBJECT
+        return instance;				// ← Returns the object
     }
 
 
@@ -310,14 +321,7 @@ public:
                     _transmission_mode = NONE;
                     break;
                 case ACK:
-					if (_transmission_mode == NONE) {
-                    	SPDR = READY;
-					} else {
-                        SPDR = BUSY;
-						#ifdef BROADCAST_SPI_DEBUG
-						Serial.println("\tI'm busy (ACK)");
-						#endif
-					}
+                    SPDR = ACK;
                     break;
                 case ERROR:
                 case FULL:

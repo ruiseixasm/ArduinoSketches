@@ -348,23 +348,15 @@ protected:
 				delayMicroseconds(10);
 				c = _spi_instance->transfer(ACK);  // When the response is collected
 				
-				if (c == READY) {
+				if (c == ACK) {
                 	#ifdef BROADCAST_SPI_DEBUG_1
-                	Serial.println("\t\tAcknowledge with READY");
+                	Serial.println("\t\tAcknowledged");
 					#endif
 					acknowledge = true;
-				} else if (c == BUSY) {
-					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println("\t\tSlave is busy, waiting a little.");
-					#endif
-					delayMicroseconds(5);
-					digitalWrite(ss_pin, HIGH);
-					delay(2);	// Waiting 2ms
-					continue;
 				}
 				#ifdef BROADCAST_SPI_DEBUG_1
 				else {
-					Serial.println("\t\tNOT acknowledge");
+					Serial.println("\t\tNOT acknowledged");
 				}
 				#endif
 			}

@@ -8,9 +8,8 @@ ISR(SPI_STC_vect) {
 }
 
 
-// Create instance
-Slave_class slave_class;    // Sets the LEDS
-
+// Slave_class slave_class;  // WRONG!
+Slave_class& slave_class = Slave_class::instance();  // CORRECT!
 
 void setup() {
     // Initialize serial
