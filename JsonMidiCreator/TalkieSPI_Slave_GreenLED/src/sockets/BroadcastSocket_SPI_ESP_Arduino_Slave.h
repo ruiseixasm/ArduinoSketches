@@ -42,7 +42,9 @@ public:
     };
 
 
-private:
+protected:
+
+    static BroadcastSocket* _self_socket;
 
     static char _isr_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     static char _isr_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
@@ -54,7 +56,7 @@ private:
     volatile static MessageCode _transmission_mode;
 	volatile static bool _received_data;
 
-protected:
+
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
     BroadcastSocket_SPI_ESP_Arduino_Slave(JsonTalker** json_talkers, uint8_t talker_count)
@@ -75,6 +77,8 @@ protected:
 			SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
 			SPCR &= ~_BV(CPOL);  // Clock polarity 0
 			SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
+
+            _self_socket = this;
 
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)

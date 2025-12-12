@@ -14,6 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "BroadcastSocket_SPI_ESP_Arduino_Slave.h"
 
+BroadcastSocket* BroadcastSocket_SPI_ESP_Arduino_Slave::_self_socket = nullptr;
 
 char BroadcastSocket_SPI_ESP_Arduino_Slave::_isr_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 char BroadcastSocket_SPI_ESP_Arduino_Slave::_isr_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
