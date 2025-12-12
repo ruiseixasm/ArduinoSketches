@@ -52,7 +52,13 @@ public:
 
 private:
 
-	static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+    char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+
+    // Buffers and state variables
+    static char* _ptr_receiving_buffer;
+    static char* _ptr_sending_buffer;
+
     static int _ss_pin;
 
     size_t sendString(const char* command) {
@@ -128,7 +134,7 @@ private:
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					SPI.transfer(ERROR);
-					// _receiving_buffer[0] = '\0'; // Implicit char
+					// _ptr_receiving_buffer[0] = '\0'; // Implicit char
 				}
 
 				delayMicroseconds(5);
@@ -197,11 +203,11 @@ private:
 					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
-							c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
+							c = SPI.transfer(_ptr_receiving_buffer[length]);    // length == i - 1
 							if (c < 128) {   // Only accepts ASCII chars
 								// Avoids increment beyond the real string size
-								if (_receiving_buffer[length] != '\0') {    // length == i - 1
-									_receiving_buffer[++length] = c;        // length == i (also sets '\0')
+								if (_ptr_receiving_buffer[length] != '\0') {    // length == i - 1
+									_ptr_receiving_buffer[++length] = c;        // length == i (also sets '\0')
 								}
 							} else if (c == END) {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
@@ -223,7 +229,7 @@ private:
 							c = SPI.transfer('\0');   // Dummy char to get the ACK
 							length = 0;
 							if (c < 128) {	// Makes sure it's an ASCII char
-								_receiving_buffer[0] = c;
+								_ptr_receiving_buffer[0] = c;
 							} else {
 								#ifdef MASTER_CLASS_DEBUG
 								Serial.println("\t\tNot a valid ASCII char (< 128)");
@@ -236,7 +242,7 @@ private:
 					#ifdef MASTER_CLASS_DEBUG
 					Serial.println("\t\tThere is nothing to be received");
 					#endif
-					_receiving_buffer[0] = '\0';
+					_ptr_receiving_buffer[0] = '\0';
 					length = 1; // Nothing received
 					break;
 				} else {
@@ -250,7 +256,7 @@ private:
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
-					_receiving_buffer[0] = '\0'; // Implicit char
+					_ptr_receiving_buffer[0] = '\0'; // Implicit char
 					#ifdef MASTER_CLASS_DEBUG
 					Serial.println("\t\t\tSent ERROR");
 					#endif
@@ -270,7 +276,7 @@ private:
                 #ifdef MASTER_CLASS_DEBUG
                 if (length > 1) {
                     Serial.print("Received message: ");
-                    Serial.println(_receiving_buffer);
+                    Serial.println(_ptr_receiving_buffer);
                 } else {
                     Serial.println("\tNothing received");
                 }
@@ -358,6 +364,11 @@ private:
 public:
 
     Master_class(int ss_pin = 10) {
+
+		// For static access to the buffers
+		_ptr_receiving_buffer = _receiving_buffer;
+		_ptr_sending_buffer = _sending_buffer;
+
         // Initialize SPI
         SPI.begin();
         SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
@@ -427,7 +438,10 @@ public:
 };
 
 
-char Master_class::_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+// Initialize static members
+char* Master_class::_ptr_receiving_buffer = nullptr;
+char* Master_class::_ptr_sending_buffer = nullptr;
+
 int Master_class::_ss_pin = 10;
 
 #endif // MASTER_CLASS_HPP
