@@ -64,12 +64,12 @@ private:
 
     int _ss_pin = 10;
 
-    size_t sendString() {
+    size_t sendString(int ss_pin) {
         size_t length = 0;	// No interrupts, so, not volatile
 		
 		#ifdef MASTER_CLASS_DEBUG
 		Serial.print("\tSending on pin: ");
-		Serial.println(_ss_pin);
+		Serial.println(ss_pin);
 		#endif
 
 		if (_ptr_sending_buffer[0] != '\0') {	// Don't send empty strings
@@ -78,7 +78,7 @@ private:
 
 			for (size_t s = 0; length == 0 && s < 3; s++) {
 		
-				digitalWrite(_ss_pin, LOW);
+				digitalWrite(ss_pin, LOW);
 				delayMicroseconds(5);
 
 				// Asks the Slave to start receiving
@@ -141,7 +141,7 @@ private:
 				}
 
 				delayMicroseconds(5);
-				digitalWrite(_ss_pin, HIGH);
+				digitalWrite(ss_pin, HIGH);
 
 				if (length > 0) {
 					#ifdef MASTER_CLASS_DEBUG
@@ -178,18 +178,18 @@ private:
     }
 
 
-    size_t receiveString() {
+    size_t receiveString(int ss_pin) {
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
 		#ifdef MASTER_CLASS_DEBUG
 		Serial.print("\tReceiving on pin: ");
-		Serial.println(_ss_pin);
+		Serial.println(ss_pin);
 		#endif
 
         for (size_t r = 0; length == 0 && r < 3; r++) {
     
-            digitalWrite(_ss_pin, LOW);
+            digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
 
             // Asks the Slave to start receiving
@@ -273,7 +273,7 @@ private:
 			}
 
             delayMicroseconds(5);
-            digitalWrite(_ss_pin, HIGH);
+            digitalWrite(ss_pin, HIGH);
 
             if (length > 0) {
                 #ifdef MASTER_CLASS_DEBUG
@@ -307,18 +307,18 @@ private:
     }
 
 
-    bool acknowledgeReady() {
+    bool acknowledgeReady(int ss_pin) {
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 
 		#ifdef MASTER_CLASS_DEBUG
 		Serial.print("\tAcknowledging on pin: ");
-		Serial.println(_ss_pin);
+		Serial.println(ss_pin);
 		#endif
 
         for (size_t a = 0; !acknowledge && a < 3; a++) {
     
-            digitalWrite(_ss_pin, LOW);
+            digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
 
             // Asks the Slave to acknowledge readiness
@@ -348,7 +348,7 @@ private:
 			#endif
 
             delayMicroseconds(5);
-            digitalWrite(_ss_pin, HIGH);
+            digitalWrite(ss_pin, HIGH);
 
         }
 
@@ -400,21 +400,21 @@ public:
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_on, BROADCAST_SOCKET_BUFFER_SIZE);
 
-        length = sendString();
+        length = sendString(_ss_pin);
         if (length == 0) return false;
         delay(1000);
-        length = receiveString();
+        length = receiveString(_ss_pin);
         if (length == 0) return false;
-        length = receiveString();
+        length = receiveString(_ss_pin);
         if (length > 0) return false;
 
 		_sending_buffer[0] = '\0';	// Clears buffer
-        length = sendString();    // Testing sending nothing at all
+        length = sendString(_ss_pin);    // Testing sending nothing at all
         if (length > 0) return false;
         delay(1000);
-        length = receiveString();   // Testing that receiving nothing also works
+        length = receiveString(_ss_pin);   // Testing that receiving nothing also works
         if (length > 0) return false;
-        length = receiveString();   // Testing that receiving nothing also works
+        length = receiveString(_ss_pin);   // Testing that receiving nothing also works
         if (length > 0) return false;
 
 
@@ -423,21 +423,21 @@ public:
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_off, BROADCAST_SOCKET_BUFFER_SIZE);
 
-        length = sendString();
+        length = sendString(_ss_pin);
         if (length == 0) return false;
         delay(1000);
-        length = receiveString();
+        length = receiveString(_ss_pin);
         if (length == 0) return false;
-        length = receiveString();
+        length = receiveString(_ss_pin);
         if (length > 0) return false;
 
 		_sending_buffer[0] = '\0';	// Clears buffer
-        length = sendString();
+        length = sendString(_ss_pin);
         if (length > 0) return false;
         delay(1000);
-        length = receiveString();
+        length = receiveString(_ss_pin);
         if (length > 0) return false;
-        length = receiveString();
+        length = receiveString(_ss_pin);
         if (length > 0) return false;
 
         return true;
@@ -445,7 +445,7 @@ public:
 
 
     bool ready() {
-        return acknowledgeReady();
+        return acknowledgeReady(_ss_pin);
     }
 
 };
