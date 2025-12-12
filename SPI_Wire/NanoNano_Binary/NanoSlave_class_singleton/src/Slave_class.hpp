@@ -261,7 +261,7 @@ public:
 						} else {
                         	SPDR = BUSY;
 							#ifdef BROADCAST_SPI_DEBUG
-							Serial.println("\tI'm busy");
+							Serial.println("\tI'm busy (RECEIVE)");
 							#endif
 						}
                     } else {
@@ -280,7 +280,7 @@ public:
 							} else {
 								SPDR = BUSY;
 								#ifdef BROADCAST_SPI_DEBUG
-								Serial.println("\tI'm busy");
+								Serial.println("\tI'm busy (SEND)");
 								#endif
 							}
                         } else {
@@ -314,7 +314,7 @@ public:
 					} else {
                         SPDR = BUSY;
 						#ifdef BROADCAST_SPI_DEBUG
-						Serial.println("\tI'm busy");
+						Serial.println("\tI'm busy (ACK)");
 						#endif
 					}
                     break;
