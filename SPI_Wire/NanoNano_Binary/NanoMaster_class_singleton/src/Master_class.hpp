@@ -68,15 +68,16 @@ private:
 	// Just create a pointer to the existing SPI object
 	SPIClass* _spi_instance = &SPI;  // Alias pointer
 
+	
     size_t sendString(int ss_pin) {
         size_t length = 0;	// No interrupts, so, not volatile
 		
-		#ifdef MASTER_CLASS_DEBUG
+		#ifdef BROADCAST_SPI_DEBUG_1
 		Serial.print("\tSending on pin: ");
 		Serial.println(ss_pin);
 		#endif
 
-		if (_ptr_sending_buffer[0] != '\0') {	// Don't send empty strings
+		if (_sending_buffer[0] != '\0') {	// Don't send empty strings
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
 
@@ -86,37 +87,37 @@ private:
 				delayMicroseconds(5);
 
 				// Asks the Slave to start receiving
-				c = SPI.transfer(RECEIVE);
+				c = _spi_instance->transfer(RECEIVE);
 
 				if (c != VOID) {
 
 					delayMicroseconds(10);	// Makes sure ACK is set by the slave (10us) (critical path)
-					c = SPI.transfer(_ptr_sending_buffer[0]);
+					c = _spi_instance->transfer(_sending_buffer[0]);
 
-					if (c == ACK) {
+					if (c == READY) {	// Makes sure the Slave it's ready first
 					
 						for (uint8_t i = 1; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
 							delayMicroseconds(send_delay_us);
-							c = SPI.transfer(_ptr_sending_buffer[i]);	// Receives the echoed _ptr_sending_buffer[i - 1]
-							if (c != _ptr_sending_buffer[i - 1]) {    // Includes NACK situation
-								#ifdef MASTER_CLASS_DEBUG
+							c = _spi_instance->transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
+							if (c != _sending_buffer[i - 1]) {    // Includes NACK situation
+								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.print("\t\tChar miss match at: ");
 								Serial.println("i");
 								#endif
 								length = 0;
 								break;
 							}
-							if (_ptr_sending_buffer[i] == '\0') {
+							if (_sending_buffer[i] == '\0') {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
-								c = SPI.transfer(END);
+								c = _spi_instance->transfer(END);
 								if (c == '\0') {
-									#ifdef MASTER_CLASS_DEBUG
+									#ifdef BROADCAST_SPI_DEBUG_1
 									Serial.println("\t\tSend completed");
 									#endif
 									length = i;
 									break;
 								} else {
-									#ifdef MASTER_CLASS_DEBUG
+									#ifdef BROADCAST_SPI_DEBUG_1
 									Serial.println("\t\tLast char '\\0' NOT received");
 									#endif
 									length = 0;
@@ -124,15 +125,23 @@ private:
 								}
 							}
 						}
+					} else if (c == BUSY) {
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println("\t\tSlave is busy, waiting a little.");
+						#endif
+						delayMicroseconds(5);
+						digitalWrite(ss_pin, HIGH);
+						delay(2);	// Waiting 2ms
+						continue;
 					} else {
-						#ifdef MASTER_CLASS_DEBUG
-						Serial.println("\t\tDevice ACK NOT received");
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println("\t\tDevice NOT ready");
 						#endif
 						length = 1; // Nothing to be sent
 					}
 
 				} else {
-					#ifdef MASTER_CLASS_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println("\t\tReceived VOID");
 					#endif
 					length = 1; // Avoids another try
@@ -140,15 +149,15 @@ private:
 
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
-					SPI.transfer(ERROR);
-					// _ptr_receiving_buffer[0] = '\0'; // Implicit char
+					_spi_instance->transfer(ERROR);
+					// _receiving_buffer[0] = '\0'; // Implicit char
 				}
 
 				delayMicroseconds(5);
 				digitalWrite(ss_pin, HIGH);
 
 				if (length > 0) {
-					#ifdef MASTER_CLASS_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_1
 					if (length > 1) {
 						Serial.print("Command successfully sent: ");
 						Serial.println(_ptr_sending_buffer);
@@ -157,7 +166,7 @@ private:
 					}
 					#endif
 				} else {
-					#ifdef MASTER_CLASS_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.print("\t\tCommand NOT successfully sent on try: ");
 					Serial.println(s + 1);
 					Serial.println("\t\tBUZZER activated for 10ms!");
@@ -170,7 +179,7 @@ private:
 			}
 
         } else {
-			#ifdef MASTER_CLASS_DEBUG
+			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.println("\t\tNothing to be sent");
 			#endif
 			length = 1; // Nothing to be sent
@@ -186,7 +195,7 @@ private:
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
-		#ifdef MASTER_CLASS_DEBUG
+		#ifdef BROADCAST_SPI_DEBUG_2
 		Serial.print("\tReceiving on pin: ");
 		Serial.println(ss_pin);
 		#endif
@@ -197,35 +206,35 @@ private:
             delayMicroseconds(5);
 
             // Asks the Slave to start receiving
-            c = SPI.transfer(SEND);
+            c = _spi_instance->transfer(SEND);
 			
 			if (c != VOID) {
 
 				delayMicroseconds(10);	// Makes sure ACK or NONE is set by the slave (10us) (critical path)
-				c = SPI.transfer('\0');   // Dummy char to get the ACK
+				c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
 
-				if (c == ACK) { // Makes sure there is an Acknowledge first
+				if (c == READY) {	// Makes sure the Slave it's ready first
 					
 					// Starts to receive all chars here
 					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
-							c = SPI.transfer(_ptr_receiving_buffer[length]);    // length == i - 1
+							c = _spi_instance->transfer(_receiving_buffer[length]);    // length == i - 1
 							if (c < 128) {   // Only accepts ASCII chars
 								// Avoids increment beyond the real string size
-								if (_ptr_receiving_buffer[length] != '\0') {    // length == i - 1
-									_ptr_receiving_buffer[++length] = c;        // length == i (also sets '\0')
+								if (_receiving_buffer[length] != '\0') {    // length == i - 1
+									_receiving_buffer[++length] = c;        // length == i (also sets '\0')
 								}
 							} else if (c == END) {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
-								SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
-								#ifdef MASTER_CLASS_DEBUG
+								_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.println("\t\tReceive completed");
 								#endif
 								length++;   // Adds up the '\0' uncounted char
 								break;
 							} else {    // Includes NACK (implicit)
-								#ifdef MASTER_CLASS_DEBUG
+								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.print("\t\t\tNo END or Char, instead, received: ");
 								Serial.println(c, HEX);
 								#endif
@@ -233,12 +242,12 @@ private:
 								break;
 							}
 						} else {
-							c = SPI.transfer('\0');   // Dummy char to get the ACK
+							c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
 							length = 0;
 							if (c < 128) {	// Makes sure it's an ASCII char
-								_ptr_receiving_buffer[0] = c;
+								_receiving_buffer[0] = c;
 							} else {
-								#ifdef MASTER_CLASS_DEBUG
+								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.println("\t\tNot a valid ASCII char (< 128)");
 								#endif
 								break;
@@ -246,15 +255,23 @@ private:
 						}
 					}
 				} else if (c == NONE) {
-					#ifdef MASTER_CLASS_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_2
 					Serial.println("\t\tThere is nothing to be received");
 					#endif
-					_ptr_receiving_buffer[0] = '\0';
+					_receiving_buffer[0] = '\0';
 					length = 1; // Nothing received
 					break;
+				} else if (c == BUSY) {
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println("\t\tSlave is busy, waiting a little.");
+					#endif
+            		delayMicroseconds(5);
+            		digitalWrite(ss_pin, HIGH);
+					delay(2);	// Waiting 2ms
+					continue;
 				} else {
-					#ifdef MASTER_CLASS_DEBUG
-					Serial.println("\t\tSlave ACK or NONE was NOT received");
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println("\t\tDevice NOT ready");
 					#endif
 					length = 1; // Nothing received
 					break;
@@ -262,15 +279,15 @@ private:
 
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
-					SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
-					_ptr_receiving_buffer[0] = '\0'; // Implicit char
-					#ifdef MASTER_CLASS_DEBUG
+					_spi_instance->transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
+					_receiving_buffer[0] = '\0'; // Implicit char
+					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println("\t\t\tSent ERROR");
 					#endif
 				}
 
 			} else {
-				#ifdef MASTER_CLASS_DEBUG
+				#ifdef BROADCAST_SPI_DEBUG_1
 				Serial.println("\t\tReceived VOID");
 				#endif
 				length = 1; // Avoids another try
@@ -280,16 +297,18 @@ private:
             digitalWrite(ss_pin, HIGH);
 
             if (length > 0) {
-                #ifdef MASTER_CLASS_DEBUG
+                #ifdef BROADCAST_SPI_DEBUG_1
                 if (length > 1) {
                     Serial.print("Received message: ");
-                    Serial.println(_ptr_receiving_buffer);
+                    Serial.println(_receiving_buffer);
                 } else {
+                	#ifdef BROADCAST_SPI_DEBUG_2
                     Serial.println("\tNothing received");
+                	#endif
                 }
                 #endif
             } else {
-                #ifdef MASTER_CLASS_DEBUG
+                #ifdef BROADCAST_SPI_DEBUG_1
                 Serial.print("\t\tMessage NOT successfully received on try: ");
                 Serial.println(r + 1);
                 Serial.println("\t\tBUZZER activated for 2 x 10ms!");
