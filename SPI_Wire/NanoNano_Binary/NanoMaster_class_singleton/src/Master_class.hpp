@@ -65,6 +65,9 @@ private:
 
     int _ss_pin = 10;
 
+	// Just create a pointer to the existing SPI object
+	SPIClass* _spi_instance = &SPI;  // Alias pointer
+
     size_t sendString(int ss_pin) {
         size_t length = 0;	// No interrupts, so, not volatile
 		
@@ -312,7 +315,7 @@ private:
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 
-		#ifdef MASTER_CLASS_DEBUG
+		#ifdef BROADCAST_SPI_DEBUG_1
 		Serial.print("\tAcknowledging on pin: ");
 		Serial.println(ss_pin);
 		#endif
@@ -323,26 +326,34 @@ private:
             delayMicroseconds(5);
 
             // Asks the Slave to acknowledge readiness
-            c = SPI.transfer(ACK);
+            c = _spi_instance->transfer(ACK);
 
 			if (c != VOID) {
 
 				delayMicroseconds(10);
-				c = SPI.transfer(ACK);  // When the response is collected
+				c = _spi_instance->transfer(ACK);  // When the response is collected
 				
 				if (c == READY) {
-                	#ifdef MASTER_CLASS_DEBUG
+                	#ifdef BROADCAST_SPI_DEBUG_1
                 	Serial.println("\t\tAcknowledge with READY");
 					#endif
 					acknowledge = true;
+				} else if (c == BUSY) {
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println("\t\tSlave is busy, waiting a little.");
+					#endif
+					delayMicroseconds(5);
+					digitalWrite(ss_pin, HIGH);
+					delay(2);	// Waiting 2ms
+					continue;
 				}
-				#ifdef MASTER_CLASS_DEBUG
+				#ifdef BROADCAST_SPI_DEBUG_1
 				else {
 					Serial.println("\t\tNOT acknowledge");
 				}
 				#endif
 			}
-            #ifdef MASTER_CLASS_DEBUG
+            #ifdef BROADCAST_SPI_DEBUG_1
 			else {
                 Serial.println("\t\tReceived VOID");
 			}
@@ -353,7 +364,7 @@ private:
 
         }
 
-        #ifdef MASTER_CLASS_DEBUG
+        #ifdef BROADCAST_SPI_DEBUG_1
         if (acknowledge) {
             Serial.println("Slave is ready!");
         } else {
