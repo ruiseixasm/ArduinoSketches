@@ -180,8 +180,8 @@ public:
 
             switch (c) {
                 case RECEIVE:
-                    if (_ptr_receiving_buffer) {
-                        SPDR = ACK;
+                    if (_ptr_receiving_buffer && _transmission_mode == NONE) {
+                        SPDR = READY;
                         _transmission_mode = RECEIVE;
                         _receiving_index = 0;
                     } else {
@@ -190,8 +190,8 @@ public:
                     break;
                 case SEND:
                     if (_ptr_sending_buffer) {
-                        if (_ready_to_send) {
-                            SPDR = ACK;
+                        if (_ready_to_send && _transmission_mode == NONE) {
+                            SPDR = READY;
                             _transmission_mode = SEND;
                             _sending_index = 0;
                             _validation_index = 0;
