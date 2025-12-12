@@ -85,7 +85,6 @@ protected:
     volatile static uint8_t _receiving_index;
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
-    volatile static uint8_t _send_iteration_i;
 	volatile static uint8_t _sending_length;
     volatile static MessageCode _transmission_mode;
 	volatile static bool _received_data;
@@ -325,7 +324,6 @@ public:
 								_transmission_mode = SEND;
 								_sending_index = 0;
 								_validation_index = 0;
-								_send_iteration_i = 0;
 							} else {
 								SPDR = ERROR;
 								_transmission_mode = NONE;	// Breaks existing transmission, avoids deadlocks this way
@@ -398,7 +396,6 @@ volatile char* Slave_class::_ptr_sending_buffer = nullptr;
 volatile uint8_t Slave_class::_receiving_index = 0;
 volatile uint8_t Slave_class::_sending_index = 0;
 volatile uint8_t Slave_class::_validation_index = 0;
-volatile uint8_t Slave_class::_send_iteration_i = 0;
 volatile uint8_t Slave_class::_sending_length = 0;
 volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::MessageCode::NONE;
 volatile bool Slave_class::_received_data = false;
