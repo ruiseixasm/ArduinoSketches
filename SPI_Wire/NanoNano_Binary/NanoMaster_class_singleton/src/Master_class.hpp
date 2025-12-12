@@ -51,8 +51,19 @@ public:
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
 
+
 	const char* command_on = "{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}";
 	const char* command_off = "{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}";
+
+
+
+	// // ArduinoJson requires fields with "" instead of ''
+	// const char* command_on =
+	// 	"{\"t\":\"Nano\",\"m\":2,\"n\":\"ON\",\"f\":\"Talker-9f\",\"i\":3540751170,\"c\":24893}";
+
+	// const char* command_off =
+	// 	"{\"t\":\"Nano\",\"m\":2,\"n\":\"OFF\",\"f\":\"Talker-9f\",\"i\":3540751170,\"c\":24893}";
+
 
 protected:
 
@@ -146,7 +157,6 @@ protected:
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(ERROR);
-					// _receiving_buffer[0] = '\0'; // Implicit char
 				}
 
 				delayMicroseconds(5);
@@ -276,7 +286,6 @@ protected:
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
-					_receiving_buffer[0] = '\0'; // Implicit char
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println("\t\t\tSent ERROR");
 					#endif
@@ -426,12 +435,33 @@ public:
 
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_on, BROADCAST_SOCKET_BUFFER_SIZE);
-
         length = sendString(_ss_pin);
         if (length == 0) return false;
+
         delay(1000);
         length = receiveString(_ss_pin);
         if (length == 0) return false;
+
+
+        // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+        #if ARDUINOJSON_VERSION_MAJOR >= 7
+        JsonDocument message_doc;
+        #else
+        StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+        #endif
+
+        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        if (error) {
+			#ifdef BROADCAST_SPI_DEBUG_1
+			Serial.println("ERROR (ON): Failed to deserialize JSON");
+			#endif
+            return false;
+        }
+
+        JsonObject json_message = message_doc.as<JsonObject>();
+		const char* command_name = json_message["n"].as<const char*>();
+		if(strcmp(command_name, "OK_ON") != 0) return false;
+
         length = receiveString(_ss_pin);
         if (length > 0) return false;
 
@@ -449,12 +479,24 @@ public:
 
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_off, BROADCAST_SOCKET_BUFFER_SIZE);
-
         length = sendString(_ss_pin);
         if (length == 0) return false;
+		
         delay(1000);
         length = receiveString(_ss_pin);
         if (length == 0) return false;
+
+        error = deserializeJson(message_doc, _receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        if (error) {
+			#ifdef BROADCAST_SPI_DEBUG_1
+			Serial.println("ERROR (OFF): Failed to deserialize JSON");
+			#endif
+            return false;
+        }
+        json_message = message_doc.as<JsonObject>();
+		command_name = json_message["n"].as<const char*>();
+		if(strcmp(command_name, "OK_OFF") != 0) return false;
+
         length = receiveString(_ss_pin);
         if (length > 0) return false;
 
