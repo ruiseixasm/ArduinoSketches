@@ -250,49 +250,36 @@ protected:
 
 				if (c == READY) {	// Makes sure the Slave it's ready first
 					
+					delayMicroseconds(receive_delay_us);
+					c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
+					_receiving_buffer[0] = c;
+
 					// Starts to receive all chars here
-					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
+					for (uint8_t i = 1; c < 128 && i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
-						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
-							c = _spi_instance->transfer(_receiving_buffer[i - 1]);
-							if (c < 128) {   // Only accepts ASCII chars
-								_receiving_buffer[i] = c;
-							} else if (c == LAST) {
-								delayMicroseconds(receive_delay_us);    // Makes sure the Status Byte is sent
-								c = _spi_instance->transfer(_receiving_buffer[i]);  // Replies the last char to trigger END in return
-								size = i + 1;	// size equivalent to 'length + 1'
-								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.println(F("\t\tReceived LAST"));
-								#endif
-								break;
-							} else {    // Includes NACK (implicit)
-								size = 0;
-								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.print(F("\t\t\tNo END or Char, instead, received: "));
-								Serial.println(c, HEX);
-								#endif
-								break;
-							}
-						} else {
-							c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
-							size = 0;
-							if (c < 128) {	// Makes sure it's an ASCII char
-								_receiving_buffer[0] = c;
-							} else {
-								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.println(F("\t\tNot a valid ASCII char (< 128)"));
-								#endif
-								break;
-							}
-						}
+						c = _spi_instance->transfer(_receiving_buffer[i - 1]);
+						_receiving_buffer[i] = c;
+						size = i;
 					}
-					if (c == END) {
+					if (c == LAST) {
+						delayMicroseconds(receive_delay_us);    // Makes sure the Status Byte is sent
+						c = _spi_instance->transfer(_receiving_buffer[size]);  // Replies the last char to trigger END in return
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println(F("\t\tReceived LAST"));
+						#endif
+					} else if (c == END) {
 						delayMicroseconds(10);    // Makes sure the Status Byte is sent
 						_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tReceive completed"));
 						#endif
-						size++;   // Adds up the '\0' uncounted char
+						size += 3;	// size equivalent to 'i + 2'
+					} else {
+						size = 0;
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println(F("\t\tNot a valid ASCII char (< 128)"));
+						#endif
+						break;
 					}
 				} else if (c == NONE) {
 					#ifdef BROADCAST_SPI_DEBUG_2
