@@ -22,8 +22,8 @@ void setup() {
     // Enable global interrupts
     sei();
 
-    Serial.println("\n\nSPI Slave Initialized - JSON class Mode");
-    Serial.print("YELLOW_LED_PIN: ");  // Led 13 is already used by SCK
+    Serial.println(F("\n\nSPI Slave Initialized - JSON class Mode"));
+    Serial.print(F("YELLOW_LED_PIN: "));  // Led 13 is already used by SCK
     Serial.println(YELLOW_LED_PIN);
 }
 

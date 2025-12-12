@@ -70,8 +70,8 @@ protected:
 
     // Buffers and state variables
 	// Exclusive to the handleSPI_Interrupt method, otherwise declare them as 'volatile'
-    static char* _ptr_receiving_buffer;
-    static char* _ptr_sending_buffer;
+    volatile static char* _ptr_receiving_buffer;
+    volatile static char* _ptr_sending_buffer;
 
     volatile static uint8_t _receiving_index;
     volatile static uint8_t _sending_index;
@@ -359,8 +359,8 @@ public:
 
 
 // Initialize static members
-char* Slave_class::_ptr_receiving_buffer = nullptr;
-char* Slave_class::_ptr_sending_buffer = nullptr;
+volatile char* Slave_class::_ptr_receiving_buffer = nullptr;
+volatile char* Slave_class::_ptr_sending_buffer = nullptr;
 
 volatile uint8_t Slave_class::_receiving_index = 0;
 volatile uint8_t Slave_class::_sending_index = 0;

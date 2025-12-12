@@ -17,24 +17,24 @@ void setup() {
     pinMode(BUZZ_PIN, OUTPUT);
     digitalWrite(BUZZ_PIN, LOW);
     
-    Serial.println("\n\nSPI Master Initialized - JSON class Mode");
+    Serial.println(F("\n\nSPI Master Initialized - JSON class Mode"));
 }
 
 
 void loop() {
     if(master_class.ready()) {
-        Serial.println("----------------------------**TESTING**----------------------------");
+        Serial.println(F("----------------------------**TESTING**----------------------------"));
         if(!master_class.test()) {
-            Serial.println("----------------------------TEST FAILED----------------------------");
+            Serial.println(F("----------------------------TEST FAILED----------------------------"));
             digitalWrite(BUZZ_PIN, HIGH);
             delay(500); // Buzzer on for 1/2 second
             digitalWrite(BUZZ_PIN, LOW);
             delay(60000);    // Avoids fast loops of failure
         } else {
-            Serial.println("----------------------------TEST PASSED----------------------------");
+            Serial.println(F("----------------------------TEST PASSED----------------------------"));
         }
     } else {
-        Serial.println("-------------------------**NOT READY**----------------------------");
+        Serial.println(F("-------------------------**NOT READY**----------------------------"));
         delay(60000);    // Avoids fast loops of tries
     }
 }
