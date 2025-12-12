@@ -53,7 +53,9 @@ public:
 
 
 	const char* command_on = "{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}";
+	const uint8_t length_on = 68;
 	const char* command_off = "{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}";
+	const uint8_t length_off = 69;
 
 
 protected:
@@ -67,8 +69,8 @@ protected:
 	SPIClass* _spi_instance = &SPI;  // Alias pointer
 
 	
-    size_t sendString(int ss_pin) {
-        size_t length = 0;	// No interrupts, so, not volatile
+    uint8_t sendString(uint8_t length, int ss_pin) {
+        uint8_t size = 0;	// No interrupts, so, not volatile
 		
 		#ifdef BROADCAST_SPI_DEBUG_1
 		Serial.print(F("\tSending on pin: "));
@@ -79,7 +81,7 @@ protected:
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
 
-			for (size_t s = 0; length == 0 && s < 3; s++) {
+			for (uint8_t s = 0; size == 0 && s < 3; s++) {
 		
 				digitalWrite(ss_pin, LOW);
 				delayMicroseconds(5);
@@ -103,7 +105,7 @@ protected:
 									Serial.print(F("\t\tChar miss match at: "));
 									Serial.println(i);
 									#endif
-									length = 0;
+									size = 0;
 									break;
 								}
 							} else {
@@ -111,7 +113,7 @@ protected:
 								Serial.print(F("\t\tERROR at: "));
 								Serial.println(i);
 								#endif
-								length = 0;
+								size = 0;
 								break;
 							}
 							if (_sending_buffer[i] == '\0') {
@@ -121,13 +123,13 @@ protected:
 									#ifdef BROADCAST_SPI_DEBUG_1
 									Serial.println(F("\t\tSend completed"));
 									#endif
-									length = i + 1;	// Goes beyond i
+									size = i + 1;	// Goes beyond i
 									break;
 								} else {
 									#ifdef BROADCAST_SPI_DEBUG_1
 									Serial.println(F("\t\tLast char '\\0' NOT received"));
 									#endif
-									length = 0;
+									size = 0;
 									break;
 								}
 							}
@@ -144,17 +146,17 @@ protected:
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tDevice NOT ready"));
 						#endif
-						length = 1; // Nothing to be sent
+						size = 1; // Nothing to be sent
 					}
 
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tReceived VOID"));
 					#endif
-					length = 1; // Avoids another try
+					size = 1; // Avoids another try
 				}
 
-				if (length == 0) {
+				if (size == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(ERROR);
 				}
@@ -162,14 +164,14 @@ protected:
 				delayMicroseconds(5);
 				digitalWrite(ss_pin, HIGH);
 
-				if (length > 0) {
+				if (size > 0) {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					if (length > 1) {
+					if (size > 1) {
 						Serial.print(F("\tSent message: "));
-						Serial.write(_sending_buffer, length - 1);
+						Serial.write(_sending_buffer, size - 1);
 						Serial.println();
-						Serial.print(F("\tSent length: "));
-						Serial.println(length - 1);
+						Serial.print(F("\tSent size: "));
+						Serial.println(size - 1);
 					} else {
 						Serial.println(F("\tNothing sent"));
 					}
@@ -191,17 +193,17 @@ protected:
 			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.println(F("\t\tNothing to be sent"));
 			#endif
-			length = 1; // Nothing to be sent
+			size = 1; // Nothing to be sent
 		}
 
-        if (length > 0)
-            length--;   // removes the '\0' from the length as final value
-        return length;
+        if (size > 0)
+            size--;   // removes the '\0' from the length as final value
+        return size;
     }
 
 
-    size_t receiveString(int ss_pin) {
-        size_t length = 0;	// No interrupts, so, not volatile
+    uint8_t receiveString(int ss_pin) {
+        uint8_t size = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
 		#ifdef BROADCAST_SPI_DEBUG_2
@@ -209,7 +211,7 @@ protected:
 		Serial.println(ss_pin);
 		#endif
 
-        for (size_t r = 0; length == 0 && r < 3; r++) {
+        for (uint8_t r = 0; size == 0 && r < 3; r++) {
     
             digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
@@ -228,11 +230,11 @@ protected:
 					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
-							c = _spi_instance->transfer(_receiving_buffer[length]);    // length == i - 1
+							c = _spi_instance->transfer(_receiving_buffer[size]);    // size == i - 1
 							if (c < 128) {   // Only accepts ASCII chars
 								// Avoids increment beyond the real string size
-								if (_receiving_buffer[length] != '\0') {    // length == i - 1
-									_receiving_buffer[++length] = c;        // length == i (also sets '\0')
+								if (_receiving_buffer[size] != '\0') {    // size == i - 1
+									_receiving_buffer[++size] = c;        // size == i (also sets '\0')
 								}
 							} else if (c == END) {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
@@ -240,19 +242,19 @@ protected:
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.println(F("\t\tReceive completed"));
 								#endif
-								length++;   // Adds up the '\0' uncounted char
+								size++;   // Adds up the '\0' uncounted char
 								break;
 							} else {    // Includes NACK (implicit)
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.print(F("\t\t\tNo END or Char, instead, received: "));
 								Serial.println(c, HEX);
 								#endif
-								length = 0;
+								size = 0;
 								break;
 							}
 						} else {
 							c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
-							length = 0;
+							size = 0;
 							if (c < 128) {	// Makes sure it's an ASCII char
 								_receiving_buffer[0] = c;
 							} else {
@@ -268,17 +270,17 @@ protected:
 					Serial.println(F("\t\tThere is nothing to be received"));
 					#endif
 					_receiving_buffer[0] = '\0';
-					length = 1; // Nothing received
+					size = 1; // Nothing received
 					break;
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tDevice NOT ready"));
 					#endif
-					length = 1; // Nothing received
+					size = 1; // Nothing received
 					break;
 				}
 
-				if (length == 0) {
+				if (size == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
 					#ifdef BROADCAST_SPI_DEBUG_1
@@ -290,20 +292,20 @@ protected:
 				#ifdef BROADCAST_SPI_DEBUG_1
 				Serial.println(F("\t\tReceived VOID"));
 				#endif
-				length = 1; // Avoids another try
+				size = 1; // Avoids another try
 			}
 
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
 
-            if (length > 0) {
+            if (size > 0) {
                 #ifdef BROADCAST_SPI_DEBUG_1
-                if (length > 1) {
+                if (size > 1) {
                     Serial.print(F("\tReceived message: "));
-					Serial.write(_receiving_buffer, length - 1);
+					Serial.write(_receiving_buffer, size - 1);
                     Serial.println();
-					Serial.print(F("\tReceived length: "));
-					Serial.println(length - 1);
+					Serial.print(F("\tReceived size: "));
+					Serial.println(size - 1);
                 } else {
                 	#ifdef BROADCAST_SPI_DEBUG_2
                     Serial.println(F("\tNothing received"));
@@ -327,9 +329,9 @@ protected:
             }
         }
 
-        if (length > 0)
-            length--;   // removes the '\0' from the length as final value
-        return length;
+        if (size > 0)
+            size--;   // removes the '\0' from the length as final value
+        return size;
     }
 
 
@@ -433,7 +435,7 @@ public:
 
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_on, BROADCAST_SOCKET_BUFFER_SIZE);
-        length = sendString(_ss_pin);
+        length = sendString(length_on, _ss_pin);
         if (length == 0) return false;
 
         delay(1000);
@@ -477,7 +479,7 @@ public:
         if (length > 0) return false;
 
 		_sending_buffer[0] = '\0';	// Clears buffer
-        length = sendString(_ss_pin);    // Testing sending nothing at all
+        length = sendString(0, _ss_pin);    // Testing sending nothing at all
         if (length > 0) return false;
         delay(1000);
         length = receiveString(_ss_pin);   // Testing that receiving nothing also works
@@ -490,7 +492,7 @@ public:
 
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_off, BROADCAST_SOCKET_BUFFER_SIZE);
-        length = sendString(_ss_pin);
+        length = sendString(length_off, _ss_pin);
         if (length == 0) return false;
 		
         delay(1000);
@@ -512,7 +514,7 @@ public:
         if (length > 0) return false;
 
 		_sending_buffer[0] = '\0';	// Clears buffer
-        length = sendString(_ss_pin);
+        length = sendString(0, _ss_pin);
         if (length > 0) return false;
         delay(1000);
         length = receiveString(_ss_pin);
