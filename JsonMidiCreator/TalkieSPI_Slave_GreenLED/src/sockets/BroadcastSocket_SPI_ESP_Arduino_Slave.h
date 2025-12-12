@@ -53,6 +53,7 @@ protected:
     volatile static uint8_t _send_iteration_i;
     volatile static MessageCode _transmission_mode;
 	volatile static bool _received_data;
+	volatile static bool _ready_to_send;
 
 
     // Needed for the compiler, the base class is the one being called though
@@ -94,7 +95,7 @@ protected:
 
 		if (length > 0) {
             
-            // No need to do anything more, the sending buffer is already set!
+            _ready_to_send = true;
 			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tSent message: "));
@@ -189,14 +190,14 @@ public:
                     break;
                 case SEND:
                     if (_ptr_sending_buffer) {
-                        if (_ptr_sending_buffer[0] == '\0') {
-                            SPDR = NONE;
-                        } else {
+                        if (_ready_to_send) {
                             SPDR = ACK;
                             _transmission_mode = SEND;
                             _sending_index = 0;
                             _validation_index = 0;
                             _send_iteration_i = 0;
+                        } else {
+                            SPDR = NONE;
                         }
                     } else {
                         SPDR = VOID;
@@ -207,8 +208,7 @@ public:
 					if (_transmission_mode == RECEIVE) {
 						_received_data = true;
                     } else if (_transmission_mode == SEND) {
-                        _ptr_sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
-						_sending_index = 0;
+                        _ready_to_send = false;	// Makes sure the sending buffer is tagged as sent
                     }
                     _transmission_mode = NONE;
                     break;

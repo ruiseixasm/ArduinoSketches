@@ -26,6 +26,7 @@ volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_send_iteration_i = 0;
 volatile BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode BroadcastSocket_SPI_ESP_Arduino_Slave::_transmission_mode 
 																	= BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode::NONE;
 volatile bool BroadcastSocket_SPI_ESP_Arduino_Slave::_received_data = false;
+volatile bool BroadcastSocket_SPI_ESP_Arduino_Slave::_ready_to_send = false;
 
 // Define ISR at GLOBAL SCOPE (outside the class)
 ISR(SPI_STC_vect) {
