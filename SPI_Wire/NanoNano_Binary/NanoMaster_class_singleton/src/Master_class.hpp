@@ -96,7 +96,7 @@ protected:
 
 					if (c == READY) {	// Makes sure the Slave it's ready first
 					
-						for (uint8_t i = 1; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
+						for (uint8_t i = 1; i < length; i++) {
 							delayMicroseconds(send_delay_us);
 							c = _spi_instance->transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
 							if (c < 128) {
@@ -116,23 +116,21 @@ protected:
 								size = 0;
 								break;
 							}
-							if (_sending_buffer[i] == '\0') {
-								delayMicroseconds(10);    // Makes sure the Status Byte is sent
-								c = _spi_instance->transfer(END);
-								if (c == _sending_buffer[i]) {	// Last char
-									#ifdef BROADCAST_SPI_DEBUG_1
-									Serial.println(F("\t\tSend completed"));
-									#endif
-									size = i + 1;	// Goes beyond i
-									break;
-								} else {
-									#ifdef BROADCAST_SPI_DEBUG_1
-									Serial.println(F("\t\tLast char '\\0' NOT received"));
-									#endif
-									size = 0;
-									break;
-								}
-							}
+						}
+						delayMicroseconds(10);    // Makes sure the Status Byte is sent
+						c = _spi_instance->transfer(END);
+						if (c == _sending_buffer[length - 1]) {	// Last char
+							#ifdef BROADCAST_SPI_DEBUG_1
+							Serial.println(F("\t\tSend completed"));
+							#endif
+							size = length;
+							break;
+						} else {
+							#ifdef BROADCAST_SPI_DEBUG_1
+							Serial.println(F("\t\tLast char NOT received"));
+							#endif
+							size = 0;
+							break;
 						}
 					} else if (c == BUSY) {
 						#ifdef BROADCAST_SPI_DEBUG_1
@@ -178,7 +176,7 @@ protected:
 					#endif
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.print(F("\t\tCommand NOT successfully sent on try: "));
+					Serial.print(F("\t\tMessage NOT successfully sent on try: "));
 					Serial.println(s + 1);
 					Serial.println(F("\t\tBUZZER activated for 10ms!"));
 					#endif
