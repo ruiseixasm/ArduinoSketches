@@ -84,7 +84,7 @@ private:
     void processMessage() {
 
         Serial.print("Processed command: ");
-        Serial.println(_ptr_receiving_buffer);
+        Serial.println(_receiving_buffer);
 
         // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
         #if ARDUINOJSON_VERSION_MAJOR >= 7
@@ -93,8 +93,11 @@ private:
         StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
         #endif
 
-        DeserializationError error = deserializeJson(message_doc, _ptr_receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
         if (error) {
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.println("ERROR: Failed to deserialize JSON");
+			#endif
             return;
         }
         JsonObject json_message = message_doc.as<JsonObject>();
@@ -106,6 +109,10 @@ private:
             digitalWrite(GREEN_LED_PIN, HIGH);
             json_message["n"] = "OK_ON";
             size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			#ifdef BROADCAST_SPI_DEBUG
+			if (length == 0)
+				Serial.println("ERROR: Failed to serialize JSON");
+			#endif
             Serial.print("LED is ON");
             Serial.print(" | Sending: ");
             Serial.println(_sending_buffer);
@@ -114,18 +121,24 @@ private:
             digitalWrite(GREEN_LED_PIN, LOW);
             json_message["n"] = "OK_OFF";
             size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			#ifdef BROADCAST_SPI_DEBUG
+			if (length == 0)
+				Serial.println("ERROR: Failed to serialize JSON");
+			#endif
             Serial.print("LED is OFF");
             Serial.print(" | Sending: ");
             Serial.println(_sending_buffer);
         } else {
             json_message["n"] = "BUZZ";
             size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			#ifdef BROADCAST_SPI_DEBUG
+			if (length == 0)
+				Serial.println("ERROR: Failed to serialize JSON");
+			#endif
             Serial.print("Unknown command");
             Serial.print(" | Sending: ");
             Serial.println(_sending_buffer);
         }
-
-		_ready_to_send = true;
     }
 
 
@@ -323,6 +336,7 @@ public:
     void process() {
         if (_received_data) {
             processMessage();   // Called only once!
+			_ready_to_send = true;
 			_received_data = false;
         }
     }
