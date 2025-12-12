@@ -342,8 +342,8 @@ public:
                 case LAST:
 					if (_transmission_mode == RECEIVE) {
 						SPDR = _ptr_receiving_buffer[_receiving_index - 1];
-                    } else if (_transmission_mode == SEND) {
-						SPDR = _ptr_sending_buffer[_sending_index];
+                    } else if (_transmission_mode == SEND && _sending_length > 0) {
+						SPDR = _ptr_sending_buffer[_sending_length - 1];
                     }
                     break;
                 case END:
