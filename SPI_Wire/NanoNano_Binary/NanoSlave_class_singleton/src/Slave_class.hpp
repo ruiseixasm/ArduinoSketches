@@ -113,6 +113,8 @@ protected:
 			Serial.print(F("Simple {} test: "));
 			Serial.println(test_err.c_str());
 			#endif
+			
+    		digitalWrite(YELLOW_LED_PIN, HIGH);
             return;
         }
         JsonObject json_message = message_doc.as<JsonObject>();
