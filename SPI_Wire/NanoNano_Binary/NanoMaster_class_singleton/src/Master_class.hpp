@@ -59,10 +59,6 @@ private:
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
-    // Buffers and state variables
-    static char* _ptr_receiving_buffer;
-    static char* _ptr_sending_buffer;
-
     int _ss_pin = 10;
 
 	// Just create a pointer to the existing SPI object
@@ -160,7 +156,7 @@ private:
 					#ifdef BROADCAST_SPI_DEBUG_1
 					if (length > 1) {
 						Serial.print("Command successfully sent: ");
-						Serial.println(_ptr_sending_buffer);
+						Serial.println(_sending_buffer);
 					} else {
 						Serial.println("\tNothing sent");
 					}
@@ -400,9 +396,6 @@ public:
     Master_class(int ss_pin = 10) {
 
         _ss_pin = ss_pin;
-		// For static access to the buffers
-		_ptr_receiving_buffer = _receiving_buffer;
-		_ptr_sending_buffer = _sending_buffer;
 
         // Initialize SPI
         SPI.begin();
@@ -481,9 +474,5 @@ public:
 
 };
 
-
-// Initialize static members
-char* Master_class::_ptr_receiving_buffer = nullptr;
-char* Master_class::_ptr_sending_buffer = nullptr;
 
 #endif // MASTER_CLASS_HPP

@@ -69,6 +69,7 @@ private:
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
     // Buffers and state variables
+	// Exclusive to the handleSPI_Interrupt method, otherwise declare them as 'volatile'
     static char* _ptr_receiving_buffer;
     static char* _ptr_sending_buffer;
 
