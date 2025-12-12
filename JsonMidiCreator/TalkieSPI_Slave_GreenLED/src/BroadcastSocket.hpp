@@ -139,8 +139,8 @@ protected:
                 temp /= 10;
                 num_digits++;
             }
-            size_t data_i = length - 1;    // Old length (shorter)
-            length += num_digits - 1;      // Discount the digit '0' already placed
+            size_t data_i = length;    	// 'data_i = length' because it has to include the '\0' char
+            length += num_digits - 1;	// Discount the digit '0' already placed
             
 			#ifdef BROADCASTSOCKET_DEBUG
 			Serial.print(F("insertChecksum3: Final length: "));
@@ -151,7 +151,7 @@ protected:
                 return length;  // buffer overflow
 
             bool at_c = false;
-            for (size_t i = length - 1; data_i > 5; --i) {
+            for (size_t i = length; data_i > 5; --i) {	// 'i = length' because it has to include the '\0' char
                 
                 if (_sending_buffer[data_i - 2] == ':') {
                     if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
