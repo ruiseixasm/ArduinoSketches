@@ -77,6 +77,15 @@ protected:
 		Serial.println(ss_pin);
 		#endif
 
+		if (length > BROADCAST_SOCKET_BUFFER_SIZE) {
+			
+			#ifdef BROADCAST_SPI_DEBUG_1
+			Serial.println(F("\tlength ABOVE BROADCAST_SOCKET_BUFFER_SIZE"));
+			#endif
+
+			return 0;
+		}
+
 		if (_sending_buffer[0] != '\0') {	// Don't send empty strings
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
