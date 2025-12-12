@@ -245,9 +245,12 @@ public:
 
             switch (_transmission_mode) {
                 case RECEIVE:
+					// Makes sure it retuns ERROR if unable to set the buffer (best way to avoid buffer corruption)
+					SPDR = ERROR;
                     if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
-                        // Returns same received char as receiving confirmation (no need to set SPDR)
-                        _ptr_receiving_buffer[_receiving_index++] = c;
+                        _ptr_receiving_buffer[_receiving_index] = c;
+						SPDR = _ptr_receiving_buffer[_receiving_index];	// Char set correctly for sure
+						_receiving_index++;
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
                         _transmission_mode = NONE;
