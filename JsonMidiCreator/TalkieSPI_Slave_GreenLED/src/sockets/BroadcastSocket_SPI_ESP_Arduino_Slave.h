@@ -44,11 +44,9 @@ public:
 
 protected:
 
-    static BroadcastSocket* _self_socket;
+    static char* _ptr_receiving_buffer;
+    static char* _ptr_sending_buffer;
 
-    static char _isr_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-    static char _isr_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-	
     volatile static uint8_t _receiving_index;
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
@@ -78,7 +76,9 @@ protected:
 			SPCR &= ~_BV(CPOL);  // Clock polarity 0
 			SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
 
-            _self_socket = this;
+            // For static access
+            _ptr_receiving_buffer = _receiving_buffer;
+            _ptr_sending_buffer = _sending_buffer;
 
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
@@ -93,11 +93,11 @@ protected:
 		length = BroadcastSocket::send(length, as_reply, target_index); // Very important pre processing !!
 
 		if (length > 0) {
-			memcpy(_isr_sending_buffer, _sending_buffer, length + 1);	// (+ 1) to include the '\0'
+			memcpy(_ptr_sending_buffer, _sending_buffer, length + 1);	// (+ 1) to include the '\0'
 			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tSent message: "));
-			Serial.println(_isr_sending_buffer);
+			Serial.println(_ptr_sending_buffer);
 			Serial.print(F("\tSent length: "));
 			Serial.println(length);
 			#endif
@@ -135,7 +135,7 @@ public:
                 case RECEIVE:
                     if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
                         // Returns same received char as receiving confirmation (no need to set SPDR)
-                        _isr_receiving_buffer[_receiving_index++] = c;
+                        _ptr_receiving_buffer[_receiving_index++] = c;
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
                         _transmission_mode = NONE;
@@ -143,7 +143,7 @@ public:
                     break;
                 case SEND:
 					if (_sending_index < BROADCAST_SOCKET_BUFFER_SIZE) {
-						SPDR = _isr_sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
+						SPDR = _ptr_sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
 						if (_validation_index > _sending_index) {	// Less missed sends this way
 							SPDR = END;	// All chars have been checked
 							break;
@@ -155,7 +155,7 @@ public:
 					}
 					// Starts checking 2 indexes after
 					if (_send_iteration_i > 1) {    // Two positions of delay
-						if (c != _isr_sending_buffer[_validation_index]) {   // Also checks '\0' char
+						if (c != _ptr_sending_buffer[_validation_index]) {   // Also checks '\0' char
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
 							break;
@@ -163,7 +163,7 @@ public:
 						_validation_index++; // Starts checking after two sent
 					}
 					// Only increments if NOT at the end of the string being sent
-					if (_isr_sending_buffer[_sending_index] != '\0') {
+					if (_ptr_sending_buffer[_sending_index] != '\0') {
 						_sending_index++;
 					}
                     _send_iteration_i++;
@@ -178,19 +178,27 @@ public:
 
             switch (c) {
                 case RECEIVE:
-                    SPDR = ACK;
-                    _transmission_mode = RECEIVE;
-                    _receiving_index = 0;
+                    if (_ptr_receiving_buffer) {
+                        SPDR = ACK;
+                        _transmission_mode = RECEIVE;
+                        _receiving_index = 0;
+                    } else {
+                        SPDR = VOID;
+                    }
                     break;
                 case SEND:
-                    if (_isr_sending_buffer[0] == '\0') {
-                        SPDR = NONE;
+                    if (_ptr_sending_buffer) {
+                        if (_ptr_sending_buffer[0] == '\0') {
+                            SPDR = NONE;
+                        } else {
+                            SPDR = ACK;
+                            _transmission_mode = SEND;
+                            _sending_index = 0;
+                            _validation_index = 0;
+                            _send_iteration_i = 0;
+                        }
                     } else {
-                        SPDR = ACK;
-                        _transmission_mode = SEND;
-                        _sending_index = 0;
-                        _validation_index = 0;
-                        _send_iteration_i = 0;
+                        SPDR = VOID;
                     }
                     break;
                 case END:
@@ -198,7 +206,7 @@ public:
 					if (_transmission_mode == RECEIVE) {
 						_received_data = true;
                     } else if (_transmission_mode == SEND) {
-                        _isr_sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
+                        _ptr_sending_buffer[0] = '\0';	// Makes sure the sending buffer is marked as empty (NONE next time)
 						_sending_index = 0;
                     }
                     _transmission_mode = NONE;
@@ -210,7 +218,7 @@ public:
                 case FULL:
                     SPDR = ACK;
                     if (_transmission_mode == RECEIVE) {
-                        _isr_receiving_buffer[0] = '\0';	// Makes sure the receiving buffer is marked as empty in case of error
+                        _ptr_receiving_buffer[0] = '\0';	// Makes sure the receiving buffer is marked as empty in case of error
 						_receiving_index = 0;
                     }
                     _transmission_mode = NONE;
@@ -239,10 +247,10 @@ public:
 			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tReceived message: "));
-			Serial.println(_isr_receiving_buffer);
+			Serial.println(_ptr_receiving_buffer);
 			#endif
 
-			memcpy(_receiving_buffer, _isr_receiving_buffer, _receiving_index);
+			memcpy(_receiving_buffer, _ptr_receiving_buffer, _receiving_index);
 			length = _receiving_index - 1;	// length excludes the char '\0'
 			
 			#ifdef BROADCAST_SPI_DEBUG
