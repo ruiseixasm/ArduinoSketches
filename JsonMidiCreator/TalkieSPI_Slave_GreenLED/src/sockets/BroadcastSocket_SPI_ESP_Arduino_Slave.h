@@ -213,7 +213,7 @@ public:
                     _transmission_mode = NONE;
                     break;
                 case ACK:
-					if (_ptr_receiving_buffer && _ptr_sending_buffer && _transmission_mode == NONE) {
+					if (_transmission_mode == NONE) {
                     	SPDR = READY;
 					} else {
                         SPDR = VOID;
