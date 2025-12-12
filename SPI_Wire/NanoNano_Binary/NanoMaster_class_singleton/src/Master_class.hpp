@@ -290,6 +290,13 @@ protected:
 					_receiving_buffer[0] = '\0';
 					size = 1; // Nothing received
 					break;
+				} else if (c == ERROR) {
+					#ifdef BROADCAST_SPI_DEBUG_2
+					Serial.println(F("\t\tTransmission ERROR"));
+					#endif
+					_receiving_buffer[0] = '\0';
+					size = 0; // Try again
+					break;
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tDevice NOT ready"));
