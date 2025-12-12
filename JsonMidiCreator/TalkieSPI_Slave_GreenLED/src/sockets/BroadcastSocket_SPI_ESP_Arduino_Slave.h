@@ -31,12 +31,13 @@ public:
         END     = 0xF1, // End of transmission
         ACK     = 0xF2, // Acknowledge
         NACK    = 0xF3, // Not acknowledged
-        READY   = 0xF4, // Slave has response ready
+        READY   = 0xF4, // Slave is ready
         ERROR   = 0xF5, // Error frame
         RECEIVE = 0xF6, // Asks the receiver to start receiving
         SEND    = 0xF7, // Asks the receiver to start sending
         NONE    = 0xF8, // Means nothing to send
         FULL    = 0xF9, // Signals the buffer as full
+        WAIT    = 0xFA, // Tells the Master to wait a little
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
@@ -180,22 +181,30 @@ public:
 
             switch (c) {
                 case RECEIVE:
-                    if (_ptr_receiving_buffer && _transmission_mode == NONE && !_received_data) {
-                        SPDR = READY;
-                        _transmission_mode = RECEIVE;
-                        _receiving_index = 0;
+                    if (_ptr_receiving_buffer) {
+						if (_transmission_mode == NONE && !_received_data) {
+							SPDR = READY;
+							_transmission_mode = RECEIVE;
+							_receiving_index = 0;
+						} else {
+                        	SPDR = WAIT;
+						}
                     } else {
                         SPDR = VOID;
                     }
                     break;
                 case SEND:
-                    if (_ptr_sending_buffer && _transmission_mode == NONE) {
+                    if (_ptr_sending_buffer) {
                         if (_ready_to_send) {
-                            SPDR = READY;
-                            _transmission_mode = SEND;
-                            _sending_index = 0;
-                            _validation_index = 0;
-                            _send_iteration_i = 0;
+							if (_transmission_mode == NONE) {
+								SPDR = READY;
+								_transmission_mode = SEND;
+								_sending_index = 0;
+								_validation_index = 0;
+								_send_iteration_i = 0;
+							} else {
+								SPDR = WAIT;
+							}
                         } else {
                             SPDR = NONE;
                         }
@@ -216,7 +225,7 @@ public:
 					if (_transmission_mode == NONE) {
                     	SPDR = READY;
 					} else {
-                        SPDR = VOID;
+                        SPDR = WAIT;
 					}
                     break;
                 case ERROR:

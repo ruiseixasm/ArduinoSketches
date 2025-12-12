@@ -44,6 +44,7 @@ public:
         SEND    = 0xF7, // Asks the receiver to start sending
         NONE    = 0xF8, // Means nothing to send
         FULL    = 0xF9, // Signals the buffer as full
+        WAIT    = 0xFA, // Tells the Master to wait a little
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
@@ -126,6 +127,14 @@ protected:
 								}
 							}
 						}
+					} else if (c == WAIT) {
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println("\t\tSlave is busy, waiting a little.");
+						#endif
+						delayMicroseconds(5);
+						digitalWrite(ss_pin, HIGH);
+						delay(2);	// Waiting 2ms
+						continue;
 					} else {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println("\t\tDevice NOT ready");
@@ -249,6 +258,14 @@ protected:
 					_receiving_buffer[0] = '\0';
 					length = 1; // Nothing received
 					break;
+				} else if (c == WAIT) {
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println("\t\tSlave is busy, waiting a little.");
+					#endif
+            		delayMicroseconds(5);
+            		digitalWrite(ss_pin, HIGH);
+					delay(2);	// Waiting 2ms
+					continue;
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println("\t\tDevice NOT ready");
@@ -328,6 +345,14 @@ protected:
                 	Serial.println("\t\tAcknowledge with READY");
 					#endif
 					acknowledge = true;
+				} else if (c == WAIT) {
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println("\t\tSlave is busy, waiting a little.");
+					#endif
+					delayMicroseconds(5);
+					digitalWrite(ss_pin, HIGH);
+					delay(2);	// Waiting 2ms
+					continue;
 				}
 				#ifdef BROADCAST_SPI_DEBUG_1
 				else {
