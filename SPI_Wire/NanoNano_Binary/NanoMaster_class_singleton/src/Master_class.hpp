@@ -160,6 +160,13 @@ protected:
 						digitalWrite(ss_pin, HIGH);
 						delay(2);	// Waiting 2ms
 						continue;
+					} else if (c == ERROR) {
+						#ifdef BROADCAST_SPI_DEBUG_2
+						Serial.println(F("\t\tTransmission ERROR"));
+						#endif
+						_receiving_buffer[0] = '\0';
+						size = 0; // Try again
+						break;
 					} else {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tDevice NOT ready"));
