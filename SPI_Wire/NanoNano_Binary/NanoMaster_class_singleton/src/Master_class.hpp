@@ -123,14 +123,12 @@ protected:
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tSend completed"));
 							#endif
-							size = length;
-							break;
+							size = length + 1;	// Just for error catch
 						} else {
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tLast char NOT received"));
 							#endif
 							size = 0;
-							break;
 						}
 					} else if (c == BUSY) {
 						#ifdef BROADCAST_SPI_DEBUG_1
@@ -195,7 +193,7 @@ protected:
 		}
 
         if (size > 0)
-            size--;   // removes the '\0' from the length as final value
+            size--;
         return size;
     }
 
