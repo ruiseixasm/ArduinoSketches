@@ -93,7 +93,8 @@ protected:
 		length = BroadcastSocket::send(length, as_reply, target_index); // Very important pre processing !!
 
 		if (length > 0) {
-			memcpy(_ptr_sending_buffer, _sending_buffer, length + 1);	// (+ 1) to include the '\0'
+            
+            // No need to do anything more, the sending buffer is already set!
 			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tSent message: "));
@@ -250,7 +251,6 @@ public:
 			Serial.println(_ptr_receiving_buffer);
 			#endif
 
-			memcpy(_receiving_buffer, _ptr_receiving_buffer, _receiving_index);
 			length = _receiving_index - 1;	// length excludes the char '\0'
 			
 			#ifdef BROADCAST_SPI_DEBUG
