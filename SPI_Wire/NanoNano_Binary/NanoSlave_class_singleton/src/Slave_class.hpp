@@ -105,24 +105,24 @@ private:
         if (strcmp(command_name, "ON") == 0) {
             digitalWrite(GREEN_LED_PIN, HIGH);
             json_message["n"] = "OK_ON";
-            size_t length = serializeJson(json_message, _ptr_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+            size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
             Serial.print("LED is ON");
             Serial.print(" | Sending: ");
-            Serial.println(_ptr_sending_buffer);
+            Serial.println(_sending_buffer);
 
         } else if (strcmp(command_name, "OFF") == 0) {
             digitalWrite(GREEN_LED_PIN, LOW);
             json_message["n"] = "OK_OFF";
-            size_t length = serializeJson(json_message, _ptr_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+            size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
             Serial.print("LED is OFF");
             Serial.print(" | Sending: ");
-            Serial.println(_ptr_sending_buffer);
+            Serial.println(_sending_buffer);
         } else {
             json_message["n"] = "BUZZ";
-            size_t length = serializeJson(json_message, _ptr_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+            size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
             Serial.print("Unknown command");
             Serial.print(" | Sending: ");
-            Serial.println(_ptr_sending_buffer);
+            Serial.println(_sending_buffer);
         }
 
 		_ready_to_send = true;
