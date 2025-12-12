@@ -276,14 +276,6 @@ protected:
 					_receiving_buffer[0] = '\0';
 					length = 1; // Nothing received
 					break;
-				} else if (c == BUSY) {
-					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println(F("\t\tSlave is busy, waiting a little."));
-					#endif
-            		delayMicroseconds(5);
-            		digitalWrite(ss_pin, HIGH);
-					delay(2);	// Waiting 2ms
-					continue;
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tDevice NOT ready"));
