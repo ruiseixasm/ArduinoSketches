@@ -168,7 +168,8 @@ protected:
 						break;
 					} else {
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println(F("\t\tDevice NOT ready"));
+						Serial.print(F("\t\tDevice NOT ready: "));
+						Serial.println(c, HEX);
 						#endif
 						size = 1; // Nothing to be sent
 					}
@@ -297,7 +298,8 @@ protected:
 					break;
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println(F("\t\tDevice NOT ready"));
+					Serial.print(F("\t\tDevice NOT ready: "));
+					Serial.println(c, HEX);
 					#endif
 					size = 1; // Nothing received
 					break;
