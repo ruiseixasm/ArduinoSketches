@@ -50,6 +50,9 @@ public:
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
 
+	const char* command_on = "{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}";
+	const char* command_off = "{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}";
+
 private:
 
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
@@ -393,6 +396,10 @@ public:
         size_t length = 0;
 
         // ON cycle
+
+		// Copy safely (takes into consideration the '\0' char)
+		strlcpy(_sending_buffer, command_on, BROADCAST_SOCKET_BUFFER_SIZE);
+
         length = sendString("{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}");
         if (length == 0) return false;
         delay(1000);
@@ -411,6 +418,10 @@ public:
 
 
         // OFF cycle
+
+		// Copy safely (takes into consideration the '\0' char)
+		strlcpy(_sending_buffer, command_off, BROADCAST_SOCKET_BUFFER_SIZE);
+
         length = sendString("{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}");
         if (length == 0) return false;
         delay(1000);
