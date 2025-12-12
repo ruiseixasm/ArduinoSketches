@@ -164,7 +164,6 @@ protected:
 						#ifdef BROADCAST_SPI_DEBUG_2
 						Serial.println(F("\t\tTransmission ERROR"));
 						#endif
-						_receiving_buffer[0] = '\0';
 						size = 0; // Try again
 						break;
 					} else {
@@ -301,7 +300,6 @@ protected:
 					#ifdef BROADCAST_SPI_DEBUG_2
 					Serial.println(F("\t\tTransmission ERROR"));
 					#endif
-					_receiving_buffer[0] = '\0';
 					size = 0; // Try again
 					break;
 				} else {
