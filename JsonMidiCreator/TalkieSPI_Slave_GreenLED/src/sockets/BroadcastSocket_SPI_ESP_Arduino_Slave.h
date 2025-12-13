@@ -322,19 +322,18 @@ public:
 
 		if (length) {
 			
-			_received_length = length;
-
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\treceive1: Received message: "));
-			Serial.write(_receiving_buffer, _received_length);
+			Serial.write(_receiving_buffer, length);
 			Serial.println();
 			Serial.print(F("\treceive1: Received length: "));
-			Serial.println(_received_length);
+			Serial.println(length);
 			#endif
 			
+			_received_length = length;
 			BroadcastSocket::triggerTalkers();
 			_received_length_spi = 0;	// Allows the device to receive more data
-			_received_length = _received_length_spi;
+			_received_length = 0;
 		}
 
         return length;
