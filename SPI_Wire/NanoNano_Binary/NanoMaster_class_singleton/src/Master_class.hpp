@@ -144,20 +144,20 @@ protected:
 							Serial.println(length - 2);
 							#endif
 							size = 0;
-							break;
-						}
-						delayMicroseconds(10);    // Makes sure the Status Byte is sent
-						c = _spi_instance->transfer(END);
-						if (c == _sending_buffer[length - 1]) {	// Last char
-							#ifdef BROADCAST_SPI_DEBUG_1
-							Serial.println(F("\t\tSend completed"));
-							#endif
-							size = length + 1;	// Just for error catch
 						} else {
-							#ifdef BROADCAST_SPI_DEBUG_1
-							Serial.println(F("\t\tLast char NOT received"));
-							#endif
-							size = 0;
+							delayMicroseconds(10);    // Makes sure the Status Byte is sent
+							c = _spi_instance->transfer(END);
+							if (c == _sending_buffer[length - 1]) {	// Last char
+								#ifdef BROADCAST_SPI_DEBUG_1
+								Serial.println(F("\t\tSend completed"));
+								#endif
+								size = length + 1;	// Just for error catch
+							} else {
+								#ifdef BROADCAST_SPI_DEBUG_1
+								Serial.println(F("\t\tLast char NOT received"));
+								#endif
+								size = 0;
+							}
 						}
 					} else if (c == BUSY) {
 						#ifdef BROADCAST_SPI_DEBUG_1
@@ -168,11 +168,15 @@ protected:
 						delay(2);	// Waiting 2ms
 						continue;
 					} else if (c == ERROR) {
-						#ifdef BROADCAST_SPI_DEBUG_2
+						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tTransmission ERROR"));
 						#endif
 						size = 0; // Try again
-						break;
+					} else if (c == RECEIVE) {
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println(F("\t\tReceived RECEIVE back, need to retry"));
+						#endif
+						size = 0; // Try again
 					} else {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.print(F("\t\tDevice NOT ready: "));
@@ -288,7 +292,6 @@ protected:
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tNot a valid ASCII char (< 128)"));
 						#endif
-						break;
 					}
 				} else if (c == NONE) {
 					#ifdef BROADCAST_SPI_DEBUG_2
@@ -296,20 +299,22 @@ protected:
 					#endif
 					_receiving_buffer[0] = '\0';
 					size = 1; // Nothing received
-					break;
 				} else if (c == ERROR) {
-					#ifdef BROADCAST_SPI_DEBUG_2
+					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tTransmission ERROR"));
 					#endif
 					size = 0; // Try again
-					break;
+				} else if (c == SEND) {
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println(F("\t\tReceived SEND back, need to retry"));
+					#endif
+					size = 0; // Try again
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.print(F("\t\tDevice NOT ready: "));
 					Serial.println(c, HEX);
 					#endif
 					size = 1; // Nothing received
-					break;
 				}
 
 				if (size == 0) {
@@ -409,7 +414,6 @@ protected:
 
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
-
         }
 
         #ifdef BROADCAST_SPI_DEBUG_1
