@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
-#define BROADCAST_SPI_DEBUG_1
+// #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
 
 
