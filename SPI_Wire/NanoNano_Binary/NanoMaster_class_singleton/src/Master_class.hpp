@@ -286,13 +286,14 @@ protected:
 							c = _spi_instance->transfer(END);	// Replies the END to confirm reception and thus Slave buffer deletion
 							for (uint8_t clear_s = 0; c && clear_s < 3; clear_s++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
 								delayMicroseconds(10);
-								c = _spi_instance->transfer(CLEAR_S);
+								c = _spi_instance->transfer(END);
 							}
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tReceive completed"));
 							#endif
 							size += 1;	// size equivalent to 'i + 2'
 						} else {
+							size = 0;	// Try again
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tERROR: END NOT received"));
 							#endif
@@ -302,9 +303,10 @@ protected:
 						_spi_instance->transfer(FULL);
 						size = 1;	// Try no more
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println(F("\t\tERROR: Master buffer overflow"));
+						Serial.println(F("\t\tFULL: Master buffer overflow"));
 						#endif
 					} else {
+						size = 0;	// Try again
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Receiving sequence wasn't followed"));
 						#endif
