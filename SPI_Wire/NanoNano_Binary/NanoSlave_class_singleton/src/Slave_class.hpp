@@ -48,7 +48,7 @@ class Slave_class
 {
 public:
     
-    enum MessageCode : uint8_t {
+    enum StatusByte : uint8_t {
         START   = 0xF0, // Start of transmission
         END     = 0xF1, // End of transmission
         ACK     = 0xF2, // Acknowledge
@@ -61,9 +61,7 @@ public:
         FULL    = 0xF9, // Signals the buffer as full
         BUSY    = 0xFA, // Tells the Master to wait a little
 		LAST	= 0xFB,	// Asks for the last char
-		CLEAR_R	= 0xFC,	// Asks for the receiving buffer clear on the Slave
-		CLEAR_S	= 0xFD,	// Asks for the sending buffer clear on the Slave
-		DONE	= 0xFE,	// Marks the action as DONE
+		DONE	= 0xFC,	// Marks the action as DONE
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
@@ -86,7 +84,7 @@ protected:
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
 	volatile static uint8_t _sending_length;
-    volatile static MessageCode _transmission_mode;
+    volatile static StatusByte _transmission_mode;
 
 	// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
 	#if ARDUINOJSON_VERSION_MAJOR >= 7
@@ -458,20 +456,6 @@ public:
 					Serial.println(F("\tTransmission ended with received ERROR or FULL"));
 					#endif
                     break;
-				case CLEAR_R:
-					_received_length = 0;	// Clears receiving buffer
-					SPDR = _received_length;
-					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println(F("\tCleared receiving buffer"));
-					#endif
-                    break;
-				case CLEAR_S:
-					_sending_length = 0;	// Clears sending buffer
-					SPDR = _sending_length;
-					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println(F("\tCleared sending buffer"));
-					#endif
-                    break;
                 default:
                     SPDR = NACK;
             }
@@ -498,7 +482,7 @@ volatile uint8_t Slave_class::_received_length = 0;
 volatile uint8_t Slave_class::_sending_index = 0;
 volatile uint8_t Slave_class::_validation_index = 0;
 volatile uint8_t Slave_class::_sending_length = 0;
-volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::MessageCode::NONE;
+volatile Slave_class::StatusByte Slave_class::_transmission_mode = Slave_class::StatusByte::NONE;
 
 
 #endif // SLAVE_CLASS_HPP

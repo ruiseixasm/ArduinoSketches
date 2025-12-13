@@ -35,7 +35,7 @@ class Master_class
 {
 public:
     
-    enum MessageCode : uint8_t {
+    enum StatusByte : uint8_t {
         START   = 0xF0, // Start of transmission
         END     = 0xF1, // End of transmission
         ACK     = 0xF2, // Acknowledge
@@ -48,9 +48,7 @@ public:
         FULL    = 0xF9, // Signals the buffer as full
         BUSY    = 0xFA, // Tells the Master to wait a little
 		LAST	= 0xFB,	// Asks for the last char
-		CLEAR_R	= 0xFC,	// Asks for the receiving buffer clear on the Slave
-		CLEAR_S	= 0xFD,	// Asks for the sending buffer clear on the Slave
-		DONE	= 0xFE,	// Marks the action as DONE
+		DONE	= 0xFC,	// Marks the action as DONE
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
