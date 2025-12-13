@@ -92,7 +92,7 @@ protected:
 			Serial.println(F("\tlength > BROADCAST_SOCKET_BUFFER_SIZE"));
 			#endif
 
-			return 0;
+			return false;
 		}
 
 		if (length > 0) {	// Don't send empty strings
