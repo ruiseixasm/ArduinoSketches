@@ -48,14 +48,10 @@ protected:
         : BroadcastSocket(json_talkers, talker_count) {}
 
 
-    size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) override {
-        (void)target_index; // Silence unused parameter warning
+    bool send(bool as_reply = false, uint8_t target_index = 255) override {
         if (_udp == nullptr) return false;
 
-        // Need to call homologous method in super class first
-        length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
-
-        if (length > 0) {
+        if (BroadcastSocket::send(as_reply, target_index)) {	// Very important pre processing !!
 
             IPAddress broadcastIP(255, 255, 255, 255);
             
@@ -64,25 +60,25 @@ protected:
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("Failed to begin packet"));
                 #endif
-                return 0;
+                return false;
             }
             #else
             if (!_udp->beginPacket(broadcastIP, _port)) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("Failed to begin packet"));
                 #endif
-                return 0;
+                return false;
             }
             #endif
 
-            size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(_sending_buffer), length);
+            size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(_sending_buffer), _sending_length);
             (void)bytesSent; // Silence unused variable warning
 
             if (!_udp->endPacket()) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("Failed to end packet"));
                 #endif
-                return 0;
+                return false;
             }
 
             #ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -91,9 +87,10 @@ protected:
             Serial.println();
             #endif
 
+			return true;
         }
 
-        return length;
+        return false;
     }
 
 
@@ -140,7 +137,7 @@ public:
             #endif
             
             _source_ip = _udp->remoteIP();
-            return triggerTalkers(static_cast<size_t>(length));
+            return triggerTalkers();
         }
         return 0;   // nothing received
     }

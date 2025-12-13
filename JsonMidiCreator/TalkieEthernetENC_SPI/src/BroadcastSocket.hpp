@@ -65,7 +65,7 @@ protected:
     // 	'9' = 57
 
 
-    uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
+    uint16_t extractChecksum(int* message_code_int, uint32_t* remote_time) {
         
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
@@ -73,7 +73,7 @@ protected:
         bool at_c = false;
         bool at_i = false;
         size_t data_i = 3;
-        for (size_t i = data_i; i < *source_len; ++i) {
+        for (size_t i = data_i; i < _received_length; ++i) {
             if (_receiving_buffer[i] == ':') {
                 if (_receiving_buffer[i - 2] == 'c' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
                     at_c = true;
@@ -114,14 +114,14 @@ protected:
             }
             _receiving_buffer[data_i++] = _receiving_buffer[i]; // Does a left offset
         }
-        *source_len = data_i;
+        _received_length = data_i;
         return data_checksum;
     }
 
 
-    size_t insertChecksum(size_t length) {
+    bool insertChecksum() {
 
-        uint16_t checksum = generateChecksum(_sending_buffer, length);
+        uint16_t checksum = generateChecksum(_sending_buffer, _sending_length);
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("insertChecksum1: Checksum is: "));
@@ -132,7 +132,7 @@ protected:
 
 			#ifdef BROADCASTSOCKET_DEBUG
 			Serial.print(F("insertChecksum2: Initial length: "));
-			Serial.println(length);
+			Serial.println(_sending_length);
 			#endif
 
             // First, find how many digits
@@ -142,19 +142,21 @@ protected:
                 temp /= 10;
                 num_digits++;
             }
-            size_t data_i = length - 1;	// Old length (shorter) (binary processing, no '\0' to take into consideration)
-            length += num_digits - 1;	// Discount the digit '0' already placed
+            uint8_t data_i = _sending_length - 1;	// Old length (shorter) (binary processing, no '\0' to take into consideration)
+			uint8_t new_length = _sending_length + num_digits - 1;	// Discount the digit '0' already placed
             
 			#ifdef BROADCASTSOCKET_DEBUG
-			Serial.print(F("insertChecksum3: Final length: "));
-			Serial.println(length);
+			Serial.print(F("insertChecksum3: New length: "));
+			Serial.println(new_length);
 			#endif
 
-            if (length > BROADCAST_SOCKET_BUFFER_SIZE)
-                return length;  // buffer overflow
+            if (new_length > BROADCAST_SOCKET_BUFFER_SIZE)
+                return false;  // buffer overflow
+
+			_sending_length = new_length;
 
             bool at_c = false;
-            for (size_t i = length - 1; data_i > 5; --i) {	// 'i = length - 1' because it's a binary processing, no '\0' to take into consideration
+            for (uint8_t i = _sending_length - 1; data_i > 5; --i) {	// 'i = _sending_length - 1' because it's a binary processing, no '\0' to take into consideration
                 
                 if (_sending_buffer[data_i - 2] == ':') {
                     if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
@@ -162,7 +164,7 @@ protected:
                     }
                 } else if (at_c) {
                     if (checksum == 0) {
-                        return length;
+                        return true;
                     } else {
                         _sending_buffer[i] = '0' + checksum % 10;
                         checksum /= 10; // Truncates the number (does a floor)
@@ -172,11 +174,11 @@ protected:
                 _sending_buffer[i] = _sending_buffer[data_i--]; // Does an offset
             }
         }
-        return length;
+        return true;
     }
 
     
-    size_t triggerTalkers(size_t length) {
+    size_t triggerTalkers() {
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(class_name());
@@ -186,16 +188,16 @@ protected:
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("triggerTalkers2: "));
-        Serial.write(_receiving_buffer, length);
+        Serial.write(_receiving_buffer, _received_length);
         Serial.println();
         #endif
 
-        if (length > 3*4 + 2) {
+        if (_received_length > 3*4 + 2) {
             
             int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
             uint32_t remote_time = 0;
-            uint16_t received_checksum = extractChecksum(&length, &message_code_int, &remote_time);
-            uint16_t checksum = generateChecksum(_receiving_buffer, length);
+            uint16_t received_checksum = extractChecksum(&message_code_int, &remote_time);
+            uint16_t checksum = generateChecksum(_receiving_buffer, _received_length);
             
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.print(F("triggerTalkers3: Remote time: "));
@@ -213,7 +215,7 @@ protected:
                     Serial.println(F("triggerTalkers5: No message code!"));
                     #endif
 
-                    return length;
+                    return _received_length;
                 }
                 
                 if (_max_delay_ms > 0) {
@@ -246,7 +248,7 @@ protected:
                                     Serial.println(remote_delay);
                                     #endif
                                     _drops_count++;
-                                    return length;  // Out of time package (too late)
+                                    return _received_length;  // Out of time package (too late)
                                 }
                             }
                         }
@@ -272,7 +274,7 @@ protected:
                     StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
                     #endif
 
-                    DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
+                    DeserializationError error = deserializeJson(message_doc, _receiving_buffer, _received_length);
                     if (error) {
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.println(F("Failed to deserialize received data"));
@@ -298,7 +300,7 @@ protected:
                 #endif
             }
         }
-        return length;
+        return _received_length;
     }
 
 
@@ -312,44 +314,43 @@ protected:
         }
 
 
-    virtual size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) {
+    virtual bool send(bool as_reply = false, uint8_t target_index = 255) {
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
 
-        if (length < 3*4 + 2) {
+        if (_sending_length < 3*4 + 2) {
 
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.println(F("Error: Serialization failed"));
             #endif
 
-            return 0;
+            return false;
         }
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("send1: "));
-        Serial.write(_sending_buffer, length);
+        Serial.write(_sending_buffer, _sending_length);
         Serial.println();
         #endif
 
-        length = insertChecksum(length);
+        insertChecksum();
         
-        if (length > BROADCAST_SOCKET_BUFFER_SIZE) {
+        if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
 
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.println(F("ERROR: Message too big"));
             #endif
 
-            return 0;
+            return false;
         }
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("send2: "));
-        Serial.write(_sending_buffer, length);
+        Serial.write(_sending_buffer, _sending_length);
         Serial.println();
         #endif
-        
 
-        return length;
+        return true;
     }
 
 
@@ -420,20 +421,20 @@ public:
 
 		// This length excludes the '\0' char
 		// serializeJson() returns length without \0, but adds \0 to the buffer. Your SPI code should send until it finds \0.
-        size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("remoteSend2: "));
-        Serial.write(_sending_buffer, length);
+        Serial.write(_sending_buffer, _sending_length);
         Serial.println();
         #endif
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend3: JSON length: "));
-		Serial.println(length);
+		Serial.println(_sending_length);
 		#endif
 
-        return send(length, as_reply, target_index);	// send is internally triggered, so, this method can hardly be static
+        return send(as_reply, target_index);	// send is internally triggered, so, this method can hardly be static
     }
     
 

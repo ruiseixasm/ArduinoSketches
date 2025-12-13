@@ -430,32 +430,31 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) override {
+    bool send(bool as_reply = false, uint8_t target_index = 255) override {
 
 		if (_initiated) {
 
-			// Need to call homologous method in super class first
-			length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
-
-			if (length > 0) {
+			if (BroadcastSocket::send(as_reply, target_index)) {	// Very important pre processing !!
 				#ifdef ENABLE_DIRECT_ADDRESSING
 				if (as_reply) {
-					sendSPI(length, _actual_ss_pin);
+					sendSPI(_sending_length, _actual_ss_pin);
 				} else if (target_index < _talker_count) {
-					sendSPI(length, _talkers_ss_pins[target_index]);
+					sendSPI(_sending_length, _talkers_ss_pins[target_index]);
 				} else {    // Broadcast mode
 					for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-						sendSPI(length, _talkers_ss_pins[ss_pin_i]);
+						sendSPI(_sending_length, _talkers_ss_pins[ss_pin_i]);
 					}
 				}
 				#else
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-					sendSPI(length, _talkers_ss_pins[ss_pin_i]);
+					sendSPI(_sending_length, _talkers_ss_pins[ss_pin_i]);
 				}
 				#endif
+
+				return true;
 			}
 		}
-        return 0;   // Returns 0 because everything is dealt internally in this method
+        return false;
     }
 
 	bool initiate() {
@@ -526,7 +525,7 @@ public:
 					#endif
 
 					_actual_ss_pin = _talkers_ss_pins[ss_pin_i];
-					triggerTalkers(length);
+					triggerTalkers();
 				}
 			}
 		}
