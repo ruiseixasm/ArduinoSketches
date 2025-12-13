@@ -305,11 +305,10 @@ protected:
 						#endif
 					}
 				} else if (c == NONE) {
+					size = 1; // Nothing received
 					#ifdef BROADCAST_SPI_DEBUG_2
 					Serial.println(F("\t\tThere is nothing to be received"));
 					#endif
-					_receiving_buffer[0] = '\0';
-					size = 1; // Nothing received
 				} else if (c == ERROR) {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tERROR: Transmission ERROR received from Slave"));
@@ -367,8 +366,7 @@ protected:
             }
         }
 
-        if (size > 0)
-            size--;   // removes the '\0' from the length as final value
+        if (size > 0) size--;
         return size;
     }
 
