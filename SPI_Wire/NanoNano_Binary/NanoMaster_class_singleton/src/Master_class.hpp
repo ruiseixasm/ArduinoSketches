@@ -163,26 +163,24 @@ protected:
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tSlave is busy, waiting a little."));
 						#endif
-						delayMicroseconds(5);
-						digitalWrite(ss_pin, HIGH);
 						delay(2);	// Waiting 2ms
-						continue;
+						size = 0;	// Try again
 					} else if (c == ERROR) {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tTransmission ERROR"));
 						#endif
-						size = 0; // Try again
+						size = 0;	// Try again
 					} else if (c == RECEIVE) {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tReceived RECEIVE back, need to retry"));
 						#endif
-						size = 0; // Try again
+						size = 0;	// Try again
 					} else {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.print(F("\t\tDevice NOT ready: "));
 						Serial.println(c, HEX);
 						#endif
-						size = 1; // Nothing to be sent
+						size = 1;	// Nothing to be sent
 					}
 
 				} else {
