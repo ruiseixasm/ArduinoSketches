@@ -108,7 +108,7 @@ protected:
 
 				if (c != VOID) {
 
-					delayMicroseconds(10);	// Makes sure ACK is set by the slave (10us) (critical path)
+					delayMicroseconds(12);	// Makes sure it's processed by the slave (12us) (critical path)
 					c = _spi_instance->transfer(_sending_buffer[0]);
 
 					if (c == READY) {	// Makes sure the Slave it's ready first
@@ -126,6 +126,11 @@ protected:
 									size = 0;
 									break;
 								}
+							} else if (c == FULL) {
+								#ifdef BROADCAST_SPI_DEBUG_1
+								Serial.println(F("\t\tERROR: Slave buffer overflow"));
+								#endif
+								size = 0;	// Try again
 							} else {
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.print(F("\t\tERROR: Not an ASCII char at loop: "));
@@ -258,7 +263,7 @@ protected:
 			
 			if (c != VOID) {
 
-				delayMicroseconds(10);	// Makes sure ACK or NONE is set by the slave (10us) (critical path)
+				delayMicroseconds(12);	// Makes sure it's processed by the slave (12us) (critical path)
 				c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
 
 				if (c == READY) {	// Makes sure the Slave it's ready first
@@ -293,6 +298,13 @@ protected:
 							Serial.println(F("\t\tERROR: END NOT received"));
 							#endif
 						}
+					} else if (size == BROADCAST_SOCKET_BUFFER_SIZE) {
+						delayMicroseconds(10);    // Makes sure the Status Byte is sent
+						_spi_instance->transfer(FULL);
+						size = 1;	// Try no more
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println(F("\t\tERROR: Master buffer overflow"));
+						#endif
 					} else {
 						size = 0;
 						#ifdef BROADCAST_SPI_DEBUG_1
@@ -315,6 +327,11 @@ protected:
 					Serial.println(F("\t\tERROR: Received SEND back, need to retry"));
 					#endif
 					size = 0; // Try again
+				} else if (c == FULL) {
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println(F("\t\tERROR: Slave buffer overflow"));
+					#endif
+					size = 0;	// Try again
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.print(F("\t\tERROR: Device NOT ready, received status message: "));

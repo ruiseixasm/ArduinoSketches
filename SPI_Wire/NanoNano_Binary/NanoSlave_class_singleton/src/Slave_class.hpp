@@ -366,14 +366,18 @@ public:
                     break;
                 case SEND:
                     if (_ptr_sending_buffer) {
-                        if (_sending_length && _sending_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-							SPDR = READY;
-							_transmission_mode = SEND;
-							_sending_index = 0;
-							_validation_index = 0;
+                        if (_sending_length) {
+							if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+								SPDR = FULL;
+								_sending_length = 0;
+							} else {
+								SPDR = READY;
+								_transmission_mode = SEND;
+								_sending_index = 0;
+								_validation_index = 0;
+							}
                         } else {
                             SPDR = NONE;
-							_sending_length = 0;	// In case _sending_length > BROADCAST_SOCKET_BUFFER_SIZE
 							#ifdef BROADCAST_SPI_DEBUG
 							Serial.println(F("\tNothing to be sent"));
 							#endif
