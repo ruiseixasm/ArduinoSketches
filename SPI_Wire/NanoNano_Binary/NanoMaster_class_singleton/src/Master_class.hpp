@@ -595,6 +595,29 @@ public:
         return acknowledgeSPI(_ss_pin);
     }
 
+
+	void yellow_on() {
+
+		const char* yellow_on = "{'t':'Nano','m':2,'n':'YELLOW_ON','f':'Talker-9f','i':3540751170,'c':24893}";
+		const uint8_t length_yellow = 75;
+
+		// Copy safely (takes into consideration the '\0' char)
+		strlcpy(_sending_buffer, yellow_on, BROADCAST_SOCKET_BUFFER_SIZE);
+
+		sendSPI(length_yellow, _ss_pin);
+	}
+
+	void yellow_off() {
+
+		const char* yellow_off = "{'t':'Nano','m':2,'n':'YELLOW_OFF','f':'Talker-9f','i':3540751170,'c':24893}";
+		const uint8_t length_yellow = 76;
+
+		// Copy safely (takes into consideration the '\0' char)
+		strlcpy(_sending_buffer, yellow_off, BROADCAST_SOCKET_BUFFER_SIZE);
+
+		sendSPI(length_yellow, _ss_pin);
+	}
+
 };
 
 

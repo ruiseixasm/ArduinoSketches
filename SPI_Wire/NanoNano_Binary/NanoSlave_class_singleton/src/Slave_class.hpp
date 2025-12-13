@@ -179,6 +179,40 @@ protected:
 			Serial.write(_sending_buffer, _sending_length);
 			Serial.println();
 
+        } else if (strcmp(command_name, "YELLOW_ON") == 0) {
+            digitalWrite(GREEN_LED_PIN, LOW);
+    		digitalWrite(YELLOW_LED_PIN, HIGH);
+            json_message["n"] = "OK_OFF";
+            _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			if (!_sending_length) {
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.println(F("ERROR: Failed to serialize JSON"));
+				#endif
+    			digitalWrite(YELLOW_LED_PIN, HIGH);
+			}
+			_sending_length = 0;	// Removes blockage due to need for reply
+            Serial.print(F("LED is OFF"));
+            Serial.print(F(" | Sending: "));
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
+
+        } else if (strcmp(command_name, "YELLOW_OFF") == 0) {
+            digitalWrite(GREEN_LED_PIN, LOW);
+    		digitalWrite(YELLOW_LED_PIN, LOW);
+            json_message["n"] = "OK_OFF";
+            _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			if (!_sending_length) {
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.println(F("ERROR: Failed to serialize JSON"));
+				#endif
+    			digitalWrite(YELLOW_LED_PIN, HIGH);
+			}
+			_sending_length = 0;	// Removes blockage due to need for reply
+            Serial.print(F("LED is OFF"));
+            Serial.print(F(" | Sending: "));
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
+
         } else {
             json_message["n"] = "BUZZ";
             _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
