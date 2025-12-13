@@ -181,9 +181,11 @@ protected:
 		Serial.print(_name);
 		Serial.print(F(": "));
 		#endif
-		// Does a targets swap first
-        json_message["t"] = json_message["f"];
-		json_message["f"] = _name;
+		if (json_message["f"] != _name) {
+			// Does a targets swap first (if not yet done)
+			json_message["t"] = json_message["f"];
+			json_message["f"] = _name;
+		}
 		uint16_t c = json_message["c"].as<uint16_t>();
 		if (c == LOCAL_C) {	// c == 1 means a local message while 0 means a remote one
 			#ifdef JSON_TALKER_DEBUG
