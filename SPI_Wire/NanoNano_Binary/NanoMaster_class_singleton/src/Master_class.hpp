@@ -286,13 +286,13 @@ protected:
 						} else {
 							size = 0;
 							#ifdef BROADCAST_SPI_DEBUG_1
-							Serial.println(F("\t\tReceiving sequence wasn't followed"));
+							Serial.println(F("\t\tEND NOT received"));
 							#endif
 						}
 					} else {
 						size = 0;
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println(F("\t\tNot a valid ASCII char (< 128)"));
+						Serial.println(F("\t\tReceiving sequence wasn't followed"));
 						#endif
 					}
 				} else if (c == NONE) {
