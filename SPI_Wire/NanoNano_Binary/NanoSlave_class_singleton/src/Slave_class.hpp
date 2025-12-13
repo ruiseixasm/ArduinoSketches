@@ -329,12 +329,13 @@ public:
 					}
 					// Starts checking 2 indexes after
 					if (_sending_index > 1) {    // Two positions of delay
-						if (c != _ptr_sending_buffer[_validation_index]) {	// Checks all chars
+						if (c == _ptr_sending_buffer[_validation_index]) {	// Checks all chars
+							_validation_index++; // Starts checking after two sent
+						} else {
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
 							break;
 						}
-						_validation_index++; // Starts checking after two sent
 					}
 					_sending_index++;
                     break;
