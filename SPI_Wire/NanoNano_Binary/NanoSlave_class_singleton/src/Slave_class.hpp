@@ -92,11 +92,10 @@ protected:
 	#endif
 
 
-	bool waitSent(uint8_t max_seconds = 3) {
+	bool availableSend(uint8_t max_seconds = 3) {
 		unsigned long start_waiting = millis();
 		while (_sending_length) {// Waits for 5 seconds
 			if (millis() - start_waiting > 1000 * max_seconds) {
-				_sending_length = 0;	// Overwrite existing _sending_buffer content
 				return false;
 			}
 		}
@@ -140,11 +139,12 @@ protected:
         const char* command_name = json_message["n"].as<const char*>();
 
 
-		if (!waitSent()) {	// Makes sure the _sending_buffer is sent first
+		if (!availableSend()) {	// Makes sure the _sending_buffer is sent first
 
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.println(F("The _sending_buffer was emptied for overwriting"));
+			Serial.println(F("\tERROR: The _sending_buffer isn't available for sending"));
 			#endif
+			return;
 		}
 
         if (strcmp(command_name, "ON") == 0) {
