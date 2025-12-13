@@ -61,6 +61,7 @@ public:
         FULL    = 0xF9, // Signals the buffer as full
         BUSY    = 0xFA, // Tells the Master to wait a little
 		LAST	= 0xFB,	// Asks for the last char
+		CLEAR	= 0xFC,	// Asks for the buffer clear on the Slave
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
