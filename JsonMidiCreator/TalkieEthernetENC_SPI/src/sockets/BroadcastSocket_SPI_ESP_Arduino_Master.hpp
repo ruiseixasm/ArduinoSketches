@@ -26,7 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define ENABLE_DIRECT_ADDRESSING
 
 
-#define send_delay_us 5
+#define send_delay_us 10
 #define receive_delay_us 10
 
 
