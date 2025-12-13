@@ -279,14 +279,19 @@ protected:
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tReceived LAST"));
 						#endif
-					}
-					if (c == END) {
-						delayMicroseconds(10);    // Makes sure the Status Byte is sent
-						_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
-						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println(F("\t\tReceive completed"));
-						#endif
-						size += 1;	// size equivalent to 'i + 2'
+						if (c == END) {
+							delayMicroseconds(10);    // Makes sure the Status Byte is sent
+							_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+							#ifdef BROADCAST_SPI_DEBUG_1
+							Serial.println(F("\t\tReceive completed"));
+							#endif
+							size += 1;	// size equivalent to 'i + 2'
+						} else {
+							size = 0;
+							#ifdef BROADCAST_SPI_DEBUG_1
+							Serial.println(F("\t\tReceiving sequence wasn't followed"));
+							#endif
+						}
 					} else {
 						size = 0;
 						#ifdef BROADCAST_SPI_DEBUG_1

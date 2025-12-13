@@ -328,7 +328,7 @@ public:
 							_validation_index = 0;
                         } else {
                             SPDR = NONE;
-							_sending_length = 0;
+							_sending_length = 0;	// In case _sending_length > BROADCAST_SOCKET_BUFFER_SIZE
 							#ifdef BROADCAST_SPI_DEBUG
 							Serial.println(F("\tNothing to be sent"));
 							#endif
