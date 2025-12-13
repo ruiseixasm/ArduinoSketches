@@ -364,7 +364,7 @@ public:
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
 	
-	bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
+	virtual bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
 		unsigned long start_waiting = millis();
 		while (_received_length) {
 			if (millis() - start_waiting > 1000 * wait_seconds) {
@@ -374,7 +374,7 @@ public:
 		return true;
 	}
 
-	bool availableSendingBuffer(uint8_t wait_seconds = 3) {
+	virtual bool availableSendingBuffer(uint8_t wait_seconds = 3) {
 		unsigned long start_waiting = millis();
 		while (_sending_length) {
 			if (millis() - start_waiting > 1000 * wait_seconds) {
