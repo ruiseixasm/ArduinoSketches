@@ -166,9 +166,12 @@ protected:
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tBUSY: Slave is busy, waiting a little."));
 						#endif
-						if (s == 1) {	// Second try and still busy, time to CLEAR Slave receiving buffer
-							delayMicroseconds(12);    // Makes sure the Status Byte is sent
-							_spi_instance->transfer(CLEAR_R);
+						if (s == 2) {	// Second try and still busy, time to CLEAR Slave receiving buffer
+							s = 0;	// Repeats the tries but with the sending buffer of the Slave deleted
+							for (uint8_t clear_r = 0; c && clear_r < 3; clear_r++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
+								delayMicroseconds(10);
+								c = _spi_instance->transfer(CLEAR_R);
+							}
 						} else {
 							delay(2);	// Waiting 2ms
 						}
