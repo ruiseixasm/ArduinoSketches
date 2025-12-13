@@ -20,7 +20,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>
 
 
-#define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG_1
+#define BROADCAST_SPI_DEBUG_2
 
 
 // Pin definitions - define these in your main sketch
@@ -105,7 +106,7 @@ protected:
 
     void processMessage() {
 
-		#ifdef BROADCAST_SPI_DEBUG
+		#ifdef BROADCAST_SPI_DEBUG_1
         Serial.print(F("Processed command: "));
 		Serial.write(_receiving_buffer, _received_length);
 		Serial.println();
@@ -113,7 +114,7 @@ protected:
 
         DeserializationError error = deserializeJson(message_doc, _receiving_buffer, _received_length);
         if (error) {
-			#ifdef BROADCAST_SPI_DEBUG
+			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.print(F("ERROR: Failed to deserialize JSON: "));
 			Serial.print(error.c_str());
 			Serial.print(F(" - Code: "));
@@ -141,7 +142,7 @@ protected:
 
 		if (!availableSend()) {	// Makes sure the _sending_buffer is sent first
 
-			#ifdef BROADCAST_SPI_DEBUG
+			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.println(F("\tERROR: The _sending_buffer isn't available for sending"));
 			#endif
 			return;
@@ -153,7 +154,7 @@ protected:
             json_message["n"] = "OK_ON";
             _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 			if (!_sending_length) {
-				#ifdef BROADCAST_SPI_DEBUG
+				#ifdef BROADCAST_SPI_DEBUG_1
 				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
     			digitalWrite(YELLOW_LED_PIN, HIGH);
@@ -169,7 +170,7 @@ protected:
             json_message["n"] = "OK_OFF";
             _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 			if (!_sending_length) {
-				#ifdef BROADCAST_SPI_DEBUG
+				#ifdef BROADCAST_SPI_DEBUG_1
 				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
     			digitalWrite(YELLOW_LED_PIN, HIGH);
@@ -185,7 +186,7 @@ protected:
             json_message["n"] = "OK_OFF";
             _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 			if (!_sending_length) {
-				#ifdef BROADCAST_SPI_DEBUG
+				#ifdef BROADCAST_SPI_DEBUG_1
 				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
     			digitalWrite(YELLOW_LED_PIN, HIGH);
@@ -202,7 +203,7 @@ protected:
             json_message["n"] = "OK_OFF";
             _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 			if (!_sending_length) {
-				#ifdef BROADCAST_SPI_DEBUG
+				#ifdef BROADCAST_SPI_DEBUG_1
 				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
     			digitalWrite(YELLOW_LED_PIN, HIGH);
@@ -217,7 +218,7 @@ protected:
             json_message["n"] = "BUZZ";
             _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 			if (!_sending_length) {
-				#ifdef BROADCAST_SPI_DEBUG
+				#ifdef BROADCAST_SPI_DEBUG_1
 				Serial.println(F("ERROR: Failed to serialize JSON"));
 				#endif
 			}
@@ -317,7 +318,7 @@ public:
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
                         _transmission_mode = NONE;
-						#ifdef BROADCAST_SPI_DEBUG
+						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Slave buffer overflow"));
 						#endif
                     }
@@ -337,7 +338,7 @@ public:
 						} else {
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
-							#ifdef BROADCAST_SPI_DEBUG
+							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tERROR: Sent char mismatch"));
 							#endif
 							break;
@@ -362,13 +363,13 @@ public:
 							_receiving_index = 0;
 						} else {
                         	SPDR = BUSY;
-							#ifdef BROADCAST_SPI_DEBUG
+							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\tI'm busy (RECEIVE)"));
 							#endif
 						}
                     } else {
                         SPDR = VOID;
-						#ifdef BROADCAST_SPI_DEBUG
+						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Receiving buffer pointer NOT set"));
 						#endif
                     }
@@ -387,13 +388,13 @@ public:
 							}
                         } else {
                             SPDR = NONE;
-							#ifdef BROADCAST_SPI_DEBUG
+							#ifdef BROADCAST_SPI_DEBUG_2
 							Serial.println(F("\tNothing to be sent"));
 							#endif
                         }
                     } else {
                         SPDR = VOID;
-						#ifdef BROADCAST_SPI_DEBUG
+						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Sending buffer pointer NOT set"));
 						#endif
                     }
@@ -411,12 +412,12 @@ public:
                     SPDR = ACK;
 					if (_transmission_mode == RECEIVE) {
 						_received_length = _receiving_index;
-						#ifdef BROADCAST_SPI_DEBUG
+						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tReceived message"));
 						#endif
                     } else if (_transmission_mode == SEND) {
                         _sending_length = 0;	// Makes sure the sending buffer is zeroed
-						#ifdef BROADCAST_SPI_DEBUG
+						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tSent message"));
 						#endif
                     }
@@ -429,7 +430,7 @@ public:
                 case FULL:
                     SPDR = ACK;
                     _transmission_mode = NONE;
-					#ifdef BROADCAST_SPI_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\tTransmission ended with received ERROR or FULL"));
 					#endif
                     break;
