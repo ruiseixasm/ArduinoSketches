@@ -120,7 +120,7 @@ protected:
 								// Offset of 2 picks all mismatches than an offset of 1
 								if (i > 1 && c != _sending_buffer[i - 2]) {
 									#ifdef BROADCAST_SPI_DEBUG_1
-									Serial.print(F("\t\tChar miss match at: "));
+									Serial.print(F("\t\tERROR: Char mismatch at index: "));
 									Serial.println(i - 2);
 									#endif
 									size = 0;
@@ -128,7 +128,7 @@ protected:
 								}
 							} else {
 								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.print(F("\t\tERROR at: "));
+								Serial.print(F("\t\tERROR: Not an ASCII char at loop: "));
 								Serial.println(i);
 								#endif
 								size = 0;
@@ -148,36 +148,37 @@ protected:
 								size = length + 1;	// Just for error catch
 							} else {
 								#ifdef BROADCAST_SPI_DEBUG_1
-								Serial.println(F("\t\tLast char NOT received"));
+								Serial.print(F("\t\tERROR: Last char mismatch at index: "));
+								Serial.println(length - 1);
 								#endif
 								size = 0;
 							}
 						} else {
 							#ifdef BROADCAST_SPI_DEBUG_1
-							Serial.print(F("\t\tChar miss match at: "));
+							Serial.print(F("\t\tERROR: Penultimate Char mismatch at index: "));
 							Serial.println(length - 2);
 							#endif
 							size = 0;
 						}
 					} else if (c == BUSY) {
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println(F("\t\tSlave is busy, waiting a little."));
+						Serial.println(F("\t\tBUSY: Slave is busy, waiting a little."));
 						#endif
 						delay(2);	// Waiting 2ms
 						size = 0;	// Try again
 					} else if (c == ERROR) {
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println(F("\t\tTransmission ERROR"));
+						Serial.println(F("\t\tERROR: Slave sent a transmission ERROR"));
 						#endif
 						size = 0;	// Try again
 					} else if (c == RECEIVE) {
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println(F("\t\tReceived RECEIVE back, need to retry"));
+						Serial.println(F("\t\tERROR: Received RECEIVE back, need to retry"));
 						#endif
 						size = 0;	// Try again
 					} else {
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.print(F("\t\tDevice NOT ready: "));
+						Serial.print(F("\t\tERROR: Device NOT ready wit the reply: "));
 						Serial.println(c, HEX);
 						#endif
 						size = 1;	// Nothing to be sent
@@ -185,7 +186,7 @@ protected:
 
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println(F("\t\tReceived VOID"));
+					Serial.println(F("\t\tERROR: Received VOID"));
 					#endif
 					size = 1; // Avoids another try
 				}
@@ -193,6 +194,9 @@ protected:
 				if (size == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(ERROR);
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println(F("\t\t\tSent ERROR back to the Slave"));
+					#endif
 				}
 
 				delayMicroseconds(5);
@@ -286,13 +290,13 @@ protected:
 						} else {
 							size = 0;
 							#ifdef BROADCAST_SPI_DEBUG_1
-							Serial.println(F("\t\tEND NOT received"));
+							Serial.println(F("\t\tERROR: END NOT received"));
 							#endif
 						}
 					} else {
 						size = 0;
 						#ifdef BROADCAST_SPI_DEBUG_1
-						Serial.println(F("\t\tReceiving sequence wasn't followed"));
+						Serial.println(F("\t\tERROR: Receiving sequence wasn't followed"));
 						#endif
 					}
 				} else if (c == NONE) {
@@ -303,17 +307,17 @@ protected:
 					size = 1; // Nothing received
 				} else if (c == ERROR) {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println(F("\t\tTransmission ERROR"));
+					Serial.println(F("\t\tERROR: Transmission ERROR received from Slave"));
 					#endif
 					size = 0; // Try again
 				} else if (c == SEND) {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println(F("\t\tReceived SEND back, need to retry"));
+					Serial.println(F("\t\tERROR: Received SEND back, need to retry"));
 					#endif
 					size = 0; // Try again
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.print(F("\t\tDevice NOT ready: "));
+					Serial.print(F("\t\tERROR: Device NOT ready, received status message: "));
 					Serial.println(c, HEX);
 					#endif
 					size = 1; // Nothing received
