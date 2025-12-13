@@ -454,11 +454,12 @@ public:
 				length = receiveString(_talkers_ss_pins[ss_pin_i]);
 				if (length > 0) {
 					_actual_ss_pin = _talkers_ss_pins[ss_pin_i];
-					BroadcastSocket::triggerTalkers();
+					_received_length = length;
+					triggerTalkers();
 				}
 			}
-			// Makes sure the _receiving_buffer is reset with '\0'
-			_receiving_buffer[0] = '\0';
+			// Makes sure the _receiving_buffer is deleted with 0
+			_received_length = 0;
 		}
         return 0;   // Receives are all called internally in this method
     }

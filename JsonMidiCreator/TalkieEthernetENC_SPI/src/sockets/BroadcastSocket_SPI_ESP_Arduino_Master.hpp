@@ -523,9 +523,12 @@ public:
 					#endif
 
 					_actual_ss_pin = _talkers_ss_pins[ss_pin_i];
+					_received_length = length;
 					triggerTalkers();
 				}
 			}
+			// Makes sure the _receiving_buffer is deleted with 0
+			_received_length = 0;
 		}
         return 0;   // Receives are all called internally in this method
     }

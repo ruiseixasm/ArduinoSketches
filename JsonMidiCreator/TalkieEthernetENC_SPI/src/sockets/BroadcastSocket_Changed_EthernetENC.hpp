@@ -137,7 +137,12 @@ public:
             #endif
             
             _source_ip = _udp->remoteIP();
-            return triggerTalkers();
+			// Makes sure the _received_length is set
+			_received_length = length;
+			triggerTalkers();
+			// Makes sure the _receiving_buffer is deleted with 0
+			_received_length = 0;
+			return length;
         }
         return 0;   // nothing received
     }
