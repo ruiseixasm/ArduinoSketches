@@ -50,6 +50,7 @@ public:
 		LAST	= 0xFB,	// Asks for the last char
 		CLEAR_R	= 0xFC,	// Asks for the receiving buffer clear on the Slave
 		CLEAR_S	= 0xFD,	// Asks for the sending buffer clear on the Slave
+		DONE	= 0xFE,	// Marks the action as DONE
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
@@ -148,7 +149,7 @@ protected:
 							if (c == _sending_buffer[length - 1]) {	// Last char
 								size = length + 1;	// Just for error catch
 								// Makes sure Slave does the respective sets
-								for (uint8_t set_r = 0; c != ACK && set_r < 3; set_r++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
+								for (uint8_t set_r = 0; c != ACK && c != DONE && set_r < 3; set_r++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
 									delayMicroseconds(10);
 									c = _spi_instance->transfer(END);
 								}

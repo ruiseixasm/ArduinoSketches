@@ -63,6 +63,7 @@ public:
 		LAST	= 0xFB,	// Asks for the last char
 		CLEAR_R	= 0xFC,	// Asks for the receiving buffer clear on the Slave
 		CLEAR_S	= 0xFD,	// Asks for the sending buffer clear on the Slave
+		DONE	= 0xFE,	// Marks the action as DONE
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
@@ -443,7 +444,7 @@ public:
 						Serial.println(F("\tSent message"));
 						#endif
                     } else {
-						SPDR = NACK;
+						SPDR = DONE;
 					}
                     break;
                 case ACK:
