@@ -131,7 +131,7 @@ protected:
 			Serial.print(F("\tsend1: Sent message: "));
 			Serial.write(_sending_buffer, _sending_length);
 			Serial.println();
-			Serial.print(F("\tsend1: Sent length: "));
+			Serial.print(F("\tsend2: Sent length: "));
 			Serial.println(_sending_length);
 			#endif
 

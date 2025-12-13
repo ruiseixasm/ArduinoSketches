@@ -19,7 +19,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
 #include "../BroadcastSocket.hpp"
 
-#define BROADCAST_SPI_DEBUG_1
+#define BROADCAST_SPI_DEBUG
+// #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
 
 
@@ -434,6 +435,15 @@ protected:
 		if (_initiated) {
 
 			if (BroadcastSocket::send(as_reply, target_index)) {	// Very important pre processing !!
+
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.print(F("\tsend1: Sent message: "));
+				Serial.write(_sending_buffer, _sending_length);
+				Serial.println();
+				Serial.print(F("\tsend2: Sent length: "));
+				Serial.println(_sending_length);
+				#endif
+
 				#ifdef ENABLE_DIRECT_ADDRESSING
 				if (as_reply) {
 					sendSPI(_sending_length, _actual_ss_pin);
@@ -449,6 +459,8 @@ protected:
 					sendSPI(_sending_length, _talkers_ss_pins[ss_pin_i]);
 				}
 				#endif
+
+				_sending_length = 0;	// Marks sending buffer available
 
 				return true;
 			}
@@ -483,7 +495,7 @@ protected:
 			}
 		}
 
-		#ifdef BROADCAST_SPI_DEBUG_1
+		#ifdef BROADCAST_SPI_DEBUG
 		if (_initiated) {
 			Serial.println("Socket initiated!");
 		} else {
@@ -517,7 +529,13 @@ public:
 				length = receiveSPI(_talkers_ss_pins[ss_pin_i]);
 				if (length > 0) {
 					
-					#ifdef BROADCAST_SPI_DEBUG_1
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.print(F("\treceive1: Received message: "));
+					Serial.write(_receiving_buffer, length);
+					Serial.println();
+					Serial.print(F("\treceive2: Received length: "));
+					Serial.println(length);
+					Serial.print(F("\t\t"));
 					Serial.print(class_name());
 					Serial.print(F(" is triggering the talkers from the SS pin: "));
 					Serial.println(_talkers_ss_pins[ss_pin_i]);
