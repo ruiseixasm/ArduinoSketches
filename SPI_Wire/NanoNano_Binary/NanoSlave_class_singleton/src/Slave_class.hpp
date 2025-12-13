@@ -151,6 +151,7 @@ protected:
 
         const char* command_name = json_message["n"].as<const char*>();
 
+		_received_length = 0;	// Receiving buffer can be released given that it was already processed
 
 		if (!availableSendingBuffer()) {	// Makes sure the _sending_buffer is sent first
 
