@@ -93,10 +93,20 @@ protected:
 	#endif
 
 
-	bool availableSend(uint8_t max_seconds = 3) {
+	bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
 		unsigned long start_waiting = millis();
-		while (_sending_length) {// Waits for 5 seconds
-			if (millis() - start_waiting > 1000 * max_seconds) {
+		while (_received_length) {
+			if (millis() - start_waiting > 1000 * wait_seconds) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	bool availableSendingBuffer(uint8_t wait_seconds = 3) {
+		unsigned long start_waiting = millis();
+		while (_sending_length) {
+			if (millis() - start_waiting > 1000 * wait_seconds) {
 				return false;
 			}
 		}
@@ -140,7 +150,7 @@ protected:
         const char* command_name = json_message["n"].as<const char*>();
 
 
-		if (!availableSend()) {	// Makes sure the _sending_buffer is sent first
+		if (!availableSendingBuffer()) {	// Makes sure the _sending_buffer is sent first
 
 			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.println(F("\tERROR: The _sending_buffer isn't available for sending"));
