@@ -421,14 +421,15 @@ public:
 					}
                     break;
                 case END:
-                    SPDR = ACK;
 					if (_transmission_mode == RECEIVE) {
+						SPDR = ACK;
 						_received_length = _receiving_index;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tReceived message"));
 						#endif
                     } else if (_transmission_mode == SEND) {
                         _sending_length = 0;	// Makes sure the sending buffer is zeroed
+						SPDR = _sending_length;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tSent message"));
 						#endif
@@ -447,15 +448,15 @@ public:
 					#endif
                     break;
 				case CLEAR_R:
-                    SPDR = ACK;
-                    _received_length = 0;	// Clears receiving buffer
+					_received_length = 0;	// Clears receiving buffer
+					SPDR = _received_length;
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\tCleared receiving buffer"));
 					#endif
                     break;
 				case CLEAR_S:
-                    SPDR = ACK;
-                    _sending_length = 0;	// Clears sending buffer
+					_sending_length = 0;	// Clears sending buffer
+					SPDR = _sending_length;
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\tCleared sending buffer"));
 					#endif
