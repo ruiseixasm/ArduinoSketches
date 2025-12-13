@@ -293,7 +293,6 @@ public:
 
             switch (c) {
                 case RECEIVE:
-					SPDR = ERROR;	// By default there is an ERROR (triggers a retry)
                     if (_ptr_receiving_buffer) {
 						if (!_received_length) {
 							SPDR = READY;
@@ -310,7 +309,6 @@ public:
                     }
                     break;
                 case SEND:
-					SPDR = ERROR;	// By default there is an ERROR (triggers a retry)
                     if (_ptr_sending_buffer) {
                         if (_sending_length && _sending_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 							SPDR = READY;
