@@ -463,18 +463,16 @@ public:
 
         size_t length = 0;
 
+		//
         // ON cycle
+		//
 
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_on, BROADCAST_SOCKET_BUFFER_SIZE);
         length = sendString(length_on, _ss_pin);
         if (length == 0) return false;
 
-        delay(1000);
-        length = receiveString(_ss_pin);
-        if (length == 0) return false;
-
-        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
+        DeserializationError error = deserializeJson(message_doc, _sending_buffer, length);
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.print(F("ERROR (ON): "));
@@ -484,7 +482,7 @@ public:
 			
 			// What ArduinoJson sees
 			Serial.print(F("Input length: "));
-			Serial.println(strlen(_receiving_buffer));
+			Serial.println(strlen(_sending_buffer));
 			
 			// Test with simple JSON
 			const char* test_simple = "{}";
@@ -495,9 +493,30 @@ public:
 			#endif
             return false;
         }
-
         JsonObject json_message = message_doc.as<JsonObject>();
 		const char* command_name = json_message["n"].as<const char*>();
+
+		if(strcmp(command_name, "ON") != 0) {
+			
+			Serial.print(F("Didn't send 'ON' to Slave as expected"));
+			return false;
+		}
+
+
+        delay(1000);
+        length = receiveString(_ss_pin);
+        if (length == 0) return false;
+
+        error = deserializeJson(message_doc, _receiving_buffer, length);
+        if (error) {
+			#ifdef BROADCAST_SPI_DEBUG_1
+			Serial.println(F("ERROR (OFF): Failed to deserialize JSON"));
+			#endif
+            return false;
+        }
+        json_message = message_doc.as<JsonObject>();
+		command_name = json_message["n"].as<const char*>();
+
 		if(strcmp(command_name, "OK_ON") != 0) {
 			
 			Serial.print(F("Didn't receive 'OK_ON' from Slave as expected"));
@@ -517,13 +536,31 @@ public:
         if (length > 0) return false;
 
 
+		//
         // OFF cycle
+		//
 
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_off, BROADCAST_SOCKET_BUFFER_SIZE);
         length = sendString(length_off, _ss_pin);
         if (length == 0) return false;
 		
+        error = deserializeJson(message_doc, _sending_buffer, length);
+        if (error) {
+			#ifdef BROADCAST_SPI_DEBUG_1
+			Serial.println(F("ERROR (OFF): Failed to deserialize JSON"));
+			#endif
+            return false;
+        }
+        json_message = message_doc.as<JsonObject>();
+		command_name = json_message["n"].as<const char*>();
+
+		if(strcmp(command_name, "OFF") != 0) {
+			
+			Serial.print(F("Didn't send 'OFF' to Slave as expected"));
+			return false;
+		}
+
         delay(1000);
         length = receiveString(_ss_pin);
         if (length == 0) return false;
