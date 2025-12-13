@@ -317,6 +317,9 @@ public:
                     } else {
                         SPDR = FULL;    // ALWAYS ON TOP
                         _transmission_mode = NONE;
+						#ifdef BROADCAST_SPI_DEBUG
+						Serial.println(F("\t\tERROR: Slave buffer overflow"));
+						#endif
                     }
                     break;
                 case SEND:
@@ -334,6 +337,9 @@ public:
 						} else {
 							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
+							#ifdef BROADCAST_SPI_DEBUG
+							Serial.println(F("\t\tERROR: Sent char mismatch"));
+							#endif
 							break;
 						}
 					}
@@ -362,6 +368,9 @@ public:
 						}
                     } else {
                         SPDR = VOID;
+						#ifdef BROADCAST_SPI_DEBUG
+						Serial.println(F("\t\tERROR: Receiving buffer pointer NOT set"));
+						#endif
                     }
                     break;
                 case SEND:
@@ -384,6 +393,9 @@ public:
                         }
                     } else {
                         SPDR = VOID;
+						#ifdef BROADCAST_SPI_DEBUG
+						Serial.println(F("\t\tERROR: Sending buffer pointer NOT set"));
+						#endif
                     }
                     break;
                 case LAST:
@@ -418,7 +430,7 @@ public:
                     SPDR = ACK;
                     _transmission_mode = NONE;
 					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println(F("\tTransmission ended"));
+					Serial.println(F("\tTransmission ended with received ERROR or FULL"));
 					#endif
                     break;
                 default:
