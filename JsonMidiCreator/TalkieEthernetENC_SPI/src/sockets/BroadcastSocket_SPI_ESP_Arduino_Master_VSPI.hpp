@@ -42,7 +42,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket_SPI_ESP_Arduino_Master_VSPI : public BroadcastSocket {
 public:
 
-    enum MessageCode : uint8_t {
+    enum StatusByte : uint8_t {
         START   = 0xF0, // Start of transmission
         END     = 0xF1, // End of transmission
         ACK     = 0xF2, // Acknowledge

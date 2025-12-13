@@ -26,7 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket_SPI_ESP_Arduino_Slave : public BroadcastSocket {
 public:
 
-    enum MessageCode : uint8_t {
+    enum StatusByte : uint8_t {
         START   = 0xF0, // Start of transmission
         END     = 0xF1, // End of transmission
         ACK     = 0xF2, // Acknowledge
@@ -52,7 +52,7 @@ protected:
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
     volatile static uint8_t _send_iteration_i;
-    volatile static MessageCode _transmission_mode;
+    volatile static StatusByte _transmission_mode;
 	volatile static bool _received_data;
 	volatile static bool _ready_to_send;
 

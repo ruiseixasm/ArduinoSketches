@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket_SPI_ESP_Arduino_Slave : public BroadcastSocket {
 public:
 
-    enum MessageCode : uint8_t {
+    enum StatusByte : uint8_t {
         START   = 0xF0, // Start of transmission
         END     = 0xF1, // End of transmission
         ACK     = 0xF2, // Acknowledge
@@ -52,7 +52,7 @@ private:
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
     volatile static uint8_t _send_iteration_i;
-    volatile static MessageCode _transmission_mode;
+    volatile static StatusByte _transmission_mode;
 	volatile static bool _received_data;
 
 protected:
@@ -221,8 +221,8 @@ volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_receiving_index = 0;
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_sending_index = 0;
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_validation_index = 0;
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_send_iteration_i = 0;
-volatile BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode BroadcastSocket_SPI_ESP_Arduino_Slave::_transmission_mode 
-																	= BroadcastSocket_SPI_ESP_Arduino_Slave::MessageCode::NONE;
+volatile BroadcastSocket_SPI_ESP_Arduino_Slave::StatusByte BroadcastSocket_SPI_ESP_Arduino_Slave::_transmission_mode 
+																	= BroadcastSocket_SPI_ESP_Arduino_Slave::StatusByte::NONE;
 volatile bool BroadcastSocket_SPI_ESP_Arduino_Slave::_received_data = false;
 
 // Define ISR at GLOBAL SCOPE (outside the class)
