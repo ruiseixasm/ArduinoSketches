@@ -323,7 +323,7 @@ protected:
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println(F("\t\t\tSent ERROR back"));
+					Serial.println(F("\t\t\tSent ERROR back to the Slave"));
 					#endif
 				}
 
