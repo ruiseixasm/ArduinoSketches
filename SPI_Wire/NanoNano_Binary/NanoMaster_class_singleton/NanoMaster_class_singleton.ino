@@ -13,7 +13,7 @@ void setup() {
     // Initialize serial
     Serial.begin(115200);
     delay(100);		// Give some time for serial to begin
-    Serial.println(F("\n\nSPI Master Initialized - JSON class Mode"));
+    Serial.println(F("\n\nSPI Master Initialized - SINGLETON class Mode"));
     delay(3000);  	// Give some extra time to Slave start up completely
 
     pinMode(BUZZ_PIN, OUTPUT);
