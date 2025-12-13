@@ -28,7 +28,7 @@ extern const int BUZZ_PIN;  // Declare as external (defined elsewhere)
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 
 // To make this value the minimum possible, always place the setting SPDR on top in the Slave code (SPDR =)
-#define send_delay_us 10
+#define send_delay_us 8
 #define receive_delay_us 10
 
 class Master_class

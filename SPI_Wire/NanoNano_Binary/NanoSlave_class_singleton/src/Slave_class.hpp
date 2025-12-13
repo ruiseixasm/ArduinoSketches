@@ -92,6 +92,16 @@ protected:
 	#endif
 
 
+	void waitSent() {
+		unsigned long start_waiting = millis();
+		while (_sending_length) {// Waits for 5 seconds
+			if (millis() - start_waiting > 5000) {
+				_sending_length = 0;	// Overwrite existing _sending_buffer content
+			}
+		}
+	}
+
+
     void processMessage() {
 
         Serial.print(F("Processed command: "));
@@ -125,6 +135,7 @@ protected:
 
         const char* command_name = json_message["n"].as<const char*>();
 
+		waitSent();	// Makes sure the _sending_buffer is sent first
 
         if (strcmp(command_name, "ON") == 0) {
             digitalWrite(GREEN_LED_PIN, HIGH);
@@ -369,7 +380,7 @@ public:
 
 	
     void process() {
-        if (_received_length && !_sending_length) {
+        if (_received_length) {
             processMessage();   // Called only once!
 			_received_length = 0;   // Makes sure the receiving buffer is zeroed
         }
