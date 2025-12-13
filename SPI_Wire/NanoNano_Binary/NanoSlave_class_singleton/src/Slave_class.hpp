@@ -170,6 +170,7 @@ protected:
             Serial.print(F(" | Sending: "));
 			Serial.write(_sending_buffer, _sending_length);
 			Serial.println();
+			return;
 
         } else if (strcmp(command_name, "YELLOW_OFF") == 0) {
             digitalWrite(GREEN_LED_PIN, LOW);
@@ -187,6 +188,7 @@ protected:
             Serial.print(F(" | Sending: "));
 			Serial.write(_sending_buffer, _sending_length);
 			Serial.println();
+			return;
 		}
 
 
@@ -198,7 +200,7 @@ protected:
 			return;
 		}
 
-		
+
         if (strcmp(command_name, "ON") == 0) {
             digitalWrite(GREEN_LED_PIN, HIGH);
 			digitalWrite(YELLOW_LED_PIN, LOW);
