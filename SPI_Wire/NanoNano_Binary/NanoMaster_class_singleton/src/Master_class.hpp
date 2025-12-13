@@ -138,10 +138,10 @@ protected:
 							}
 						}
 						// Checks the last 2 chars still to be checked
-						delayMicroseconds(10);    // Makes sure the Status Byte is sent
+						delayMicroseconds(12);    // Makes sure the Status Byte is sent
 						c = _spi_instance->transfer(LAST);
 						if (c == _sending_buffer[length - 2]) {
-							delayMicroseconds(10);    // Makes sure the Status Byte is sent
+							delayMicroseconds(12);    // Makes sure the Status Byte is sent
 							c = _spi_instance->transfer(END);
 							if (c == _sending_buffer[length - 1]) {	// Last char
 								size = length + 1;	// Just for error catch
@@ -189,7 +189,7 @@ protected:
 				}
 
 				if (size == 0) {
-					delayMicroseconds(10);    // Makes sure the Status Byte is sent
+					delayMicroseconds(12);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(ERROR);
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\t\tSent ERROR back to the Slave"));
@@ -278,27 +278,25 @@ protected:
 						Serial.println(F("\t\tReceived LAST"));
 						#endif
 						if (c == END) {
-							delayMicroseconds(10);    // Makes sure the Status Byte is sent
+							delayMicroseconds(12);    // Makes sure the Status Byte is sent
 							_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tReceive completed"));
 							#endif
 							size += 1;	// size equivalent to 'i + 2'
 						} else {
-							size = 0;
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tERROR: END NOT received"));
 							#endif
 						}
 					} else if (size == BROADCAST_SOCKET_BUFFER_SIZE) {
-						delayMicroseconds(10);    // Makes sure the Status Byte is sent
+						delayMicroseconds(12);    // Makes sure the Status Byte is sent
 						_spi_instance->transfer(FULL);
 						size = 1;	// Try no more
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Master buffer overflow"));
 						#endif
 					} else {
-						size = 0;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Receiving sequence wasn't followed"));
 						#endif
@@ -313,17 +311,14 @@ protected:
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tERROR: Transmission ERROR received from Slave"));
 					#endif
-					size = 0; // Try again
 				} else if (c == SEND) {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tERROR: Received SEND back, need to retry"));
 					#endif
-					size = 0; // Try again
 				} else if (c == FULL) {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tERROR: Slave buffer overflow"));
 					#endif
-					size = 0;	// Try again
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.print(F("\t\tERROR: Device NOT ready, received status message: "));
@@ -333,7 +328,7 @@ protected:
 				}
 
 				if (size == 0) {
-					delayMicroseconds(10);    // Makes sure the Status Byte is sent
+					delayMicroseconds(12);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\t\tSent ERROR back to the Slave"));
@@ -406,7 +401,7 @@ protected:
 
 			if (c != VOID) {
 
-				delayMicroseconds(10);
+				delayMicroseconds(12);
 				c = _spi_instance->transfer(ACK);  // When the response is collected
 				
 				if (c == ACK) {
