@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonTalker.h"
 
 
-// #define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -121,11 +121,16 @@ protected:
         uint16_t checksum = generateChecksum(_sending_buffer, length);
 
         #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("I: Checksum is: "));
+        Serial.print(F("insertChecksum1: Checksum is: "));
         Serial.println(checksum);
         #endif
 
         if (checksum > 0) { // It's already 0
+
+			#ifdef BROADCASTSOCKET_DEBUG
+			Serial.print(F("insertChecksum2: Initial length: "));
+			Serial.println(length);
+			#endif
 
             // First, find how many digits
             uint16_t temp = checksum;
@@ -134,14 +139,19 @@ protected:
                 temp /= 10;
                 num_digits++;
             }
-            size_t data_i = length - 1;    // Old length (shorter)
-            length += num_digits - 1;      // Discount the digit '0' already placed
+            size_t data_i = length - 1;	// Old length (shorter) (binary processing, no '\0' to take into consideration)
+            length += num_digits - 1;	// Discount the digit '0' already placed
             
+			#ifdef BROADCASTSOCKET_DEBUG
+			Serial.print(F("insertChecksum3: Final length: "));
+			Serial.println(length);
+			#endif
+
             if (length > BROADCAST_SOCKET_BUFFER_SIZE)
                 return length;  // buffer overflow
 
             bool at_c = false;
-            for (size_t i = length - 1; data_i > 5; --i) {
+            for (size_t i = length - 1; data_i > 5; --i) {	// 'i = length - 1' because it's a binary processing, no '\0' to take into consideration
                 
                 if (_sending_buffer[data_i - 2] == ':') {
                     if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
@@ -167,12 +177,12 @@ protected:
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(class_name());
-		Serial.print(F(" has a Talkers count of: "));
+		Serial.print(F("triggerTalkers1: has a Talkers count of: "));
 		Serial.println(_talker_count);
 		#endif
 
         #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("T: "));
+        Serial.print(F("triggerTalkers2: "));
         Serial.write(_receiving_buffer, length);
         Serial.println();
         #endif
@@ -185,19 +195,19 @@ protected:
             uint16_t checksum = generateChecksum(_receiving_buffer, length);
             
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("C: Remote time: "));
+            Serial.print(F("triggerTalkers3: Remote time: "));
             Serial.println(remote_time);
             #endif
 
             if (received_checksum == checksum) {
                 #ifdef BROADCASTSOCKET_DEBUG
-                Serial.print(F("C: Validated Checksum of "));
+                Serial.print(F("triggerTalkers4: Validated Checksum of "));
                 Serial.println(checksum);
                 #endif
 
                 if (message_code_int == 1000) { // Found no message code!
                     #ifdef BROADCASTSOCKET_DEBUG
-                    Serial.println(F("C: No message code!"));
+                    Serial.println(F("triggerTalkers5: No message code!"));
                     #endif
 
                     return length;
@@ -210,7 +220,7 @@ protected:
                     if (!(message_code < JsonTalker::MessageCode::RUN || message_code > JsonTalker::MessageCode::GET)) {
 
                         #ifdef BROADCASTSOCKET_DEBUG
-                        Serial.print(F("C: Message code requires delay check: "));
+                        Serial.print(F("triggerTalkers6: Message code requires delay check: "));
                         Serial.println(message_code_int);
                         #endif
 
@@ -224,12 +234,12 @@ protected:
                                 const uint32_t allowed_delay = static_cast<uint32_t>(_max_delay_ms);
                                 const uint32_t local_delay = local_time - _last_local_time;
                                 #ifdef BROADCASTSOCKET_DEBUG
-                                Serial.print(F("C: Local delay: "));
+                                Serial.print(F("triggerTalkers7: Local delay: "));
                                 Serial.println(local_delay);
                                 #endif
                                 if (remote_delay > allowed_delay || local_delay > allowed_delay) {
                                     #ifdef BROADCASTSOCKET_DEBUG
-                                    Serial.print(F("C: Out of time package (remote delay): "));
+                                    Serial.print(F("triggerTalkers8: Out of time package (remote delay): "));
                                     Serial.println(remote_delay);
                                     #endif
                                     _drops_count++;
@@ -280,7 +290,7 @@ protected:
                 
             } else {
                 #ifdef BROADCASTSOCKET_DEBUG
-                Serial.print(F("C: Validation of Checksum FAILED!!"));
+                Serial.print(F("triggerTalkers9: Validation of Checksum FAILED: "));
                 Serial.println(checksum);
                 #endif
             }
@@ -299,8 +309,6 @@ protected:
         }
 
 
-	// CAN'T BE STATIC
-    // NOT Pure virtual methods anymores (= 0;)
     virtual size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) {
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
@@ -315,7 +323,7 @@ protected:
         }
 
         #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("S: "));
+        Serial.print(F("send1: "));
         Serial.write(_sending_buffer, length);
         Serial.println();
         #endif
@@ -325,14 +333,14 @@ protected:
         if (length > BROADCAST_SOCKET_BUFFER_SIZE) {
 
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("Error: Message too big"));
+            Serial.println(F("ERROR: Message too big"));
             #endif
 
             return 0;
         }
 
         #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("T: "));
+        Serial.print(F("send2: "));
         Serial.write(_sending_buffer, length);
         Serial.println();
         #endif
@@ -352,7 +360,6 @@ public:
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
 
-	// CAN'T BE STATIC
     virtual size_t receive() {
         // In theory, a UDP packet on a local area network (LAN) could survive
         // for about 4.25 minutes (255 seconds).
@@ -373,7 +380,7 @@ public:
         } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
 
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("R: Response message without an identifier (i)"));
+            Serial.print(F("ERROR: Response message without an identifier (i)"));
             serializeJson(json_message, Serial);
             Serial.println();  // optional: just to add a newline after the JSON
             #endif
@@ -381,13 +388,26 @@ public:
             return false;
         }
 
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.print(F("remoteSend1: "));
+		serializeJson(json_message, Serial);
+		Serial.println();  // optional: just to add a newline after the JSON
+		#endif
+
+		// This length excludes the '\0' char
+		// serializeJson() returns length without \0, but adds \0 to the buffer. Your SPI code should send until it finds \0.
         size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
         #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("R: "));
-        serializeJson(json_message, Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
+        Serial.print(F("remoteSend2: "));
+        Serial.write(_sending_buffer, length);
+        Serial.println();
         #endif
+
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.print(F("remoteSend3: JSON length: "));
+		Serial.println(length);
+		#endif
 
         return send(length, as_reply, target_index);	// send is internally triggered, so, this method can hardly be static
     }

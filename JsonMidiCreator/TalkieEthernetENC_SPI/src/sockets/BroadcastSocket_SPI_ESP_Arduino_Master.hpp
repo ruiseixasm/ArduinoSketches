@@ -207,7 +207,8 @@ protected:
 					#ifdef BROADCAST_SPI_DEBUG_1
 					if (size > 1) {
 						Serial.print("Sent message: ");
-						Serial.println(_sending_buffer);
+						Serial.write(_sending_buffer, length);
+						Serial.println();
 					} else {
 						Serial.println("\tNothing sent");
 					}
