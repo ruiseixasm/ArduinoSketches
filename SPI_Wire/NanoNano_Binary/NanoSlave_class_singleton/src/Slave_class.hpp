@@ -442,7 +442,9 @@ public:
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tSent message"));
 						#endif
-                    }
+                    } else {
+						SPDR = NACK;
+					}
                     break;
                 case ACK:
                     SPDR = ACK;

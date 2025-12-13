@@ -147,6 +147,11 @@ protected:
 							c = _spi_instance->transfer(END);
 							if (c == _sending_buffer[length - 1]) {	// Last char
 								size = length + 1;	// Just for error catch
+								// Makes sure Slave does the respective sets
+								for (uint8_t set_r = 0; c != ACK && set_r < 3; set_r++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
+									delayMicroseconds(10);
+									c = _spi_instance->transfer(END);
+								}
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.println(F("\t\tSend completed"));
 								#endif
