@@ -285,10 +285,10 @@ protected:
 						Serial.println(F("\t\tReceived LAST"));
 						#endif
 						if (c == END) {
-							delayMicroseconds(12);	// Makes sure the Status Byte is sent
+							delayMicroseconds(10);	// Makes sure the Status Byte is sent
 							c = _spi_instance->transfer(END);	// Replies the END to confirm reception and thus Slave buffer deletion
 							for (uint8_t clear_s = 0; c && clear_s < 3; clear_s++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
-								delayMicroseconds(12);
+								delayMicroseconds(10);
 								c = _spi_instance->transfer(CLEAR_S);
 							}
 							#ifdef BROADCAST_SPI_DEBUG_1
