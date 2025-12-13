@@ -64,13 +64,6 @@ public:
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
 
-	uint8_t received_length() {
-		return _receiving_index;
-	}
-
-	uint8_t sending_length() {
-		return _sending_length;
-	}
 
 protected:
 
@@ -79,16 +72,17 @@ protected:
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
     // Buffers and state variables
-	// Exclusive to the handleSPI_Interrupt method, otherwise declare them as 'volatile'
-    volatile static char* _ptr_receiving_buffer;
-    volatile static char* _ptr_sending_buffer;
+
+	// Pointers never change handleSPI_Interrupt method, otherwise declare them as 'volatile'
+    static char* _ptr_receiving_buffer;
+    static char* _ptr_sending_buffer;
 
     volatile static uint8_t _receiving_index;
+	volatile static uint8_t _received_length;
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
 	volatile static uint8_t _sending_length;
     volatile static MessageCode _transmission_mode;
-	volatile static bool _received_data;
 
 	// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
 	#if ARDUINOJSON_VERSION_MAJOR >= 7
@@ -101,10 +95,10 @@ protected:
     void processMessage() {
 
         Serial.print(F("Processed command: "));
-		Serial.write(_receiving_buffer, received_length());
+		Serial.write(_receiving_buffer, _received_length);
 		Serial.println();
 
-        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, received_length());
+        DeserializationError error = deserializeJson(message_doc, _receiving_buffer, _received_length);
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("ERROR: Failed to deserialize JSON: "));
@@ -303,7 +297,7 @@ public:
 						if (_transmission_mode != NONE) {
                         	SPDR = ERROR;
                     		_transmission_mode = NONE;	// Breaks existing transmission, avoids deadlocks this way
-						} else if (!_received_data) {
+						} else if (!_received_length) {
 							SPDR = READY;
 							_transmission_mode = RECEIVE;
 							_receiving_index = 0;
@@ -352,7 +346,7 @@ public:
                 case END:
                     SPDR = ACK;
 					if (_transmission_mode == RECEIVE) {
-						_received_data = true;
+						_received_length = _receiving_index;
 						#ifdef BROADCAST_SPI_DEBUG
 						Serial.println(F("\tReceived message"));
 						#endif
@@ -383,9 +377,9 @@ public:
 
 	
     void process() {
-        if (_received_data && !_sending_length) {
+        if (_received_length && !_sending_length) {
             processMessage();   // Called only once!
-			_received_data = false;
+			_received_length = 0;   // Makes sure the receiving buffer is zeroed
         }
     }
 
@@ -393,15 +387,15 @@ public:
 
 
 // Initialize static members
-volatile char* Slave_class::_ptr_receiving_buffer = nullptr;
-volatile char* Slave_class::_ptr_sending_buffer = nullptr;
+char* Slave_class::_ptr_receiving_buffer = nullptr;
+char* Slave_class::_ptr_sending_buffer = nullptr;
 
 volatile uint8_t Slave_class::_receiving_index = 0;
+volatile uint8_t Slave_class::_received_length = 0;
 volatile uint8_t Slave_class::_sending_index = 0;
 volatile uint8_t Slave_class::_validation_index = 0;
 volatile uint8_t Slave_class::_sending_length = 0;
 volatile Slave_class::MessageCode Slave_class::_transmission_mode = Slave_class::MessageCode::NONE;
-volatile bool Slave_class::_received_data = false;
 
 
 #endif // SLAVE_CLASS_HPP
