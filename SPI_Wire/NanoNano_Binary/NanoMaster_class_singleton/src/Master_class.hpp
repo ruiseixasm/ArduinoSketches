@@ -77,7 +77,7 @@ protected:
 	#endif
 
 	
-    bool sendString(uint8_t length, int ss_pin) {
+    bool sendSPI(uint8_t length, int ss_pin) {
         uint8_t size = 0;	// No interrupts, so, not volatile
 		
 		#ifdef BROADCAST_SPI_DEBUG_1
@@ -237,7 +237,7 @@ protected:
     }
 
 
-    uint8_t receiveString(int ss_pin) {
+    uint8_t receiveSPI(int ss_pin) {
         uint8_t size = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
@@ -376,7 +376,7 @@ protected:
     }
 
 
-    bool acknowledgeReady(int ss_pin) {
+    bool acknowledgeSPI(int ss_pin) {
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 
@@ -477,7 +477,7 @@ public:
 
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_on, BROADCAST_SOCKET_BUFFER_SIZE);
-        if (!sendString(length_on, _ss_pin)) return false;
+        if (!sendSPI(length_on, _ss_pin)) return false;
 
         DeserializationError error = deserializeJson(message_doc, _sending_buffer, length_on);
         if (error) {
@@ -511,7 +511,7 @@ public:
 
 
         delay(1000);
-        length = receiveString(_ss_pin);
+        length = receiveSPI(_ss_pin);
         if (!length) return false;
 
         error = deserializeJson(message_doc, _receiving_buffer, length);
@@ -530,11 +530,11 @@ public:
 			return false;
 		}
 
-        if (receiveString(_ss_pin)) return false;
-        if (sendString(0, _ss_pin)) return false;
+        if (receiveSPI(_ss_pin)) return false;
+        if (sendSPI(0, _ss_pin)) return false;
         delay(1000);
-        if (receiveString(_ss_pin)) return false;	// Testing that receiving nothing also works
-        if (receiveString(_ss_pin)) return false;
+        if (receiveSPI(_ss_pin)) return false;	// Testing that receiving nothing also works
+        if (receiveSPI(_ss_pin)) return false;
 
 
 		//
@@ -543,7 +543,7 @@ public:
 
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_off, BROADCAST_SOCKET_BUFFER_SIZE);
-        if (!sendString(length_off, _ss_pin)) return false;
+        if (!sendSPI(length_off, _ss_pin)) return false;
 		
         error = deserializeJson(message_doc, _sending_buffer, length_off);
         if (error) {
@@ -562,7 +562,7 @@ public:
 		}
 
         delay(1000);
-        length = receiveString(_ss_pin);
+        length = receiveSPI(_ss_pin);
         if (length == 0) return false;
 
         error = deserializeJson(message_doc, _receiving_buffer, length);
@@ -581,18 +581,18 @@ public:
 			return false;
 		}
 
-        if (receiveString(_ss_pin)) return false;
-        if (sendString(0, _ss_pin)) return false;
+        if (receiveSPI(_ss_pin)) return false;
+        if (sendSPI(0, _ss_pin)) return false;
         delay(1000);
-        if (receiveString(_ss_pin)) return false;
-        if (receiveString(_ss_pin)) return false;
+        if (receiveSPI(_ss_pin)) return false;
+        if (receiveSPI(_ss_pin)) return false;
 
         return true;
     }
 
 
     bool ready() {
-        return acknowledgeReady(_ss_pin);
+        return acknowledgeSPI(_ss_pin);
     }
 
 };
