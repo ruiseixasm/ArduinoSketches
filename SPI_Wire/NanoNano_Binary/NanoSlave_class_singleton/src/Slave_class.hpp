@@ -92,21 +92,25 @@ protected:
 	#endif
 
 
-	void waitSent() {
+	bool waitSent(uint8_t max_seconds = 3) {
 		unsigned long start_waiting = millis();
 		while (_sending_length) {// Waits for 5 seconds
-			if (millis() - start_waiting > 5000) {
+			if (millis() - start_waiting > 1000 * max_seconds) {
 				_sending_length = 0;	// Overwrite existing _sending_buffer content
+				return false;
 			}
 		}
+		return true;
 	}
 
 
     void processMessage() {
 
+		#ifdef BROADCAST_SPI_DEBUG
         Serial.print(F("Processed command: "));
 		Serial.write(_receiving_buffer, _received_length);
 		Serial.println();
+		#endif
 
         DeserializationError error = deserializeJson(message_doc, _receiving_buffer, _received_length);
         if (error) {
@@ -135,7 +139,13 @@ protected:
 
         const char* command_name = json_message["n"].as<const char*>();
 
-		waitSent();	// Makes sure the _sending_buffer is sent first
+
+		if (!waitSent()) {	// Makes sure the _sending_buffer is sent first
+
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.println(F("The _sending_buffer was emptied for overwriting"));
+			#endif
+		}
 
         if (strcmp(command_name, "ON") == 0) {
             digitalWrite(GREEN_LED_PIN, HIGH);
