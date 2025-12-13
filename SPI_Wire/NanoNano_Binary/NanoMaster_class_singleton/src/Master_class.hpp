@@ -475,8 +475,8 @@ public:
         // ON cycle
 		//
 
-		// Copy safely (takes into consideration the '\0' char)
-		strlcpy(_sending_buffer, command_on, BROADCAST_SOCKET_BUFFER_SIZE);
+		// Use memcpy to copy the value of 'command_on' into '_sending_buffer'
+    	memcpy(_sending_buffer, command_on, length_on);
         if (!sendSPI(length_on, _ss_pin)) return false;
 
         DeserializationError error = deserializeJson(message_doc, _sending_buffer, length_on);
