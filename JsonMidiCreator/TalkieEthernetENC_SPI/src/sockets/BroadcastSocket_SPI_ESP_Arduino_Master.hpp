@@ -351,7 +351,8 @@ protected:
                 #ifdef BROADCAST_SPI_DEBUG_1
                 if (size > 1) {
                     Serial.print("Received message: ");
-                    Serial.println(_receiving_buffer);
+					Serial.write(_receiving_buffer, size - 1);
+                    Serial.println();
                 } else {
                 	#ifdef BROADCAST_SPI_DEBUG_2
                     Serial.println("\tNothing received");
