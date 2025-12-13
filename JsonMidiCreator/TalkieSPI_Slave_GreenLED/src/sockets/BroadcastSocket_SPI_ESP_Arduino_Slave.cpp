@@ -20,13 +20,13 @@ char* BroadcastSocket_SPI_ESP_Arduino_Slave::_ptr_sending_buffer = nullptr;
 
 
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_receiving_index = 0;
+volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length = 0;
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_sending_index = 0;
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_validation_index = 0;
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_send_iteration_i = 0;
+volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_sending_length = 0;
 volatile BroadcastSocket_SPI_ESP_Arduino_Slave::StatusByte BroadcastSocket_SPI_ESP_Arduino_Slave::_transmission_mode 
-																	= BroadcastSocket_SPI_ESP_Arduino_Slave::StatusByte::NONE;
-volatile bool BroadcastSocket_SPI_ESP_Arduino_Slave::_received_data = false;
-volatile bool BroadcastSocket_SPI_ESP_Arduino_Slave::_ready_to_send = false;
+									= BroadcastSocket_SPI_ESP_Arduino_Slave::StatusByte::NONE;
+
 
 // Define ISR at GLOBAL SCOPE (outside the class)
 ISR(SPI_STC_vect) {

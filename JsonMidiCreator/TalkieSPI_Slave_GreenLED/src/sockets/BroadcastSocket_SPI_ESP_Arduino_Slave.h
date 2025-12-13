@@ -20,7 +20,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"
 
 
-#define BROADCAST_SPI_DEBUG
+// #define BROADCAST_SPI_DEBUG_1
+// #define BROADCAST_SPI_DEBUG_2
 
 
 class BroadcastSocket_SPI_ESP_Arduino_Slave : public BroadcastSocket {
@@ -51,12 +52,11 @@ protected:
     static char* _ptr_sending_buffer;
 
     volatile static uint8_t _receiving_index;
+	volatile static uint8_t _received_length;
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
-    volatile static uint8_t _send_iteration_i;
+	volatile static uint8_t _sending_length;
     volatile static StatusByte _transmission_mode;
-	volatile static bool _received_data;
-	volatile static bool _ready_to_send;
 
 
     // Needed for the compiler, the base class is the one being called though
@@ -91,32 +91,24 @@ protected:
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) override {
+    bool send(bool as_reply = false, uint8_t target_index = 255) override {
 
-		// Need to call homologous method in super class first
-		length = BroadcastSocket::send(length, as_reply, target_index); // Very important pre processing !!
-
-		if (length > 0) {
+		if (BroadcastSocket::send(as_reply, target_index)) {	// Very important pre processing !!
             
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tsend1: Sending buffer: "));
-			Serial.println(_sending_buffer);
-			Serial.print(F("\tsend1: Pointer buffer: "));
-			Serial.println(_ptr_sending_buffer);
+			#ifdef BROADCAST_SPI_DEBUG_1
+			Serial.print(F("\tsend1: Sent message: "));
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
 			Serial.print(F("\tsend1: Sent length: "));
-			Serial.println(length);
+			Serial.println(_sending_length);
 			#endif
 
-            _ready_to_send = true;
+			// Marks the sending buffer ready to be sent
+            BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length = this->_sending_length;
 			
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tsend2: Sent message: "));
-			Serial.println(_ptr_sending_buffer);
-			#endif
-
 		}
 
-        return length;
+        return false;
     }
 
 
@@ -135,7 +127,12 @@ public:
         //     THE POSSIBILITY OF SPI CAPTURE AND RESPONSE IN TIME !!!
 
         // WARNING 3:
-        //     THE SETTING OF THE `SPDR` VARIABLE SHALL ALWAYS BE ON TOP, FIRSTLY THAN ALL OTHERS!
+        //     THE SETTING OF THE `SPDR` VARIABLE SHALL ALWAYS BE DONE AFTER ALL OTHER SETTINGS,
+		//     TO MAKE SURE THEY ARE REALLY SET WHEN THE `SPDR` REPORTS A SET CONDITION!
+
+		// WARNING 4:
+		//     FOR FINALLY USAGE MAKE SURE TO COMMENT OUT THE BROADCAST_SPI_DEBUG_1 AND BROADCAST_SPI_DEBUG_1
+		// 	   DEFINITIONS OR ELSE THE SLAVE WONT RESPOND IN TIME AND ERRORS WILL RESULT DUE TO IT!
 
         uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
 
@@ -146,39 +143,41 @@ public:
             switch (_transmission_mode) {
                 case RECEIVE:
                     if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
-                        // Returns same received char as receiving confirmation (no need to set SPDR)
-                        _ptr_receiving_buffer[_receiving_index++] = c;
+                        _ptr_receiving_buffer[_receiving_index] = c;
+						if (_receiving_index > 0) {
+							SPDR = _ptr_receiving_buffer[_receiving_index - 1];	// Char sent with an offset to guarantee matching
+						}
+						_receiving_index++;
                     } else {
-                        SPDR = FULL;    // ALWAYS ON TOP
-                        _transmission_mode = NONE;
+						_transmission_mode = NONE;
+                        SPDR = FULL;
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println(F("\t\tERROR: Slave buffer overflow"));
+						#endif
                     }
                     break;
                 case SEND:
-					if (_sending_index < BROADCAST_SOCKET_BUFFER_SIZE) {
+					if (_sending_index < _sending_length) {
 						SPDR = _ptr_sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
-						if (_validation_index > _sending_index) {	// Less missed sends this way
-							SPDR = END;	// All chars have been checked
-							break;
-						}
-					} else {
-						SPDR = FULL;
-						_transmission_mode = NONE;
-						break;
+					} else if (_sending_index == _sending_length) {
+						SPDR = LAST;	// Asks for the LAST char
+					} else {	// Less missed sends this way
+						SPDR = END;		// All chars have been checked
 					}
 					// Starts checking 2 indexes after
-					if (_send_iteration_i > 1) {    // Two positions of delay
-						if (c != _ptr_sending_buffer[_validation_index]) {   // Also checks '\0' char
-							SPDR = ERROR;
+					if (_sending_index > 1) {    // Two positions of delay
+						if (c == _ptr_sending_buffer[_validation_index]) {	// Checks all chars
+							_validation_index++; // Starts checking after two sent
+						} else {
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
+							SPDR = ERROR;
+							#ifdef BROADCAST_SPI_DEBUG_1
+							Serial.println(F("\t\tERROR: Sent char mismatch"));
+							#endif
 							break;
 						}
-						_validation_index++; // Starts checking after two sent
 					}
-					// Only increments if NOT at the end of the string being sent
-					if (_ptr_sending_buffer[_sending_index] != '\0') {
-						_sending_index++;
-					}
-                    _send_iteration_i++;
+					_sending_index++;
                     break;
                 default:
                     SPDR = NACK;
@@ -191,60 +190,82 @@ public:
             switch (c) {
                 case RECEIVE:
                     if (_ptr_receiving_buffer) {
-						if (_transmission_mode == NONE && !_received_data) {
-							SPDR = READY;
+						if (!_received_length) {
 							_transmission_mode = RECEIVE;
 							_receiving_index = 0;
+							SPDR = READY;	// Doing it at the end makes sure everything above was actually set
 						} else {
                         	SPDR = BUSY;
+							#ifdef BROADCAST_SPI_DEBUG_1
+							Serial.println(F("\t\tBUSY: I'm busy (RECEIVE)"));
+							#endif
 						}
                     } else {
                         SPDR = VOID;
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println(F("\t\tERROR: Receiving buffer pointer NOT set"));
+						#endif
                     }
                     break;
                 case SEND:
                     if (_ptr_sending_buffer) {
-                        if (_ready_to_send) {
-							if (_transmission_mode == NONE) {
-								SPDR = READY;
+                        if (_sending_length) {
+							if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+								_sending_length = 0;
+								SPDR = FULL;
+							} else {
 								_transmission_mode = SEND;
 								_sending_index = 0;
 								_validation_index = 0;
-								_send_iteration_i = 0;
-							} else {
-								SPDR = BUSY;
+								SPDR = READY;	// Doing it at the end makes sure everything above was actually set
 							}
                         } else {
                             SPDR = NONE;
+							#ifdef BROADCAST_SPI_DEBUG_2
+							Serial.println(F("\tNothing to be sent"));
+							#endif
                         }
                     } else {
                         SPDR = VOID;
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println(F("\t\tERROR: Sending buffer pointer NOT set"));
+						#endif
                     }
+                    break;
+                case LAST:
+					if (_transmission_mode == RECEIVE) {
+						SPDR = _ptr_receiving_buffer[_receiving_index - 1];
+                    } else if (_transmission_mode == SEND && _sending_length > 0) {
+						SPDR = _ptr_sending_buffer[_sending_length - 1];
+                    } else {
+						SPDR = NONE;
+					}
                     break;
                 case END:
-                    SPDR = ACK;
 					if (_transmission_mode == RECEIVE) {
-						_received_data = true;
+						_received_length = _receiving_index;
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println(F("\tReceived message"));
+						#endif
                     } else if (_transmission_mode == SEND) {
-                        _ready_to_send = false;	// Makes sure the sending buffer is tagged as sent
-                    }
+                        _sending_length = 0;	// Makes sure the sending buffer is zeroed
+						#ifdef BROADCAST_SPI_DEBUG_1
+						Serial.println(F("\tSent message"));
+						#endif
+					}
                     _transmission_mode = NONE;
+					SPDR = DONE;	// Doing it at the end makes sure everything above was actually set
                     break;
                 case ACK:
-					if (_transmission_mode == NONE) {
-                    	SPDR = READY;
-					} else {
-                        SPDR = BUSY;
-					}
+                    SPDR = ACK;
                     break;
                 case ERROR:
                 case FULL:
-                    SPDR = ACK;
-                    if (_transmission_mode == RECEIVE) {
-                        _ptr_receiving_buffer[0] = '\0';	// Makes sure the receiving buffer is marked as empty in case of error
-						_receiving_index = 0;
-                    }
-                    _transmission_mode = NONE;
+					_transmission_mode = NONE;
+					SPDR = ACK;
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println(F("\tTransmission ended with received ERROR or FULL"));
+					#endif
                     break;
                 default:
                     SPDR = NACK;
@@ -261,24 +282,25 @@ public:
     }
 
 
-    size_t receive() override {
+    uint8_t receive() override {
 
         // Need to call homologous method in super class first
-        size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+        uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+		length = BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length;
 
-		if (_received_data) {
+		if (length) {
 			
-			length = _receiving_index - 1;	// length excludes the char '\0'
-			
-			#ifdef BROADCAST_SPI_DEBUG
+			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.print(F("\tReceived message: "));
 			Serial.println(_ptr_receiving_buffer);
 			Serial.print(F("\tReceived length: "));
 			Serial.println(length);
 			#endif
-
-			length = BroadcastSocket::triggerTalkers(length);
-			_received_data = false;	// Allows the device to receive more data
+			
+			this->_received_length = length;
+			BroadcastSocket::triggerTalkers();
+			BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length = 0;	// Allows the device to receive more data
+			this->_received_length = BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length;
 		}
 
         return length;

@@ -50,7 +50,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class Slave_class
 {
 public:
-    
+
     enum StatusByte : uint8_t {
         ACK     = 0xF0, // Acknowledge
         NACK    = 0xF1, // Not acknowledged
