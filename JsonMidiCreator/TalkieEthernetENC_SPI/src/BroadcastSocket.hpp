@@ -359,6 +359,27 @@ public:
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
+	
+	bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
+		unsigned long start_waiting = millis();
+		while (_received_length) {
+			if (millis() - start_waiting > 1000 * wait_seconds) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	bool availableSendingBuffer(uint8_t wait_seconds = 3) {
+		unsigned long start_waiting = millis();
+		while (_sending_length) {
+			if (millis() - start_waiting > 1000 * wait_seconds) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 
     virtual size_t receive() {
         // In theory, a UDP packet on a local area network (LAN) could survive
