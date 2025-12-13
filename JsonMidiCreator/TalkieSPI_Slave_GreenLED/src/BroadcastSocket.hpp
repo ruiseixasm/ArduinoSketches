@@ -139,7 +139,7 @@ protected:
                 temp /= 10;
                 num_digits++;
             }
-            size_t data_i = length;    	// 'data_i = length' because it has to include the '\0' char
+            size_t data_i = length - 1;	// Old length (shorter) (binary processing, no '\0' to take into consideration)
             length += num_digits - 1;	// Discount the digit '0' already placed
             
 			#ifdef BROADCASTSOCKET_DEBUG
@@ -151,7 +151,7 @@ protected:
                 return length;  // buffer overflow
 
             bool at_c = false;
-            for (size_t i = length; data_i > 5; --i) {	// 'i = length' because it has to include the '\0' char
+            for (size_t i = length - 1; data_i > 5; --i) {	// 'i = length - 1' because it's a binary processing, no '\0' to take into consideration
                 
                 if (_sending_buffer[data_i - 2] == ':') {
                     if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
