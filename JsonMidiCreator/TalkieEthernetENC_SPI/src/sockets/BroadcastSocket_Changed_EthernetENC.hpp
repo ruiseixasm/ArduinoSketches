@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../BroadcastSocket.hpp"
 
-// #define BROADCAST_ETHERNETENC_DEBUG
+#define BROADCAST_ETHERNETENC_DEBUG
 
 
 #define ENABLE_DIRECT_ADDRESSING
@@ -58,14 +58,14 @@ protected:
             #ifdef ENABLE_DIRECT_ADDRESSING
             if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
-                Serial.println(F("Failed to begin packet"));
+                Serial.println(F("\tFailed to begin packet"));
                 #endif
                 return false;
             }
             #else
             if (!_udp->beginPacket(broadcastIP, _port)) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
-                Serial.println(F("Failed to begin packet"));
+                Serial.println(F("\tFailed to begin packet"));
                 #endif
                 return false;
             }
@@ -76,16 +76,18 @@ protected:
 
             if (!_udp->endPacket()) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
-                Serial.println(F("Failed to end packet"));
+                Serial.println(F("\tFailed to end packet"));
                 #endif
                 return false;
             }
 
             #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.print(F("B: "));
-            Serial.write(_sending_buffer, length);
+            Serial.print(F("\tsend1: "));
+            Serial.write(_sending_buffer, _sending_length);
             Serial.println();
             #endif
+
+			_sending_length = 0;	// Marks sending buffer available
 
 			return true;
         }
@@ -127,6 +129,7 @@ public:
             if (length <= 0) return 0;  // Your requested check - handles all error cases
             
             #ifdef BROADCAST_ETHERNETENC_DEBUG
+            Serial.print(F("\treceive1: "));
             Serial.print(packetSize);
             Serial.print(F("B from "));
             Serial.print(_udp->remoteIP());
