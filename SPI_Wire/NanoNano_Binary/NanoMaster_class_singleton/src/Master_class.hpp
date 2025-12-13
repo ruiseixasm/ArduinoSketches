@@ -28,7 +28,7 @@ extern const int BUZZ_PIN;  // Declare as external (defined elsewhere)
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 
 // To make this value the minimum possible, always place the setting SPDR on top in the Slave code (SPDR =)
-#define send_delay_us 8
+#define send_delay_us 10
 #define receive_delay_us 10
 
 class Master_class
@@ -138,13 +138,7 @@ protected:
 						// Checks the last 2 chars still to be checked
 						delayMicroseconds(10);    // Makes sure the Status Byte is sent
 						c = _spi_instance->transfer(LAST);
-						if (c != _sending_buffer[length - 2]) {
-							#ifdef BROADCAST_SPI_DEBUG_1
-							Serial.print(F("\t\tChar miss match at: "));
-							Serial.println(length - 2);
-							#endif
-							size = 0;
-						} else {
+						if (c == _sending_buffer[length - 2]) {
 							delayMicroseconds(10);    // Makes sure the Status Byte is sent
 							c = _spi_instance->transfer(END);
 							if (c == _sending_buffer[length - 1]) {	// Last char
@@ -158,6 +152,12 @@ protected:
 								#endif
 								size = 0;
 							}
+						} else {
+							#ifdef BROADCAST_SPI_DEBUG_1
+							Serial.print(F("\t\tChar miss match at: "));
+							Serial.println(length - 2);
+							#endif
+							size = 0;
 						}
 					} else if (c == BUSY) {
 						#ifdef BROADCAST_SPI_DEBUG_1
