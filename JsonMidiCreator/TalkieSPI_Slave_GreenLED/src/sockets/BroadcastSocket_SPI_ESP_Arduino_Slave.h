@@ -20,6 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"
 
 
+#define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
 
@@ -52,10 +53,10 @@ protected:
     static char* _ptr_sending_buffer;
 
     volatile static uint8_t _receiving_index;
-	volatile static uint8_t _received_length;
+	volatile static uint8_t _received_length_spi;
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
-	volatile static uint8_t _sending_length;
+	volatile static uint8_t _sending_length_spi;
     volatile static StatusByte _transmission_mode;
 
 
@@ -95,7 +96,7 @@ protected:
 
 		if (BroadcastSocket::send(as_reply, target_index)) {	// Very important pre processing !!
             
-			#ifdef BROADCAST_SPI_DEBUG_1
+			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tsend1: Sent message: "));
 			Serial.write(_sending_buffer, _sending_length);
 			Serial.println();
@@ -104,7 +105,7 @@ protected:
 			#endif
 
 			// Marks the sending buffer ready to be sent
-            BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length = this->_sending_length;
+            _sending_length_spi = _sending_length;
 			
 		}
 
@@ -157,9 +158,9 @@ public:
                     }
                     break;
                 case SEND:
-					if (_sending_index < _sending_length) {
+					if (_sending_index < _sending_length_spi) {
 						SPDR = _ptr_sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
-					} else if (_sending_index == _sending_length) {
+					} else if (_sending_index == _sending_length_spi) {
 						SPDR = LAST;	// Asks for the LAST char
 					} else {	// Less missed sends this way
 						SPDR = END;		// All chars have been checked
@@ -190,7 +191,7 @@ public:
             switch (c) {
                 case RECEIVE:
                     if (_ptr_receiving_buffer) {
-						if (!_received_length) {
+						if (!_received_length_spi) {
 							_transmission_mode = RECEIVE;
 							_receiving_index = 0;
 							SPDR = READY;	// Doing it at the end makes sure everything above was actually set
@@ -209,9 +210,9 @@ public:
                     break;
                 case SEND:
                     if (_ptr_sending_buffer) {
-                        if (_sending_length) {
-							if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
-								_sending_length = 0;
+                        if (_sending_length_spi) {
+							if (_sending_length_spi > BROADCAST_SOCKET_BUFFER_SIZE) {
+								_sending_length_spi = 0;
 								SPDR = FULL;
 							} else {
 								_transmission_mode = SEND;
@@ -235,20 +236,20 @@ public:
                 case LAST:
 					if (_transmission_mode == RECEIVE) {
 						SPDR = _ptr_receiving_buffer[_receiving_index - 1];
-                    } else if (_transmission_mode == SEND && _sending_length > 0) {
-						SPDR = _ptr_sending_buffer[_sending_length - 1];
+                    } else if (_transmission_mode == SEND && _sending_length_spi > 0) {
+						SPDR = _ptr_sending_buffer[_sending_length_spi - 1];
                     } else {
 						SPDR = NONE;
 					}
                     break;
                 case END:
 					if (_transmission_mode == RECEIVE) {
-						_received_length = _receiving_index;
+						_received_length_spi = _receiving_index;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tReceived message"));
 						#endif
                     } else if (_transmission_mode == SEND) {
-                        _sending_length = 0;	// Makes sure the sending buffer is zeroed
+                        _sending_length_spi = 0;	// Makes sure the sending buffer is zeroed
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tSent message"));
 						#endif
@@ -286,21 +287,23 @@ public:
 
         // Need to call homologous method in super class first
         uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
-		length = BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length;
+		length = _received_length_spi;
 
 		if (length) {
 			
-			#ifdef BROADCAST_SPI_DEBUG_1
-			Serial.print(F("\tReceived message: "));
-			Serial.println(_ptr_receiving_buffer);
-			Serial.print(F("\tReceived length: "));
-			Serial.println(length);
+			_received_length = length;
+
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print(F("\treceive1: Received message: "));
+			Serial.write(_receiving_buffer, _received_length);
+			Serial.println();
+			Serial.print(F("\treceive1: Received length: "));
+			Serial.println(_received_length);
 			#endif
 			
-			this->_received_length = length;
 			BroadcastSocket::triggerTalkers();
-			BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length = 0;	// Allows the device to receive more data
-			this->_received_length = BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length;
+			_received_length_spi = 0;	// Allows the device to receive more data
+			_received_length = _received_length_spi;
 		}
 
         return length;

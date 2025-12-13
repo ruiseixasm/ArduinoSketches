@@ -20,10 +20,10 @@ char* BroadcastSocket_SPI_ESP_Arduino_Slave::_ptr_sending_buffer = nullptr;
 
 
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_receiving_index = 0;
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length = 0;
+volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length_spi = 0;
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_sending_index = 0;
 volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_validation_index = 0;
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_sending_length = 0;
+volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_sending_length_spi = 0;
 volatile BroadcastSocket_SPI_ESP_Arduino_Slave::StatusByte BroadcastSocket_SPI_ESP_Arduino_Slave::_transmission_mode 
 									= BroadcastSocket_SPI_ESP_Arduino_Slave::StatusByte::NONE;
 
