@@ -563,7 +563,7 @@ public:
 
         delay(1000);
         length = receiveSPI(_ss_pin);
-        if (length == 0) return false;
+        if (!length) return false;
 
         error = deserializeJson(message_doc, _receiving_buffer, length);
         if (error) {
