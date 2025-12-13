@@ -48,7 +48,8 @@ public:
         FULL    = 0xF9, // Signals the buffer as full
         BUSY    = 0xFA, // Tells the Master to wait a little
 		LAST	= 0xFB,	// Asks for the last char
-		CLEAR	= 0xFC,	// Asks for the buffer clear on the Slave
+		CLEAR_R	= 0xFC,	// Asks for the receiving buffer clear on the Slave
+		CLEAR_S	= 0xFD,	// Asks for the sending buffer clear on the Slave
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
@@ -167,7 +168,7 @@ protected:
 						#endif
 						if (s == 1) {	// Second try and still busy, time to CLEAR Slave receiving buffer
 							delayMicroseconds(12);    // Makes sure the Status Byte is sent
-							_spi_instance->transfer(CLEAR);
+							_spi_instance->transfer(CLEAR_R);
 						} else {
 							delay(2);	// Waiting 2ms
 						}
@@ -284,8 +285,10 @@ protected:
 						Serial.println(F("\t\tReceived LAST"));
 						#endif
 						if (c == END) {
-							delayMicroseconds(12);    // Makes sure the Status Byte is sent
-							_spi_instance->transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+							delayMicroseconds(12);	// Makes sure the Status Byte is sent
+							_spi_instance->transfer(END);	// Replies the END to confirm reception and thus Slave buffer deletion
+							delayMicroseconds(12);
+							_spi_instance->transfer(CLEAR_S);	// Makes sure the sending buffer of the Slave is deleted, for sure!
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tReceive completed"));
 							#endif

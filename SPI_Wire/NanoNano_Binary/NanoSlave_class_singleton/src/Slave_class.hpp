@@ -61,7 +61,8 @@ public:
         FULL    = 0xF9, // Signals the buffer as full
         BUSY    = 0xFA, // Tells the Master to wait a little
 		LAST	= 0xFB,	// Asks for the last char
-		CLEAR	= 0xFC,	// Asks for the buffer clear on the Slave
+		CLEAR_R	= 0xFC,	// Asks for the receiving buffer clear on the Slave
+		CLEAR_S	= 0xFD,	// Asks for the sending buffer clear on the Slave
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
@@ -445,9 +446,19 @@ public:
 					Serial.println(F("\tTransmission ended with received ERROR or FULL"));
 					#endif
                     break;
-				case CLEAR:
+				case CLEAR_R:
                     SPDR = ACK;
                     _received_length = 0;	// Clears receiving buffer
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println(F("\tCleared receiving buffer"));
+					#endif
+                    break;
+				case CLEAR_S:
+                    SPDR = ACK;
+                    _sending_length = 0;	// Clears sending buffer
+					#ifdef BROADCAST_SPI_DEBUG_1
+					Serial.println(F("\tCleared sending buffer"));
+					#endif
                     break;
                 default:
                     SPDR = NACK;
