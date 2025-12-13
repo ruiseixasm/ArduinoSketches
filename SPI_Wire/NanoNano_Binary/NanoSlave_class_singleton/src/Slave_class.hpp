@@ -334,8 +334,8 @@ public:
 						}
 						_receiving_index++;
                     } else {
-                        SPDR = FULL;    // ALWAYS ON TOP
-                        _transmission_mode = NONE;
+						_transmission_mode = NONE;
+                        SPDR = FULL;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Slave buffer overflow"));
 						#endif
@@ -354,8 +354,8 @@ public:
 						if (c == _ptr_sending_buffer[_validation_index]) {	// Checks all chars
 							_validation_index++; // Starts checking after two sent
 						} else {
-							SPDR = ERROR;
 							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
+							SPDR = ERROR;
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tERROR: Sent char mismatch"));
 							#endif
@@ -376,9 +376,9 @@ public:
                 case RECEIVE:
                     if (_ptr_receiving_buffer) {
 						if (!_received_length) {
-							SPDR = READY;
 							_transmission_mode = RECEIVE;
 							_receiving_index = 0;
+							SPDR = READY;	// Doing it at the end makes sure everything above was actually set
 						} else {
                         	SPDR = BUSY;
 							#ifdef BROADCAST_SPI_DEBUG_1
@@ -396,13 +396,13 @@ public:
                     if (_ptr_sending_buffer) {
                         if (_sending_length) {
 							if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
-								SPDR = FULL;
 								_sending_length = 0;
+								SPDR = FULL;
 							} else {
-								SPDR = READY;
 								_transmission_mode = SEND;
 								_sending_index = 0;
 								_validation_index = 0;
+								SPDR = READY;	// Doing it at the end makes sure everything above was actually set
 							}
                         } else {
                             SPDR = NONE;
@@ -439,15 +439,15 @@ public:
 						#endif
 					}
                     _transmission_mode = NONE;
-					SPDR = DONE;	// Doing it at the end makes sure everything above was actually DONE
+					SPDR = DONE;	// Doing it at the end makes sure everything above was actually set
                     break;
                 case ACK:
                     SPDR = ACK;
                     break;
                 case ERROR:
                 case FULL:
-                    SPDR = ACK;
-                    _transmission_mode = NONE;
+					_transmission_mode = NONE;
+					SPDR = ACK;
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\tTransmission ended with received ERROR or FULL"));
 					#endif
