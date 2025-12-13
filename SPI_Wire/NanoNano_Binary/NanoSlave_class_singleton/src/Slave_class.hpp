@@ -49,19 +49,19 @@ class Slave_class
 public:
     
     enum StatusByte : uint8_t {
-        START   = 0xF0, // Start of transmission
-        END     = 0xF1, // End of transmission
-        ACK     = 0xF2, // Acknowledge
-        NACK    = 0xF3, // Not acknowledged
-        READY   = 0xF4, // Slave is ready
-        ERROR   = 0xF5, // Error frame
-        RECEIVE = 0xF6, // Asks the receiver to start receiving
-        SEND    = 0xF7, // Asks the receiver to start sending
-        NONE    = 0xF8, // Means nothing to send
-        FULL    = 0xF9, // Signals the buffer as full
-        BUSY    = 0xFA, // Tells the Master to wait a little
-		LAST	= 0xFB,	// Asks for the last char
-		DONE	= 0xFC,	// Marks the action as DONE
+        ACK     = 0xF0, // Acknowledge
+        NACK    = 0xF1, // Not acknowledged
+        READY   = 0xF2, // Slave is ready
+        BUSY    = 0xF3, // Tells the Master to wait a little
+        RECEIVE = 0xF4, // Asks the receiver to start receiving
+        SEND    = 0xF5, // Asks the receiver to start sending
+        NONE    = 0xF6, // Means nothing to send
+        START   = 0xF7, // Start of transmission
+        END     = 0xF8, // End of transmission
+		LAST	= 0xF9,	// Asks for the last char
+		DONE	= 0xFA,	// Marks the action as DONE
+        ERROR   = 0xFB, // Error frame
+        FULL    = 0xFC, // Signals the buffer as full
         
         VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
     };
