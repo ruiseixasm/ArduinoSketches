@@ -123,20 +123,17 @@ protected:
 									Serial.print(F("\t\tERROR: Char mismatch at index: "));
 									Serial.println(i - 2);
 									#endif
-									size = 0;
 									break;
 								}
 							} else if (c == FULL) {
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.println(F("\t\tERROR: Slave buffer overflow"));
 								#endif
-								size = 0;	// Try again
 							} else {
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.print(F("\t\tERROR: Not an ASCII char at loop: "));
 								Serial.println(i);
 								#endif
-								size = 0;
 								break;
 							}
 						}
@@ -147,53 +144,48 @@ protected:
 							delayMicroseconds(10);    // Makes sure the Status Byte is sent
 							c = _spi_instance->transfer(END);
 							if (c == _sending_buffer[length - 1]) {	// Last char
+								size = length + 1;	// Just for error catch
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.println(F("\t\tSend completed"));
 								#endif
-								size = length + 1;	// Just for error catch
 							} else {
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.print(F("\t\tERROR: Last char mismatch at index: "));
 								Serial.println(length - 1);
 								#endif
-								size = 0;
 							}
 						} else {
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.print(F("\t\tERROR: Penultimate Char mismatch at index: "));
 							Serial.println(length - 2);
 							#endif
-							size = 0;
 						}
 					} else if (c == BUSY) {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tBUSY: Slave is busy, waiting a little."));
 						#endif
 						delay(2);	// Waiting 2ms
-						size = 0;	// Try again
 					} else if (c == ERROR) {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Slave sent a transmission ERROR"));
 						#endif
-						size = 0;	// Try again
 					} else if (c == RECEIVE) {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Received RECEIVE back, need to retry"));
 						#endif
-						size = 0;	// Try again
 					} else {
+						size = 1;	// Nothing to be sent
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.print(F("\t\tERROR: Device NOT ready wit the reply: "));
 						Serial.println(c, HEX);
 						#endif
-						size = 1;	// Nothing to be sent
 					}
 
 				} else {
+					size = 1; // Avoids another try
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tERROR: Received VOID"));
 					#endif
-					size = 1; // Avoids another try
 				}
 
 				if (size == 0) {
