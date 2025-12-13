@@ -192,7 +192,7 @@ protected:
 			return localSend(json_message, as_reply);
 		}
 		#ifdef JSON_TALKER_DEBUG
-		Serial.println(F("\tReplied a REMOTE message"));
+		Serial.println(F("Replied a REMOTE message"));
 		#endif
         return remoteSend(json_message, as_reply);
     }

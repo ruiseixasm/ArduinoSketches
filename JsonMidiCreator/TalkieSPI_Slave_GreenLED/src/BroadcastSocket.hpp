@@ -314,6 +314,37 @@ protected:
         }
 
 
+	virtual bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
+		unsigned long start_waiting = millis();
+		while (_received_length) {
+			if (millis() - start_waiting > 1000 * wait_seconds) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	virtual bool availableSendingBuffer(uint8_t wait_seconds = 3) {
+		unsigned long start_waiting = millis();
+		while (_sending_length) {
+			if (millis() - start_waiting > 1000 * wait_seconds) {
+
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.println(F("\tavailableSendingBuffer: NOT available sending buffer"));
+				#endif
+
+				return false;
+			}
+		}
+		
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.println(F("\tavailableSendingBuffer: Available sending buffer"));
+		#endif
+
+		return true;
+	}
+
+
     virtual bool send(bool as_reply = false, uint8_t target_index = 255) {
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
@@ -363,26 +394,6 @@ public:
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
-	
-	virtual bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
-		unsigned long start_waiting = millis();
-		while (_received_length) {
-			if (millis() - start_waiting > 1000 * wait_seconds) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	virtual bool availableSendingBuffer(uint8_t wait_seconds = 3) {
-		unsigned long start_waiting = millis();
-		while (_sending_length) {
-			if (millis() - start_waiting > 1000 * wait_seconds) {
-				return false;
-			}
-		}
-		return true;
-	}
 
 
     virtual uint8_t receive() {
@@ -419,22 +430,29 @@ public:
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
-		// This length excludes the '\0' char
-		// serializeJson() returns length without \0, but adds \0 to the buffer. Your SPI code should send until it finds \0.
-        _sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+		// Before writing on the _sending_buffer it needs the wait for its availability
 
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("remoteSend2: "));
-        Serial.write(_sending_buffer, _sending_length);
-        Serial.println();
-        #endif
+		if (availableSendingBuffer()) {
 
-		#ifdef BROADCASTSOCKET_DEBUG
-		Serial.print(F("remoteSend3: JSON length: "));
-		Serial.println(_sending_length);
-		#endif
+			// This length excludes the '\0' char
+			// serializeJson() returns length without \0, but adds \0 to the buffer. Your SPI code should send until it finds \0.
+			_sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
-        return send(as_reply, target_index);	// send is internally triggered, so, this method can hardly be static
+			#ifdef BROADCASTSOCKET_DEBUG
+			Serial.print(F("remoteSend2: "));
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
+			#endif
+
+			#ifdef BROADCASTSOCKET_DEBUG
+			Serial.print(F("remoteSend3: JSON length: "));
+			Serial.println(_sending_length);
+			#endif
+
+			return send(as_reply, target_index);	// send is internally triggered, so, this method can hardly be static
+		}
+
+		return false;
     }
     
 

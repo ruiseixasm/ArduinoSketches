@@ -91,6 +91,27 @@ protected:
         }
 
 
+	bool availableReceivingBuffer(uint8_t wait_seconds = 3) override {
+		unsigned long start_waiting = millis();
+		while (_received_length_spi) {
+			if (millis() - start_waiting > 1000 * wait_seconds) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	bool availableSendingBuffer(uint8_t wait_seconds = 3) override {
+		unsigned long start_waiting = millis();
+		while (_sending_length_spi) {
+			if (millis() - start_waiting > 1000 * wait_seconds) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     bool send(bool as_reply = false, uint8_t target_index = 255) override {
 
