@@ -293,11 +293,9 @@ public:
 
             switch (c) {
                 case RECEIVE:
+					SPDR = ERROR;	// By default there is an ERROR (triggers a retry)
                     if (_ptr_receiving_buffer) {
-						if (_transmission_mode != NONE) {
-                        	SPDR = ERROR;
-                    		_transmission_mode = NONE;	// Breaks existing transmission, avoids deadlocks this way
-						} else if (!_received_length) {
+						if (!_received_length) {
 							SPDR = READY;
 							_transmission_mode = RECEIVE;
 							_receiving_index = 0;
@@ -312,17 +310,13 @@ public:
                     }
                     break;
                 case SEND:
+					SPDR = ERROR;	// By default there is an ERROR (triggers a retry)
                     if (_ptr_sending_buffer) {
                         if (_sending_length && _sending_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-							if (_transmission_mode == NONE) {
-								SPDR = READY;
-								_transmission_mode = SEND;
-								_sending_index = 0;
-								_validation_index = 0;
-							} else {
-								SPDR = ERROR;
-								_transmission_mode = NONE;	// Breaks existing transmission, avoids deadlocks this way
-							}
+							SPDR = READY;
+							_transmission_mode = SEND;
+							_sending_index = 0;
+							_validation_index = 0;
                         } else {
                             SPDR = NONE;
 							_sending_length = 0;
