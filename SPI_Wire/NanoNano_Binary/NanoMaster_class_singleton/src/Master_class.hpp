@@ -147,7 +147,7 @@ protected:
 							if (c == _sending_buffer[length - 1]) {	// Last char
 								size = length + 1;	// Just for error catch
 								// Makes sure Slave does the respective sets
-								for (uint8_t set_r = 0; c != DONE && set_r < 3; set_r++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
+								for (uint8_t end_r = 0; c != DONE && end_r < 3; end_r++) {	// Makes sure the receiving buffer of the Slave is deleted, for sure!
 									delayMicroseconds(10);
 									c = _spi_instance->transfer(END);
 								}
@@ -288,7 +288,7 @@ protected:
 						if (c == END) {
 							delayMicroseconds(10);	// Makes sure the Status Byte is sent
 							c = _spi_instance->transfer(END);	// Replies the END to confirm reception and thus Slave buffer deletion
-							for (uint8_t clear_s = 0; c != DONE && clear_s < 3; clear_s++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
+							for (uint8_t end_s = 0; c != DONE && end_s < 3; end_s++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
 								delayMicroseconds(10);
 								c = _spi_instance->transfer(END);
 							}
