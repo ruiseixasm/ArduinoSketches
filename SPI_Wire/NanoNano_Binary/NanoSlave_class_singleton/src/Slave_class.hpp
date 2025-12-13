@@ -429,15 +429,15 @@ public:
                     break;
                 case END:
 					if (_transmission_mode == RECEIVE) {
-                    	_transmission_mode = NONE;
 						_received_length = _receiving_index;
+                    	_transmission_mode = NONE;
 						SPDR = ACK;	// After in this case to make sure END set everything all right
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tReceived message"));
 						#endif
                     } else if (_transmission_mode == SEND) {
-                    	_transmission_mode = NONE;
                         _sending_length = 0;	// Makes sure the sending buffer is zeroed
+						_transmission_mode = NONE;
 						SPDR = _sending_length;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tSent message"));
