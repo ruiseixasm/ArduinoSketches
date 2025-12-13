@@ -212,9 +212,9 @@ protected:
 					#endif
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.print(F("\t\tMessage NOT successfully sent on try: "));
+					Serial.print(F("\t\t\tRETRY: Message NOT successfully sent on try: "));
 					Serial.println(s + 1);
-					Serial.println(F("\t\tBUZZER activated for 10ms!"));
+					Serial.println(F("\t\t\t\tBUZZER activated for 10ms!"));
 					#endif
 					digitalWrite(BUZZ_PIN, HIGH);
 					delay(10);  // Buzzer on for 10ms
@@ -353,9 +353,9 @@ protected:
                 #endif
             } else {
                 #ifdef BROADCAST_SPI_DEBUG_1
-                Serial.print(F("\t\tMessage NOT successfully received on try: "));
+                Serial.print(F("\t\t\tRETRY: Message NOT successfully received on try: "));
                 Serial.println(r + 1);
-                Serial.println(F("\t\tBUZZER activated for 2 x 10ms!"));
+                Serial.println(F("\t\t\t\tBUZZER activated for 2 x 10ms!"));
                 #endif
                 digitalWrite(BUZZ_PIN, HIGH);
                 delay(10);  // Buzzer on for 10ms
