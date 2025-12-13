@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "JsonTalker.h"         // Includes the ArduinoJson Library
 
-#define GREEN_TALKER_DEBUG
+// #define GREEN_TALKER_DEBUG
 
 
 class GreenTalker : public JsonTalker {
