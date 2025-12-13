@@ -471,8 +471,7 @@ public:
 	
     void process() {
         if (_received_length) {
-            processMessage();   // Called only once!
-			_received_length = 0;   // Makes sure the receiving buffer is zeroed
+            processMessage();   // Called only once, itself releases the receiving buffer!
         }
     }
 
