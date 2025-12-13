@@ -12,9 +12,9 @@ Master_class& master_class = Master_class::instance(SS_PIN);  // CORRECT!
 void setup() {
     // Initialize serial
     Serial.begin(115200);
-    delay(1000);    // Give some extra time to Slave start up completely
+    delay(100);		// Give some time for serial to begin
     Serial.println(F("\n\nSPI Master Initialized - JSON class Mode"));
-    delay(2000);    // Give some extra time to Slave start up completely
+    delay(3000);  	// Give some extra time to Slave start up completely
 
     pinMode(BUZZ_PIN, OUTPUT);
     digitalWrite(BUZZ_PIN, LOW);
