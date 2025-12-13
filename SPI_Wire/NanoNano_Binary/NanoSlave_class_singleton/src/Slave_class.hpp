@@ -375,7 +375,7 @@ public:
 						} else {
                         	SPDR = BUSY;
 							#ifdef BROADCAST_SPI_DEBUG_1
-							Serial.println(F("\tI'm busy (RECEIVE)"));
+							Serial.println(F("\t\tBUSY: I'm busy (RECEIVE)"));
 							#endif
 						}
                     } else {
@@ -444,6 +444,10 @@ public:
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\tTransmission ended with received ERROR or FULL"));
 					#endif
+                    break;
+				case CLEAR:
+                    SPDR = ACK;
+                    _received_length = 0;	// Clears receiving buffer
                     break;
                 default:
                     SPDR = NACK;
