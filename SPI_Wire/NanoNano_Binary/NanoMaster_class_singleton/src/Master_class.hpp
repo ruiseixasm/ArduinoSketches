@@ -77,7 +77,7 @@ protected:
 	#endif
 
 	
-    uint8_t sendString(uint8_t length, int ss_pin) {
+    bool sendString(uint8_t length, int ss_pin) {
         uint8_t size = 0;	// No interrupts, so, not volatile
 		
 		#ifdef BROADCAST_SPI_DEBUG_1
@@ -88,13 +88,13 @@ protected:
 		if (length > BROADCAST_SOCKET_BUFFER_SIZE) {
 			
 			#ifdef BROADCAST_SPI_DEBUG_1
-			Serial.println(F("\tlength ABOVE BROADCAST_SOCKET_BUFFER_SIZE"));
+			Serial.println(F("\tlength > BROADCAST_SOCKET_BUFFER_SIZE"));
 			#endif
 
 			return 0;
 		}
 
-		if (_sending_buffer[0] != '\0') {	// Don't send empty strings
+		if (length > 0) {	// Don't send empty strings
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
 
@@ -232,9 +232,8 @@ protected:
 			size = 1; // Nothing to be sent
 		}
 
-        if (size > 0)
-            size--;
-        return size;
+        if (size > 1) return true;
+        return false;
     }
 
 
@@ -478,10 +477,9 @@ public:
 
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_on, BROADCAST_SOCKET_BUFFER_SIZE);
-        length = sendString(length_on, _ss_pin);
-        if (length == 0) return false;
+        if (!sendString(length_on, _ss_pin)) return false;
 
-        DeserializationError error = deserializeJson(message_doc, _sending_buffer, length);
+        DeserializationError error = deserializeJson(message_doc, _sending_buffer, length_on);
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.print(F("ERROR (ON): "));
@@ -514,7 +512,7 @@ public:
 
         delay(1000);
         length = receiveString(_ss_pin);
-        if (length == 0) return false;
+        if (!length) return false;
 
         error = deserializeJson(message_doc, _receiving_buffer, length);
         if (error) {
@@ -532,17 +530,11 @@ public:
 			return false;
 		}
 
-        length = receiveString(_ss_pin);
-        if (length > 0) return false;
-
-		_sending_buffer[0] = '\0';	// Clears buffer
-        length = sendString(0, _ss_pin);    // Testing sending nothing at all
-        if (length > 0) return false;
+        if (receiveString(_ss_pin)) return false;
+        if (sendString(0, _ss_pin)) return false;
         delay(1000);
-        length = receiveString(_ss_pin);   // Testing that receiving nothing also works
-        if (length > 0) return false;
-        length = receiveString(_ss_pin);   // Testing that receiving nothing also works
-        if (length > 0) return false;
+        if (receiveString(_ss_pin)) return false;	// Testing that receiving nothing also works
+        if (receiveString(_ss_pin)) return false;
 
 
 		//
@@ -551,10 +543,9 @@ public:
 
 		// Copy safely (takes into consideration the '\0' char)
 		strlcpy(_sending_buffer, command_off, BROADCAST_SOCKET_BUFFER_SIZE);
-        length = sendString(length_off, _ss_pin);
-        if (length == 0) return false;
+        if (!sendString(length_off, _ss_pin)) return false;
 		
-        error = deserializeJson(message_doc, _sending_buffer, length);
+        error = deserializeJson(message_doc, _sending_buffer, length_off);
         if (error) {
 			#ifdef BROADCAST_SPI_DEBUG_1
 			Serial.println(F("ERROR (OFF): Failed to deserialize JSON"));
@@ -590,17 +581,11 @@ public:
 			return false;
 		}
 
-        length = receiveString(_ss_pin);
-        if (length > 0) return false;
-
-		_sending_buffer[0] = '\0';	// Clears buffer
-        length = sendString(0, _ss_pin);
-        if (length > 0) return false;
+        if (receiveString(_ss_pin)) return false;
+        if (sendString(0, _ss_pin)) return false;
         delay(1000);
-        length = receiveString(_ss_pin);
-        if (length > 0) return false;
-        length = receiveString(_ss_pin);
-        if (length > 0) return false;
+        if (receiveString(_ss_pin)) return false;
+        if (receiveString(_ss_pin)) return false;
 
         return true;
     }
