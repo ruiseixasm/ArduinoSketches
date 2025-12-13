@@ -34,7 +34,7 @@ extern const int BUZZ_PIN;  // Declare as external (defined elsewhere)
 class Master_class
 {
 public:
-    
+
     enum StatusByte : uint8_t {
         ACK     = 0xF0, // Acknowledge
         NACK    = 0xF1, // Not acknowledged
