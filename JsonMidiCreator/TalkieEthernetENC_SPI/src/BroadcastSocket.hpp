@@ -72,8 +72,8 @@ protected:
         bool at_m = false;
         bool at_c = false;
         bool at_i = false;
-        size_t data_i = 3;
-        for (size_t i = data_i; i < _received_length; ++i) {
+        uint8_t data_i = 3;
+        for (uint8_t i = data_i; i < _received_length; ++i) {
             if (_receiving_buffer[i] == ':') {
                 if (_receiving_buffer[i - 2] == 'c' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
                     at_c = true;
@@ -178,7 +178,7 @@ protected:
     }
 
     
-    size_t triggerTalkers() {
+    uint8_t triggerTalkers() {
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(class_name());
@@ -385,7 +385,7 @@ public:
 	}
 
 
-    virtual size_t receive() {
+    virtual uint8_t receive() {
         // In theory, a UDP packet on a local area network (LAN) could survive
         // for about 4.25 minutes (255 seconds).
         // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN

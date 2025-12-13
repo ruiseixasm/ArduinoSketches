@@ -382,7 +382,7 @@ protected:
 		Serial.println(ss_pin);
 		#endif
 
-        for (size_t a = 0; !acknowledge && a < 3; a++) {
+        for (uint8_t a = 0; !acknowledge && a < 3; a++) {
     
             digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
@@ -507,12 +507,12 @@ public:
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t receive() override {
+    uint8_t receive() override {
 
 		if (_initiated) {
 
 			// Need to call homologous method in super class first
-			size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+			uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
 				length = receiveSPI(_talkers_ss_pins[ss_pin_i]);

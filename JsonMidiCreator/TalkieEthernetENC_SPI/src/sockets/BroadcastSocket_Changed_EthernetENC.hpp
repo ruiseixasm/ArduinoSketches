@@ -110,7 +110,7 @@ public:
     }
     
 
-    size_t receive() override {
+    uint8_t receive() override {
         if (_udp == nullptr) return 0;
 
         // Need to call homologous method in super class first

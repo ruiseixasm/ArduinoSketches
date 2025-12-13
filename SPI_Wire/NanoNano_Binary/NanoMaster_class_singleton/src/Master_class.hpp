@@ -405,7 +405,7 @@ protected:
 		Serial.println(ss_pin);
 		#endif
 
-        for (size_t a = 0; !acknowledge && a < 3; a++) {
+        for (uint8_t a = 0; !acknowledge && a < 3; a++) {
     
             digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
@@ -489,7 +489,7 @@ public:
     
     bool test() {
 
-        size_t length = 0;
+        uint8_t length = 0;
 
 		//
         // ON cycle

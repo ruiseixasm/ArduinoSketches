@@ -81,8 +81,8 @@ protected:
     
     // Specific methods associated to Arduino SPI as Master
 
-    size_t sendString(int ss_pin) {
-        size_t length = 0;	// No interrupts, so, not volatile
+    uint8_t sendString(int ss_pin) {
+        uint8_t length = 0;	// No interrupts, so, not volatile
 		
 		#ifdef BROADCAST_SPI_DEBUG
 		Serial.print("\tSending on pin: ");
@@ -93,7 +93,7 @@ protected:
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
 
-			for (size_t s = 0; length == 0 && s < 3; s++) {
+			for (uint8_t s = 0; length == 0 && s < 3; s++) {
 		
 				digitalWrite(ss_pin, LOW);
 				delayMicroseconds(5);
@@ -190,8 +190,8 @@ protected:
     }
 
 
-    size_t receiveString(int ss_pin) {
-        size_t length = 0;	// No interrupts, so, not volatile
+    uint8_t receiveString(int ss_pin) {
+        uint8_t length = 0;	// No interrupts, so, not volatile
         uint8_t c; // Avoid using 'char' while using values above 127
 
 		#ifdef BROADCAST_SPI_DEBUG
@@ -199,7 +199,7 @@ protected:
 		Serial.println(ss_pin);
 		#endif
 
-        for (size_t r = 0; length == 0 && r < 3; r++) {
+        for (uint8_t r = 0; length == 0 && r < 3; r++) {
     
             digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
@@ -319,7 +319,7 @@ protected:
 		Serial.println(ss_pin);
 		#endif
 
-        for (size_t a = 0; !acknowledge && a < 3; a++) {
+        for (uint8_t a = 0; !acknowledge && a < 3; a++) {
     
             digitalWrite(ss_pin, LOW);
             delayMicroseconds(5);
@@ -368,14 +368,11 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t send(size_t length, bool as_reply = false, uint8_t target_index = 255) override {
+    bool send(bool as_reply = false, uint8_t target_index = 255) override {
 
 		if (_initiated) {
 
-			// Need to call homologous method in super class first
-			length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
-
-			if (length > 0) {
+			if (BroadcastSocket::send(as_reply, target_index)) {	// Very important pre processing !!
 				#ifdef ENABLE_DIRECT_ADDRESSING
 				if (as_reply) {
 					sendString(_actual_ss_pin);
@@ -391,11 +388,12 @@ protected:
 					sendString(_talkers_ss_pins[ss_pin_i]);
 				}
 				#endif
+
+				_sending_length = 0;	// Deletes sending buffer
+				return true;
 			}
-			// Makes sure the _sending_buffer is reset with '\0'
-			_sending_buffer[0] = '\0';
 		}
-        return 0;   // Returns 0 because everything is dealt internally in this method
+        return false;
     }
 
 	bool initiate() {
@@ -445,12 +443,12 @@ public:
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t receive() override {
+    uint8_t receive() override {
 
 		if (_initiated) {
 
 			// Need to call homologous method in super class first
-			size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+			uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
 				length = receiveString(_talkers_ss_pins[ss_pin_i]);
