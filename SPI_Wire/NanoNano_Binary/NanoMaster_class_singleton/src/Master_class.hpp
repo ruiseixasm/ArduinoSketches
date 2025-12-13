@@ -79,7 +79,7 @@ protected:
 
 	
     bool sendSPI(uint8_t length, int ss_pin) {
-        uint8_t size = 0;	// No interrupts, so, not volatile
+        uint8_t size = 0;
 		
 		#ifdef BROADCAST_SPI_DEBUG_1
 		Serial.print(F("\tSending on pin: "));
@@ -245,7 +245,7 @@ protected:
 
 
     uint8_t receiveSPI(int ss_pin) {
-        uint8_t size = 0;	// No interrupts, so, not volatile
+        uint8_t size = 0;
         uint8_t c; // Avoid using 'char' while using values above 127
 
 		#ifdef BROADCAST_SPI_DEBUG_2
