@@ -30,6 +30,9 @@ protected:
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 	
+	uint8_t _received_length = 0;
+	uint8_t _sending_length = 0;
+	
     // Pointer PRESERVE the polymorphism while objects don't!
     JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
     uint8_t _max_delay_ms = 5;
