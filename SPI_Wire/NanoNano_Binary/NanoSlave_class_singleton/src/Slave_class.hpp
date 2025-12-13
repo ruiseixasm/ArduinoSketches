@@ -74,6 +74,7 @@ public:
 
 protected:
 
+    // volatile here makes sure the memory is read instead of cache values in registers
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 
