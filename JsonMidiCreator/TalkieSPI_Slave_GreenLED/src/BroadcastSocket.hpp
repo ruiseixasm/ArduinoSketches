@@ -442,9 +442,6 @@ public:
 			Serial.print(F("remoteSend2: "));
 			Serial.write(_sending_buffer, _sending_length);
 			Serial.println();
-			#endif
-
-			#ifdef BROADCASTSOCKET_DEBUG
 			Serial.print(F("remoteSend3: JSON length: "));
 			Serial.println(_sending_length);
 			#endif
