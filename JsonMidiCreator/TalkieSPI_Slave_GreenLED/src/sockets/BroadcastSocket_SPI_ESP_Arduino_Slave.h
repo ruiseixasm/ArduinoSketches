@@ -105,9 +105,19 @@ protected:
 		unsigned long start_waiting = millis();
 		while (_sending_length_spi) {
 			if (millis() - start_waiting > 1000 * wait_seconds) {
+				
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.println(F("\tavailableSendingBuffer: NOT available sending buffer"));
+				#endif
+
 				return false;
 			}
 		}
+		
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.println(F("\tavailableSendingBuffer: Available sending buffer"));
+		#endif
+
 		return true;
 	}
 
