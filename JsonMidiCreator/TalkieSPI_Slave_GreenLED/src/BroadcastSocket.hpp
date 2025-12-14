@@ -42,6 +42,13 @@ protected:
     uint32_t _last_remote_time = 0;
     uint16_t _drops_count = 0;
 
+    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+    #if ARDUINOJSON_VERSION_MAJOR >= 7
+    JsonDocument _message_doc;
+    #else
+    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _message_doc;
+    #endif
+
 
     static uint16_t generateChecksum(const char* net_data, const size_t len) {
         // 16-bit word and XORing
@@ -267,21 +274,14 @@ protected:
                     Serial.println(_json_talkers[talker_i]->get_name());
                     #endif
                     
-                    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-                    #if ARDUINOJSON_VERSION_MAJOR >= 7
-                    JsonDocument message_doc;
-                    #else
-                    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
-                    #endif
-
-                    DeserializationError error = deserializeJson(message_doc, _receiving_buffer, _received_length);
+                    DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
                     if (error) {
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.println(F("Failed to deserialize received data"));
                         #endif
                         return 0;
                     }
-                    JsonObject json_message = message_doc.as<JsonObject>();
+                    JsonObject json_message = _message_doc.as<JsonObject>();
 
 					#ifdef BROADCASTSOCKET_DEBUG
 					Serial.print(F("Triggering the talker: "));
