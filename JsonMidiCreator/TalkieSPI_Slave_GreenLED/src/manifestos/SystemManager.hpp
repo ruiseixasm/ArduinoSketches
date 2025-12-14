@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef SYSTEM_MANAGER_HPP
 #define SYSTEM_MANAGER_HPP
 
-#include "IManifesto.hpp"
+#include "../IManifesto.hpp"
 
 
 class SystemManager : public IManifesto {
