@@ -64,14 +64,6 @@ protected:
     }
 
 
-    // ASCII byte values:
-    // 	'c' = 99
-    // 	':' = 58
-    // 	'"' = 34
-    // 	'0' = 48
-    // 	'9' = 57
-
-
     uint16_t extractChecksum(int* message_code_int, uint32_t* remote_time) {
         
         uint16_t data_checksum = 0;
