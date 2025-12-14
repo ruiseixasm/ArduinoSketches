@@ -29,10 +29,6 @@ protected:
     bool _is_led_on = false;  // keep track of state yourself, by default it's off
 
 
-    const uint8_t runsCount_ = 2;
-    const uint8_t setsCount_ = 1;
-    const uint8_t getsCount_ = 1;
-    
     Action runs[2] = {
 		{"on", "Turns led ON"},
 		{"off", "Turns led OFF"}
@@ -60,9 +56,9 @@ public:
 
 
     // Size methods
-    uint8_t runsCount() const override { return runsCount_; }
-    uint8_t setsCount() const override { return setsCount_; }
-    uint8_t getsCount() const override { return getsCount_; }
+    uint8_t runsCount() const override { return sizeof(runs)/sizeof(Action); }
+    uint8_t setsCount() const override { return sizeof(sets)/sizeof(Action); }
+    uint8_t getsCount() const override { return sizeof(gets)/sizeof(Action); }
 
 
     // Iterator methods
@@ -72,7 +68,8 @@ public:
     }
     
     Action* iterateRunsNext() override {
-        if (runsIterIdx < runsCount_) {
+		uint8_t size_runs = sizeof(runs)/sizeof(Action);
+        if (runsIterIdx < size_runs) {
             return &runs[runsIterIdx++];
         }
         return nullptr;
@@ -84,6 +81,7 @@ public:
     }
     
     Action* iterateSetsNext() override {
+		uint8_t size_runs = sizeof(runs)/sizeof(Action);
         if (setsIterIdx < setsCount_) {
             return &sets[setsIterIdx++];
         }
@@ -96,6 +94,7 @@ public:
     }
     
     Action* iterateGetsNext() override {
+		uint8_t size_runs = sizeof(runs)/sizeof(Action);
         if (getsIterIdx < getsCount_) {
             return &gets[getsIterIdx++];
         }
@@ -105,7 +104,8 @@ public:
 
     // Name-based operations
     uint8_t runIndex(const char* name) const override {
-        for (uint8_t i = 0; i < runsCount_; i++) {
+		uint8_t size_runs = sizeof(runs)/sizeof(Action);
+        for (uint8_t i = 0; i < size_runs; i++) {
             if (strcmp(runs[i].name, name) == 0) {
                 return i;
             }
@@ -114,7 +114,8 @@ public:
     }
     
     uint8_t setIndex(const char* name) const override {
-        for (uint8_t i = 0; i < setsCount_; i++) {
+		uint8_t size_sets = sizeof(sets)/sizeof(Action);
+        for (uint8_t i = 0; i < size_sets; i++) {
             if (strcmp(sets[i].name, name) == 0) {
                 return i;
             }
@@ -123,7 +124,8 @@ public:
     }
     
     uint8_t getIndex(const char* name) const override {
-        for (uint8_t i = 0; i < getsCount_; i++) {
+		uint8_t size_gets = sizeof(gets)/sizeof(Action);
+        for (uint8_t i = 0; i < size_gets; i++) {
             if (strcmp(gets[i].name, name) == 0) {
                 return i;
             }
@@ -135,7 +137,8 @@ public:
     // Index-based operations (simplified examples)
     bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
         (void)talker;		// Silence unused parameter warning
-		if (index >= runsCount_) return false;
+		
+		if (index >= sizeof(runs)/sizeof(Action)) return false;
 		
 		// Actual implementation would do something based on index
 		switch(index) {
@@ -192,7 +195,7 @@ public:
     bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) override {
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
-        if (index >= setsCount_) return false;
+        if (index >= sizeof(sets)/sizeof(Action)) return false;
         
         switch(index) {
             case 0:
@@ -206,7 +209,7 @@ public:
     uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) const override {
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
-        if (index >= getsCount_) return 0;
+        if (index >= sizeof(gets)/sizeof(Action)) return 0;
         
         switch(index) {
             case 0: return _bpm_10;
