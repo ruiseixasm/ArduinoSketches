@@ -42,11 +42,6 @@ public:
         const char* desc;
     };
 
-    struct Result {
-        const EchoCode echo_code;
-        const char* desc;
-    };
-
     virtual const char* class_name() const { return "IManifesto"; }
 
 
@@ -72,6 +67,10 @@ public:
     virtual uint8_t setIndex(const char* name) const = 0;
     virtual uint8_t getIndex(const char* name) const = 0;
 
+    // These methods are intended to call the respective ByIndex number and return it if in range or 255 if not
+    virtual uint8_t runIndex(uint8_t index) const = 0;
+    virtual uint8_t setIndex(uint8_t index) const = 0;
+    virtual uint8_t getIndex(uint8_t index) const = 0;
 
     // These methods use a switch that based on the index pick the respective action to be done
     virtual bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) = 0;

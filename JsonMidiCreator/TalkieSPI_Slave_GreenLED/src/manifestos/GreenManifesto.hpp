@@ -133,6 +133,25 @@ public:
         return 255;
     }
 
+    // Number-based operations
+    uint8_t runIndex(uint8_t index) const override {
+		if (index < sizeof(runs)/sizeof(Action))
+			return index;
+        return 255;
+    }
+    
+    uint8_t setIndex(uint8_t index) const override {
+		if (index < sizeof(sets)/sizeof(Action))
+			return index;
+        return 255;
+    }
+    
+    uint8_t getIndex(uint8_t index) const override {
+		if (index < sizeof(gets)/sizeof(Action))
+			return index;
+        return 255;
+    }
+
     
     // Index-based operations (simplified examples)
     bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
