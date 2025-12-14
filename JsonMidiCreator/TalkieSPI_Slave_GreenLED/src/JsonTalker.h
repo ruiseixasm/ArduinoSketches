@@ -26,6 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define REMOTE_C ((uint16_t)0)
 #define LOCAL_C ((uint16_t)1)
 
+
 class BroadcastSocket;
 
 
@@ -74,45 +75,12 @@ protected:
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
+	IManifesto* _manifesto;
     uint8_t _channel = 0;
     bool _muted = false;
 
 
-    // Can't use method reference because these type of references are class designation dependent,
-    // so, they will prevent any possibility of inheritance, this way the only alternative is to
-    // do an indirect reference based on the command position with only a pair of strings and
-    // a following switch case sequence that picks the respective method and calls it directly.
-
-    // Virtual method that returns static manifesto (can't override class member variables)
-    virtual const Manifesto& get_manifesto() const {
-
-        static const Manifesto _manifesto = {
-            (const Command[]){  // runs
-                {"mute", "Mutes this talker"},
-                {"unmute", "Unmutes this talker"},
-                {"on", "Turns led ON"},
-                {"off", "Turns led OFF"}
-            },
-            (const Command[]){  // sets 
-                {"delay", "Sets the socket max delay"}
-            },
-            (const Command[]){  // gets
-                {"muted", "Returns 1 if muted and 0 if not"},
-                {"delay", "Gets the socket max delay"},
-                {"drops", "Gets total drops count"},
-                {"runs", "Gets total runs"}
-            },
-            4,
-            1,
-            4
-        };
-
-        return _manifesto;
-    }
-
-
     bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255);
-
 
     bool localSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
         (void)as_reply; 	// Silence unused parameter warning
@@ -198,152 +166,6 @@ protected:
     }
 
     
-    uint16_t _total_runs = 0;
-    // static becaus it's a shared state among all other talkers, device (board) parameter
-    static bool _is_led_on;  // keep track of state yourself, by default it's off
-
-
-    uint8_t command_index(const MessageCode message_code, JsonObject& json_message) {
-        const char* command_name = json_message["n"].as<const char*>();
-        const Command* command = nullptr;
-        uint8_t count = 0;
-        const Manifesto& my_manifesto = get_manifesto();
-        switch (message_code)
-        {
-        case MessageCode::RUN:
-            command = my_manifesto.runs;
-            count = my_manifesto.runs_count;
-            break;
-        case MessageCode::SET:
-            command = my_manifesto.sets;
-            count = my_manifesto.sets_count;
-            break;
-        case MessageCode::GET:
-            command = my_manifesto.gets;
-            count = my_manifesto.gets_count;
-            break;
-        default: return 255;    // 255 means not found!
-        }
-        for (uint8_t i = 0; i < count; i++) {
-            if (strcmp(command_name, command[i].name) == 0)
-                return i;
-        }
-        return 255; // 255 means not found!
-    }
-
-
-    virtual bool command_run(const uint8_t command_index, JsonObject& json_message) {
-        (void)json_message; // Silence unused parameter warning
-        switch (command_index)
-        {
-        case 0:
-            _muted = true;
-            break;
-        case 1:
-            _muted = false;
-            break;
-
-        case 2:
-            {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("\tCase 0 - Turning LED ON"));
-                #endif
-        
-                if (!_is_led_on) {
-                #ifdef LED_BUILTIN
-                    #ifdef JSON_TALKER_DEBUG
-                        Serial.print(F("\tLED_BUILTIN IS DEFINED as: "));
-                        Serial.println(LED_BUILTIN);
-                    #endif
-                    digitalWrite(LED_BUILTIN, HIGH);
-                #else
-                    #ifdef JSON_TALKER_DEBUG
-                        Serial.println(F("\tLED_BUILTIN IS NOT DEFINED in this context!"));
-                    #endif
-                #endif
-                    _is_led_on = true;
-                    _total_runs++;
-                } else {
-                    json_message["r"] = "Already On!";
-                    if (_socket)
-                        this->replyMessage(json_message, false);
-                    return false;
-                }
-                return true;
-            }
-            break;
-        
-        case 3:
-            {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("\tCase 1 - Turning LED OFF"));
-                #endif
-        
-                if (_is_led_on) {
-                #ifdef LED_BUILTIN
-                    digitalWrite(LED_BUILTIN, LOW);
-                #endif
-                    _is_led_on = false;
-                    _total_runs++;
-                } else {
-                    json_message["r"] = "Already Off!";
-                    if (_socket)
-                        this->replyMessage(json_message, false);
-                    return false;
-                }
-                return true;
-            }
-            break;
-        }
-		return false;  // Nothing done
-    }
-
-    
-    virtual bool command_set(const uint8_t command_index, JsonObject& json_message) {
-        uint32_t json_value = json_message["v"].as<uint32_t>();
-        switch (command_index)
-        {
-        case 0:
-            {
-                this->set_delay(static_cast<uint8_t>(json_value));
-                return true;
-            }
-            break;
-        
-        default: return false;
-        }
-    }
-
-    
-    virtual uint32_t command_get(const uint8_t command_index, JsonObject& json_message) {
-        (void)json_message; // Silence unused parameter warning
-        switch (command_index)
-        {
-        case 0:
-            return _muted;
-            break;
-        case 1:
-            {
-                return static_cast<uint32_t>(this->get_delay());
-            }
-            break;
-
-        case 2:
-            {
-                return this->get_total_drops();
-            }
-            break;
-
-        case 3:
-            {
-                return _total_runs;
-            }
-            break;
-        
-        default: return 0;  // Has to return something
-        }
-    }
-
     bool echo(JsonObject& json_message) {
         Serial.print(json_message["f"].as<String>());
         Serial.print(" - ");
@@ -374,7 +196,6 @@ protected:
     void set_delay(uint8_t delay);
     uint8_t get_delay();
     uint16_t get_total_drops();
-    uint16_t get_total_runs() { return _total_runs; }
 
 
 public:
@@ -382,15 +203,11 @@ public:
     // Explicit default constructor
     JsonTalker() = delete;
         
-    JsonTalker(const char* name, const char* desc)
-        : _name(name), _desc(desc) {
+    JsonTalker(const char* name, const char* desc, IManifesto* manifesto)
+        : _name(name), _desc(desc), _manifesto(manifesto) {
             // Nothing to see here
         }
 
-
-    void setSocket(BroadcastSocket* socket) {
-        _socket = socket;
-    }
 
     static void connectTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
         _json_talkers = json_talkers;
@@ -398,10 +215,14 @@ public:
     }
 
 
+	// Getter and setters
+    void setSocket(BroadcastSocket* socket) { _socket = socket; }
+    BroadcastSocket& getSocket();
     const char* get_name() { return _name; }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
     
+
     JsonTalker& mute() {    // It does NOT make a copy!
         _muted = true;
         return *this;
@@ -504,30 +325,37 @@ public:
                 Serial.print("\t=== This object is: ");
                 Serial.println(class_name());
                 #endif
-            
-                const Manifesto& my_manifesto = get_manifesto();
 
-                json_message["w"] = MessageCode::RUN;
-                for (size_t i = 0; i < my_manifesto.runs_count; ++i) {
-                    none_list = false;
-                    json_message["n"] = my_manifesto.runs[i].name;
-                    json_message["d"] = my_manifesto.runs[i].desc;
-                    replyMessage(json_message, true);
-                }
+				json_message["w"] = MessageCode::RUN;
+				_manifesto->iterateRunsReset();
+				IManifesto::Action* run;
+				while ((run = _manifesto->iterateRunsNext()) != nullptr) {	// No boilerplate
+					none_list = false;
+					json_message["n"] = run->name;      // Direct access
+					json_message["d"] = run->desc;
+					replyMessage(json_message, true);
+				}
+
                 json_message["w"] = MessageCode::SET;
-                for (size_t i = 0; i < my_manifesto.sets_count; ++i) {
-                    none_list = false;
-                    json_message["n"] = my_manifesto.sets[i].name;
-                    json_message["d"] = my_manifesto.sets[i].desc;
-                    replyMessage(json_message, true);
-                }
+				_manifesto->iterateSetsReset();
+				IManifesto::Action* set;
+				while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
+					none_list = false;
+					json_message["n"] = set->name;      // Direct access
+					json_message["d"] = set->desc;
+					replyMessage(json_message, true);
+				}
+				
                 json_message["w"] = MessageCode::GET;
-                for (size_t i = 0; i < my_manifesto.gets_count; ++i) {
-                    none_list = false;
-                    json_message["n"] = my_manifesto.gets[i].name;
-                    json_message["d"] = my_manifesto.gets[i].desc;
-                    replyMessage(json_message, true);
-                }
+				_manifesto->iterateGetsReset();
+				IManifesto::Action* get;
+				while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
+					none_list = false;
+					json_message["n"] = get->name;      // Direct access
+					json_message["d"] = get->desc;
+					replyMessage(json_message, true);
+				}
+
                 if(none_list) {
                     json_message["g"] = 2;       // NONE
                 }
@@ -535,57 +363,73 @@ public:
             break;
         
         case MessageCode::RUN:
-            if (json_message["n"].is<String>()) {
+            if (json_message["n"].is<const char *>()) {
 
-                const uint8_t command_found_i = command_index(MessageCode::RUN, json_message);
-                if (command_found_i < 255) {
+                const uint8_t index_found_i = _manifesto->runIndex(json_message["n"].as<const char *>());
+                if (index_found_i < 255) {
 
                     #ifdef JSON_TALKER_DEBUG
                     Serial.print(F("\tRUN found at "));
-                    Serial.print(command_found_i);
+                    Serial.print(index_found_i);
                     Serial.println(F(", now being processed..."));
                     #endif
-            
-                    json_message["g"] = 0;       // ROGER
+
+					if (_manifesto->runByIndex(index_found_i, json_message, this)) {
+						json_message["g"] = IManifesto::ROGER;
+					} else {
+						json_message["g"] = IManifesto::NEGATIVE;
+					}
                     replyMessage(json_message, true);
-                    // No memory leaks because message_doc exists in the listen() method stack
-                    json_message.remove("g");
-                    command_run(command_found_i, json_message);
                 } else {
-                    json_message["g"] = 1;   // UNKNOWN
+                    json_message["g"] = IManifesto::SAY_AGAIN;
                     replyMessage(json_message, true);
                 }
             }
             break;
         
         case MessageCode::SET:
-            if (json_message["n"].is<String>() && json_message["v"].is<uint32_t>()) {
+            if (json_message["n"].is<const char *>() && json_message["v"].is<uint32_t>()) {
 
-                const uint8_t command_found_i = command_index(MessageCode::SET, json_message);
-                if (command_found_i < 255) {
-                    json_message["g"] = 0;       // ROGER
+                const uint8_t index_found_i = _manifesto->setIndex(json_message["n"].as<const char *>());
+                if (index_found_i < 255) {
+
+                    #ifdef JSON_TALKER_DEBUG
+                    Serial.print(F("\tSET found at "));
+                    Serial.print(index_found_i);
+                    Serial.println(F(", now being processed..."));
+                    #endif
+
+					if (_manifesto->setByIndex(index_found_i, json_message["v"].as<uint32_t>(), json_message, this)) {
+						json_message["g"] = IManifesto::ROGER;
+					} else {
+						json_message["g"] = IManifesto::NEGATIVE;
+					}
                     replyMessage(json_message, true);
-                    // No memory leaks because message_doc exists in the listen() method stack
-                    json_message.remove("g");
-                    command_set(command_found_i, json_message);
                 } else {
-                    json_message["g"] = 1;   // UNKNOWN
+                    json_message["g"] = IManifesto::SAY_AGAIN;
                     replyMessage(json_message, true);
                 }
             }
             break;
         
         case MessageCode::GET:
-            if (json_message["n"].is<String>()) {
+            if (json_message["n"].is<const char *>()) {
 
-                const uint8_t command_found_i = command_index(MessageCode::GET, json_message);
-                if (command_found_i < 255) {
+                const uint8_t index_found_i = _manifesto->getIndex(json_message["n"].as<const char *>());
+                if (index_found_i < 255) {
+
+                    #ifdef JSON_TALKER_DEBUG
+                    Serial.print(F("\tGET found at "));
+                    Serial.print(index_found_i);
+                    Serial.println(F(", now being processed..."));
+                    #endif
+
                     // No memory leaks because message_doc exists in the listen() method stack
                     // The return of the value works as an implicit ROGER (avoids network flooding)
-                    json_message["v"] = command_get(command_found_i, json_message);
+                    json_message["v"] = _manifesto->getByIndex(index_found_i, json_message, this);
                     replyMessage(json_message, true);
                 } else {
-                    json_message["g"] = 1;   // UNKNOWN
+                    json_message["g"] = IManifesto::SAY_AGAIN;
                     replyMessage(json_message, true);
                 }
             }

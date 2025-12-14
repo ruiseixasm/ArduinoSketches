@@ -11,37 +11,40 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef SYSTEM_MANAGER_HPP
-#define SYSTEM_MANAGER_HPP
+#ifndef GREEN_MANIFESTO_HPP
+#define GREEN_MANIFESTO_HPP
 
 #include "../IManifesto.hpp"
 
+// #define GREEN_TALKER_DEBUG
 
-class SystemManager : public IManifesto {
+
+class GreenManifesto : public IManifesto {
 
 protected:
 
-    static constexpr uint8_t MAX_ACTIONS = 10;
+    uint16_t _bpm_10 = 1200;
+
+    uint16_t _total_runs = 0;
+    bool _is_led_on = false;  // keep track of state yourself, by default it's off
+
+
+    const uint8_t runsCount_ = 2;
+    const uint8_t setsCount_ = 1;
+    const uint8_t getsCount_ = 1;
     
-    Action runs[MAX_ACTIONS] = {
-        {"start", "Start the system"},
-        {"stop", "Stop the system"},
-        {"reset", "Reset to defaults"}
+    Action runs[2] = {
+		{"on", "Turns led ON"},
+		{"off", "Turns led OFF"}
     };
     
-    Action sets[MAX_ACTIONS] = {
-        {"speed", "Set motor speed"},
-        {"temp", "Set temperature"}
+    Action sets[1] = {
+        {"bpm_10", "Sets the Tempo in BPM x 10"}
     };
     
-    Action gets[MAX_ACTIONS] = {
-        {"status", "Get system status"},
-        {"counter", "Get operation counter"}
+    Action gets[1] = {
+        {"bpm_10", "Gets the Tempo in BPM x 10"}
     };
-    
-    uint8_t runsCount_ = 3;
-    uint8_t setsCount_ = 2;
-    uint8_t getsCount_ = 2;
     
     // Iterator states
     uint8_t runsIterIdx = 0;
@@ -51,7 +54,9 @@ protected:
 
 public:
 
-    const char* class_name() const override { return "SystemManager"; }
+    const char* class_name() const override { return "GreenManifesto"; }
+
+    GreenManifesto() : IManifesto() {}
 
 
     // Size methods
@@ -99,73 +104,117 @@ public:
 
 
     // Name-based operations
-    bool runByName(const char* name, JsonObject& json_message, JsonTalker* talker) override {
+    uint8_t runIndex(const char* name) const override {
         for (uint8_t i = 0; i < runsCount_; i++) {
             if (strcmp(runs[i].name, name) == 0) {
-                return runByIndex(i, json_message, talker);
+                return i;
             }
         }
-        return false;
+        return 255;
     }
     
-    bool setByName(const char* name, uint32_t value, JsonObject& json_message, JsonTalker* talker) override {
+    uint8_t setIndex(const char* name) const override {
         for (uint8_t i = 0; i < setsCount_; i++) {
             if (strcmp(sets[i].name, name) == 0) {
-                return setByIndex(i, value, json_message, talker);
+                return i;
             }
         }
-        return false;
+        return 255;
     }
     
-    uint32_t getByName(const char* name, JsonObject& json_message, JsonTalker* talker) const override {
+    uint8_t getIndex(const char* name) const override {
         for (uint8_t i = 0; i < getsCount_; i++) {
             if (strcmp(gets[i].name, name) == 0) {
-                return getByIndex(i, json_message, talker);
+                return i;
             }
         }
-        return 0;  // Or some error value
+        return 255;
     }
 
     
     // Index-based operations (simplified examples)
     bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
-        if (index >= runsCount_) return false;
-        
-        // Actual implementation would do something based on index
-        switch(index) {
-            case 0: Serial.println("Starting system"); break;
-            case 1: Serial.println("Stopping system"); break;
-            case 2: Serial.println("Resetting system"); break;
-        }
-        return true;
-    }
+        (void)talker;		// Silence unused parameter warning
+		if (index >= runsCount_) return false;
+		
+		// Actual implementation would do something based on index
+		switch(index) {
+			case 0:
+			{
+				#ifdef GREEN_MANIFESTO_DEBUG
+				Serial.println(F("\tCase 0 - Turning LED ON"));
+				#endif
+		
+				if (!_is_led_on) {
+				#ifdef GREEN_LED
+					#ifdef GREEN_MANIFESTO_DEBUG
+						Serial.print(F("\tGREEN_LED IS DEFINED as: "));
+						Serial.println(GREEN_LED);
+					#endif
+					digitalWrite(GREEN_LED, HIGH);
+				#else
+					#ifdef GREEN_MANIFESTO_DEBUG
+						Serial.println(F("\tGREEN_LED IS NOT DEFINED in this context!"));
+					#endif
+				#endif
+					_is_led_on = true;
+					_total_runs++;
+					return true;
+				} else {
+					json_message["r"] = "Already On!";
+					return false;
+				}
+			}
+			break;
+			case 1:
+			{
+				#ifdef GREEN_MANIFESTO_DEBUG
+				Serial.println(F("\tCase 1 - Turning LED OFF"));
+				#endif
+		
+				if (_is_led_on) {
+				#ifdef GREEN_LED
+					digitalWrite(GREEN_LED, LOW);
+				#endif
+					_is_led_on = false;
+					_total_runs++;
+				} else {
+					json_message["r"] = "Already Off!";
+					return false;
+				}
+				return true;
+			}
+			break;
+		}
+		return false;
+	}
     
     bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) override {
+        (void)json_message;	// Silence unused parameter warning
+        (void)talker;		// Silence unused parameter warning
         if (index >= setsCount_) return false;
         
         switch(index) {
-            case 0: 
-                Serial.print("Setting speed to: ");
-                Serial.println(value);
-                break;
-            case 1:
-                Serial.print("Setting temperature to: ");
-                Serial.println(value);
+            case 0:
+                _bpm_10 = value;
+                return true;
                 break;
         }
-        return true;
+        return false;
     }
     
     uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) const override {
+        (void)json_message;	// Silence unused parameter warning
+        (void)talker;		// Silence unused parameter warning
         if (index >= getsCount_) return 0;
         
         switch(index) {
-            case 0: return 123;  // status
-            case 1: return 456;  // counter
+            case 0: return _bpm_10;
         }
         return 0;
     }
+
 };
 
 
-#endif // SYSTEM_MANAGER_HPP
+#endif // GREEN_MANIFESTO_HPP

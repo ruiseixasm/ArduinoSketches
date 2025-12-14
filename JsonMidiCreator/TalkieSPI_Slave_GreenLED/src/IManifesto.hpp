@@ -18,10 +18,16 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 
 
-class JsonTalkie;
+class JsonTalker;
 
 class IManifesto {
 public:
+
+    enum EchoCode : int {
+        ROGER,
+        SAY_AGAIN,
+        NEGATIVE
+    };
 
     IManifesto(const IManifesto&) = delete;
     IManifesto& operator=(const IManifesto&) = delete;
@@ -33,6 +39,11 @@ public:
 
     struct Action {
         const char* name;
+        const char* desc;
+    };
+
+    struct Result {
+        const EchoCode echo_code;
         const char* desc;
     };
 
@@ -57,15 +68,15 @@ public:
 
 
     // These methods are intended to call the respective ByIndex when it's find based on a name
-    virtual bool runByName(const char* name, JsonObject& json_message, JsonTalkie* talker) = 0;
-    virtual bool setByName(const char* name, const uint32_t value, JsonObject& json_message, JsonTalkie* talker) = 0;
-    virtual uint32_t getByName(const char* name, JsonObject& json_message, JsonTalkie* talker) const = 0;
+    virtual uint8_t runIndex(const char* name) const = 0;
+    virtual uint8_t setIndex(const char* name) const = 0;
+    virtual uint8_t getIndex(const char* name) const = 0;
 
 
     // These methods use a switch that based on the index pick the respective action to be done
-    virtual bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalkie* talker) = 0;
-    virtual bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalkie* talker) = 0;
-    virtual uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalkie* talker) const = 0;
+    virtual bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) = 0;
+    virtual bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) = 0;
+    virtual uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) const = 0;
 };
 
 

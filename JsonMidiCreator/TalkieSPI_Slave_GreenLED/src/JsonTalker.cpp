@@ -18,8 +18,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 JsonTalker** JsonTalker::_json_talkers = nullptr;
 uint8_t JsonTalker::_talker_count = 0;
-bool JsonTalker::_is_led_on = false;
-
 
 
 bool JsonTalker::remoteSend(JsonObject& json_message, bool as_reply, uint8_t target_index) {
@@ -33,6 +31,10 @@ bool JsonTalker::remoteSend(JsonObject& json_message, bool as_reply, uint8_t tar
     return _socket->remoteSend(json_message, as_reply, target_index);
 }
 
+
+BroadcastSocket& JsonTalker::getSocket() {
+	return *_socket;
+}
 
 void JsonTalker::set_delay(uint8_t delay) {
     return _socket->set_max_delay(delay);
