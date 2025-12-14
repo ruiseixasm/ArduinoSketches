@@ -274,11 +274,6 @@ public:
         }   // else: If it has no "t" it means for every Talkers
 
 
-        // Echo codes:
-        //     0 - ROGER
-        //     1 - UNKNOWN
-        //     2 - NONE
-
         #ifdef JSON_TALKER_DEBUG
         Serial.print(F("\tProcess: "));
         serializeJson(json_message, Serial);
@@ -314,30 +309,36 @@ public:
 				json_message["w"] = MessageCode::RUN;
 				_manifesto->iterateRunsReset();
 				IManifesto::Action* run;
+				uint8_t run_number = 0;
 				while ((run = _manifesto->iterateRunsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
 					json_message["n"] = run->name;      // Direct access
 					json_message["d"] = run->desc;
+					json_message["N"] = run_number++;
 					replyMessage(json_message, true);
 				}
 
                 json_message["w"] = MessageCode::SET;
 				_manifesto->iterateSetsReset();
 				IManifesto::Action* set;
+				uint8_t set_number = 0;
 				while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
 					json_message["n"] = set->name;      // Direct access
 					json_message["d"] = set->desc;
+					json_message["N"] = set_number++;
 					replyMessage(json_message, true);
 				}
 				
                 json_message["w"] = MessageCode::GET;
 				_manifesto->iterateGetsReset();
 				IManifesto::Action* get;
+				uint8_t get_number = 0;
 				while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
 					json_message["n"] = get->name;      // Direct access
 					json_message["d"] = get->desc;
+					json_message["N"] = get_number++;
 					replyMessage(json_message, true);
 				}
 
