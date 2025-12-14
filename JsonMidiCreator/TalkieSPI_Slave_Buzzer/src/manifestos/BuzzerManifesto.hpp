@@ -16,9 +16,9 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../IManifesto.hpp"
 
-#define BUZZER_MANIFESTO_DEBUG
+// #define BUZZER_MANIFESTO_DEBUG
 
-const int BUZZ_PIN = 2; // External BUZZER pin
+#define BUZZ_PIN 2	// External BUZZER pin
 
 class BuzzerManifesto : public IManifesto {
 public:
