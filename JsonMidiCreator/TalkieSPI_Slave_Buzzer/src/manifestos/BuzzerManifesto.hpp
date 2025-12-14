@@ -30,7 +30,8 @@ public:
 
 protected:
 
-    uint16_t _buzz_time_ms = 100;
+    uint16_t _buzz_duration_ms = 100;
+	unsigned long _buzz_start = 0;
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
@@ -59,7 +60,11 @@ protected:
 public:
 
 	void loop() override {
-
+		if (millis() - _buzz_start > _buzz_duration_ms) {
+			#ifdef BUZZ_PIN
+			digitalWrite(BUZZ_PIN, LOW);
+			#endif
+		}
 	}
 
     
@@ -81,9 +86,9 @@ public:
 						Serial.print(F("\tBUZZ_PIN IS DEFINED as: "));
 						Serial.println(BUZZ_PIN);
 					#endif
+
 					digitalWrite(BUZZ_PIN, HIGH);
-					delay(_buzz_time_ms);
-					digitalWrite(BUZZ_PIN, LOW);
+					_buzz_start = millis();
 
 					#else
 					#ifdef BUZZER_MANIFESTO_DEBUG
@@ -105,7 +110,7 @@ public:
         if (index < setsCount()) {
 			switch(index) {
 				case 0:
-					_buzz_time_ms = value;
+					_buzz_duration_ms = value;
 					return true;
 					break;
 			}
@@ -118,7 +123,7 @@ public:
         (void)talker;		// Silence unused parameter warning
         if (index < getsCount()) {
 			switch(index) {
-				case 0: return _buzz_time_ms;
+				case 0: return _buzz_duration_ms;
 			}
 		}
         return 0;
