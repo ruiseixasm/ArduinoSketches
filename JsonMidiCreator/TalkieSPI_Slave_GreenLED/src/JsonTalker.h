@@ -176,16 +176,13 @@ protected:
 
 
     bool replyMessage(JsonObject& json_message, bool as_reply = true) {
+
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("\t"));
 		Serial.print(_name);
 		Serial.print(F(": "));
 		#endif
-		if (json_message["f"] != _name) {
-			// Does a targets swap first (if not yet done)
-			json_message["t"] = json_message["f"];
-			json_message["f"] = _name;
-		}
+
 		uint16_t c = json_message["c"].as<uint16_t>();
 		if (c == LOCAL_C) {	// c == 1 means a local message while 0 means a remote one
 			#ifdef JSON_TALKER_DEBUG
@@ -481,6 +478,9 @@ public:
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
+        // From one to many, starts to set the returning target in this single place only
+        json_message["t"] = json_message["f"];
+        json_message["f"] = _name;
 
         MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
         json_message["w"] = json_message["m"].as<int>();
