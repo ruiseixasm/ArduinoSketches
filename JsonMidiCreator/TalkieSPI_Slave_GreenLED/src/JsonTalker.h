@@ -349,76 +349,88 @@ public:
             break;
         
         case MessageCode::RUN:
-            if (json_message["n"].is<const char *>()) {
+			{
+				uint8_t index_found_i = 255;
+				if (json_message["N"].is<uint8_t>()) {
+					index_found_i = _manifesto->runIndex(json_message["N"].as<uint8_t>());
+				} else if (json_message["n"].is<const char *>()) {
+					index_found_i = _manifesto->runIndex(json_message["n"].as<const char *>());
+				}
+				if (index_found_i < 255) {
 
-                const uint8_t index_found_i = _manifesto->runIndex(json_message["n"].as<const char *>());
-                if (index_found_i < 255) {
-
-                    #ifdef JSON_TALKER_DEBUG
-                    Serial.print(F("\tRUN found at "));
-                    Serial.print(index_found_i);
-                    Serial.println(F(", now being processed..."));
-                    #endif
+					#ifdef JSON_TALKER_DEBUG
+					Serial.print(F("\tRUN found at "));
+					Serial.print(index_found_i);
+					Serial.println(F(", now being processed..."));
+					#endif
 
 					if (_manifesto->runByIndex(index_found_i, json_message, this)) {
 						json_message["g"] = IManifesto::ROGER;
 					} else {
 						json_message["g"] = IManifesto::NEGATIVE;
 					}
-                    replyMessage(json_message, true);
-                } else {
-                    json_message["g"] = IManifesto::SAY_AGAIN;
-                    replyMessage(json_message, true);
-                }
-            }
+					replyMessage(json_message, true);
+				} else {
+					json_message["g"] = IManifesto::SAY_AGAIN;
+					replyMessage(json_message, true);
+				}
+			}
             break;
         
         case MessageCode::SET:
-            if (json_message["n"].is<const char *>() && json_message["v"].is<uint32_t>()) {
+			{
+				uint8_t index_found_i = 255;
+				if (json_message["N"].is<uint8_t>()) {
+					index_found_i = _manifesto->setIndex(json_message["N"].as<uint8_t>());
+				} else if (json_message["n"].is<const char *>()) {
+					index_found_i = _manifesto->setIndex(json_message["n"].as<const char *>());
+				}
+				if (index_found_i < 255) {
 
-                const uint8_t index_found_i = _manifesto->setIndex(json_message["n"].as<const char *>());
-                if (index_found_i < 255) {
-
-                    #ifdef JSON_TALKER_DEBUG
-                    Serial.print(F("\tSET found at "));
-                    Serial.print(index_found_i);
-                    Serial.println(F(", now being processed..."));
-                    #endif
+					#ifdef JSON_TALKER_DEBUG
+					Serial.print(F("\tSET found at "));
+					Serial.print(index_found_i);
+					Serial.println(F(", now being processed..."));
+					#endif
 
 					if (_manifesto->setByIndex(index_found_i, json_message["v"].as<uint32_t>(), json_message, this)) {
 						json_message["g"] = IManifesto::ROGER;
 					} else {
 						json_message["g"] = IManifesto::NEGATIVE;
 					}
-                    replyMessage(json_message, true);
-                } else {
-                    json_message["g"] = IManifesto::SAY_AGAIN;
-                    replyMessage(json_message, true);
-                }
-            }
+					replyMessage(json_message, true);
+				} else {
+					json_message["g"] = IManifesto::SAY_AGAIN;
+					replyMessage(json_message, true);
+				}
+			}
             break;
         
         case MessageCode::GET:
-            if (json_message["n"].is<const char *>()) {
+			{
+				uint8_t index_found_i = 255;
+				if (json_message["N"].is<uint8_t>()) {
+					index_found_i = _manifesto->getIndex(json_message["N"].as<uint8_t>());
+				} else if (json_message["n"].is<const char *>()) {
+					index_found_i = _manifesto->getIndex(json_message["n"].as<const char *>());
+				}
+				if (index_found_i < 255) {
 
-                const uint8_t index_found_i = _manifesto->getIndex(json_message["n"].as<const char *>());
-                if (index_found_i < 255) {
+					#ifdef JSON_TALKER_DEBUG
+					Serial.print(F("\tGET found at "));
+					Serial.print(index_found_i);
+					Serial.println(F(", now being processed..."));
+					#endif
 
-                    #ifdef JSON_TALKER_DEBUG
-                    Serial.print(F("\tGET found at "));
-                    Serial.print(index_found_i);
-                    Serial.println(F(", now being processed..."));
-                    #endif
-
-                    // No memory leaks because message_doc exists in the listen() method stack
-                    // The return of the value works as an implicit ROGER (avoids network flooding)
-                    json_message["v"] = _manifesto->getByIndex(index_found_i, json_message, this);
-                    replyMessage(json_message, true);
-                } else {
-                    json_message["g"] = IManifesto::SAY_AGAIN;
-                    replyMessage(json_message, true);
-                }
-            }
+					// No memory leaks because message_doc exists in the listen() method stack
+					// The return of the value works as an implicit ROGER (avoids network flooding)
+					json_message["v"] = _manifesto->getByIndex(index_found_i, json_message, this);
+					replyMessage(json_message, true);
+				} else {
+					json_message["g"] = IManifesto::SAY_AGAIN;
+					replyMessage(json_message, true);
+				}
+			}
             break;
         
         case MessageCode::SYS:
