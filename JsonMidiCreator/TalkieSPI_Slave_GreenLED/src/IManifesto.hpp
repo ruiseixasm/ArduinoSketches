@@ -21,6 +21,13 @@ https://github.com/ruiseixasm/JsonTalkie
 class JsonTalker;
 
 class IManifesto {
+protected:
+	
+    // Iterator states
+    uint8_t runsIterIdx = 0;
+    uint8_t setsIterIdx = 0;
+    uint8_t getsIterIdx = 0;
+
 public:
 
     enum EchoCode : int {
@@ -44,11 +51,15 @@ public:
 
     virtual const char* class_name() const { return "IManifesto"; }
 
-
+    // Iterator methods
+    virtual void iterateRunsReset() { runsIterIdx = 0; }
+    virtual void iterateSetsReset() { setsIterIdx = 0; }
+    virtual void iterateGetsReset() { getsIterIdx = 0; }
+    
     // Size methods
-    virtual uint8_t runsCount() const = 0;
-    virtual uint8_t setsCount() const = 0;
-    virtual uint8_t getsCount() const = 0;
+    virtual uint8_t runsCount() const { return 0; }
+    virtual uint8_t setsCount() const { return 0; }
+    virtual uint8_t getsCount() const { return 0; }
 
 
     // These methods are intended to be used in a for loop where they return an Action at each iteration

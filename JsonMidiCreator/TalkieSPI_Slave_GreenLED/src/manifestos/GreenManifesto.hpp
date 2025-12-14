@@ -42,11 +42,6 @@ protected:
         {"bpm_10", "Gets the Tempo in BPM x 10"}
     };
     
-    // Iterator states
-    uint8_t runsIterIdx = 0;
-    uint8_t setsIterIdx = 0;
-    uint8_t getsIterIdx = 0;
-
 
 public:
 
@@ -61,40 +56,24 @@ public:
     uint8_t getsCount() const override { return sizeof(gets)/sizeof(Action); }
 
 
-    // Iterator methods
-    bool iterateRunsReset() override { 
-        runsIterIdx = 0; 
-        return true; 
-    }
-    
     Action* iterateRunsNext() override {
-		uint8_t size_runs = sizeof(runs)/sizeof(Action);
+		uint8_t size_runs = runsCount();
         if (runsIterIdx < size_runs) {
             return &runs[runsIterIdx++];
         }
         return nullptr;
     }
     
-    bool iterateSetsReset() override { 
-        setsIterIdx = 0; 
-        return true; 
-    }
-    
     Action* iterateSetsNext() override {
-		uint8_t size_sets = sizeof(sets)/sizeof(Action);
+		uint8_t size_sets = setsCount();
         if (setsIterIdx < size_sets) {
             return &sets[setsIterIdx++];
         }
         return nullptr;
     }
     
-    bool iterateGetsReset() override { 
-        getsIterIdx = 0; 
-        return true; 
-    }
-    
     Action* iterateGetsNext() override {
-		uint8_t size_gets = sizeof(gets)/sizeof(Action);
+		uint8_t size_gets = getsCount();
         if (getsIterIdx < size_gets) {
             return &gets[getsIterIdx++];
         }
@@ -104,7 +83,7 @@ public:
 
     // Name-based operations
     uint8_t runIndex(const char* name) const override {
-		uint8_t size_runs = sizeof(runs)/sizeof(Action);
+		uint8_t size_runs = runsCount();
         for (uint8_t i = 0; i < size_runs; i++) {
             if (strcmp(runs[i].name, name) == 0) {
                 return i;
@@ -114,7 +93,7 @@ public:
     }
     
     uint8_t setIndex(const char* name) const override {
-		uint8_t size_sets = sizeof(sets)/sizeof(Action);
+		uint8_t size_sets = setsCount();
         for (uint8_t i = 0; i < size_sets; i++) {
             if (strcmp(sets[i].name, name) == 0) {
                 return i;
@@ -124,7 +103,7 @@ public:
     }
     
     uint8_t getIndex(const char* name) const override {
-		uint8_t size_gets = sizeof(gets)/sizeof(Action);
+		uint8_t size_gets = getsCount();
         for (uint8_t i = 0; i < size_gets; i++) {
             if (strcmp(gets[i].name, name) == 0) {
                 return i;
@@ -135,19 +114,19 @@ public:
 
     // Number-based operations
     uint8_t runIndex(uint8_t index) const override {
-		if (index < sizeof(runs)/sizeof(Action))
+		if (index < runsCount())
 			return index;
         return 255;
     }
     
     uint8_t setIndex(uint8_t index) const override {
-		if (index < sizeof(sets)/sizeof(Action))
+		if (index < setsCount())
 			return index;
         return 255;
     }
     
     uint8_t getIndex(uint8_t index) const override {
-		if (index < sizeof(gets)/sizeof(Action))
+		if (index < getsCount())
 			return index;
         return 255;
     }
