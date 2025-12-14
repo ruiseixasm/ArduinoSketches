@@ -29,6 +29,11 @@ public:
 
 protected:
 
+    bool _is_led_on = false;  // keep track of state yourself, by default it's off
+    uint16_t _bpm_10 = 1200;
+    uint16_t _total_runs = 0;
+
+
     Action runs[2] = {
 		{"on", "Turns led ON"},
 		{"off", "Turns led OFF"}
@@ -41,11 +46,6 @@ protected:
     Action gets[1] = {
         {"bpm_10", "Gets the Tempo in BPM x 10"}
     };
-
-    bool _is_led_on = false;  // keep track of state yourself, by default it's off
-    uint16_t _bpm_10 = 1200;
-    uint16_t _total_runs = 0;
-
 
     const Action* getRunsArray() const override { return runs; }
     const Action* getSetsArray() const override { return sets; }
