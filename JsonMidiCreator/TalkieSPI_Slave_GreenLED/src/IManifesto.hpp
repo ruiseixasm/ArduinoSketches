@@ -15,7 +15,10 @@ https://github.com/ruiseixasm/JsonTalkie
 #define I_MANIFESTO_HPP
 
 #include <Arduino.h>
+#include <ArduinoJson.h>    // Include ArduinoJson Library
 
+
+class JsonTalkie;
 
 class IManifesto {
 public:
@@ -54,15 +57,15 @@ public:
 
 
     // These methods are intended to call the respective ByIndex when it's find based on a name
-    virtual bool runByName(const char* name) = 0;
-    virtual bool setByName(const char* name, const uint32_t value) = 0;
-    virtual uint32_t getByName(const char* name) const = 0;
+    virtual bool runByName(const char* name, JsonObject& json_message, JsonTalkie* talker) = 0;
+    virtual bool setByName(const char* name, const uint32_t value, JsonObject& json_message, JsonTalkie* talker) = 0;
+    virtual uint32_t getByName(const char* name, JsonObject& json_message, JsonTalkie* talker) const = 0;
 
 
     // These methods use a switch that based on the index pick the respective action to be done
-    virtual bool runByIndex(uint8_t index) = 0;
-    virtual bool setByIndex(uint8_t index, uint32_t value) = 0;
-    virtual uint32_t getByIndex(uint8_t index) const = 0;
+    virtual bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalkie* talker) = 0;
+    virtual bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalkie* talker) = 0;
+    virtual uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalkie* talker) const = 0;
 };
 
 

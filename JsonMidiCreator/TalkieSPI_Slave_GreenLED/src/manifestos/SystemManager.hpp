@@ -99,28 +99,28 @@ public:
 
 
     // Name-based operations
-    bool runByName(const char* name) override {
+    bool runByName(const char* name, JsonObject& json_message, JsonTalkie* talker) override {
         for (uint8_t i = 0; i < runsCount_; i++) {
             if (strcmp(runs[i].name, name) == 0) {
-                return runByIndex(i);
+                return runByIndex(i, json_message, talker);
             }
         }
         return false;
     }
     
-    bool setByName(const char* name, uint32_t value) override {
+    bool setByName(const char* name, uint32_t value, JsonObject& json_message, JsonTalkie* talker) override {
         for (uint8_t i = 0; i < setsCount_; i++) {
             if (strcmp(sets[i].name, name) == 0) {
-                return setByIndex(i, value);
+                return setByIndex(i, value, json_message, talker);
             }
         }
         return false;
     }
     
-    uint32_t getByName(const char* name) const override {
+    uint32_t getByName(const char* name, JsonObject& json_message, JsonTalkie* talker) const override {
         for (uint8_t i = 0; i < getsCount_; i++) {
             if (strcmp(gets[i].name, name) == 0) {
-                return getByIndex(i);
+                return getByIndex(i, json_message, talker);
             }
         }
         return 0;  // Or some error value
@@ -128,7 +128,7 @@ public:
 
     
     // Index-based operations (simplified examples)
-    bool runByIndex(uint8_t index) override {
+    bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalkie* talker) override {
         if (index >= runsCount_) return false;
         
         // Actual implementation would do something based on index
@@ -140,7 +140,7 @@ public:
         return true;
     }
     
-    bool setByIndex(uint8_t index, uint32_t value) override {
+    bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalkie* talker) override {
         if (index >= setsCount_) return false;
         
         switch(index) {
@@ -156,7 +156,7 @@ public:
         return true;
     }
     
-    uint32_t getByIndex(uint8_t index) const override {
+    uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalkie* talker) const override {
         if (index >= getsCount_) return 0;
         
         switch(index) {
