@@ -22,8 +22,8 @@ https://github.com/ruiseixasm/JsonTalkie
 
 const char talker_name[] = "buzz";
 const char talker_desc[] = "I'm a buzzer";
-BuzzerManifesto buzzer_manifesto;
-JsonTalker talker = JsonTalker(talker_name, talker_desc, &buzzer_manifesto);
+BuzzerManifesto talker_manifesto;
+JsonTalker talker = JsonTalker(talker_name, talker_desc, &talker_manifesto);
 JsonTalker* talkers[] = { &talker };   // It's an array of pointers of JsonTalker (keep it as JsonTalker!)
 // Singleton requires the & (to get a reference variable)
 

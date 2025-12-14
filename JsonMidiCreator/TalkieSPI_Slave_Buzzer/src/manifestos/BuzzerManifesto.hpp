@@ -32,8 +32,9 @@ protected:
 
     uint16_t _buzz_time_ms = 100;
 
+	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action runs[2] = {
+    Action runs[1] = {
 		{"buzz", "Buzz for a while"}
     };
     
