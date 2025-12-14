@@ -42,7 +42,7 @@ protected:
     uint32_t _last_remote_time = 0;
     uint16_t _drops_count = 0;
 
-    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+    // JsonDocument intended to be reused
     #if ARDUINOJSON_VERSION_MAJOR >= 7
     JsonDocument _message_doc;
     #else
