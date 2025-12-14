@@ -65,7 +65,7 @@ protected:
 
 public:
 
-    virtual void loop() {}
+    virtual void loop() {}	// Also defined, not a pure virtual one
 
 	virtual void iterateRunsReset() {
 		runsIterIdx = 0;
