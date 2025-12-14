@@ -21,20 +21,10 @@ https://github.com/ruiseixasm/JsonTalkie
 class JsonTalker;
 
 class IManifesto {
-protected:
-	
-    // Iterator states
-    uint8_t runsIterIdx = 0;
-    uint8_t setsIterIdx = 0;
-    uint8_t getsIterIdx = 0;
 
 public:
 
-    enum EchoCode : int {
-        ROGER,
-        SAY_AGAIN,
-        NEGATIVE
-    };
+    virtual const char* class_name() const { return "IManifesto"; }
 
     IManifesto(const IManifesto&) = delete;
     IManifesto& operator=(const IManifesto&) = delete;
@@ -44,44 +34,118 @@ public:
     IManifesto() = default;
     virtual ~IManifesto() = default;
 
+    enum EchoCode : int {
+        ROGER,
+        SAY_AGAIN,
+        NEGATIVE
+    };
+
     struct Action {
         const char* name;
         const char* desc;
     };
 
-    virtual const char* class_name() const { return "IManifesto"; }
 
-    // Iterator methods
-    virtual void iterateRunsReset() { runsIterIdx = 0; }
-    virtual void iterateSetsReset() { setsIterIdx = 0; }
-    virtual void iterateGetsReset() { getsIterIdx = 0; }
-    
+protected:
+	
+    // Iterator states
+    uint8_t runsIterIdx = 0;
+    uint8_t setsIterIdx = 0;
+    uint8_t getsIterIdx = 0;
+
+    virtual const Action* getRunsArray() const = 0;
+    virtual const Action* getSetsArray() const = 0;
+    virtual const Action* getGetsArray() const = 0;
+
     // Size methods
     virtual uint8_t runsCount() const = 0;
     virtual uint8_t setsCount() const = 0;
     virtual uint8_t getsCount() const = 0;
 
 
-    // These methods are intended to be used in a for loop where they return an Action at each iteration
-    virtual Action* iterateRunsNext() = 0;  // Returns nullptr when done
-    virtual Action* iterateSetsNext() = 0;
-    virtual Action* iterateGetsNext() = 0;
+public:
+
+	virtual void iterateRunsReset() {
+		runsIterIdx = 0;
+	}
+
+	virtual void iterateSetsReset() {
+		setsIterIdx = 0;
+	}
+
+	virtual void iterateGetsReset() {
+		getsIterIdx = 0;
+	}
 
 
-    // These methods are intended to call the respective ByIndex when it's find based on a name
-    virtual uint8_t runIndex(const char* name) const = 0;
-    virtual uint8_t setIndex(const char* name) const = 0;
-    virtual uint8_t getIndex(const char* name) const = 0;
+    // Iterator next methods - IMPLEMENTED in base class
+    virtual const Action* iterateRunsNext() {
+        if (runsIterIdx < runsCount()) {
+            return &getRunsArray()[runsIterIdx++];
+        }
+        return nullptr;
+    }
+    
+    virtual const Action* iterateSetsNext() {
+        if (setsIterIdx < setsCount()) {
+            return &getSetsArray()[setsIterIdx++];
+        }
+        return nullptr;
+    }
+    
+    virtual const Action* iterateGetsNext() {
+        if (getsIterIdx < getsCount()) {
+            return &getGetsArray()[getsIterIdx++];
+        }
+        return nullptr;
+    }
 
-    // These methods are intended to call the respective ByIndex number and return it if in range or 255 if not
-    virtual uint8_t runIndex(uint8_t index) const = 0;
-    virtual uint8_t setIndex(uint8_t index) const = 0;
-    virtual uint8_t getIndex(uint8_t index) const = 0;
+    // Name-based index search - IMPLEMENTED in base class
+    virtual uint8_t runIndex(const char* name) const {
+        for (uint8_t i = 0; i < runsCount(); i++) {
+            if (strcmp(getRunsArray()[i].name, name) == 0) {
+                return i;
+            }
+        }
+        return 255;
+    }
+    
+    virtual uint8_t setIndex(const char* name) const {
+        for (uint8_t i = 0; i < setsCount(); i++) {
+            if (strcmp(getSetsArray()[i].name, name) == 0) {
+                return i;
+            }
+        }
+        return 255;
+    }
+    
+    virtual uint8_t getIndex(const char* name) const {
+        for (uint8_t i = 0; i < getsCount(); i++) {
+            if (strcmp(getGetsArray()[i].name, name) == 0) {
+                return i;
+            }
+        }
+        return 255;
+    }
 
-    // These methods use a switch that based on the index pick the respective action to be done
+    // Numeric index validation
+    virtual uint8_t runIndex(uint8_t index) const {
+        return (index < runsCount()) ? index : 255;
+    }
+    
+    virtual uint8_t setIndex(uint8_t index) const {
+        return (index < setsCount()) ? index : 255;
+    }
+    
+    virtual uint8_t getIndex(uint8_t index) const {
+        return (index < getsCount()) ? index : 255;
+    }
+
+    // Action implementations - MUST be implemented by derived
     virtual bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) = 0;
     virtual bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) = 0;
     virtual uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) const = 0;
+
 };
 
 

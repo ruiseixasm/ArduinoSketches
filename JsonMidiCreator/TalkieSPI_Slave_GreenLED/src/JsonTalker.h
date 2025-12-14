@@ -308,7 +308,7 @@ public:
 
 				json_message["w"] = MessageCode::RUN;
 				_manifesto->iterateRunsReset();
-				IManifesto::Action* run;
+				const IManifesto::Action* run;
 				uint8_t run_number = 0;
 				while ((run = _manifesto->iterateRunsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
@@ -320,7 +320,7 @@ public:
 
                 json_message["w"] = MessageCode::SET;
 				_manifesto->iterateSetsReset();
-				IManifesto::Action* set;
+				const IManifesto::Action* set;
 				uint8_t set_number = 0;
 				while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
@@ -332,7 +332,7 @@ public:
 				
                 json_message["w"] = MessageCode::GET;
 				_manifesto->iterateGetsReset();
-				IManifesto::Action* get;
+				const IManifesto::Action* get;
 				uint8_t get_number = 0;
 				while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
 					none_list = false;

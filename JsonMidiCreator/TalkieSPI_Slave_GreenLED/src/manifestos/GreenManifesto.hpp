@@ -20,6 +20,12 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 class GreenManifesto : public IManifesto {
+public:
+
+    const char* class_name() const override { return "GreenManifesto"; }
+
+    GreenManifesto() : IManifesto() {}	// Constructor
+
 
 protected:
 
@@ -35,19 +41,15 @@ protected:
     Action gets[1] = {
         {"bpm_10", "Gets the Tempo in BPM x 10"}
     };
-    
 
     bool _is_led_on = false;  // keep track of state yourself, by default it's off
     uint16_t _bpm_10 = 1200;
     uint16_t _total_runs = 0;
 
 
-public:
-
-    const char* class_name() const override { return "GreenManifesto"; }
-
-    GreenManifesto() : IManifesto() {}
-
+    const Action* getRunsArray() const override { return runs; }
+    const Action* getSetsArray() const override { return sets; }
+    const Action* getGetsArray() const override { return gets; }
 
     // Size methods
     uint8_t runsCount() const override { return sizeof(runs)/sizeof(Action); }
@@ -55,81 +57,7 @@ public:
     uint8_t getsCount() const override { return sizeof(gets)/sizeof(Action); }
 
 
-    Action* iterateRunsNext() override {
-		uint8_t runs_count = runsCount();
-        if (runsIterIdx < runs_count) {
-            return &runs[runsIterIdx++];
-        }
-        return nullptr;
-    }
-    
-    Action* iterateSetsNext() override {
-		uint8_t sets_count = setsCount();
-        if (setsIterIdx < sets_count) {
-            return &sets[setsIterIdx++];
-        }
-        return nullptr;
-    }
-    
-    Action* iterateGetsNext() override {
-		uint8_t gets_count = getsCount();
-        if (getsIterIdx < gets_count) {
-            return &gets[getsIterIdx++];
-        }
-        return nullptr;
-    }
-
-
-    // Name-based operations
-    uint8_t runIndex(const char* name) const override {
-		uint8_t runs_count = runsCount();
-        for (uint8_t i = 0; i < runs_count; i++) {
-            if (strcmp(runs[i].name, name) == 0) {
-                return i;
-            }
-        }
-        return 255;
-    }
-    
-    uint8_t setIndex(const char* name) const override {
-		uint8_t sets_count = setsCount();
-        for (uint8_t i = 0; i < sets_count; i++) {
-            if (strcmp(sets[i].name, name) == 0) {
-                return i;
-            }
-        }
-        return 255;
-    }
-    
-    uint8_t getIndex(const char* name) const override {
-		uint8_t gets_count = getsCount();
-        for (uint8_t i = 0; i < gets_count; i++) {
-            if (strcmp(gets[i].name, name) == 0) {
-                return i;
-            }
-        }
-        return 255;
-    }
-
-    // Number-based operations
-    uint8_t runIndex(uint8_t index) const override {
-		if (index < runsCount())
-			return index;
-        return 255;
-    }
-    
-    uint8_t setIndex(uint8_t index) const override {
-		if (index < setsCount())
-			return index;
-        return 255;
-    }
-    
-    uint8_t getIndex(uint8_t index) const override {
-		if (index < getsCount())
-			return index;
-        return 255;
-    }
-
+public:
     
     // Index-based operations (simplified examples)
     bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
