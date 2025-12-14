@@ -191,9 +191,6 @@ protected:
 		Serial.print(class_name());
 		Serial.print(F(": triggerTalkers1: has a Talkers count of: "));
 		Serial.println(_talker_count);
-		#endif
-
-        #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("triggerTalkers2: "));
         Serial.write(_receiving_buffer, _received_length);
         Serial.println();
