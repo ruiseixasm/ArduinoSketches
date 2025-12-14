@@ -57,19 +57,14 @@ public:
     virtual void iterateGetsReset() { getsIterIdx = 0; }
     
     // Size methods
-    virtual uint8_t runsCount() const { return 0; }
-    virtual uint8_t setsCount() const { return 0; }
-    virtual uint8_t getsCount() const { return 0; }
+    virtual uint8_t runsCount() const = 0;
+    virtual uint8_t setsCount() const = 0;
+    virtual uint8_t getsCount() const = 0;
 
 
     // These methods are intended to be used in a for loop where they return an Action at each iteration
-    virtual bool iterateRunsReset() = 0;
     virtual Action* iterateRunsNext() = 0;  // Returns nullptr when done
-
-    virtual bool iterateSetsReset() = 0;
     virtual Action* iterateSetsNext() = 0;
-    
-    virtual bool iterateGetsReset() = 0;
     virtual Action* iterateGetsNext() = 0;
 
 

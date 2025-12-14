@@ -23,12 +23,6 @@ class GreenManifesto : public IManifesto {
 
 protected:
 
-    uint16_t _bpm_10 = 1200;
-
-    uint16_t _total_runs = 0;
-    bool _is_led_on = false;  // keep track of state yourself, by default it's off
-
-
     Action runs[2] = {
 		{"on", "Turns led ON"},
 		{"off", "Turns led OFF"}
@@ -42,6 +36,11 @@ protected:
         {"bpm_10", "Gets the Tempo in BPM x 10"}
     };
     
+
+    bool _is_led_on = false;  // keep track of state yourself, by default it's off
+    uint16_t _bpm_10 = 1200;
+    uint16_t _total_runs = 0;
+
 
 public:
 
@@ -57,24 +56,24 @@ public:
 
 
     Action* iterateRunsNext() override {
-		uint8_t size_runs = runsCount();
-        if (runsIterIdx < size_runs) {
+		uint8_t runs_count = runsCount();
+        if (runsIterIdx < runs_count) {
             return &runs[runsIterIdx++];
         }
         return nullptr;
     }
     
     Action* iterateSetsNext() override {
-		uint8_t size_sets = setsCount();
-        if (setsIterIdx < size_sets) {
+		uint8_t sets_count = setsCount();
+        if (setsIterIdx < sets_count) {
             return &sets[setsIterIdx++];
         }
         return nullptr;
     }
     
     Action* iterateGetsNext() override {
-		uint8_t size_gets = getsCount();
-        if (getsIterIdx < size_gets) {
+		uint8_t gets_count = getsCount();
+        if (getsIterIdx < gets_count) {
             return &gets[getsIterIdx++];
         }
         return nullptr;
@@ -83,8 +82,8 @@ public:
 
     // Name-based operations
     uint8_t runIndex(const char* name) const override {
-		uint8_t size_runs = runsCount();
-        for (uint8_t i = 0; i < size_runs; i++) {
+		uint8_t runs_count = runsCount();
+        for (uint8_t i = 0; i < runs_count; i++) {
             if (strcmp(runs[i].name, name) == 0) {
                 return i;
             }
@@ -93,8 +92,8 @@ public:
     }
     
     uint8_t setIndex(const char* name) const override {
-		uint8_t size_sets = setsCount();
-        for (uint8_t i = 0; i < size_sets; i++) {
+		uint8_t sets_count = setsCount();
+        for (uint8_t i = 0; i < sets_count; i++) {
             if (strcmp(sets[i].name, name) == 0) {
                 return i;
             }
@@ -103,8 +102,8 @@ public:
     }
     
     uint8_t getIndex(const char* name) const override {
-		uint8_t size_gets = getsCount();
-        for (uint8_t i = 0; i < size_gets; i++) {
+		uint8_t gets_count = getsCount();
+        for (uint8_t i = 0; i < gets_count; i++) {
             if (strcmp(gets[i].name, name) == 0) {
                 return i;
             }
