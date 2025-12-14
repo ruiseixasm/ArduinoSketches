@@ -81,8 +81,8 @@ public:
     }
     
     Action* iterateSetsNext() override {
-		uint8_t size_runs = sizeof(runs)/sizeof(Action);
-        if (setsIterIdx < setsCount_) {
+		uint8_t size_sets = sizeof(sets)/sizeof(Action);
+        if (setsIterIdx < size_sets) {
             return &sets[setsIterIdx++];
         }
         return nullptr;
@@ -94,8 +94,8 @@ public:
     }
     
     Action* iterateGetsNext() override {
-		uint8_t size_runs = sizeof(runs)/sizeof(Action);
-        if (getsIterIdx < getsCount_) {
+		uint8_t size_gets = sizeof(gets)/sizeof(Action);
+        if (getsIterIdx < size_gets) {
             return &gets[getsIterIdx++];
         }
         return nullptr;

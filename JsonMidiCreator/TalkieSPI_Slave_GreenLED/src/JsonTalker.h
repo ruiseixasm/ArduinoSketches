@@ -55,21 +55,6 @@ public:
         CHANNEL
     };
 
-    
-    // Now without a method reference `bool (JsonTalker::*method)(JsonObject, uint32_t)`
-    struct Command {
-        const char* name;
-        const char* desc;
-    };
-
-    struct Manifesto {
-        const Command* runs;
-        const Command* sets;
-        const Command* gets;
-        const uint8_t runs_count;
-        const uint8_t sets_count;
-        const uint8_t gets_count;
-    };
 
 protected:
 
