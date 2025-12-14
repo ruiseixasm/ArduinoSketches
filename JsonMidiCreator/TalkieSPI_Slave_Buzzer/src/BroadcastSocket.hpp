@@ -374,6 +374,17 @@ protected:
     }
 
 
+    virtual uint8_t receive() {
+        // In theory, a UDP packet on a local area network (LAN) could survive
+        // for about 4.25 minutes (255 seconds).
+        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
+        if (_control_timing && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
+            _control_timing = false;
+        }
+        return 0;
+    }
+
+
 public:
     // Delete copy/move operations
     BroadcastSocket(const BroadcastSocket&) = delete;
@@ -384,15 +395,11 @@ public:
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
 
-
-    virtual uint8_t receive() {
-        // In theory, a UDP packet on a local area network (LAN) could survive
-        // for about 4.25 minutes (255 seconds).
-        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
-        if (_control_timing && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
-            _control_timing = false;
+    virtual void loop() {
+        receive();
+        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+            _json_talkers[talker_i]->loop();
         }
-        return 0;
     }
 
     

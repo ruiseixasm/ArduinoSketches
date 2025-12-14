@@ -50,6 +50,6 @@ void setup() {
 
 
 void loop() {
-    spi_socket.receive();
+    spi_socket.loop();
 }
 

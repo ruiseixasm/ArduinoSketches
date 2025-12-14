@@ -57,6 +57,11 @@ protected:
 
 
 public:
+
+	void loop() override {
+
+	}
+
     
     // Index-based operations (simplified examples)
     bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
