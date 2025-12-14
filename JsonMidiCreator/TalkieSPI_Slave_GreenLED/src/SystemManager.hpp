@@ -117,7 +117,7 @@ public:
         return false;
     }
     
-    uint32_t getByName(const char* name) override {
+    uint32_t getByName(const char* name) const override {
         for (uint8_t i = 0; i < getsCount_; i++) {
             if (strcmp(gets[i].name, name) == 0) {
                 return getByIndex(i);
@@ -156,7 +156,7 @@ public:
         return true;
     }
     
-    uint32_t getByIndex(uint8_t index) override {
+    uint32_t getByIndex(uint8_t index) const override {
         if (index >= getsCount_) return 0;
         
         switch(index) {
