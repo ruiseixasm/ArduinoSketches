@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../IManifesto.hpp"
 
-// #define BUZZER_MANIFESTO_DEBUG
+#define BUZZER_MANIFESTO_DEBUG
 
 const int BUZZ_PIN = 2; // External BUZZER pin
 
@@ -68,7 +68,7 @@ public:
 				case 0:
 				{
 					#ifdef BUZZER_MANIFESTO_DEBUG
-					Serial.println(F("\tCase 0 - Turning LED ON"));
+					Serial.println(F("\tCase 0 - Triggering the buzzer"));
 					#endif
 			
 					#ifdef BUZZ_PIN

@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
 #include "../BroadcastSocket.hpp"
 
-// #define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
 
@@ -57,18 +57,19 @@ protected:
 
 	SPIClass* _spi_instance;  // Pointer to SPI instance
 	bool _initiated = false;
-    int* _talkers_ss_pins;
+    int* _ss_pins;
+    uint8_t _ss_pins_count;
     uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_SPI_ESP_Arduino_Master(JsonTalker** json_talkers, int* talkers_ss_pins, uint8_t talker_count)
-        : BroadcastSocket(json_talkers, talker_count) {
+    BroadcastSocket_SPI_ESP_Arduino_Master(
+		JsonTalker** json_talkers, uint8_t talker_count, int* ss_pins, uint8_t ss_pins_count
+	) : BroadcastSocket(json_talkers, talker_count) {
             
-        	_talkers_ss_pins = talkers_ss_pins;
+        	_ss_pins = ss_pins;
+        	_ss_pins_count = ss_pins_count;
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
-            // // Initialize devices control object (optional initial setup)
-            // devices_ss_pins["initialized"] = true;
         }
 
     
@@ -448,15 +449,15 @@ protected:
 				if (as_reply) {
 					sendSPI(_sending_length, _actual_ss_pin);
 				} else if (target_index < _talker_count) {
-					sendSPI(_sending_length, _talkers_ss_pins[target_index]);
+					sendSPI(_sending_length, _ss_pins[target_index]);
 				} else {    // Broadcast mode
 					for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-						sendSPI(_sending_length, _talkers_ss_pins[ss_pin_i]);
+						sendSPI(_sending_length, _ss_pins[ss_pin_i]);
 					}
 				}
 				#else
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-					sendSPI(_sending_length, _talkers_ss_pins[ss_pin_i]);
+					sendSPI(_sending_length, _ss_pins[ss_pin_i]);
 				}
 				#endif
 
@@ -481,14 +482,14 @@ protected:
 			// ================== CONFIGURE SS PINS ==================
 			// CRITICAL: Configure all SS pins as outputs and set HIGH
 			for (uint8_t i = 0; i < _talker_count; i++) {
-				pinMode(_talkers_ss_pins[i], OUTPUT);
-				digitalWrite(_talkers_ss_pins[i], HIGH);
+				pinMode(_ss_pins[i], OUTPUT);
+				digitalWrite(_ss_pins[i], HIGH);
 				delayMicroseconds(10); // Small delay between pins
 			}
 
 			_initiated = true;
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-				if (!acknowledgeSPI(_talkers_ss_pins[ss_pin_i])) {
+				if (!acknowledgeSPI(_ss_pins[ss_pin_i])) {
 					_initiated = false;
 					break;
 				}
@@ -497,19 +498,32 @@ protected:
 
 		#ifdef BROADCAST_SPI_DEBUG
 		if (_initiated) {
-			Serial.println("Socket initiated!");
+			Serial.print(class_name());
+			Serial.println(": initiate1: Socket initiated!");
+
+			Serial.print(F("\tinitiate2: Total talkers connected: "));
+			Serial.println(_talker_count);
+			Serial.print(F("\t\tinitiate3: Talkers pins: "));
+			
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
+				Serial.print(_ss_pins[ss_pin_i]);
+				Serial.print(F(", "));
+			}
+			Serial.println();
 		} else {
-			Serial.println("Socket NOT initiated!");
+			Serial.println("initiate1: Socket NOT initiated!");
 		}
+	
 		#endif
+
 		return _initiated;
 	}
 
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_SPI_ESP_Arduino_Master& instance(JsonTalker** json_talkers, int* talkers_ss_pins, uint8_t talker_count) {
-        static BroadcastSocket_SPI_ESP_Arduino_Master instance(json_talkers, talkers_ss_pins, talker_count);
+    static BroadcastSocket_SPI_ESP_Arduino_Master& instance(JsonTalker** json_talkers, uint8_t talker_count, int* ss_pins, uint8_t ss_pins_count) {
+        static BroadcastSocket_SPI_ESP_Arduino_Master instance(json_talkers, talker_count, ss_pins, ss_pins_count);
 
         return instance;
     }
@@ -526,7 +540,7 @@ public:
 			uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-				length = receiveSPI(_talkers_ss_pins[ss_pin_i]);
+				length = receiveSPI(_ss_pins[ss_pin_i]);
 				if (length > 0) {
 					
 					#ifdef BROADCAST_SPI_DEBUG
@@ -538,10 +552,10 @@ public:
 					Serial.print(F("\t\t"));
 					Serial.print(class_name());
 					Serial.print(F(" is triggering the talkers from the SS pin: "));
-					Serial.println(_talkers_ss_pins[ss_pin_i]);
+					Serial.println(_ss_pins[ss_pin_i]);
 					#endif
 
-					_actual_ss_pin = _talkers_ss_pins[ss_pin_i];
+					_actual_ss_pin = _ss_pins[ss_pin_i];
 					_received_length = length;
 					triggerTalkers();
 				}

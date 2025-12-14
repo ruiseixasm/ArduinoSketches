@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "IManifesto.hpp"
 
 
-// #define JSON_TALKER_DEBUG
+#define JSON_TALKER_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
