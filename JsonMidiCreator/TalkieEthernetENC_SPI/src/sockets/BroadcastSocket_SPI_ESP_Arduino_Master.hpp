@@ -58,7 +58,7 @@ protected:
 	SPIClass* _spi_instance;  // Pointer to SPI instance
 	bool _initiated = false;
     int* _ss_pins;
-    uint8_t _ss_pins_count;
+    uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
 
     // Needed for the compiler, the base class is the one being called though
@@ -448,15 +448,15 @@ protected:
 				#ifdef ENABLE_DIRECT_ADDRESSING
 				if (as_reply) {
 					sendSPI(_sending_length, _actual_ss_pin);
-				} else if (target_index < _talker_count) {
+				} else if (target_index < _ss_pins_count) {
 					sendSPI(_sending_length, _ss_pins[target_index]);
 				} else {    // Broadcast mode
-					for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
+					for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 						sendSPI(_sending_length, _ss_pins[ss_pin_i]);
 					}
 				}
 				#else
-				for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
+				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 					sendSPI(_sending_length, _ss_pins[ss_pin_i]);
 				}
 				#endif
@@ -481,14 +481,14 @@ protected:
 			
 			// ================== CONFIGURE SS PINS ==================
 			// CRITICAL: Configure all SS pins as outputs and set HIGH
-			for (uint8_t i = 0; i < _talker_count; i++) {
+			for (uint8_t i = 0; i < _ss_pins_count; i++) {
 				pinMode(_ss_pins[i], OUTPUT);
 				digitalWrite(_ss_pins[i], HIGH);
 				delayMicroseconds(10); // Small delay between pins
 			}
 
 			_initiated = true;
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 				if (!acknowledgeSPI(_ss_pins[ss_pin_i])) {
 					_initiated = false;
 					break;
@@ -501,11 +501,11 @@ protected:
 			Serial.print(class_name());
 			Serial.println(": initiate1: Socket initiated!");
 
-			Serial.print(F("\tinitiate2: Total talkers connected: "));
-			Serial.println(_talker_count);
-			Serial.print(F("\t\tinitiate3: Talkers pins: "));
+			Serial.print(F("\tinitiate2: Total SS pins connected: "));
+			Serial.println(_ss_pins_count);
+			Serial.print(F("\t\tinitiate3: SS pins: "));
 			
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 				Serial.print(_ss_pins[ss_pin_i]);
 				Serial.print(F(", "));
 			}
@@ -539,7 +539,7 @@ public:
 			// Need to call homologous method in super class first
 			uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 				length = receiveSPI(_ss_pins[ss_pin_i]);
 				if (length > 0) {
 					
@@ -551,7 +551,7 @@ public:
 					Serial.println(length);
 					Serial.print(F("\t\t"));
 					Serial.print(class_name());
-					Serial.print(F(" is triggering the talkers from the SS pin: "));
+					Serial.print(F(" is triggering the talkers with the received message from the SS pin: "));
 					Serial.println(_ss_pins[ss_pin_i]);
 					#endif
 
