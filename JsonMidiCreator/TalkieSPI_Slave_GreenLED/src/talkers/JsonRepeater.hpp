@@ -11,20 +11,20 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef REPEATER_TALKER_HPP
-#define REPEATER_TALKER_HPP
+#ifndef JSON_REPEATER_HPP
+#define JSON_REPEATER_HPP
 
 #include "../JsonTalker.h"         // Includes the ArduinoJson Library
 
 // #define REPEATER_TALKER_DEBUG
 
 
-class RepeaterTalker : public JsonTalker {
+class JsonRepeater : public JsonTalker {
 public:
 
-    const char* class_name() const override { return "RepeaterTalker"; }
+    const char* class_name() const override { return "JsonRepeater"; }
 
-    RepeaterTalker(const char* name, const char* desc)
+    JsonRepeater(const char* name, const char* desc)
         : JsonTalker(name, desc) {}
 
 
@@ -51,4 +51,4 @@ public:
 };
 
 
-#endif // REPEATER_TALKER_HPP
+#endif // JSON_REPEATER_HPP
