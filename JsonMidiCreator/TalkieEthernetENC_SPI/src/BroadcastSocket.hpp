@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 
 
-#define BROADCASTSOCKET_DEBUG
+// #define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -405,6 +405,9 @@ public:
 
     
     bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
+
+		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
+		json_message[ JsonKey::CHECKSUM ] = 0;
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));
