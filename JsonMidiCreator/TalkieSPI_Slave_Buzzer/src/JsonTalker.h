@@ -196,14 +196,6 @@ public:
         Serial.println(F("\tProcessing JSON message..."));
         #endif
         
-        // Error types:
-        //     0 - Unknown sender   // Removed, useless kind of error report that results in UDP flooding
-        //     1 - Message missing the checksum
-        //     2 - Message corrupted
-        //     3 - Wrong message code
-        //     4 - Message NOT identified
-        //     5 - Set command arrived too late
-
         if (!pre_validated) {
 
             if (!json_message[ key_str(JsonKey::FROM) ].is<String>()) {
@@ -218,7 +210,7 @@ public:
                 #endif
                 json_message[ key_str(JsonKey::ORIGINAL) ] = json_message[ key_str(JsonKey::MESSAGE) ];
                 json_message[ key_str(JsonKey::MESSAGE) ] = static_cast<int>(MessageCode::ERROR);
-                json_message[ key_str(JsonKey::ERROR) ] = 4;
+                json_message[ key_str(JsonKey::ERROR) ] = static_cast<int>(ErrorCode::IDENTITY);
 				// Wrong type of identifier or no identifier, so, it has to insert new identifier
                 json_message[ key_str(JsonKey::IDENTITY) ] = (uint16_t)millis();
 				// From one to many, starts to set the returning target in this single place only

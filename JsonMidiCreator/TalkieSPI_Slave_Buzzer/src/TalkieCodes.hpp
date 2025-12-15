@@ -42,6 +42,16 @@ enum class EchoCode : int {
 };
 
 
+enum class ErrorCode : int {
+	FROM,
+	FIELDS,
+	CHECKSUM,
+	MESSAGE,
+	IDENTITY,
+	DELAY
+};
+
+
 enum class JsonKey : char {
 	CHECKSUM    = 'c',
 	IDENTITY    = 'i',
