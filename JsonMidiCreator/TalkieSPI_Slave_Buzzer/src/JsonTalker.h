@@ -435,7 +435,6 @@ public:
 					replyMessage(json_message, true);
 					break;
 				case SystemCode::MUTED:
-					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 					json_message[ key_str(JsonKey::VALUE) ] = _muted;
 					{
 						bool muted = _muted;
@@ -445,7 +444,6 @@ public:
 					}
 					break;
 				case SystemCode::BOARD:
-					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 					
 				// AVR Boards (Uno, Nano, Mega) - Check RAM size
 				#ifdef __AVR__
@@ -498,18 +496,15 @@ public:
 					break;
 
 				case SystemCode::PING:
-					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 					replyMessage(json_message, true);
 					break;
 
 				case SystemCode::DROPS:
-					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 					json_message[ key_str(JsonKey::VALUE) ] = get_drops();
 					replyMessage(json_message, true);
 					break;
 
 				case SystemCode::DELAY:
-					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 					json_message[ key_str(JsonKey::VALUE) ] = get_delay();
 					replyMessage(json_message, true);
 					break;
