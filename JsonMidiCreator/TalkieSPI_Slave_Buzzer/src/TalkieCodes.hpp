@@ -19,6 +19,26 @@ https://github.com/ruiseixasm/JsonTalkie
 
 struct TalkieCodes {
 
+	// Add a string "enum" struct
+    struct JsonKey {
+        static constexpr const char* CHECKSUM		= "c";
+        static constexpr const char* IDENTITY 		= "i";
+        static constexpr const char* MESSAGE 		= "m";
+        static constexpr const char* ORIGINAL 		= "o";
+        static constexpr const char* FROM 			= "f";
+        static constexpr const char* TO 			= "t";
+        static constexpr const char* SYSTEM 		= "s";
+        static constexpr const char* ERROR 			= "e";
+        static constexpr const char* VALUE 			= "v";
+        static constexpr const char* REPLY 			= "r";
+        static constexpr const char* ROGER 			= "g";
+        static constexpr const char* ACTION 		= "a";
+        static constexpr const char* NAME 			= "n";
+        static constexpr const char* INDEX 			= "x";
+        static constexpr const char* DESCRIPTION	= "d";
+    };
+
+
 	enum class MessageCode : int {
 		TALK,
 		LIST,
@@ -52,26 +72,6 @@ struct TalkieCodes {
 		IDENTITY,
 		DELAY
 	};
-
-	
-	// Add a string "enum" struct
-    struct JsonKey {
-        static constexpr const char* CHECKSUM		= "c";
-        static constexpr const char* IDENTITY 		= "i";
-        static constexpr const char* MESSAGE 		= "m";
-        static constexpr const char* ORIGINAL 		= "o";
-        static constexpr const char* FROM 			= "f";
-        static constexpr const char* TO 			= "t";
-        static constexpr const char* SYSTEM 		= "s";
-        static constexpr const char* ERROR 			= "e";
-        static constexpr const char* VALUE 			= "v";
-        static constexpr const char* REPLY 			= "r";
-        static constexpr const char* ROGER 			= "g";
-        static constexpr const char* ACTION 		= "a";
-        static constexpr const char* NAME 			= "n";
-        static constexpr const char* INDEX 			= "x";
-        static constexpr const char* DESCRIPTION	= "d";
-    };
 
 };
 
