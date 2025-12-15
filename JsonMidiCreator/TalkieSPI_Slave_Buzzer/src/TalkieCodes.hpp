@@ -46,6 +46,7 @@ enum class JsonKey : char {
 	CHECKSUM    = 'c',
 	IDENTITY    = 'i',
 	MESSAGE     = 'm',
+	ORIGINAL	= 'o',
 	FROM        = 'f',
 	TO          = 't',
 	SYSTEM      = 's',
@@ -54,18 +55,17 @@ enum class JsonKey : char {
 	REPLY       = 'r',
 	ROGER       = 'g',
 	NAME        = 'n',
+	INDEX		= 'x',
 	DESCRIPTION = 'd'
 };
 
 
-inline const char* key_str(JsonKey json_key, bool upper_case = false) {
-	static uint8_t flip_flop = 0;	// The flip_flop avoids the usage of the sam string in a single line double operations
+inline const char* key_str(JsonKey json_key) {
+	// The flip_flop avoids the usage of the sam string in a single line double operations
+	static uint8_t flip_flop = 0;
 	static char json_key_string[2][2] = {{'\0'}, {'\0'}};
 	flip_flop = 1 - flip_flop;
 	json_key_string[flip_flop][0] = static_cast<char>(json_key);
-	if (upper_case) {
-		json_key_string[flip_flop][0] += 'A' - 'a';
-	}
 	return json_key_string[flip_flop];
 }
 

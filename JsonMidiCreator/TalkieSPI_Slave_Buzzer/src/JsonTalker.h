@@ -254,7 +254,7 @@ public:
         json_message[ key_str(JsonKey::FROM) ] = _name;
 
         MessageCode message_code = static_cast<MessageCode>(json_message[ key_str(JsonKey::MESSAGE) ].as<int>());
-        json_message[ key_str(JsonKey::MESSAGE, true) ] = json_message[ key_str(JsonKey::MESSAGE) ].as<int>();
+        json_message[ key_str(JsonKey::ORIGINAL) ] = json_message[ key_str(JsonKey::MESSAGE) ].as<int>();
         json_message[ key_str(JsonKey::MESSAGE) ] = static_cast<int>(MessageCode::ECHO);
 
         switch (message_code)
@@ -283,7 +283,7 @@ public:
 					none_list = false;
 					json_message[ key_str(JsonKey::NAME) ] = run->name;      // Direct access
 					json_message[ key_str(JsonKey::DESCRIPTION) ] = run->desc;
-					json_message[ key_str(JsonKey::NAME, true) ] = action_index++;
+					json_message[ key_str(JsonKey::INDEX) ] = action_index++;
 					replyMessage(json_message, true);
 				}
 
@@ -295,7 +295,7 @@ public:
 					none_list = false;
 					json_message[ key_str(JsonKey::NAME) ] = set->name;      // Direct access
 					json_message[ key_str(JsonKey::DESCRIPTION) ] = set->desc;
-					json_message[ key_str(JsonKey::NAME, true) ] = action_index++;
+					json_message[ key_str(JsonKey::INDEX) ] = action_index++;
 					replyMessage(json_message, true);
 				}
 				
@@ -307,7 +307,7 @@ public:
 					none_list = false;
 					json_message[ key_str(JsonKey::NAME) ] = get->name;      // Direct access
 					json_message[ key_str(JsonKey::DESCRIPTION) ] = get->desc;
-					json_message[ key_str(JsonKey::NAME, true) ] = action_index++;
+					json_message[ key_str(JsonKey::INDEX) ] = action_index++;
 					replyMessage(json_message, true);
 				}
 
@@ -320,8 +320,8 @@ public:
         case MessageCode::RUN:
 			{
 				uint8_t index_found_i = 255;
-				if (json_message[ key_str(JsonKey::NAME, true) ].is<uint8_t>()) {
-					index_found_i = _manifesto->runIndex(json_message[ key_str(JsonKey::NAME, true) ].as<uint8_t>());
+				if (json_message[ key_str(JsonKey::INDEX) ].is<uint8_t>()) {
+					index_found_i = _manifesto->runIndex(json_message[ key_str(JsonKey::INDEX) ].as<uint8_t>());
 				} else if (json_message[ key_str(JsonKey::NAME) ].is<const char *>()) {
 					index_found_i = _manifesto->runIndex(json_message[ key_str(JsonKey::NAME) ].as<const char *>());
 				}
@@ -349,8 +349,8 @@ public:
         case MessageCode::SET:
 			{
 				uint8_t index_found_i = 255;
-				if (json_message[ key_str(JsonKey::NAME, true) ].is<uint8_t>()) {
-					index_found_i = _manifesto->setIndex(json_message[ key_str(JsonKey::NAME, true) ].as<uint8_t>());
+				if (json_message[ key_str(JsonKey::INDEX) ].is<uint8_t>()) {
+					index_found_i = _manifesto->setIndex(json_message[ key_str(JsonKey::INDEX) ].as<uint8_t>());
 				} else if (json_message[ key_str(JsonKey::NAME) ].is<const char *>()) {
 					index_found_i = _manifesto->setIndex(json_message[ key_str(JsonKey::NAME) ].as<const char *>());
 				}
@@ -378,8 +378,8 @@ public:
         case MessageCode::GET:
 			{
 				uint8_t index_found_i = 255;
-				if (json_message[ key_str(JsonKey::NAME, true) ].is<uint8_t>()) {
-					index_found_i = _manifesto->getIndex(json_message[ key_str(JsonKey::NAME, true) ].as<uint8_t>());
+				if (json_message[ key_str(JsonKey::INDEX) ].is<uint8_t>()) {
+					index_found_i = _manifesto->getIndex(json_message[ key_str(JsonKey::INDEX) ].as<uint8_t>());
 				} else if (json_message[ key_str(JsonKey::NAME) ].is<const char *>()) {
 					index_found_i = _manifesto->getIndex(json_message[ key_str(JsonKey::NAME) ].as<const char *>());
 				}
