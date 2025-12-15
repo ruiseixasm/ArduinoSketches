@@ -221,6 +221,9 @@ public:
                 json_message[ key_str(JsonKey::ERROR) ] = 4;
 				// Wrong type of identifier or no identifier, so, it has to insert new identifier
                 json_message[ key_str(JsonKey::IDENTITY) ] = (uint16_t)millis();
+				// From one to many, starts to set the returning target in this single place only
+				json_message[ key_str(JsonKey::TO) ] = json_message[ key_str(JsonKey::FROM) ];
+				json_message[ key_str(JsonKey::FROM) ] = _name;
 
                 replyMessage(json_message, true);	// Includes reply swap
                 return false;
