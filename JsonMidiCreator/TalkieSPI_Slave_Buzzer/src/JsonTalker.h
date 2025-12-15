@@ -216,7 +216,8 @@ public:
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(4);
                 #endif
-                json_message[ key_str(JsonKey::MESSAGE) ] = 7;   // error
+                json_message[ key_str(JsonKey::ORIGINAL) ] = json_message[ key_str(JsonKey::MESSAGE) ];
+                json_message[ key_str(JsonKey::MESSAGE) ] = static_cast<int>(MessageCode::ERROR);
                 json_message[ key_str(JsonKey::ERROR) ] = 4;
 				// Wrong type of identifier or no identifier, so, it has to insert new identifier
                 json_message[ key_str(JsonKey::IDENTITY) ] = (uint16_t)millis();
