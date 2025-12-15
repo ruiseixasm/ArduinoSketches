@@ -15,6 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define TALKIE_CODES_HPP
 
 
+
 enum class MessageCode : int {
 	TALK,
 	LIST,
