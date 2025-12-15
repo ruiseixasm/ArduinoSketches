@@ -149,6 +149,18 @@ public:
     virtual bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) = 0;
     virtual bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) = 0;
     virtual uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) const = 0;
+  
+
+    virtual void echo(JsonObject& json_message, JsonTalker* talker) {
+        (void)json_message;	// Silence unused parameter warning
+        (void)talker;		// Silence unused parameter warning
+    }
+
+
+    virtual void error(JsonObject& json_message, JsonTalker* talker) {
+        (void)json_message;	// Silence unused parameter warning
+        (void)talker;		// Silence unused parameter warning
+    }
 
 };
 

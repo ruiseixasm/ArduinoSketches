@@ -130,6 +130,34 @@ public:
         return 0;
     }
 
+
+    void echo(JsonObject& json_message, JsonTalker* talker) override {
+        (void)talker;		// Silence unused parameter warning
+        Serial.print(json_message["f"].as<String>());
+        Serial.print(" - ");
+        if (json_message["r"].is<String>()) {
+            Serial.println(json_message["r"].as<String>());
+        } else if (json_message["d"].is<String>()) {
+            Serial.println(json_message["d"].as<String>());
+        } else {
+            Serial.println(F("Empty echo received!"));
+        }
+    }
+
+
+    void error(JsonObject& json_message, JsonTalker* talker) override {
+        (void)talker;		// Silence unused parameter warning
+        Serial.print(json_message["f"].as<String>());
+        Serial.print(" - ");
+        if (json_message["r"].is<String>()) {
+            Serial.println(json_message["r"].as<String>());
+        } else if (json_message["d"].is<String>()) {
+            Serial.println(json_message["d"].as<String>());
+        } else {
+            Serial.println(F("Empty error received!"));
+        }
+    }
+
 };
 
 
