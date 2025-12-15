@@ -49,6 +49,15 @@ protected:
 
 public:
 
+    // Explicit default constructor
+    JsonTalker() = delete;
+        
+    JsonTalker(const char* name, const char* desc, IManifesto* manifesto)
+        : _name(name), _desc(desc), _manifesto(manifesto) {
+            // Nothing to see here
+        }
+
+
     virtual const char* class_name() const { return "JsonTalker"; }
 
 
@@ -56,7 +65,7 @@ protected:
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
-	IManifesto* _manifesto;
+	IManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
     bool _muted = false;
 
@@ -153,15 +162,6 @@ protected:
 
 
 public:
-
-    // Explicit default constructor
-    JsonTalker() = delete;
-        
-    JsonTalker(const char* name, const char* desc, IManifesto* manifesto)
-        : _name(name), _desc(desc), _manifesto(manifesto) {
-            // Nothing to see here
-        }
-
 
     virtual void loop() {
         if (_manifesto) {
