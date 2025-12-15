@@ -62,7 +62,7 @@ enum class JsonKey : char {
 
 
 inline const char* key_str(JsonKey json_key) {
-	// The flip_flop avoids the usage of the sam string in a single line double operations
+	// The flip_flop avoids the usage of the same string in a single line of double calls
 	static uint8_t flip_flop = 0;
 	static char json_key_string[2][2] = {{'\0'}, {'\0'}};
 	flip_flop = 1 - flip_flop;
