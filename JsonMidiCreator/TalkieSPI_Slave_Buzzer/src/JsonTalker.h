@@ -218,6 +218,8 @@ public:
                 #endif
                 json_message[ key_str(JsonKey::MESSAGE) ] = 7;   // error
                 json_message[ key_str(JsonKey::ERROR) ] = 4;
+				// Wrong type of identifier or no identifier, so, it has to insert new identifier
+                json_message[ key_str(JsonKey::IDENTITY) ] = (uint16_t)millis();
 
                 replyMessage(json_message, true);	// Includes reply swap
                 return false;
