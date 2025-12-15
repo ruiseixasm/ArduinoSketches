@@ -1,0 +1,80 @@
+/*
+JsonTalkie - Json Talkie is intended for direct IoT communication.
+Original Copyright (c) 2025 Rui Seixas Monteiro. All right reserved.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Lesser General Public License for more details.
+https://github.com/ruiseixasm/JsonTalkie
+*/
+#ifndef TALKIE_CODES_HPP
+#define TALKIE_CODES_HPP
+
+#include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
+
+
+struct TalkieCodes {
+
+	// Add a string "enum" struct
+    struct JsonKey {
+        static constexpr const char* CHECKSUM		= "c";
+        static constexpr const char* IDENTITY 		= "i";
+        static constexpr const char* MESSAGE 		= "m";
+        static constexpr const char* ORIGINAL 		= "o";
+        static constexpr const char* FROM 			= "f";
+        static constexpr const char* TO 			= "t";
+        static constexpr const char* SYSTEM 		= "s";
+        static constexpr const char* ERROR 			= "e";
+        static constexpr const char* VALUE 			= "v";
+        static constexpr const char* REPLY 			= "r";
+        static constexpr const char* ROGER 			= "g";
+        static constexpr const char* ACTION 		= "a";
+        static constexpr const char* NAME 			= "n";
+        static constexpr const char* INDEX 			= "x";
+        static constexpr const char* DESCRIPTION	= "d";
+    };
+
+
+	enum class MessageCode : int {
+		TALK,
+		LIST,
+		RUN,
+		SET,
+		GET,
+		SYS,
+		ECHO,
+		ERROR,
+		CHANNEL
+	};
+
+
+	enum class SystemCode : int {
+		MUTE, UNMUTE, MUTED, BOARD, PING, DROPS, DELAY
+	};
+
+
+	enum class EchoCode : int {
+		ROGER,
+		SAY_AGAIN,
+		NEGATIVE
+	};
+
+
+	enum class ErrorCode : int {
+		FROM,
+		FIELDS,
+		CHECKSUM,
+		MESSAGE,
+		IDENTITY,
+		DELAY
+	};
+
+};
+
+
+
+#endif // TALKIE_CODES_HPP
