@@ -27,7 +27,7 @@ bool JsonTalker::remoteSend(JsonObject& json_message, bool as_reply, uint8_t tar
 	Serial.print(F(": "));
 	Serial.println(F("Sending a REMOTE message"));
 	#endif
-	json_message[ key_str(JsonKey::CHECKSUM) ] = REMOTE_C;	// 'c' = 0 means REMOTE_C communication
+	json_message[ JsonKey::CHECKSUM ] = REMOTE_C;	// 'c' = 0 means REMOTE_C communication
     return _socket->remoteSend(json_message, as_reply, target_index);
 }
 

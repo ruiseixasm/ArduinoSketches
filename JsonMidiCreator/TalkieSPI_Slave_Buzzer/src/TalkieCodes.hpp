@@ -17,68 +17,64 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 
 
-enum class MessageCode : int {
-	TALK,
-	LIST,
-	RUN,
-	SET,
-	GET,
-	SYS,
-	ECHO,
-	ERROR,
-	CHANNEL
+struct TalkieCodes {
+
+	enum class MessageCode : int {
+		TALK,
+		LIST,
+		RUN,
+		SET,
+		GET,
+		SYS,
+		ECHO,
+		ERROR,
+		CHANNEL
+	};
+
+
+	enum class SystemCode : int {
+		MUTE, UNMUTE, MUTED, BOARD, PING, DROPS, DELAY
+	};
+
+
+	enum class EchoCode : int {
+		ROGER,
+		SAY_AGAIN,
+		NEGATIVE
+	};
+
+
+	enum class ErrorCode : int {
+		FROM,
+		FIELDS,
+		CHECKSUM,
+		MESSAGE,
+		IDENTITY,
+		DELAY
+	};
+
+	
+	// Add a string "enum" struct
+    struct JsonKey {
+        static constexpr const char* CHECKSUM		= "c";
+        static constexpr const char* IDENTITY 		= "i";
+        static constexpr const char* MESSAGE 		= "m";
+        static constexpr const char* ORIGINAL 		= "o";
+        static constexpr const char* FROM 			= "f";
+        static constexpr const char* TO 			= "t";
+        static constexpr const char* SYSTEM 		= "s";
+        static constexpr const char* ERROR 			= "e";
+        static constexpr const char* VALUE 			= "v";
+        static constexpr const char* REPLY 			= "r";
+        static constexpr const char* ROGER 			= "g";
+        static constexpr const char* ACTION 		= "a";
+        static constexpr const char* NAME 			= "n";
+        static constexpr const char* INDEX 			= "x";
+        static constexpr const char* DESCRIPTION	= "d";
+    };
+
 };
 
-
-enum class SystemCode : int {
-	MUTE, UNMUTE, MUTED, BOARD, PING, DROPS, DELAY
-};
-
-
-enum class EchoCode : int {
-	ROGER,
-	SAY_AGAIN,
-	NEGATIVE
-};
-
-
-enum class ErrorCode : int {
-	FROM,
-	FIELDS,
-	CHECKSUM,
-	MESSAGE,
-	IDENTITY,
-	DELAY
-};
-
-
-enum class JsonKey : char {
-	CHECKSUM    = 'c',
-	IDENTITY    = 'i',
-	MESSAGE     = 'm',
-	ORIGINAL	= 'o',
-	FROM        = 'f',
-	TO          = 't',
-	SYSTEM      = 's',
-	ERROR       = 'e',
-	VALUE       = 'v',
-	REPLY       = 'r',
-	ROGER       = 'g',
-	ACTION      = 'a',
-	NAME        = 'n',
-	INDEX		= 'x',
-	DESCRIPTION = 'd'
-};
-
-
-inline const char* key_str(JsonKey json_key) {
-	// The flip_flop avoids the usage of the same string in a single line of double calls
-	static uint8_t flip_flop = 0;
-	static char json_key_string[2][2] = {{'\0'}, {'\0'}};
-	flip_flop = 1 - flip_flop;
-	json_key_string[flip_flop][0] = static_cast<char>(json_key);
-	return json_key_string[flip_flop];
-}
 
 
 #endif // TALKIE_CODES_HPP

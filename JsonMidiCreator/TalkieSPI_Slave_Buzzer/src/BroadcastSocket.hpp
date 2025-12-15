@@ -406,7 +406,7 @@ public:
     
     bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
 
-        MessageCode message_code = static_cast<MessageCode>(json_message[ key_str(JsonKey::MESSAGE) ].as<int>());
+        MessageCode message_code = static_cast<MessageCode>(json_message[ JsonKey::MESSAGE ].as<int>());
         if (message_code != MessageCode::ECHO && message_code != MessageCode::ERROR) {
 
             #ifdef BROADCASTSOCKET_DEBUG
@@ -415,9 +415,9 @@ public:
             Serial.println();  // optional: just to add a newline after the JSON
             #endif
 
-            json_message[ key_str(JsonKey::IDENTITY) ] = (uint16_t)millis();
+            json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
 
-        } else if (!json_message[ key_str(JsonKey::IDENTITY) ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
+        } else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
 
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.print(F("ERROR: Response message with a wrong or without an identifier (i): "));

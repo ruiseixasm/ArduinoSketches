@@ -16,7 +16,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <Arduino.h>
 #include <ArduinoJson.h>    // Include ArduinoJson Library
-#include "TalkieCodes.hpp"
 
 
 class JsonTalker;
