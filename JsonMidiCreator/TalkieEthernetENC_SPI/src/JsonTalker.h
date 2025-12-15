@@ -254,13 +254,18 @@ public:
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-        // From one to many, starts to set the returning target in this single place only
-        json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
-        json_message[ JsonKey::FROM ] = _name;
+		MessageCode message_code = static_cast<MessageCode>(json_message[ JsonKey::MESSAGE ].as<int>());
 
-        MessageCode message_code = static_cast<MessageCode>(json_message[ JsonKey::MESSAGE ].as<int>());
-        json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ].as<int>();
-        json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ECHO);
+		// Doesn't apply to ECHO nor ERROR
+		if (message_code != MessageCode::ECHO && message_code != MessageCode::ERROR) {
+
+			// From one to many, starts to set the returning target in this single place only
+			json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
+			json_message[ JsonKey::FROM ] = _name;
+
+			json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ].as<int>();
+			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ECHO);
+		}
 
         switch (message_code)
         {
