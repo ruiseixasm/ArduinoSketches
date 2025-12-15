@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 bool JsonRepeater::remoteSend(JsonObject& json_message, bool as_reply, uint8_t target_index) {
-    if (_muted || !_socket) return false;
+    if (!_socket) return false;	// Ignores if it's muted or not
 
 	#ifdef JSON_REPEATER_DEBUG
 	Serial.print(_name);
