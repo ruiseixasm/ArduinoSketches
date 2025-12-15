@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 
 
-// #define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -410,7 +410,7 @@ public:
         if (message_code != MessageCode::ECHO && message_code != MessageCode::ERROR) {
 
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("remoteSend1: Setting a new identifier (i) for m :"));
+            Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
             serializeJson(json_message, Serial);
             Serial.println();  // optional: just to add a newline after the JSON
             #endif
