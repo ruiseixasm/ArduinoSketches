@@ -17,6 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 #include "IManifesto.hpp"
+#include "TalkieCodes.hpp"
 
 
 // #define JSON_TALKER_DEBUG
@@ -25,6 +26,13 @@ https://github.com/ruiseixasm/JsonTalkie
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 #define REMOTE_C ((uint16_t)0)
 #define LOCAL_C ((uint16_t)1)
+
+
+using MessageCode = TalkieCodes::MessageCode;
+using SystemCode = TalkieCodes::SystemCode;
+using EchoCode = TalkieCodes::EchoCode;
+using ErrorCode = TalkieCodes::ErrorCode;
+using JsonKey = TalkieCodes::JsonKey;
 
 
 class BroadcastSocket;
@@ -41,26 +49,23 @@ protected:
 
 public:
 
-    virtual const char* class_name() const { return "JsonTalker"; }
+    // Explicit default constructor
+    JsonTalker() = delete;
+        
+    JsonTalker(const char* name, const char* desc, IManifesto* manifesto)
+        : _name(name), _desc(desc), _manifesto(manifesto) {
+            // Nothing to see here
+        }
 
-    enum MessageCode : int {
-        TALK,
-        LIST,
-        RUN,
-        SET,
-        GET,
-        SYS,
-        ECHO,
-        ERROR,
-        CHANNEL
-    };
+
+    virtual const char* class_name() const { return "JsonTalker"; }
 
 
 protected:
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
-	IManifesto* _manifesto;
+	IManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
     bool _muted = false;
 
@@ -77,7 +82,8 @@ protected:
 		Serial.print(F(": "));
 		Serial.println(F("Sending a LOCAL message"));
 		#endif
-        json_message["c"] = LOCAL_C;	// 'c' = 1 means LOCAL_C communication
+
+        json_message[ JsonKey::CHECKSUM ] = LOCAL_C;	// 'c' = 1 means LOCAL_C communication
         // Triggers all local Talkers to processes the json_message
         bool sent_message = false;
 		if (target_index < _talker_count) {
@@ -137,7 +143,7 @@ protected:
 		Serial.print(F(": "));
 		#endif
 
-		uint16_t c = json_message["c"].as<uint16_t>();
+		uint16_t c = json_message[ JsonKey::CHECKSUM ].as<uint16_t>();
 		if (c == LOCAL_C) {	// c == 1 means a local message while 0 means a remote one
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("\tReplied a LOCAL message"));
@@ -150,48 +156,18 @@ protected:
         return remoteSend(json_message, as_reply);
     }
 
-    
-    bool echo(JsonObject& json_message) {
-        Serial.print(json_message["f"].as<String>());
-        Serial.print(" - ");
-        if (json_message["r"].is<String>()) {
-            Serial.println(json_message["r"].as<String>());
-        } else if (json_message["d"].is<String>()) {
-            Serial.println(json_message["d"].as<String>());
-        } else {
-            Serial.println(F("Empty echo received!"));
-        }
-        return false;
-    }
-
-    bool error(JsonObject& json_message) {
-        Serial.print(json_message["f"].as<String>());
-        Serial.print(" - ");
-        if (json_message["r"].is<String>()) {
-            Serial.println(json_message["r"].as<String>());
-        } else if (json_message["d"].is<String>()) {
-            Serial.println(json_message["d"].as<String>());
-        } else {
-            Serial.println(F("Empty error received!"));
-        }
-        return false;
-    }
-
-
     void set_delay(uint8_t delay);
     uint8_t get_delay();
-    uint16_t get_total_drops();
+    uint16_t get_drops();
 
 
 public:
 
-    // Explicit default constructor
-    JsonTalker() = delete;
-        
-    JsonTalker(const char* name, const char* desc, IManifesto* manifesto)
-        : _name(name), _desc(desc), _manifesto(manifesto) {
-            // Nothing to see here
+    virtual void loop() {
+        if (_manifesto) {
+            _manifesto->loop(this);
         }
+    }
 
 
     static void connectTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
@@ -227,28 +203,26 @@ public:
         Serial.println(F("\tProcessing JSON message..."));
         #endif
         
-        // Error types:
-        //     0 - Unknown sender   // Removed, useless kind of error report that results in UDP flooding
-        //     1 - Message missing the checksum
-        //     2 - Message corrupted
-        //     3 - Wrong message code
-        //     4 - Message NOT identified
-        //     5 - Set command arrived too late
-
         if (!pre_validated) {
 
-            if (!json_message["f"].is<String>()) {
+            if (!json_message[ JsonKey::FROM ].is<String>()) {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(0);
                 #endif
                 return false;
             }
-            if (!json_message["i"].is<uint32_t>()) {
+            if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(4);
                 #endif
-                json_message["m"] = 7;   // error
-                json_message["e"] = 4;
+                json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ];
+                json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ERROR);
+                json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorCode::IDENTITY);
+				// Wrong type of identifier or no identifier, so, it has to insert new identifier
+                json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
+				// From one to many, starts to set the returning target in this single place only
+				json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
+				json_message[ JsonKey::FROM ] = _name;
 
                 replyMessage(json_message, true);	// Includes reply swap
                 return false;
@@ -259,11 +233,11 @@ public:
         bool dont_interrupt = true;   // Doesn't interrupt next talkers process
 
         // Is it for me?
-        if (json_message["t"].is<uint8_t>()) {
-            if (json_message["t"].as<uint8_t>() != _channel)
+        if (json_message[ JsonKey::TO ].is<uint8_t>()) {
+            if (json_message[ JsonKey::TO ].as<uint8_t>() != _channel)
                 return true;    // It's still validated (just not for me as a target)
-        } else if (json_message["t"].is<String>()) {
-            if (json_message["t"] != _name) {
+        } else if (json_message[ JsonKey::TO ].is<String>()) {
+            if (json_message[ JsonKey::TO ] != _name) {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(F("\tMessage NOT for me!"));
                 #endif
@@ -281,17 +255,17 @@ public:
         #endif
 
         // From one to many, starts to set the returning target in this single place only
-        json_message["t"] = json_message["f"];
-        json_message["f"] = _name;
+        json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
+        json_message[ JsonKey::FROM ] = _name;
 
-        MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
-        json_message["w"] = json_message["m"].as<int>();
-        json_message["m"] = MessageCode::ECHO;
+        MessageCode message_code = static_cast<MessageCode>(json_message[ JsonKey::MESSAGE ].as<int>());
+        json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ].as<int>();
+        json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ECHO);
 
         switch (message_code)
         {
         case MessageCode::TALK:
-            json_message["d"] = _desc;
+            json_message[ JsonKey::DESCRIPTION ] = _desc;
             replyMessage(json_message, true);	// Includes reply swap
             break;
         
@@ -306,44 +280,44 @@ public:
                 Serial.println(class_name());
                 #endif
 
-				json_message["w"] = MessageCode::RUN;
+				json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::RUN);
 				_manifesto->iterateRunsReset();
 				const IManifesto::Action* run;
-				uint8_t run_number = 0;
+				uint8_t action_index = 0;
 				while ((run = _manifesto->iterateRunsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
-					json_message["n"] = run->name;      // Direct access
-					json_message["d"] = run->desc;
-					json_message["N"] = run_number++;
+					json_message[ JsonKey::NAME ] = run->name;      // Direct access
+					json_message[ JsonKey::DESCRIPTION ] = run->desc;
+					json_message[ JsonKey::INDEX ] = action_index++;
 					replyMessage(json_message, true);
 				}
 
-                json_message["w"] = MessageCode::SET;
+                json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::SET);
 				_manifesto->iterateSetsReset();
 				const IManifesto::Action* set;
-				uint8_t set_number = 0;
+				action_index = 0;
 				while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
-					json_message["n"] = set->name;      // Direct access
-					json_message["d"] = set->desc;
-					json_message["N"] = set_number++;
+					json_message[ JsonKey::NAME ] = set->name;      // Direct access
+					json_message[ JsonKey::DESCRIPTION ] = set->desc;
+					json_message[ JsonKey::INDEX ] = action_index++;
 					replyMessage(json_message, true);
 				}
 				
-                json_message["w"] = MessageCode::GET;
+                json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::GET);
 				_manifesto->iterateGetsReset();
 				const IManifesto::Action* get;
-				uint8_t get_number = 0;
+				action_index = 0;
 				while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
-					json_message["n"] = get->name;      // Direct access
-					json_message["d"] = get->desc;
-					json_message["N"] = get_number++;
+					json_message[ JsonKey::NAME ] = get->name;      // Direct access
+					json_message[ JsonKey::DESCRIPTION ] = get->desc;
+					json_message[ JsonKey::INDEX ] = action_index++;
 					replyMessage(json_message, true);
 				}
 
                 if(none_list) {
-                    json_message["g"] = 2;       // NONE
+                    json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
                 }
             }
             break;
@@ -351,10 +325,10 @@ public:
         case MessageCode::RUN:
 			{
 				uint8_t index_found_i = 255;
-				if (json_message["N"].is<uint8_t>()) {
-					index_found_i = _manifesto->runIndex(json_message["N"].as<uint8_t>());
-				} else if (json_message["n"].is<const char *>()) {
-					index_found_i = _manifesto->runIndex(json_message["n"].as<const char *>());
+				if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
+					index_found_i = _manifesto->runIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
+				} else if (json_message[ JsonKey::NAME ].is<const char *>()) {
+					index_found_i = _manifesto->runIndex(json_message[ JsonKey::NAME ].as<const char *>());
 				}
 				if (index_found_i < 255) {
 
@@ -365,13 +339,13 @@ public:
 					#endif
 
 					if (_manifesto->runByIndex(index_found_i, json_message, this)) {
-						json_message["g"] = IManifesto::ROGER;
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
 					} else {
-						json_message["g"] = IManifesto::NEGATIVE;
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
 					}
 					replyMessage(json_message, true);
 				} else {
-					json_message["g"] = IManifesto::SAY_AGAIN;
+					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 				}
 			}
@@ -380,10 +354,10 @@ public:
         case MessageCode::SET:
 			{
 				uint8_t index_found_i = 255;
-				if (json_message["N"].is<uint8_t>()) {
-					index_found_i = _manifesto->setIndex(json_message["N"].as<uint8_t>());
-				} else if (json_message["n"].is<const char *>()) {
-					index_found_i = _manifesto->setIndex(json_message["n"].as<const char *>());
+				if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
+					index_found_i = _manifesto->setIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
+				} else if (json_message[ JsonKey::NAME ].is<const char *>()) {
+					index_found_i = _manifesto->setIndex(json_message[ JsonKey::NAME ].as<const char *>());
 				}
 				if (index_found_i < 255) {
 
@@ -393,14 +367,14 @@ public:
 					Serial.println(F(", now being processed..."));
 					#endif
 
-					if (_manifesto->setByIndex(index_found_i, json_message["v"].as<uint32_t>(), json_message, this)) {
-						json_message["g"] = IManifesto::ROGER;
+					if (_manifesto->setByIndex(index_found_i, json_message[ JsonKey::VALUE ].as<uint32_t>(), json_message, this)) {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
 					} else {
-						json_message["g"] = IManifesto::NEGATIVE;
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
 					}
 					replyMessage(json_message, true);
 				} else {
-					json_message["g"] = IManifesto::SAY_AGAIN;
+					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 				}
 			}
@@ -409,10 +383,10 @@ public:
         case MessageCode::GET:
 			{
 				uint8_t index_found_i = 255;
-				if (json_message["N"].is<uint8_t>()) {
-					index_found_i = _manifesto->getIndex(json_message["N"].as<uint8_t>());
-				} else if (json_message["n"].is<const char *>()) {
-					index_found_i = _manifesto->getIndex(json_message["n"].as<const char *>());
+				if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
+					index_found_i = _manifesto->getIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
+				} else if (json_message[ JsonKey::NAME ].is<const char *>()) {
+					index_found_i = _manifesto->getIndex(json_message[ JsonKey::NAME ].as<const char *>());
 				}
 				if (index_found_i < 255) {
 
@@ -424,86 +398,153 @@ public:
 
 					// No memory leaks because message_doc exists in the listen() method stack
 					// The return of the value works as an implicit ROGER (avoids network flooding)
-					json_message["v"] = _manifesto->getByIndex(index_found_i, json_message, this);
+					json_message[ JsonKey::VALUE ] = _manifesto->getByIndex(index_found_i, json_message, this);
 					replyMessage(json_message, true);
 				} else {
-					json_message["g"] = IManifesto::SAY_AGAIN;
+					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 				}
 			}
             break;
         
         case MessageCode::SYS:
-            {
-            // AVR Boards (Uno, Nano, Mega) - Check RAM size
-            #ifdef __AVR__
-				#if (RAMEND - RAMSTART + 1) == 2048
-					json_message["d"] = "Arduino Uno/Nano (ATmega328P)";
-				#elif (RAMEND - RAMSTART + 1) == 8192
-					json_message["d"] = "Arduino Mega (ATmega2560)";
+			if (json_message["s"].is<int>()) {
+
+        		SystemCode system_code = static_cast<SystemCode>(json_message["s"].as<int>());
+
+				switch (system_code)
+				{
+				case SystemCode::MUTE:
+					if (!_muted) {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
+						_muted = true;
+					} else {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message["r"] = "Already muted";
+					}
+					{
+						bool muted = _muted;
+						_muted = false;	// temporaily unmute device to send state
+						replyMessage(json_message, true);
+						_muted = muted;
+					}
+					break;
+				case SystemCode::UNMUTE:
+					if (_muted) {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
+						_muted = false;
+					} else {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message["r"] = "Already NOT muted";
+					}
+					replyMessage(json_message, true);
+					break;
+				case SystemCode::MUTED:
+					json_message[ JsonKey::VALUE ] = _muted;
+					{
+						bool muted = _muted;
+						_muted = false;	// temporaily unmute device to send state
+						replyMessage(json_message, true);
+						_muted = muted;
+					}
+					break;
+				case SystemCode::BOARD:
+					
+				// AVR Boards (Uno, Nano, Mega) - Check RAM size
+				#ifdef __AVR__
+					#if (RAMEND - RAMSTART + 1) == 2048
+						json_message[ JsonKey::DESCRIPTION ] = "Arduino Uno/Nano (ATmega328P)";
+					#elif (RAMEND - RAMSTART + 1) == 8192
+						json_message[ JsonKey::DESCRIPTION ] = "Arduino Mega (ATmega2560)";
+					#else
+						json_message[ JsonKey::DESCRIPTION ] = "Unknown AVR Board";
+					#endif
+					
+				// ESP8266
+				#elif defined(ESP8266)
+					json_message[ JsonKey::DESCRIPTION ] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
+					
+				// ESP32
+				#elif defined(ESP32)
+					json_message[ JsonKey::DESCRIPTION ] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
+					
+				// Teensy Boards
+				#elif defined(TEENSYDUINO)
+					#if defined(__IMXRT1062__)
+						json_message[ JsonKey::DESCRIPTION ] = "Teensy 4.0/4.1 (i.MX RT1062)";
+					#elif defined(__MK66FX1M0__)
+						json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.6 (MK66FX1M0)";
+					#elif defined(__MK64FX512__)
+						json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.5 (MK64FX512)";
+					#elif defined(__MK20DX256__)
+						json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.2/3.1 (MK20DX256)";
+					#elif defined(__MKL26Z64__)
+						json_message[ JsonKey::DESCRIPTION ] = "Teensy LC (MKL26Z64)";
+					#else
+						json_message[ JsonKey::DESCRIPTION ] = "Unknown Teensy Board";
+					#endif
+
+				// ARM (Due, Zero, etc.)
+				#elif defined(__arm__)
+					json_message[ JsonKey::DESCRIPTION ] = "ARM-based Board";
+
+				// Unknown Board
 				#else
-					json_message["d"] = "Unknown AVR Board";
+					json_message[ JsonKey::DESCRIPTION ] = "Unknown Board";
+
 				#endif
-				
-            // ESP8266
-            #elif defined(ESP8266)
-                json_message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
-                
-            // ESP32
-            #elif defined(ESP32)
-                json_message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
-                
-            // Teensy Boards
-            #elif defined(TEENSYDUINO)
-                #if defined(__IMXRT1062__)
-                    json_message["d"] = "Teensy 4.0/4.1 (i.MX RT1062)";
-                #elif defined(__MK66FX1M0__)
-                    json_message["d"] = "Teensy 3.6 (MK66FX1M0)";
-                #elif defined(__MK64FX512__)
-                    json_message["d"] = "Teensy 3.5 (MK64FX512)";
-                #elif defined(__MK20DX256__)
-                    json_message["d"] = "Teensy 3.2/3.1 (MK20DX256)";
-                #elif defined(__MKL26Z64__)
-                    json_message["d"] = "Teensy LC (MKL26Z64)";
-                #else
-                    json_message["d"] = "Unknown Teensy Board";
-                #endif
 
-            // ARM (Due, Zero, etc.)
-            #elif defined(__arm__)
-                json_message["d"] = "ARM-based Board";
+					replyMessage(json_message, true);
 
-            // Unknown Board
-            #else
-                json_message["d"] = "Unknown Board";
+					// TO INSERT HERE EXTRA DATA !!
+					
+					break;
 
-            #endif
+				case SystemCode::PING:
+					replyMessage(json_message, true);
+					break;
 
-                replyMessage(json_message, true);
+				case SystemCode::DROPS:
+					json_message[ JsonKey::VALUE ] = get_drops();
+					replyMessage(json_message, true);
+					break;
 
-                // TO INSERT HERE EXTRA DATA !!
+				case SystemCode::DELAY:
+					json_message[ JsonKey::VALUE ] = get_delay();
+					replyMessage(json_message, true);
+					break;
+
+				default:
+					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
+					replyMessage(json_message, true);
+					break;
+				}
             }
             break;
         
         case MessageCode::ECHO:
-            this->echo(json_message);
+			if (_manifesto) {
+				_manifesto->echo(json_message, this);
+			}
             break;
         
         case MessageCode::ERROR:
-            this->error(json_message);
+			if (_manifesto) {
+				_manifesto->error(json_message, this);
+			}
             break;
         
         case MessageCode::CHANNEL:
-            if (json_message["b"].is<uint8_t>()) {
+            if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
 
                 #ifdef JSON_TALKER_DEBUG
                 Serial.print(F("\tChannel B value is an <uint8_t>: "));
-                Serial.println(json_message["b"].is<uint8_t>());
+                Serial.println(json_message[ JsonKey::VALUE ].is<uint8_t>());
                 #endif
 
-                _channel = json_message["b"].as<uint8_t>();
+                _channel = json_message[ JsonKey::VALUE ].as<uint8_t>();
             }
-            json_message["b"] = _channel;
+            json_message[ JsonKey::VALUE ] = _channel;
             replyMessage(json_message, true);
             break;
         

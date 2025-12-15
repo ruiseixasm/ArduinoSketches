@@ -16,6 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <Arduino.h>
 #include <ArduinoJson.h>    // Include ArduinoJson Library
+#include "TalkieCodes.hpp"
 
 
 class JsonTalker;
@@ -33,12 +34,6 @@ public:
     
     IManifesto() = default;
     virtual ~IManifesto() = default;
-
-    enum EchoCode : int {
-        ROGER,
-        SAY_AGAIN,
-        NEGATIVE
-    };
 
     struct Action {
         const char* name;
@@ -64,6 +59,10 @@ protected:
 
 
 public:
+
+    virtual void loop(JsonTalker* talker) {	// Also defined, not a pure virtual one
+        (void)talker;		// Silence unused parameter warning
+	}
 
 	virtual void iterateRunsReset() {
 		runsIterIdx = 0;
@@ -145,6 +144,18 @@ public:
     virtual bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) = 0;
     virtual bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) = 0;
     virtual uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) const = 0;
+  
+
+    virtual void echo(JsonObject& json_message, JsonTalker* talker) {
+        (void)json_message;	// Silence unused parameter warning
+        (void)talker;		// Silence unused parameter warning
+    }
+
+
+    virtual void error(JsonObject& json_message, JsonTalker* talker) {
+        (void)json_message;	// Silence unused parameter warning
+        (void)talker;		// Silence unused parameter warning
+    }
 
 };
 
