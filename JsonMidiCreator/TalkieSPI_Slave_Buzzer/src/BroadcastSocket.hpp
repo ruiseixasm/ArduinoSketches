@@ -216,9 +216,9 @@ protected:
                 
                 if (_max_delay_ms > 0) {
 
-                    JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(message_code_int);
+                    IManifesto::MessageCode message_code = static_cast<IManifesto::MessageCode>(message_code_int);
 
-                    if (!(message_code < JsonTalker::MessageCode::RUN || message_code > JsonTalker::MessageCode::GET)) {
+                    if (!(message_code < IManifesto::MessageCode::RUN || message_code > IManifesto::MessageCode::GET)) {
 
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.print(F("triggerTalkers6: Message code requires delay check: "));
@@ -405,8 +405,8 @@ public:
     
     bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
 
-        JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
-        if (message_code != JsonTalker::MessageCode::ECHO && message_code != JsonTalker::MessageCode::ERROR) {
+        IManifesto::MessageCode message_code = static_cast<IManifesto::MessageCode>(json_message["m"].as<int>());
+        if (message_code != IManifesto::MessageCode::ECHO && message_code != IManifesto::MessageCode::ERROR) {
             json_message["i"] = (uint32_t)millis();
 
         } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)

@@ -34,6 +34,22 @@ public:
     IManifesto() = default;
     virtual ~IManifesto() = default;
 
+    enum MessageCode : int {
+        TALK,
+        LIST,
+        RUN,
+        SET,
+        GET,
+        SYS,
+        ECHO,
+        ERROR,
+        CHANNEL
+    };
+
+	enum SystemCode : int {
+		MUTE, UNMUTE, MUTED, BOARD, PING, DROPS, DELAY
+	};
+
     enum EchoCode : int {
         ROGER,
         SAY_AGAIN,

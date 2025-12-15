@@ -43,23 +43,6 @@ public:
 
     virtual const char* class_name() const { return "JsonTalker"; }
 
-    enum MessageCode : int {
-        TALK,
-        LIST,
-        RUN,
-        SET,
-        GET,
-        SYS,
-        ECHO,
-        ERROR,
-        CHANNEL
-    };
-
-
-	enum SystemCode : int {
-		MUTE, UNMUTE, MUTED, BOARD, PING, DROPS, DELAY
-	};
-
 
 protected:
 
@@ -268,18 +251,18 @@ public:
         json_message["t"] = json_message["f"];
         json_message["f"] = _name;
 
-        MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
+        IManifesto::MessageCode message_code = static_cast<IManifesto::MessageCode>(json_message["m"].as<int>());
         json_message["w"] = json_message["m"].as<int>();
-        json_message["m"] = MessageCode::ECHO;
+        json_message["m"] = IManifesto::MessageCode::ECHO;
 
         switch (message_code)
         {
-        case MessageCode::TALK:
+        case IManifesto::MessageCode::TALK:
             json_message["d"] = _desc;
             replyMessage(json_message, true);	// Includes reply swap
             break;
         
-        case MessageCode::LIST:
+        case IManifesto::MessageCode::LIST:
             {   // Because of none_list !!!
                 bool none_list = true;
 
@@ -290,7 +273,7 @@ public:
                 Serial.println(class_name());
                 #endif
 
-				json_message["v"] = MessageCode::RUN;
+				json_message["v"] = IManifesto::MessageCode::RUN;
 				_manifesto->iterateRunsReset();
 				const IManifesto::Action* run;
 				uint8_t action_index = 0;
@@ -302,7 +285,7 @@ public:
 					replyMessage(json_message, true);
 				}
 
-                json_message["v"] = MessageCode::SET;
+                json_message["v"] = IManifesto::MessageCode::SET;
 				_manifesto->iterateSetsReset();
 				const IManifesto::Action* set;
 				action_index = 0;
@@ -314,7 +297,7 @@ public:
 					replyMessage(json_message, true);
 				}
 				
-                json_message["v"] = MessageCode::GET;
+                json_message["v"] = IManifesto::MessageCode::GET;
 				_manifesto->iterateGetsReset();
 				const IManifesto::Action* get;
 				action_index = 0;
@@ -332,7 +315,7 @@ public:
             }
             break;
         
-        case MessageCode::RUN:
+        case IManifesto::MessageCode::RUN:
 			{
 				uint8_t index_found_i = 255;
 				if (json_message["N"].is<uint8_t>()) {
@@ -361,7 +344,7 @@ public:
 			}
             break;
         
-        case MessageCode::SET:
+        case IManifesto::MessageCode::SET:
 			{
 				uint8_t index_found_i = 255;
 				if (json_message["N"].is<uint8_t>()) {
@@ -390,7 +373,7 @@ public:
 			}
             break;
         
-        case MessageCode::GET:
+        case IManifesto::MessageCode::GET:
 			{
 				uint8_t index_found_i = 255;
 				if (json_message["N"].is<uint8_t>()) {
@@ -417,14 +400,14 @@ public:
 			}
             break;
         
-        case MessageCode::SYS:
+        case IManifesto::MessageCode::SYS:
 			if (json_message["s"].is<int>()) {
 
-        		SystemCode system_code = static_cast<SystemCode>(json_message["s"].as<int>());
+        		IManifesto::SystemCode system_code = static_cast<IManifesto::SystemCode>(json_message["s"].as<int>());
 
 				switch (system_code)
 				{
-				case SystemCode::MUTE:
+				case IManifesto::SystemCode::MUTE:
 					if (!_muted) {
 						json_message["g"] = IManifesto::ROGER;
 						_muted = true;
@@ -439,7 +422,7 @@ public:
 						_muted = muted;
 					}
 					break;
-				case SystemCode::UNMUTE:
+				case IManifesto::SystemCode::UNMUTE:
 					if (_muted) {
 						json_message["g"] = IManifesto::ROGER;
 						_muted = false;
@@ -449,7 +432,7 @@ public:
 					}
 					replyMessage(json_message, true);
 					break;
-				case SystemCode::MUTED:
+				case IManifesto::SystemCode::MUTED:
 					json_message["g"] = IManifesto::ROGER;
 					json_message["v"] = _muted;
 					{
@@ -459,7 +442,7 @@ public:
 						_muted = muted;
 					}
 					break;
-				case SystemCode::BOARD:
+				case IManifesto::SystemCode::BOARD:
 					json_message["g"] = IManifesto::ROGER;
 					
 				// AVR Boards (Uno, Nano, Mega) - Check RAM size
@@ -512,18 +495,18 @@ public:
 					
 					break;
 
-				case SystemCode::PING:
+				case IManifesto::SystemCode::PING:
 					json_message["g"] = IManifesto::ROGER;
 					replyMessage(json_message, true);
 					break;
 
-				case SystemCode::DROPS:
+				case IManifesto::SystemCode::DROPS:
 					json_message["g"] = IManifesto::ROGER;
 					json_message["v"] = get_drops();
 					replyMessage(json_message, true);
 					break;
 
-				case SystemCode::DELAY:
+				case IManifesto::SystemCode::DELAY:
 					json_message["g"] = IManifesto::ROGER;
 					json_message["v"] = get_delay();
 					replyMessage(json_message, true);
@@ -537,19 +520,19 @@ public:
             }
             break;
         
-        case MessageCode::ECHO:
+        case IManifesto::MessageCode::ECHO:
 			if (_manifesto) {
 				_manifesto->echo(json_message, this);
 			}
             break;
         
-        case MessageCode::ERROR:
+        case IManifesto::MessageCode::ERROR:
 			if (_manifesto) {
 				_manifesto->error(json_message, this);
 			}
             break;
         
-        case MessageCode::CHANNEL:
+        case IManifesto::MessageCode::CHANNEL:
             if (json_message["v"].is<uint8_t>()) {
 
                 #ifdef JSON_TALKER_DEBUG
