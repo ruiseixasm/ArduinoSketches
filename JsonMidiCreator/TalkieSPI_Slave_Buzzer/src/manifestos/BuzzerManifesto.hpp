@@ -59,7 +59,8 @@ protected:
 
 public:
 
-	void loop() override {
+	void loop(JsonTalker* talker) override {
+        (void)talker;		// Silence unused parameter warning
 		if (millis() - _buzz_start > _buzz_duration_ms) {
 			#ifdef BUZZ_PIN
 			digitalWrite(BUZZ_PIN, LOW);

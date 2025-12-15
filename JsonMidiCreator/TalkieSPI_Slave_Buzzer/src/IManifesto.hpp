@@ -65,7 +65,9 @@ protected:
 
 public:
 
-    virtual void loop() {}	// Also defined, not a pure virtual one
+    virtual void loop(JsonTalker* talker) {	// Also defined, not a pure virtual one
+        (void)talker;		// Silence unused parameter warning
+	}
 
 	virtual void iterateRunsReset() {
 		runsIterIdx = 0;

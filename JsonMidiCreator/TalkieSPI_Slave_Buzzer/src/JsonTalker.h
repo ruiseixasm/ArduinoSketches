@@ -196,7 +196,7 @@ public:
 
     virtual void loop() {
         if (_manifesto) {
-            _manifesto->loop();
+            _manifesto->loop(this);
         }
     }
 
@@ -316,36 +316,36 @@ public:
 				json_message["w"] = MessageCode::RUN;
 				_manifesto->iterateRunsReset();
 				const IManifesto::Action* run;
-				uint8_t run_number = 0;
+				uint8_t action_index = 0;
 				while ((run = _manifesto->iterateRunsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
 					json_message["n"] = run->name;      // Direct access
 					json_message["d"] = run->desc;
-					json_message["N"] = run_number++;
+					json_message["N"] = action_index++;
 					replyMessage(json_message, true);
 				}
 
                 json_message["w"] = MessageCode::SET;
 				_manifesto->iterateSetsReset();
 				const IManifesto::Action* set;
-				uint8_t set_number = 0;
+				action_index = 0;
 				while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
 					json_message["n"] = set->name;      // Direct access
 					json_message["d"] = set->desc;
-					json_message["N"] = set_number++;
+					json_message["N"] = action_index++;
 					replyMessage(json_message, true);
 				}
 				
                 json_message["w"] = MessageCode::GET;
 				_manifesto->iterateGetsReset();
 				const IManifesto::Action* get;
-				uint8_t get_number = 0;
+				action_index = 0;
 				while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
 					json_message["n"] = get->name;      // Direct access
 					json_message["d"] = get->desc;
-					json_message["N"] = get_number++;
+					json_message["N"] = action_index++;
 					replyMessage(json_message, true);
 				}
 
