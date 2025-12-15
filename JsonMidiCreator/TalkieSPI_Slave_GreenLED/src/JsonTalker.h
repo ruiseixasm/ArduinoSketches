@@ -20,7 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 
 
-// #define JSON_TALKER_DEBUG
+#define JSON_TALKER_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -500,6 +500,12 @@ public:
 					break;
 
 				case SystemCode::PING:
+				
+					#ifdef JSON_TALKER_DEBUG
+					Serial.print(F("\tPing replied as message code: "));
+					Serial.println(json_message[ JsonKey::MESSAGE ].is<int>());
+					#endif
+
 					replyMessage(json_message, true);
 					break;
 

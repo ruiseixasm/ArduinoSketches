@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 
 
-// #define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -354,7 +354,7 @@ protected:
         Serial.println();
         #endif
 
-        insertChecksum();
+        insertChecksum();	// Where the CHECKSUM is set
         
         if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
 
@@ -406,39 +406,8 @@ public:
     
     bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
 
-        MessageCode message_code = static_cast<MessageCode>(json_message[ JsonKey::MESSAGE ].as<int>());
-        if (message_code != MessageCode::ECHO && message_code != MessageCode::ERROR) {
-
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("remoteSend1: Setting a new identifier (i) for m :"));
-            serializeJson(json_message, Serial);
-            Serial.println();  // optional: just to add a newline after the JSON
-            #endif
-
-            json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
-
-        } else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
-
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("ERROR: Response message with a wrong or without an identifier (i): "));
-            serializeJson(json_message, Serial);
-            Serial.println();  // optional: just to add a newline after the JSON
-            #endif
-
-            return false;
-
-        } else {
-			
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
-            serializeJson(json_message, Serial);
-            Serial.println();  // optional: just to add a newline after the JSON
-            #endif
-
-		}
-
 		#ifdef BROADCASTSOCKET_DEBUG
-		Serial.print(F("remoteSend2: "));
+		Serial.print(F("remoteSend1: "));
 		serializeJson(json_message, Serial);
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
