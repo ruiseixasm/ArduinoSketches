@@ -22,12 +22,49 @@ uint8_t JsonTalker::_talker_count = 0;
 
 bool JsonTalker::remoteSend(JsonObject& json_message, bool as_reply, uint8_t target_index) {
     if (_muted || !_socket) return false;
+
 	#ifdef JSON_TALKER_DEBUG
 	Serial.print(_name);
 	Serial.print(F(": "));
 	Serial.println(F("Sending a REMOTE message"));
 	#endif
+
 	json_message[ JsonKey::CHECKSUM ] = REMOTE_C;	// 'c' = 0 means REMOTE_C communication
+
+	// It also sets the IDENTITY if applicable, these settings are of the Talker exclusive responsibility (NO DELEGATION TO SOCKET !!)
+	
+	MessageCode message_code = static_cast<MessageCode>(json_message[ JsonKey::MESSAGE ].as<int>());
+	if (message_code != MessageCode::ECHO && message_code != MessageCode::ERROR) {
+
+		#ifdef JSON_TALKER_DEBUG
+		Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
+		serializeJson(json_message, Serial);
+		Serial.println();  // optional: just to add a newline after the JSON
+		#endif
+
+		json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
+
+	} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
+
+		#ifdef JSON_TALKER_DEBUG
+		Serial.print(F("remoteSend1: Response message with a wrong or without an identifier, now being set (i): "));
+		serializeJson(json_message, Serial);
+		Serial.println();  // optional: just to add a newline after the JSON
+		#endif
+
+		return false;
+
+	} else {
+		
+		#ifdef JSON_TALKER_DEBUG
+		Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
+		serializeJson(json_message, Serial);
+		Serial.println();  // optional: just to add a newline after the JSON
+		#endif
+
+	}
+
+
     return _socket->remoteSend(json_message, as_reply, target_index);
 }
 

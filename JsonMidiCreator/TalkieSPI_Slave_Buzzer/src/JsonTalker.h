@@ -500,6 +500,12 @@ public:
 					break;
 
 				case SystemCode::PING:
+				
+					#ifdef JSON_TALKER_DEBUG
+					Serial.print(F("\tPing replied as message code: "));
+					Serial.println(json_message[ JsonKey::MESSAGE ].is<int>());
+					#endif
+
 					replyMessage(json_message, true);
 					break;
 
