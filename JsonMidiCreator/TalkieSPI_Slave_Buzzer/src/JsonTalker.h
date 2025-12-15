@@ -343,16 +343,15 @@ public:
 					} else {
 						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
 					}
-					replyMessage(json_message, true);
 				} else {
 					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
-					replyMessage(json_message, true);
 				}
+				replyMessage(json_message, true);
 			}
             break;
         
         case MessageCode::SET:
-			{
+			if (json_message[ JsonKey::VALUE ].is<uint32_t>()) {
 				uint8_t index_found_i = 255;
 				if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
 					index_found_i = _manifesto->setIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
@@ -372,11 +371,12 @@ public:
 					} else {
 						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
 					}
-					replyMessage(json_message, true);
 				} else {
 					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
-					replyMessage(json_message, true);
 				}
+				// Remove unecessary keys to reduce overhead data
+				json_message.remove( JsonKey::VALUE );
+				replyMessage(json_message, true);
 			}
             break;
         
@@ -399,11 +399,10 @@ public:
 					// No memory leaks because message_doc exists in the listen() method stack
 					// The return of the value works as an implicit ROGER (avoids network flooding)
 					json_message[ JsonKey::VALUE ] = _manifesto->getByIndex(index_found_i, json_message, this);
-					replyMessage(json_message, true);
 				} else {
 					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
-					replyMessage(json_message, true);
 				}
+				replyMessage(json_message, true);
 			}
             break;
         
@@ -440,7 +439,7 @@ public:
 					replyMessage(json_message, true);
 					break;
 				case SystemCode::MUTED:
-					json_message[ JsonKey::VALUE ] = _muted;
+					json_message[ JsonKey::VALUE ] = static_cast<int>(_muted);
 					{
 						bool muted = _muted;
 						_muted = false;	// temporaily unmute device to send state
