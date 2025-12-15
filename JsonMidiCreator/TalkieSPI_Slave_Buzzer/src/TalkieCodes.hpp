@@ -54,6 +54,7 @@ enum class JsonKey : char {
 	VALUE       = 'v',
 	REPLY       = 'r',
 	ROGER       = 'g',
+	ACTION      = 'a',
 	NAME        = 'n',
 	INDEX		= 'x',
 	DESCRIPTION = 'd'

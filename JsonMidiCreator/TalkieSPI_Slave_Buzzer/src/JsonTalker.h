@@ -275,7 +275,7 @@ public:
                 Serial.println(class_name());
                 #endif
 
-				json_message[ key_str(JsonKey::VALUE) ] = static_cast<int>(MessageCode::RUN);
+				json_message[ key_str(JsonKey::ACTION) ] = static_cast<int>(MessageCode::RUN);
 				_manifesto->iterateRunsReset();
 				const IManifesto::Action* run;
 				uint8_t action_index = 0;
@@ -287,7 +287,7 @@ public:
 					replyMessage(json_message, true);
 				}
 
-                json_message[ key_str(JsonKey::VALUE) ] = static_cast<int>(MessageCode::SET);
+                json_message[ key_str(JsonKey::ACTION) ] = static_cast<int>(MessageCode::SET);
 				_manifesto->iterateSetsReset();
 				const IManifesto::Action* set;
 				action_index = 0;
@@ -299,7 +299,7 @@ public:
 					replyMessage(json_message, true);
 				}
 				
-                json_message[ key_str(JsonKey::VALUE) ] = static_cast<int>(MessageCode::GET);
+                json_message[ key_str(JsonKey::ACTION) ] = static_cast<int>(MessageCode::GET);
 				_manifesto->iterateGetsReset();
 				const IManifesto::Action* get;
 				action_index = 0;
