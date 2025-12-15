@@ -406,11 +406,11 @@ public:
     
     bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
 
-        MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
+        MessageCode message_code = static_cast<MessageCode>(json_message[ key_str(JsonKey::MESSAGE) ].as<int>());
         if (message_code != MessageCode::ECHO && message_code != MessageCode::ERROR) {
-            json_message["i"] = (uint32_t)millis();
+            json_message[ key_str(JsonKey::IDENTITY) ] = (uint32_t)millis();
 
-        } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
+        } else if (!json_message[ key_str(JsonKey::IDENTITY) ].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
 
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.print(F("ERROR: Response message without an identifier (i)"));

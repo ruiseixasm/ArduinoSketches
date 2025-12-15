@@ -14,6 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef TALKIE_CODES_HPP
 #define TALKIE_CODES_HPP
 
+#include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 
 
 enum class MessageCode : int {
@@ -57,13 +58,15 @@ enum class JsonKey : char {
 };
 
 
-inline const char* key_string(JsonKey json_key, bool upper_case = false) {
-	static char json_key_string[2] = {'\0'};
-	json_key_string[0] = static_cast<char>(json_key);
+inline const char* key_str(JsonKey json_key, bool upper_case = false) {
+	static uint8_t flip_flop = 0;	// The flip_flop avoids the usage of the sam string in a single line double operations
+	static char json_key_string[2][2] = {{'\0'}, {'\0'}};
+	flip_flop = 1 - flip_flop;
+	json_key_string[flip_flop][0] = static_cast<char>(json_key);
 	if (upper_case) {
-		json_key_string[0] += 'A' - 'a';
+		json_key_string[flip_flop][0] += 'A' - 'a';
 	}
-	return json_key_string;
+	return json_key_string[flip_flop];
 }
 
 

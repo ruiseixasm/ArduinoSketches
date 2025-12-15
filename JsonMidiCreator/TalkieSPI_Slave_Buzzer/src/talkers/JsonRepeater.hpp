@@ -36,7 +36,7 @@ public:
 		Serial.print(_name);
 		Serial.print(F(": "));
 		#endif
-        uint16_t c = json_message["c"].as<uint16_t>();
+        uint16_t c = json_message[ key_str(JsonKey::CHECKSUM) ].as<uint16_t>();
 		if (c == LOCAL_C) {
 			#ifdef REPEATER_TALKER_DEBUG
 			Serial.println(F("Received a LOCAL message"));

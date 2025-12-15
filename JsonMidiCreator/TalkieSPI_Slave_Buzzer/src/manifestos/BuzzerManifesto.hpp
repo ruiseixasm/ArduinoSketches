@@ -133,12 +133,12 @@ public:
 
     void echo(JsonObject& json_message, JsonTalker* talker) override {
         (void)talker;		// Silence unused parameter warning
-        Serial.print(json_message["f"].as<String>());
+        Serial.print(json_message[ key_str(JsonKey::FROM) ].as<String>());
         Serial.print(" - ");
         if (json_message["r"].is<String>()) {
             Serial.println(json_message["r"].as<String>());
-        } else if (json_message["d"].is<String>()) {
-            Serial.println(json_message["d"].as<String>());
+        } else if (json_message[ key_str(JsonKey::DESCRIPTION) ].is<String>()) {
+            Serial.println(json_message[ key_str(JsonKey::DESCRIPTION) ].as<String>());
         } else {
             Serial.println(F("Empty echo received!"));
         }
@@ -147,12 +147,12 @@ public:
 
     void error(JsonObject& json_message, JsonTalker* talker) override {
         (void)talker;		// Silence unused parameter warning
-        Serial.print(json_message["f"].as<String>());
+        Serial.print(json_message[ key_str(JsonKey::FROM) ].as<String>());
         Serial.print(" - ");
         if (json_message["r"].is<String>()) {
             Serial.println(json_message["r"].as<String>());
-        } else if (json_message["d"].is<String>()) {
-            Serial.println(json_message["d"].as<String>());
+        } else if (json_message[ key_str(JsonKey::DESCRIPTION) ].is<String>()) {
+            Serial.println(json_message[ key_str(JsonKey::DESCRIPTION) ].as<String>());
         } else {
             Serial.println(F("Empty error received!"));
         }

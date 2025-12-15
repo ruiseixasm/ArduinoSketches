@@ -66,7 +66,8 @@ protected:
 		Serial.print(F(": "));
 		Serial.println(F("Sending a LOCAL message"));
 		#endif
-        json_message["c"] = LOCAL_C;	// 'c' = 1 means LOCAL_C communication
+
+        json_message[ key_str(JsonKey::CHECKSUM) ] = LOCAL_C;	// 'c' = 1 means LOCAL_C communication
         // Triggers all local Talkers to processes the json_message
         bool sent_message = false;
 		if (target_index < _talker_count) {
@@ -126,7 +127,7 @@ protected:
 		Serial.print(F(": "));
 		#endif
 
-		uint16_t c = json_message["c"].as<uint16_t>();
+		uint16_t c = json_message[ key_str(JsonKey::CHECKSUM) ].as<uint16_t>();
 		if (c == LOCAL_C) {	// c == 1 means a local message while 0 means a remote one
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("\tReplied a LOCAL message"));
@@ -205,18 +206,18 @@ public:
 
         if (!pre_validated) {
 
-            if (!json_message["f"].is<String>()) {
+            if (!json_message[ key_str(JsonKey::FROM) ].is<String>()) {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(0);
                 #endif
                 return false;
             }
-            if (!json_message["i"].is<uint32_t>()) {
+            if (!json_message[ key_str(JsonKey::IDENTITY) ].is<uint32_t>()) {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(4);
                 #endif
-                json_message["m"] = 7;   // error
-                json_message["e"] = 4;
+                json_message[ key_str(JsonKey::MESSAGE) ] = 7;   // error
+                json_message[ key_str(JsonKey::ERROR) ] = 4;
 
                 replyMessage(json_message, true);	// Includes reply swap
                 return false;
@@ -227,11 +228,11 @@ public:
         bool dont_interrupt = true;   // Doesn't interrupt next talkers process
 
         // Is it for me?
-        if (json_message["t"].is<uint8_t>()) {
-            if (json_message["t"].as<uint8_t>() != _channel)
+        if (json_message[ key_str(JsonKey::TO) ].is<uint8_t>()) {
+            if (json_message[ key_str(JsonKey::TO) ].as<uint8_t>() != _channel)
                 return true;    // It's still validated (just not for me as a target)
-        } else if (json_message["t"].is<String>()) {
-            if (json_message["t"] != _name) {
+        } else if (json_message[ key_str(JsonKey::TO) ].is<String>()) {
+            if (json_message[ key_str(JsonKey::TO) ] != _name) {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(F("\tMessage NOT for me!"));
                 #endif
@@ -249,17 +250,17 @@ public:
         #endif
 
         // From one to many, starts to set the returning target in this single place only
-        json_message["t"] = json_message["f"];
-        json_message["f"] = _name;
+        json_message[ key_str(JsonKey::TO) ] = json_message[ key_str(JsonKey::FROM) ];
+        json_message[ key_str(JsonKey::FROM) ] = _name;
 
-        MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
-        json_message["w"] = json_message["m"].as<int>();
-        json_message["m"] = static_cast<int>(MessageCode::ECHO);
+        MessageCode message_code = static_cast<MessageCode>(json_message[ key_str(JsonKey::MESSAGE) ].as<int>());
+        json_message[ key_str(JsonKey::MESSAGE, true) ] = json_message[ key_str(JsonKey::MESSAGE) ].as<int>();
+        json_message[ key_str(JsonKey::MESSAGE) ] = static_cast<int>(MessageCode::ECHO);
 
         switch (message_code)
         {
         case MessageCode::TALK:
-            json_message["d"] = _desc;
+            json_message[ key_str(JsonKey::DESCRIPTION) ] = _desc;
             replyMessage(json_message, true);	// Includes reply swap
             break;
         
@@ -274,44 +275,44 @@ public:
                 Serial.println(class_name());
                 #endif
 
-				json_message["v"] = static_cast<int>(MessageCode::RUN);
+				json_message[ key_str(JsonKey::VALUE) ] = static_cast<int>(MessageCode::RUN);
 				_manifesto->iterateRunsReset();
 				const IManifesto::Action* run;
 				uint8_t action_index = 0;
 				while ((run = _manifesto->iterateRunsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
-					json_message["n"] = run->name;      // Direct access
-					json_message["d"] = run->desc;
-					json_message["N"] = action_index++;
+					json_message[ key_str(JsonKey::NAME) ] = run->name;      // Direct access
+					json_message[ key_str(JsonKey::DESCRIPTION) ] = run->desc;
+					json_message[ key_str(JsonKey::NAME, true) ] = action_index++;
 					replyMessage(json_message, true);
 				}
 
-                json_message["v"] = static_cast<int>(MessageCode::SET);
+                json_message[ key_str(JsonKey::VALUE) ] = static_cast<int>(MessageCode::SET);
 				_manifesto->iterateSetsReset();
 				const IManifesto::Action* set;
 				action_index = 0;
 				while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
-					json_message["n"] = set->name;      // Direct access
-					json_message["d"] = set->desc;
-					json_message["N"] = action_index++;
+					json_message[ key_str(JsonKey::NAME) ] = set->name;      // Direct access
+					json_message[ key_str(JsonKey::DESCRIPTION) ] = set->desc;
+					json_message[ key_str(JsonKey::NAME, true) ] = action_index++;
 					replyMessage(json_message, true);
 				}
 				
-                json_message["v"] = static_cast<int>(MessageCode::GET);
+                json_message[ key_str(JsonKey::VALUE) ] = static_cast<int>(MessageCode::GET);
 				_manifesto->iterateGetsReset();
 				const IManifesto::Action* get;
 				action_index = 0;
 				while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
 					none_list = false;
-					json_message["n"] = get->name;      // Direct access
-					json_message["d"] = get->desc;
-					json_message["N"] = action_index++;
+					json_message[ key_str(JsonKey::NAME) ] = get->name;      // Direct access
+					json_message[ key_str(JsonKey::DESCRIPTION) ] = get->desc;
+					json_message[ key_str(JsonKey::NAME, true) ] = action_index++;
 					replyMessage(json_message, true);
 				}
 
                 if(none_list) {
-                    json_message["g"] = static_cast<int>(EchoCode::SAY_AGAIN);
+                    json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::SAY_AGAIN);
                 }
             }
             break;
@@ -319,10 +320,10 @@ public:
         case MessageCode::RUN:
 			{
 				uint8_t index_found_i = 255;
-				if (json_message["N"].is<uint8_t>()) {
-					index_found_i = _manifesto->runIndex(json_message["N"].as<uint8_t>());
-				} else if (json_message["n"].is<const char *>()) {
-					index_found_i = _manifesto->runIndex(json_message["n"].as<const char *>());
+				if (json_message[ key_str(JsonKey::NAME, true) ].is<uint8_t>()) {
+					index_found_i = _manifesto->runIndex(json_message[ key_str(JsonKey::NAME, true) ].as<uint8_t>());
+				} else if (json_message[ key_str(JsonKey::NAME) ].is<const char *>()) {
+					index_found_i = _manifesto->runIndex(json_message[ key_str(JsonKey::NAME) ].as<const char *>());
 				}
 				if (index_found_i < 255) {
 
@@ -333,13 +334,13 @@ public:
 					#endif
 
 					if (_manifesto->runByIndex(index_found_i, json_message, this)) {
-						json_message["g"] = static_cast<int>(EchoCode::ROGER);
+						json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 					} else {
-						json_message["g"] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::NEGATIVE);
 					}
 					replyMessage(json_message, true);
 				} else {
-					json_message["g"] = static_cast<int>(EchoCode::SAY_AGAIN);
+					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 				}
 			}
@@ -348,10 +349,10 @@ public:
         case MessageCode::SET:
 			{
 				uint8_t index_found_i = 255;
-				if (json_message["N"].is<uint8_t>()) {
-					index_found_i = _manifesto->setIndex(json_message["N"].as<uint8_t>());
-				} else if (json_message["n"].is<const char *>()) {
-					index_found_i = _manifesto->setIndex(json_message["n"].as<const char *>());
+				if (json_message[ key_str(JsonKey::NAME, true) ].is<uint8_t>()) {
+					index_found_i = _manifesto->setIndex(json_message[ key_str(JsonKey::NAME, true) ].as<uint8_t>());
+				} else if (json_message[ key_str(JsonKey::NAME) ].is<const char *>()) {
+					index_found_i = _manifesto->setIndex(json_message[ key_str(JsonKey::NAME) ].as<const char *>());
 				}
 				if (index_found_i < 255) {
 
@@ -361,14 +362,14 @@ public:
 					Serial.println(F(", now being processed..."));
 					#endif
 
-					if (_manifesto->setByIndex(index_found_i, json_message["v"].as<uint32_t>(), json_message, this)) {
-						json_message["g"] = static_cast<int>(EchoCode::ROGER);
+					if (_manifesto->setByIndex(index_found_i, json_message[ key_str(JsonKey::VALUE) ].as<uint32_t>(), json_message, this)) {
+						json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 					} else {
-						json_message["g"] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::NEGATIVE);
 					}
 					replyMessage(json_message, true);
 				} else {
-					json_message["g"] = static_cast<int>(EchoCode::SAY_AGAIN);
+					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 				}
 			}
@@ -377,10 +378,10 @@ public:
         case MessageCode::GET:
 			{
 				uint8_t index_found_i = 255;
-				if (json_message["N"].is<uint8_t>()) {
-					index_found_i = _manifesto->getIndex(json_message["N"].as<uint8_t>());
-				} else if (json_message["n"].is<const char *>()) {
-					index_found_i = _manifesto->getIndex(json_message["n"].as<const char *>());
+				if (json_message[ key_str(JsonKey::NAME, true) ].is<uint8_t>()) {
+					index_found_i = _manifesto->getIndex(json_message[ key_str(JsonKey::NAME, true) ].as<uint8_t>());
+				} else if (json_message[ key_str(JsonKey::NAME) ].is<const char *>()) {
+					index_found_i = _manifesto->getIndex(json_message[ key_str(JsonKey::NAME) ].as<const char *>());
 				}
 				if (index_found_i < 255) {
 
@@ -392,10 +393,10 @@ public:
 
 					// No memory leaks because message_doc exists in the listen() method stack
 					// The return of the value works as an implicit ROGER (avoids network flooding)
-					json_message["v"] = _manifesto->getByIndex(index_found_i, json_message, this);
+					json_message[ key_str(JsonKey::VALUE) ] = _manifesto->getByIndex(index_found_i, json_message, this);
 					replyMessage(json_message, true);
 				} else {
-					json_message["g"] = static_cast<int>(EchoCode::SAY_AGAIN);
+					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 				}
 			}
@@ -410,10 +411,10 @@ public:
 				{
 				case SystemCode::MUTE:
 					if (!_muted) {
-						json_message["g"] = static_cast<int>(EchoCode::ROGER);
+						json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 						_muted = true;
 					} else {
-						json_message["g"] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::NEGATIVE);
 						json_message["r"] = "Already muted";
 					}
 					{
@@ -425,17 +426,17 @@ public:
 					break;
 				case SystemCode::UNMUTE:
 					if (_muted) {
-						json_message["g"] = static_cast<int>(EchoCode::ROGER);
+						json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 						_muted = false;
 					} else {
-						json_message["g"] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::NEGATIVE);
 						json_message["r"] = "Already NOT muted";
 					}
 					replyMessage(json_message, true);
 					break;
 				case SystemCode::MUTED:
-					json_message["g"] = static_cast<int>(EchoCode::ROGER);
-					json_message["v"] = _muted;
+					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
+					json_message[ key_str(JsonKey::VALUE) ] = _muted;
 					{
 						bool muted = _muted;
 						_muted = false;	// temporaily unmute device to send state
@@ -444,49 +445,49 @@ public:
 					}
 					break;
 				case SystemCode::BOARD:
-					json_message["g"] = static_cast<int>(EchoCode::ROGER);
+					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 					
 				// AVR Boards (Uno, Nano, Mega) - Check RAM size
 				#ifdef __AVR__
 					#if (RAMEND - RAMSTART + 1) == 2048
-						json_message["d"] = "Arduino Uno/Nano (ATmega328P)";
+						json_message[ key_str(JsonKey::DESCRIPTION) ] = "Arduino Uno/Nano (ATmega328P)";
 					#elif (RAMEND - RAMSTART + 1) == 8192
-						json_message["d"] = "Arduino Mega (ATmega2560)";
+						json_message[ key_str(JsonKey::DESCRIPTION) ] = "Arduino Mega (ATmega2560)";
 					#else
-						json_message["d"] = "Unknown AVR Board";
+						json_message[ key_str(JsonKey::DESCRIPTION) ] = "Unknown AVR Board";
 					#endif
 					
 				// ESP8266
 				#elif defined(ESP8266)
-					json_message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
+					json_message[ key_str(JsonKey::DESCRIPTION) ] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
 					
 				// ESP32
 				#elif defined(ESP32)
-					json_message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
+					json_message[ key_str(JsonKey::DESCRIPTION) ] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
 					
 				// Teensy Boards
 				#elif defined(TEENSYDUINO)
 					#if defined(__IMXRT1062__)
-						json_message["d"] = "Teensy 4.0/4.1 (i.MX RT1062)";
+						json_message[ key_str(JsonKey::DESCRIPTION) ] = "Teensy 4.0/4.1 (i.MX RT1062)";
 					#elif defined(__MK66FX1M0__)
-						json_message["d"] = "Teensy 3.6 (MK66FX1M0)";
+						json_message[ key_str(JsonKey::DESCRIPTION) ] = "Teensy 3.6 (MK66FX1M0)";
 					#elif defined(__MK64FX512__)
-						json_message["d"] = "Teensy 3.5 (MK64FX512)";
+						json_message[ key_str(JsonKey::DESCRIPTION) ] = "Teensy 3.5 (MK64FX512)";
 					#elif defined(__MK20DX256__)
-						json_message["d"] = "Teensy 3.2/3.1 (MK20DX256)";
+						json_message[ key_str(JsonKey::DESCRIPTION) ] = "Teensy 3.2/3.1 (MK20DX256)";
 					#elif defined(__MKL26Z64__)
-						json_message["d"] = "Teensy LC (MKL26Z64)";
+						json_message[ key_str(JsonKey::DESCRIPTION) ] = "Teensy LC (MKL26Z64)";
 					#else
-						json_message["d"] = "Unknown Teensy Board";
+						json_message[ key_str(JsonKey::DESCRIPTION) ] = "Unknown Teensy Board";
 					#endif
 
 				// ARM (Due, Zero, etc.)
 				#elif defined(__arm__)
-					json_message["d"] = "ARM-based Board";
+					json_message[ key_str(JsonKey::DESCRIPTION) ] = "ARM-based Board";
 
 				// Unknown Board
 				#else
-					json_message["d"] = "Unknown Board";
+					json_message[ key_str(JsonKey::DESCRIPTION) ] = "Unknown Board";
 
 				#endif
 
@@ -497,24 +498,24 @@ public:
 					break;
 
 				case SystemCode::PING:
-					json_message["g"] = static_cast<int>(EchoCode::ROGER);
+					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
 					replyMessage(json_message, true);
 					break;
 
 				case SystemCode::DROPS:
-					json_message["g"] = static_cast<int>(EchoCode::ROGER);
-					json_message["v"] = get_drops();
+					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
+					json_message[ key_str(JsonKey::VALUE) ] = get_drops();
 					replyMessage(json_message, true);
 					break;
 
 				case SystemCode::DELAY:
-					json_message["g"] = static_cast<int>(EchoCode::ROGER);
-					json_message["v"] = get_delay();
+					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::ROGER);
+					json_message[ key_str(JsonKey::VALUE) ] = get_delay();
 					replyMessage(json_message, true);
 					break;
 
 				default:
-					json_message["g"] = static_cast<int>(EchoCode::SAY_AGAIN);
+					json_message[ key_str(JsonKey::ROGER) ] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 					break;
 				}
@@ -534,16 +535,16 @@ public:
             break;
         
         case MessageCode::CHANNEL:
-            if (json_message["v"].is<uint8_t>()) {
+            if (json_message[ key_str(JsonKey::VALUE) ].is<uint8_t>()) {
 
                 #ifdef JSON_TALKER_DEBUG
                 Serial.print(F("\tChannel B value is an <uint8_t>: "));
-                Serial.println(json_message["v"].is<uint8_t>());
+                Serial.println(json_message[ key_str(JsonKey::VALUE) ].is<uint8_t>());
                 #endif
 
-                _channel = json_message["v"].as<uint8_t>();
+                _channel = json_message[ key_str(JsonKey::VALUE) ].as<uint8_t>();
             }
-            json_message["v"] = _channel;
+            json_message[ key_str(JsonKey::VALUE) ] = _channel;
             replyMessage(json_message, true);
             break;
         
