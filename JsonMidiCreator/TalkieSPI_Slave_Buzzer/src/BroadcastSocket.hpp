@@ -65,7 +65,7 @@ protected:
     }
 
 
-    uint16_t extractChecksum(int* message_code_int, uint16_t* remote_time) {
+    uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {
         
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
@@ -191,7 +191,7 @@ protected:
 
         if (_received_length > 3*4 + 2) {
             
-            int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
+            uint8_t message_code_int = 255;    // There is no 255 message code, meaning, it has none!
             uint16_t remote_time = 0;
             uint16_t received_checksum = extractChecksum(&message_code_int, &remote_time);
             uint16_t checksum = generateChecksum(_receiving_buffer, _received_length);
@@ -207,7 +207,7 @@ protected:
                 Serial.println(checksum);
                 #endif
 
-                if (message_code_int == 1000) { // Found no message code!
+                if (message_code_int == 255) { // Found no message code!
                     #ifdef BROADCASTSOCKET_DEBUG
                     Serial.println(F("triggerTalkers5: No message code!"));
                     #endif
