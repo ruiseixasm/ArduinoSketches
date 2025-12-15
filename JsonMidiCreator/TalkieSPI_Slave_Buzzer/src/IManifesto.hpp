@@ -16,6 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <Arduino.h>
 #include <ArduinoJson.h>    // Include ArduinoJson Library
+#include "TalkieCodes.hpp"
 
 
 class JsonTalker;
@@ -33,28 +34,6 @@ public:
     
     IManifesto() = default;
     virtual ~IManifesto() = default;
-
-    enum MessageCode : int {
-        TALK,
-        LIST,
-        RUN,
-        SET,
-        GET,
-        SYS,
-        ECHO,
-        ERROR,
-        CHANNEL
-    };
-
-	enum SystemCode : int {
-		MUTE, UNMUTE, MUTED, BOARD, PING, DROPS, DELAY
-	};
-
-    enum EchoCode : int {
-        ROGER,
-        SAY_AGAIN,
-        NEGATIVE
-    };
 
     struct Action {
         const char* name;

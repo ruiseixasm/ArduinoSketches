@@ -17,6 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 #include "IManifesto.hpp"
+#include "TalkieCodes.hpp"
 
 
 // #define JSON_TALKER_DEBUG
@@ -251,18 +252,18 @@ public:
         json_message["t"] = json_message["f"];
         json_message["f"] = _name;
 
-        IManifesto::MessageCode message_code = static_cast<IManifesto::MessageCode>(json_message["m"].as<int>());
+        MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
         json_message["w"] = json_message["m"].as<int>();
-        json_message["m"] = IManifesto::MessageCode::ECHO;
+        json_message["m"] = static_cast<int>(MessageCode::ECHO);
 
         switch (message_code)
         {
-        case IManifesto::MessageCode::TALK:
+        case MessageCode::TALK:
             json_message["d"] = _desc;
             replyMessage(json_message, true);	// Includes reply swap
             break;
         
-        case IManifesto::MessageCode::LIST:
+        case MessageCode::LIST:
             {   // Because of none_list !!!
                 bool none_list = true;
 
@@ -273,7 +274,7 @@ public:
                 Serial.println(class_name());
                 #endif
 
-				json_message["v"] = IManifesto::MessageCode::RUN;
+				json_message["v"] = static_cast<int>(MessageCode::RUN);
 				_manifesto->iterateRunsReset();
 				const IManifesto::Action* run;
 				uint8_t action_index = 0;
@@ -285,7 +286,7 @@ public:
 					replyMessage(json_message, true);
 				}
 
-                json_message["v"] = IManifesto::MessageCode::SET;
+                json_message["v"] = static_cast<int>(MessageCode::SET);
 				_manifesto->iterateSetsReset();
 				const IManifesto::Action* set;
 				action_index = 0;
@@ -297,7 +298,7 @@ public:
 					replyMessage(json_message, true);
 				}
 				
-                json_message["v"] = IManifesto::MessageCode::GET;
+                json_message["v"] = static_cast<int>(MessageCode::GET);
 				_manifesto->iterateGetsReset();
 				const IManifesto::Action* get;
 				action_index = 0;
@@ -310,12 +311,12 @@ public:
 				}
 
                 if(none_list) {
-                    json_message["g"] = 2;       // NONE
+                    json_message["g"] = static_cast<int>(EchoCode::SAY_AGAIN);
                 }
             }
             break;
         
-        case IManifesto::MessageCode::RUN:
+        case MessageCode::RUN:
 			{
 				uint8_t index_found_i = 255;
 				if (json_message["N"].is<uint8_t>()) {
@@ -332,19 +333,19 @@ public:
 					#endif
 
 					if (_manifesto->runByIndex(index_found_i, json_message, this)) {
-						json_message["g"] = IManifesto::ROGER;
+						json_message["g"] = static_cast<int>(EchoCode::ROGER);
 					} else {
-						json_message["g"] = IManifesto::NEGATIVE;
+						json_message["g"] = static_cast<int>(EchoCode::NEGATIVE);
 					}
 					replyMessage(json_message, true);
 				} else {
-					json_message["g"] = IManifesto::SAY_AGAIN;
+					json_message["g"] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 				}
 			}
             break;
         
-        case IManifesto::MessageCode::SET:
+        case MessageCode::SET:
 			{
 				uint8_t index_found_i = 255;
 				if (json_message["N"].is<uint8_t>()) {
@@ -361,19 +362,19 @@ public:
 					#endif
 
 					if (_manifesto->setByIndex(index_found_i, json_message["v"].as<uint32_t>(), json_message, this)) {
-						json_message["g"] = IManifesto::ROGER;
+						json_message["g"] = static_cast<int>(EchoCode::ROGER);
 					} else {
-						json_message["g"] = IManifesto::NEGATIVE;
+						json_message["g"] = static_cast<int>(EchoCode::NEGATIVE);
 					}
 					replyMessage(json_message, true);
 				} else {
-					json_message["g"] = IManifesto::SAY_AGAIN;
+					json_message["g"] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 				}
 			}
             break;
         
-        case IManifesto::MessageCode::GET:
+        case MessageCode::GET:
 			{
 				uint8_t index_found_i = 255;
 				if (json_message["N"].is<uint8_t>()) {
@@ -394,25 +395,25 @@ public:
 					json_message["v"] = _manifesto->getByIndex(index_found_i, json_message, this);
 					replyMessage(json_message, true);
 				} else {
-					json_message["g"] = IManifesto::SAY_AGAIN;
+					json_message["g"] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 				}
 			}
             break;
         
-        case IManifesto::MessageCode::SYS:
+        case MessageCode::SYS:
 			if (json_message["s"].is<int>()) {
 
-        		IManifesto::SystemCode system_code = static_cast<IManifesto::SystemCode>(json_message["s"].as<int>());
+        		SystemCode system_code = static_cast<SystemCode>(json_message["s"].as<int>());
 
 				switch (system_code)
 				{
-				case IManifesto::SystemCode::MUTE:
+				case SystemCode::MUTE:
 					if (!_muted) {
-						json_message["g"] = IManifesto::ROGER;
+						json_message["g"] = static_cast<int>(EchoCode::ROGER);
 						_muted = true;
 					} else {
-						json_message["g"] = IManifesto::NEGATIVE;
+						json_message["g"] = static_cast<int>(EchoCode::NEGATIVE);
 						json_message["r"] = "Already muted";
 					}
 					{
@@ -422,18 +423,18 @@ public:
 						_muted = muted;
 					}
 					break;
-				case IManifesto::SystemCode::UNMUTE:
+				case SystemCode::UNMUTE:
 					if (_muted) {
-						json_message["g"] = IManifesto::ROGER;
+						json_message["g"] = static_cast<int>(EchoCode::ROGER);
 						_muted = false;
 					} else {
-						json_message["g"] = IManifesto::NEGATIVE;
+						json_message["g"] = static_cast<int>(EchoCode::NEGATIVE);
 						json_message["r"] = "Already NOT muted";
 					}
 					replyMessage(json_message, true);
 					break;
-				case IManifesto::SystemCode::MUTED:
-					json_message["g"] = IManifesto::ROGER;
+				case SystemCode::MUTED:
+					json_message["g"] = static_cast<int>(EchoCode::ROGER);
 					json_message["v"] = _muted;
 					{
 						bool muted = _muted;
@@ -442,8 +443,8 @@ public:
 						_muted = muted;
 					}
 					break;
-				case IManifesto::SystemCode::BOARD:
-					json_message["g"] = IManifesto::ROGER;
+				case SystemCode::BOARD:
+					json_message["g"] = static_cast<int>(EchoCode::ROGER);
 					
 				// AVR Boards (Uno, Nano, Mega) - Check RAM size
 				#ifdef __AVR__
@@ -495,44 +496,44 @@ public:
 					
 					break;
 
-				case IManifesto::SystemCode::PING:
-					json_message["g"] = IManifesto::ROGER;
+				case SystemCode::PING:
+					json_message["g"] = static_cast<int>(EchoCode::ROGER);
 					replyMessage(json_message, true);
 					break;
 
-				case IManifesto::SystemCode::DROPS:
-					json_message["g"] = IManifesto::ROGER;
+				case SystemCode::DROPS:
+					json_message["g"] = static_cast<int>(EchoCode::ROGER);
 					json_message["v"] = get_drops();
 					replyMessage(json_message, true);
 					break;
 
-				case IManifesto::SystemCode::DELAY:
-					json_message["g"] = IManifesto::ROGER;
+				case SystemCode::DELAY:
+					json_message["g"] = static_cast<int>(EchoCode::ROGER);
 					json_message["v"] = get_delay();
 					replyMessage(json_message, true);
 					break;
 
 				default:
-					json_message["g"] = IManifesto::SAY_AGAIN;
+					json_message["g"] = static_cast<int>(EchoCode::SAY_AGAIN);
 					replyMessage(json_message, true);
 					break;
 				}
             }
             break;
         
-        case IManifesto::MessageCode::ECHO:
+        case MessageCode::ECHO:
 			if (_manifesto) {
 				_manifesto->echo(json_message, this);
 			}
             break;
         
-        case IManifesto::MessageCode::ERROR:
+        case MessageCode::ERROR:
 			if (_manifesto) {
 				_manifesto->error(json_message, this);
 			}
             break;
         
-        case IManifesto::MessageCode::CHANNEL:
+        case MessageCode::CHANNEL:
             if (json_message["v"].is<uint8_t>()) {
 
                 #ifdef JSON_TALKER_DEBUG

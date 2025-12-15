@@ -16,6 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <Arduino.h>    // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "JsonTalker.h"
+#include "TalkieCodes.hpp"
 
 
 // #define BROADCASTSOCKET_DEBUG
@@ -216,9 +217,9 @@ protected:
                 
                 if (_max_delay_ms > 0) {
 
-                    IManifesto::MessageCode message_code = static_cast<IManifesto::MessageCode>(message_code_int);
+                    MessageCode message_code = static_cast<MessageCode>(message_code_int);
 
-                    if (!(message_code < IManifesto::MessageCode::RUN || message_code > IManifesto::MessageCode::GET)) {
+                    if (!(message_code < MessageCode::RUN || message_code > MessageCode::GET)) {
 
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.print(F("triggerTalkers6: Message code requires delay check: "));
@@ -405,8 +406,8 @@ public:
     
     bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
 
-        IManifesto::MessageCode message_code = static_cast<IManifesto::MessageCode>(json_message["m"].as<int>());
-        if (message_code != IManifesto::MessageCode::ECHO && message_code != IManifesto::MessageCode::ERROR) {
+        MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
+        if (message_code != MessageCode::ECHO && message_code != MessageCode::ERROR) {
             json_message["i"] = (uint32_t)millis();
 
         } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
