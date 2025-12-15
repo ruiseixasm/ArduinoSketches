@@ -420,7 +420,7 @@ public:
         } else if (!json_message[ key_str(JsonKey::IDENTITY) ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
 
             #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("ERROR: Response message without an identifier (i): "));
+            Serial.print(F("ERROR: Response message with a wrong or without an identifier (i): "));
             serializeJson(json_message, Serial);
             Serial.println();  // optional: just to add a newline after the JSON
             #endif
