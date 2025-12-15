@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef JSON_REPEATER_HPP
-#define JSON_REPEATER_HPP
+#ifndef JSON_REPEATER_H
+#define JSON_REPEATER_H
 
 #include "../JsonTalker.h"         // Includes the ArduinoJson Library
 
@@ -26,6 +26,9 @@ public:
 
     JsonRepeater(const char* name, const char* desc, IManifesto* manifesto)
         : JsonTalker(name, desc, manifesto) {}
+
+
+    bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) override;
 
 
 	// Works as a router to LOCAL_C send
@@ -51,4 +54,4 @@ public:
 };
 
 
-#endif // JSON_REPEATER_HPP
+#endif // JSON_REPEATER_H

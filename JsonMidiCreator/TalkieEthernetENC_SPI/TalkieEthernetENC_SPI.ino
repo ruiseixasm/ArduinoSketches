@@ -23,7 +23,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
 #include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Master.hpp"
-#include "src/talkers/JsonRepeater.hpp"
+#include "src/talkers/JsonRepeater.h"
 
 
 const char t_ethernet_name[] = "t_ethernet";
