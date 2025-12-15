@@ -290,7 +290,7 @@ public:
                 Serial.println(class_name());
                 #endif
 
-				json_message["w"] = MessageCode::RUN;
+				json_message["v"] = MessageCode::RUN;
 				_manifesto->iterateRunsReset();
 				const IManifesto::Action* run;
 				uint8_t action_index = 0;
@@ -302,7 +302,7 @@ public:
 					replyMessage(json_message, true);
 				}
 
-                json_message["w"] = MessageCode::SET;
+                json_message["v"] = MessageCode::SET;
 				_manifesto->iterateSetsReset();
 				const IManifesto::Action* set;
 				action_index = 0;
@@ -314,7 +314,7 @@ public:
 					replyMessage(json_message, true);
 				}
 				
-                json_message["w"] = MessageCode::GET;
+                json_message["v"] = MessageCode::GET;
 				_manifesto->iterateGetsReset();
 				const IManifesto::Action* get;
 				action_index = 0;
@@ -550,16 +550,16 @@ public:
             break;
         
         case MessageCode::CHANNEL:
-            if (json_message["b"].is<uint8_t>()) {
+            if (json_message["v"].is<uint8_t>()) {
 
                 #ifdef JSON_TALKER_DEBUG
                 Serial.print(F("\tChannel B value is an <uint8_t>: "));
                 Serial.println(json_message["b"].is<uint8_t>());
                 #endif
 
-                _channel = json_message["b"].as<uint8_t>();
+                _channel = json_message["v"].as<uint8_t>();
             }
-            json_message["b"] = _channel;
+            json_message["v"] = _channel;
             replyMessage(json_message, true);
             break;
         
