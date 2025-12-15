@@ -534,7 +534,6 @@ public:
 					replyMessage(json_message, true);
 					break;
 				}
-
             }
             break;
         
