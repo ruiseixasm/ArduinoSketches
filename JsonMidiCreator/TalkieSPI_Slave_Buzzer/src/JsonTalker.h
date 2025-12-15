@@ -554,7 +554,7 @@ public:
 
                 #ifdef JSON_TALKER_DEBUG
                 Serial.print(F("\tChannel B value is an <uint8_t>: "));
-                Serial.println(json_message["b"].is<uint8_t>());
+                Serial.println(json_message["v"].is<uint8_t>());
                 #endif
 
                 _channel = json_message["v"].as<uint8_t>();
