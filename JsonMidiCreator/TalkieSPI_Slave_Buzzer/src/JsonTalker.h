@@ -56,6 +56,11 @@ public:
     };
 
 
+	enum SystemCode : int {
+		MUTE, UNMUTE, MUTED, BOARD, PING, DROPS, DELAY
+	};
+
+
 protected:
 
     const char* _name;      // Name of the Talker
@@ -152,7 +157,7 @@ protected:
 
     void set_delay(uint8_t delay);
     uint8_t get_delay();
-    uint16_t get_total_drops();
+    uint16_t get_drops();
 
 
 public:
@@ -413,54 +418,123 @@ public:
             break;
         
         case MessageCode::SYS:
-            {
-            // AVR Boards (Uno, Nano, Mega) - Check RAM size
-            #ifdef __AVR__
-				#if (RAMEND - RAMSTART + 1) == 2048
-					json_message["d"] = "Arduino Uno/Nano (ATmega328P)";
-				#elif (RAMEND - RAMSTART + 1) == 8192
-					json_message["d"] = "Arduino Mega (ATmega2560)";
+			if (json_message["s"].is<int>()) {
+
+        		SystemCode system_code = static_cast<SystemCode>(json_message["s"].as<int>());
+
+				switch (system_code)
+				{
+				case SystemCode::MUTE:
+					if (!_muted) {
+						json_message["g"] = IManifesto::ROGER;
+						_muted = true;
+					} else {
+						json_message["g"] = IManifesto::NEGATIVE;
+						json_message["r"] = "Already muted";
+					}
+					{
+						bool muted = _muted;
+						_muted = false;	// temporaily unmute device to send state
+						replyMessage(json_message, true);
+						_muted = muted;
+					}
+					break;
+				case SystemCode::UNMUTE:
+					if (_muted) {
+						json_message["g"] = IManifesto::ROGER;
+						_muted = false;
+					} else {
+						json_message["g"] = IManifesto::NEGATIVE;
+						json_message["r"] = "Already NOT muted";
+					}
+					replyMessage(json_message, true);
+					break;
+				case SystemCode::MUTED:
+					json_message["g"] = IManifesto::ROGER;
+					json_message["v"] = _muted;
+					{
+						bool muted = _muted;
+						_muted = false;	// temporaily unmute device to send state
+						replyMessage(json_message, true);
+						_muted = muted;
+					}
+					break;
+				case SystemCode::BOARD:
+					json_message["g"] = IManifesto::ROGER;
+					
+				// AVR Boards (Uno, Nano, Mega) - Check RAM size
+				#ifdef __AVR__
+					#if (RAMEND - RAMSTART + 1) == 2048
+						json_message["d"] = "Arduino Uno/Nano (ATmega328P)";
+					#elif (RAMEND - RAMSTART + 1) == 8192
+						json_message["d"] = "Arduino Mega (ATmega2560)";
+					#else
+						json_message["d"] = "Unknown AVR Board";
+					#endif
+					
+				// ESP8266
+				#elif defined(ESP8266)
+					json_message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
+					
+				// ESP32
+				#elif defined(ESP32)
+					json_message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
+					
+				// Teensy Boards
+				#elif defined(TEENSYDUINO)
+					#if defined(__IMXRT1062__)
+						json_message["d"] = "Teensy 4.0/4.1 (i.MX RT1062)";
+					#elif defined(__MK66FX1M0__)
+						json_message["d"] = "Teensy 3.6 (MK66FX1M0)";
+					#elif defined(__MK64FX512__)
+						json_message["d"] = "Teensy 3.5 (MK64FX512)";
+					#elif defined(__MK20DX256__)
+						json_message["d"] = "Teensy 3.2/3.1 (MK20DX256)";
+					#elif defined(__MKL26Z64__)
+						json_message["d"] = "Teensy LC (MKL26Z64)";
+					#else
+						json_message["d"] = "Unknown Teensy Board";
+					#endif
+
+				// ARM (Due, Zero, etc.)
+				#elif defined(__arm__)
+					json_message["d"] = "ARM-based Board";
+
+				// Unknown Board
 				#else
-					json_message["d"] = "Unknown AVR Board";
+					json_message["d"] = "Unknown Board";
+
 				#endif
-				
-            // ESP8266
-            #elif defined(ESP8266)
-                json_message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
-                
-            // ESP32
-            #elif defined(ESP32)
-                json_message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
-                
-            // Teensy Boards
-            #elif defined(TEENSYDUINO)
-                #if defined(__IMXRT1062__)
-                    json_message["d"] = "Teensy 4.0/4.1 (i.MX RT1062)";
-                #elif defined(__MK66FX1M0__)
-                    json_message["d"] = "Teensy 3.6 (MK66FX1M0)";
-                #elif defined(__MK64FX512__)
-                    json_message["d"] = "Teensy 3.5 (MK64FX512)";
-                #elif defined(__MK20DX256__)
-                    json_message["d"] = "Teensy 3.2/3.1 (MK20DX256)";
-                #elif defined(__MKL26Z64__)
-                    json_message["d"] = "Teensy LC (MKL26Z64)";
-                #else
-                    json_message["d"] = "Unknown Teensy Board";
-                #endif
 
-            // ARM (Due, Zero, etc.)
-            #elif defined(__arm__)
-                json_message["d"] = "ARM-based Board";
+					replyMessage(json_message, true);
 
-            // Unknown Board
-            #else
-                json_message["d"] = "Unknown Board";
+					// TO INSERT HERE EXTRA DATA !!
+					
+					break;
 
-            #endif
+				case SystemCode::PING:
+					json_message["g"] = IManifesto::ROGER;
+					replyMessage(json_message, true);
+					break;
 
-                replyMessage(json_message, true);
+				case SystemCode::DROPS:
+					json_message["g"] = IManifesto::ROGER;
+					json_message["v"] = get_drops();
+					replyMessage(json_message, true);
+					break;
 
-                // TO INSERT HERE EXTRA DATA !!
+				case SystemCode::DELAY:
+					json_message["g"] = IManifesto::ROGER;
+					json_message["v"] = get_delay();
+					replyMessage(json_message, true);
+					break;
+
+				default:
+					json_message["g"] = IManifesto::SAY_AGAIN;
+					replyMessage(json_message, true);
+					break;
+				}
+
             }
             break;
         
