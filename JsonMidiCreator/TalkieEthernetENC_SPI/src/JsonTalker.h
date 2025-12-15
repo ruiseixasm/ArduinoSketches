@@ -47,6 +47,13 @@ protected:
     static JsonTalker** _json_talkers;  // It's capable of communicate with other talkers (local)
     static uint8_t _talker_count;
 
+    const char* _name;      // Name of the Talker
+    const char* _desc;      // Description of the Device
+	IManifesto* _manifesto = nullptr;
+    uint8_t _channel = 0;
+    bool _muted = false;
+
+
 public:
 
     // Explicit default constructor
@@ -62,13 +69,6 @@ public:
 
 
 protected:
-
-    const char* _name;      // Name of the Talker
-    const char* _desc;      // Description of the Device
-	IManifesto* _manifesto = nullptr;
-    uint8_t _channel = 0;
-    bool _muted = false;
-
 
     virtual bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255);
 
@@ -510,7 +510,7 @@ public:
 					Serial.print(F("\tPing replied as message code: "));
 					Serial.println(json_message[ JsonKey::MESSAGE ].is<int>());
 					#endif
-
+					// Replies as soon as possible (best case scenario)
 					replyMessage(json_message, true);
 					break;
 
