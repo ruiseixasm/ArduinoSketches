@@ -31,7 +31,7 @@ public:
 protected:
 
     uint16_t _buzz_duration_ms = 100;
-	unsigned long _buzz_start = 0;
+	uint16_t _buzz_start = 0;
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
@@ -61,7 +61,7 @@ public:
 
 	void loop(JsonTalker* talker) override {
         (void)talker;		// Silence unused parameter warning
-		if (millis() - _buzz_start > _buzz_duration_ms) {
+		if ((uint16_t)millis() - _buzz_start > _buzz_duration_ms) {
 			#ifdef BUZZ_PIN
 			digitalWrite(BUZZ_PIN, LOW);
 			#endif
@@ -89,7 +89,7 @@ public:
 					#endif
 
 					digitalWrite(BUZZ_PIN, HIGH);
-					_buzz_start = millis();
+					_buzz_start = (uint16_t)millis();
 
 					#else
 					#ifdef BUZZER_MANIFESTO_DEBUG

@@ -212,7 +212,7 @@ public:
                 #endif
                 return false;
             }
-            if (!json_message[ key_str(JsonKey::IDENTITY) ].is<uint32_t>()) {
+            if (!json_message[ key_str(JsonKey::IDENTITY) ].is<uint16_t>()) {
                 #ifdef JSON_TALKER_DEBUG
                 Serial.println(4);
                 #endif

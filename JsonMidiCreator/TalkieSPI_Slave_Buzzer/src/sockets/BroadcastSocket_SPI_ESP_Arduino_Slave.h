@@ -92,9 +92,9 @@ protected:
 
 
 	bool availableReceivingBuffer(uint8_t wait_seconds = 3) override {
-		unsigned long start_waiting = millis();
+		uint16_t start_waiting = (uint16_t)millis();
 		while (_received_length_spi) {
-			if (millis() - start_waiting > 1000 * wait_seconds) {
+			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
 				return false;
 			}
 		}
@@ -102,9 +102,9 @@ protected:
 	}
 
 	bool availableSendingBuffer(uint8_t wait_seconds = 3) override {
-		unsigned long start_waiting = millis();
+		uint16_t start_waiting = (uint16_t)millis();
 		while (_sending_length_spi) {
-			if (millis() - start_waiting > 1000 * wait_seconds) {
+			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
 				
 				#ifdef BROADCASTSOCKET_DEBUG
 				Serial.println(F("\tavailableSendingBuffer: NOT available sending buffer"));
