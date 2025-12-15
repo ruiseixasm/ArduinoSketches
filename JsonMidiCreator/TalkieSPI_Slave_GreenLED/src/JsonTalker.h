@@ -20,7 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 
 
-#define JSON_TALKER_DEBUG
+// #define JSON_TALKER_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -70,9 +70,9 @@ protected:
     bool _muted = false;
 
 
-    bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255);
+    virtual bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255);
 
-    bool localSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
+    virtual bool localSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
         (void)as_reply; 	// Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
 
@@ -135,7 +135,7 @@ protected:
     }
 
 
-    bool replyMessage(JsonObject& json_message, bool as_reply = true) {
+    virtual bool replyMessage(JsonObject& json_message, bool as_reply = true) {
 
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("\t"));
