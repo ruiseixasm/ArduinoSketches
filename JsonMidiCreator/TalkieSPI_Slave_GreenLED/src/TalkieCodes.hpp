@@ -40,7 +40,12 @@ struct TalkieCodes {
     };
 
 
-	enum class MessageCode : int {
+	enum class SourceData : int {
+		REMOTE, LOCAL
+	};
+
+
+	enum class MessageData : int {
 		RUN,
 		SET,
 		GET,
@@ -53,26 +58,18 @@ struct TalkieCodes {
 	};
 
 
-	enum class SystemCode : int {
+	enum class SystemData : int {
 		BOARD, PING, DROPS, DELAY, MUTE, UNMUTE, MUTED
 	};
 
 
-	enum class EchoCode : int {
-		ROGER,
-		SAY_AGAIN,
-		NEGATIVE,
-		NIL
+	enum class EchoData : int {
+		ROGER, SAY_AGAIN, NEGATIVE, NIL
 	};
 
 
-	enum class ErrorCode : int {
-		FROM,
-		FIELDS,
-		CHECKSUM,
-		MESSAGE,
-		IDENTITY,
-		DELAY
+	enum class ErrorData : int {
+		FROM, FIELD, CHECKSUM, MESSAGE, IDENTITY, DELAY, KEY, DATA
 	};
 
 };

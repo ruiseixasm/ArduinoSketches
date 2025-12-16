@@ -217,9 +217,9 @@ protected:
                 
                 if (_max_delay_ms > 0) {
 
-                    MessageCode message_code = static_cast<MessageCode>(message_code_int);
+                    MessageData message_code = static_cast<MessageData>(message_code_int);
 
-                    if (!(message_code < MessageCode::RUN || message_code > MessageCode::GET)) {
+                    if (!(message_code < MessageData::RUN || message_code > MessageData::GET)) {
 
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.print(F("triggerTalkers6: Message code requires delay check: "));
