@@ -180,7 +180,7 @@ protected:
     }
 
 
-	// Allows the overriding class to peek at the received JSON document
+	// Allows the overriding class to peek at the received JSON message
 	virtual void showReceivedMessage(const JsonObject& json_message) {}
 
     
@@ -450,7 +450,7 @@ public:
     }
 
 
-	// Allows the overriding class to peek at the sending JSON document
+	// Allows the overriding class to peek at the sending JSON message
 	virtual void showSendingMessage(const JsonObject& json_message) {}
 
     
