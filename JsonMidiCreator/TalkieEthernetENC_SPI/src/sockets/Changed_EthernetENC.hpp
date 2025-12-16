@@ -65,13 +65,13 @@ protected:
             } else {
 				
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
-				if (_source_ip == broadcastIP) {
-
-					Serial.println(F("\tsend1: --> Broadcast sent to the 255.255.255.255 address -->"));
-
-				} else {
+				if (as_reply && _source_ip != broadcastIP) {
 
 					Serial.println(F("\tsend1: --> Directly sent to the received IP address -->"));
+					
+				} else {
+					
+					Serial.println(F("\tsend1: --> Broadcast sent to the 255.255.255.255 address -->"));
 					
 				}
 				#endif
