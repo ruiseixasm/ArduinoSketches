@@ -180,9 +180,8 @@ protected:
     }
 
 
-	virtual void showReceivedMessage(const JsonObject& json_message) {
-
-	}
+	// Allows the overriding class to peek at the received JSON document
+	virtual void showReceivedMessage(const JsonObject& json_message) {}
 
     
     uint8_t triggerTalkers() {
@@ -450,6 +449,10 @@ public:
         }
     }
 
+
+	// Allows the overriding class to peek at the sending JSON document
+	virtual void showSendingMessage(const JsonObject& json_message) {}
+
     
     bool remoteSend(JsonObject& json_message, uint8_t target_index = 255) {
 
@@ -477,6 +480,8 @@ public:
 			Serial.print(F("remoteSend4: JSON length: "));
 			Serial.println(_sending_length);
 			#endif
+
+			showSendingMessage(json_message);
 
 			if (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name) {
 				return send(true, target_index);	// send is internally triggered, so, this method can hardly be static
