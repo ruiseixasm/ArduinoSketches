@@ -37,23 +37,77 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 class Changed_EthernetENC : public BroadcastSocket {
-private:
+protected:
+
     uint16_t _port = 5005;
     IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     EthernetUDP* _udp = nullptr;
+	String _from_name = "";
 
-protected:
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
     Changed_EthernetENC(JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {}
 
 
-    bool send(bool as_reply = false, uint8_t target_index = 255) override {
-        if (_udp == nullptr) return false;
+		
+    uint8_t receive() override {
+        if (_udp == nullptr) return 0;
 
-        if (BroadcastSocket::send(as_reply, target_index)) {	// Very important pre processing !!
+        // Need to call homologous method in super class first
+        BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
+        // Receive packets
+        int packetSize = _udp->parsePacket();
+        if (packetSize > 0) {
+
+            // Avoids overflow
+            if (packetSize > BROADCAST_SOCKET_BUFFER_SIZE) return 0;
+
+            int length = _udp->read(_receiving_buffer, static_cast<size_t>(packetSize));
+            if (length <= 0) return 0;  // Your requested check - handles all error cases
+            
+            #ifdef BROADCAST_ETHERNETENC_DEBUG
+            Serial.print(F("\treceive1: "));
+            Serial.print(packetSize);
+            Serial.print(F("B from "));
+            Serial.print(_udp->remoteIP());
+            Serial.print(F(":"));
+            Serial.print(_udp->remotePort());
+            Serial.print(F(" -> "));
+            Serial.println(_receiving_buffer);
+            #endif
+            
+            _source_ip = _udp->remoteIP();
+			// Makes sure the _received_length is set
+			_received_length = length;
+			triggerTalkers();
+			// Makes sure the _receiving_buffer is deleted with 0
+			_received_length = 0;
+			return length;
+        }
+        return 0;   // nothing received
+    }
+
+
+	// Allows the overriding class to peek at the received JSON message
+	void showJsonMessage(const JsonObject& json_message) override {
+
+		if (!json_message[ JsonKey::FROM ].is<String>()) {
+			#ifdef JSON_TALKER_DEBUG
+			Serial.println(F("ERROR: From key 'f' is missing"));
+			#endif
+			return;
+		}
+		_from_name = json_message[ JsonKey::FROM ].as<String>();
+	}
+
+
+    bool send(const JsonObject& json_message, uint8_t target_index = 255) override {
+		
+        if (_udp && BroadcastSocket::send(json_message, target_index)) {	// Very important pre processing !!
+			
+			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
             IPAddress broadcastIP(255, 255, 255, 255);
             
             #ifdef ENABLE_DIRECT_ADDRESSING
@@ -111,47 +165,7 @@ protected:
 
 			return true;
         }
-
         return false;
-    }
-
-
-    uint8_t receive() override {
-        if (_udp == nullptr) return 0;
-
-        // Need to call homologous method in super class first
-        BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
-
-        // Receive packets
-        int packetSize = _udp->parsePacket();
-        if (packetSize > 0) {
-
-            // Avoids overflow
-            if (packetSize > BROADCAST_SOCKET_BUFFER_SIZE) return 0;
-
-            int length = _udp->read(_receiving_buffer, static_cast<size_t>(packetSize));
-            if (length <= 0) return 0;  // Your requested check - handles all error cases
-            
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.print(F("\treceive1: "));
-            Serial.print(packetSize);
-            Serial.print(F("B from "));
-            Serial.print(_udp->remoteIP());
-            Serial.print(F(":"));
-            Serial.print(_udp->remotePort());
-            Serial.print(F(" -> "));
-            Serial.println(_receiving_buffer);
-            #endif
-            
-            _source_ip = _udp->remoteIP();
-			// Makes sure the _received_length is set
-			_received_length = length;
-			triggerTalkers();
-			// Makes sure the _receiving_buffer is deleted with 0
-			_received_length = 0;
-			return length;
-        }
-        return 0;   // nothing received
     }
 
 
@@ -168,7 +182,7 @@ public:
 
     void set_port(uint16_t port) { _port = port; }
     void set_udp(EthernetUDP* udp) { _udp = udp; }
-	
+
 };
 
 #endif // CHANGED_ETHERNETENC_HPP

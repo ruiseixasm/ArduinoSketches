@@ -66,6 +66,7 @@ protected:
 	bool _initiated = false;
     int* _talkers_ss_pins;
     uint8_t _actual_ss_pin = VSPI_SS;
+	String _from_name = "";
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
@@ -367,32 +368,45 @@ protected:
         return acknowledge;
     }
 
+
+	// Allows the overriding class to peek at the received JSON message
+	void showJsonMessage(const JsonObject& json_message) override {
+
+		if (!json_message[ JsonKey::FROM ].is<String>()) {
+			#ifdef JSON_TALKER_DEBUG
+			Serial.println(F("ERROR: From key 'f' is missing"));
+			#endif
+			return;
+		}
+		_from_name = json_message[ JsonKey::FROM ].as<String>();
+	}
+
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(bool as_reply = false, uint8_t target_index = 255) override {
+    bool send(const JsonObject& json_message, uint8_t target_index = 255) override {
 
-		if (_initiated) {
+		if (_initiated && BroadcastSocket::send(json_message, target_index)) {	// Very important pre processing !!
 
-			if (BroadcastSocket::send(as_reply, target_index)) {	// Very important pre processing !!
-				#ifdef ENABLE_DIRECT_ADDRESSING
-				if (as_reply) {
-					sendString(_actual_ss_pin);
-				} else if (target_index < _talker_count) {
-					sendString(_talkers_ss_pins[target_index]);
-				} else {    // Broadcast mode
-					for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-						sendString(_talkers_ss_pins[ss_pin_i]);
-					}
-				}
-				#else
+			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
+
+			#ifdef ENABLE_DIRECT_ADDRESSING
+			if (as_reply) {
+				sendString(_actual_ss_pin);
+			} else if (target_index < _talker_count) {
+				sendString(_talkers_ss_pins[target_index]);
+			} else {    // Broadcast mode
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
 					sendString(_talkers_ss_pins[ss_pin_i]);
 				}
-				#endif
-
-				_sending_length = 0;	// Deletes sending buffer
-				return true;
 			}
+			#else
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
+				sendString(_talkers_ss_pins[ss_pin_i]);
+			}
+			#endif
+
+			_sending_length = 0;	// Deletes sending buffer
+			return true;
 		}
         return false;
     }

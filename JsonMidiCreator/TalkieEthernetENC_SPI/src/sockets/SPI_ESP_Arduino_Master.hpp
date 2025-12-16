@@ -60,6 +60,7 @@ protected:
     int* _ss_pins;
     uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
+	String _from_name = "";
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
@@ -429,62 +430,74 @@ protected:
         return acknowledge;
     }
 
+
+	// Allows the overriding class to peek at the received JSON message
+	void showJsonMessage(const JsonObject& json_message) override {
+
+		if (!json_message[ JsonKey::FROM ].is<String>()) {
+			#ifdef JSON_TALKER_DEBUG
+			Serial.println(F("ERROR: From key 'f' is missing"));
+			#endif
+			return;
+		}
+		_from_name = json_message[ JsonKey::FROM ].as<String>();
+	}
+
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(bool as_reply = false, uint8_t target_index = 255) override {
+    bool send(const JsonObject& json_message, uint8_t target_index = 255) override {
 
-		if (_initiated) {
+		if (_initiated && BroadcastSocket::send(json_message, target_index)) {	// Very important pre processing !!
 
-			if (BroadcastSocket::send(as_reply, target_index)) {	// Very important pre processing !!
+			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
+			
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print(F("\tsend1: Sent message: "));
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
+			Serial.print(F("\tsend2: Sent length: "));
+			Serial.println(_sending_length);
+			#endif
+
+			#ifdef ENABLE_DIRECT_ADDRESSING
+			if (as_reply) {
+				sendSPI(_sending_length, _actual_ss_pin);
 
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.print(F("\tsend1: Sent message: "));
-				Serial.write(_sending_buffer, _sending_length);
-				Serial.println();
-				Serial.print(F("\tsend2: Sent length: "));
-				Serial.println(_sending_length);
+				Serial.println(F("\tsend3: --> Directly sent for the received pin -->"));
 				#endif
 
-				#ifdef ENABLE_DIRECT_ADDRESSING
-				if (as_reply) {
-					sendSPI(_sending_length, _actual_ss_pin);
+			} else if (target_index < _ss_pins_count) {
+				sendSPI(_sending_length, _ss_pins[target_index]);
+				
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.println(F("\tsend3: --> Directly sent to the target index pin -->"));
+				#endif
 
-					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println(F("\tsend3: --> Directly sent for the received pin -->"));
-					#endif
-
-				} else if (target_index < _ss_pins_count) {
-					sendSPI(_sending_length, _ss_pins[target_index]);
-					
-					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println(F("\tsend3: --> Directly sent to the target index pin -->"));
-					#endif
-
-				} else {    // Broadcast mode
-					for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-						sendSPI(_sending_length, _ss_pins[ss_pin_i]);
-					}
-					
-					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println(F("\tsend3: --> Broadcast sent to all pins -->"));
-					#endif
-
-				}
-				#else
+			} else {    // Broadcast mode
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 					sendSPI(_sending_length, _ss_pins[ss_pin_i]);
 				}
-
+				
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("\tsend3: --> Broadcast sent to all pins -->"));
 				#endif
 
-				#endif
-
-				_sending_length = 0;	// Marks sending buffer available
-
-				return true;
 			}
+			#else
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+				sendSPI(_sending_length, _ss_pins[ss_pin_i]);
+			}
+
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.println(F("\tsend3: --> Broadcast sent to all pins -->"));
+			#endif
+
+			#endif
+
+			_sending_length = 0;	// Marks sending buffer available
+
+			return true;
 		}
         return false;
     }

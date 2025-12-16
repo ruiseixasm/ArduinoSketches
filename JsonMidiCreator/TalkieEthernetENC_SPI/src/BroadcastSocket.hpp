@@ -34,8 +34,6 @@ protected:
 	uint8_t _received_length = 0;
 	uint8_t _sending_length = 0;
 
-	String _from_name = "";
-	
     // Pointer PRESERVE the polymorphism while objects don't!
     JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
     uint8_t _max_delay_ms = 5;
@@ -181,7 +179,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual void showReceivedMessage(const JsonObject& json_message) {}
+	virtual void showJsonMessage(const JsonObject& json_message) {}
 
     
     uint8_t triggerTalkers() {
@@ -270,11 +268,27 @@ protected:
 					return 0;
 				}
 				JsonObject json_message = _message_doc.as<JsonObject>();
-				showReceivedMessage(json_message);
 
+				showJsonMessage(json_message);
+
+				if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) {
+					#ifdef JSON_TALKER_DEBUG
+					Serial.println(4);
+					#endif
+					json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ];
+					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
+					json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
+					// Wrong type of identifier or no identifier, so, it has to insert new identifier
+					json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
+					// From one to many, starts to set the returning target in this single place only
+					json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
+
+					remoteSend(json_message);	// Includes reply swap
+					return 0;
+				}
+				
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
-				_from_name = "";	// Registers a new from name
                 for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
 
                     #ifdef BROADCASTSOCKET_DEBUG
@@ -297,32 +311,6 @@ protected:
 					Serial.print(F("triggerTalkers10: Triggering the talker: "));
 					Serial.println(_json_talkers[talker_i]->get_name());
 					#endif
-
-					if (_from_name == "") {
-						if (!json_message[ JsonKey::FROM ].is<String>()) {
-							#ifdef JSON_TALKER_DEBUG
-							Serial.println(F("ERROR: From key 'f' is missing"));
-							#endif
-							return 0;
-						}
-						_from_name = json_message[ JsonKey::FROM ].as<String>();
-
-						if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) {
-							#ifdef JSON_TALKER_DEBUG
-							Serial.println(4);
-							#endif
-							json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ];
-							json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
-							json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
-							// Wrong type of identifier or no identifier, so, it has to insert new identifier
-							json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
-							// From one to many, starts to set the returning target in this single place only
-							json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
-
-							remoteSend(json_message);	// Includes reply swap
-							return 0;
-						}
-					}
 
 					// A non static method
                     pre_validated = _json_talkers[talker_i]->processData(json_message);
@@ -381,8 +369,8 @@ protected:
 	}
 
 
-    virtual bool send(bool as_reply = false, uint8_t target_index = 255) {
-        (void)as_reply; 	// Silence unused parameter warning
+    virtual bool send(const JsonObject& json_message, uint8_t target_index = 255) {
+        (void)json_message; // Silence unused parameter warning
         (void)target_index; // Silence unused parameter warning
 
         if (_sending_length < 3*4 + 2) {
@@ -450,9 +438,6 @@ public:
     }
 
 
-	// Allows the overriding class to peek at the sending JSON message
-	virtual void showSendingMessage(const JsonObject& json_message) {}
-
     
     bool remoteSend(JsonObject& json_message, uint8_t target_index = 255) {
 
@@ -481,14 +466,7 @@ public:
 			Serial.println(_sending_length);
 			#endif
 
-			showSendingMessage(json_message);
-
-			if (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name) {
-				return send(true, target_index);	// send is internally triggered, so, this method can hardly be static
-			} else {
-				return send(false, target_index);
-			}
-
+			return send(json_message);
 		}
 
 		return false;
