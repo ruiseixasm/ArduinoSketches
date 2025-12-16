@@ -293,8 +293,9 @@ public:
 				} else {
 					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
 				}
-				replyMessage(json_message, true);
 			}
+			// In the end sends back the processed message (single message, one-to-one)
+			replyMessage(json_message, true);
             break;
         
         case MessageCode::SET:
@@ -323,8 +324,12 @@ public:
 				}
 				// Remove unecessary keys to reduce overhead data
 				json_message.remove( JsonKey::VALUE );
-				replyMessage(json_message, true);
+			} else {
+				json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ERROR);
+				json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorCode::FIELDS);
 			}
+			// In the end sends back the processed message (single message, one-to-one)
+			replyMessage(json_message, true);
             break;
         
         case MessageCode::GET:
@@ -349,18 +354,20 @@ public:
 				} else {
 					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
 				}
-				replyMessage(json_message, true);
 			}
+			// In the end sends back the processed message (single message, one-to-one)
+			replyMessage(json_message, true);
             break;
         
         case MessageCode::TALK:
             json_message[ JsonKey::DESCRIPTION ] = _desc;
-            replyMessage(json_message, true);	// Includes reply swap
+			// In the end sends back the processed message (single message, one-to-one)
+			replyMessage(json_message, true);
             break;
         
         case MessageCode::LIST:
             {   // Because of none_list !!!
-                bool none_list = true;
+                bool no_list = true;
 
                 // In your list handler:
                 
@@ -374,11 +381,11 @@ public:
 				const IManifesto::Action* run;
 				uint8_t action_index = 0;
 				while ((run = _manifesto->iterateRunsNext()) != nullptr) {	// No boilerplate
-					none_list = false;
+					no_list = false;
 					json_message[ JsonKey::NAME ] = run->name;      // Direct access
 					json_message[ JsonKey::DESCRIPTION ] = run->desc;
 					json_message[ JsonKey::INDEX ] = action_index++;
-					replyMessage(json_message, true);
+					replyMessage(json_message, true);	// One-to-Many
 				}
 
                 json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::SET);
@@ -386,11 +393,11 @@ public:
 				const IManifesto::Action* set;
 				action_index = 0;
 				while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
-					none_list = false;
+					no_list = false;
 					json_message[ JsonKey::NAME ] = set->name;      // Direct access
 					json_message[ JsonKey::DESCRIPTION ] = set->desc;
 					json_message[ JsonKey::INDEX ] = action_index++;
-					replyMessage(json_message, true);
+					replyMessage(json_message, true);	// One-to-Many
 				}
 				
                 json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::GET);
@@ -398,15 +405,16 @@ public:
 				const IManifesto::Action* get;
 				action_index = 0;
 				while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
-					none_list = false;
+					no_list = false;
 					json_message[ JsonKey::NAME ] = get->name;      // Direct access
 					json_message[ JsonKey::DESCRIPTION ] = get->desc;
 					json_message[ JsonKey::INDEX ] = action_index++;
-					replyMessage(json_message, true);
+					replyMessage(json_message, true);	// One-to-Many
 				}
 
-                if(none_list) {
-                    json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
+                if(no_list) {
+                    json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NIL);
+					replyMessage(json_message, true);	// One-to-Many
                 }
             }
             break;
@@ -422,7 +430,8 @@ public:
                 _channel = json_message[ JsonKey::VALUE ].as<uint8_t>();
             }
             json_message[ JsonKey::VALUE ] = _channel;
-            replyMessage(json_message, true);
+			// In the end sends back the processed message (single message, one-to-one)
+			replyMessage(json_message, true);
             break;
         
         case MessageCode::SYS:

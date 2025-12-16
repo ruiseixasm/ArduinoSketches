@@ -60,7 +60,8 @@ struct TalkieCodes {
 	enum class EchoCode : int {
 		ROGER,
 		SAY_AGAIN,
-		NEGATIVE
+		NEGATIVE,
+		NIL
 	};
 
 
