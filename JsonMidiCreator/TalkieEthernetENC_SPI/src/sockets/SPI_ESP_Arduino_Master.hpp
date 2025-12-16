@@ -31,7 +31,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define receive_delay_us 10
 
 
-class BroadcastSocket_SPI_ESP_Arduino_Master : public BroadcastSocket {
+class SPI_ESP_Arduino_Master : public BroadcastSocket {
 public:
 
     enum StatusByte : uint8_t {
@@ -63,7 +63,7 @@ protected:
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_SPI_ESP_Arduino_Master(
+    SPI_ESP_Arduino_Master(
 		JsonTalker** json_talkers, uint8_t talker_count, int* ss_pins, uint8_t ss_pins_count
 	) : BroadcastSocket(json_talkers, talker_count) {
             
@@ -522,13 +522,13 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_SPI_ESP_Arduino_Master& instance(JsonTalker** json_talkers, uint8_t talker_count, int* ss_pins, uint8_t ss_pins_count) {
-        static BroadcastSocket_SPI_ESP_Arduino_Master instance(json_talkers, talker_count, ss_pins, ss_pins_count);
+    static SPI_ESP_Arduino_Master& instance(JsonTalker** json_talkers, uint8_t talker_count, int* ss_pins, uint8_t ss_pins_count) {
+        static SPI_ESP_Arduino_Master instance(json_talkers, talker_count, ss_pins, ss_pins_count);
 
         return instance;
     }
 
-    const char* class_name() const override { return "BroadcastSocket_SPI_ESP_Arduino_Master"; }
+    const char* class_name() const override { return "SPI_ESP_Arduino_Master"; }
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
