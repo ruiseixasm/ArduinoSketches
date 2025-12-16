@@ -28,10 +28,10 @@ https://github.com/ruiseixasm/JsonTalkie
 #define C_LOCAL ((uint16_t)1)
 
 
-using MessageCode = TalkieCodes::MessageCode;
-using SystemCode = TalkieCodes::SystemCode;
-using EchoCode = TalkieCodes::EchoCode;
-using ErrorCode = TalkieCodes::ErrorCode;
+using MessageData = TalkieCodes::MessageData;
+using SystemData = TalkieCodes::SystemData;
+using EchoData = TalkieCodes::EchoData;
+using ErrorData = TalkieCodes::ErrorData;
 using JsonKey = TalkieCodes::JsonKey;
 
 
@@ -216,8 +216,8 @@ public:
                 Serial.println(4);
                 #endif
                 json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ];
-                json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ERROR);
-                json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorCode::IDENTITY);
+                json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
+                json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
 				// Wrong type of identifier or no identifier, so, it has to insert new identifier
                 json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
 				// From one to many, starts to set the returning target in this single place only
@@ -254,22 +254,22 @@ public:
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-		MessageCode message_code = static_cast<MessageCode>(json_message[ JsonKey::MESSAGE ].as<int>());
+		MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
 
 		// Doesn't apply to ECHO nor ERROR
-		if (message_code < MessageCode::ECHO) {
+		if (message_code < MessageData::ECHO) {
 
 			// From one to many, starts to set the returning target in this single place only
 			json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
 			json_message[ JsonKey::FROM ] = _name;
 
 			json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ].as<int>();
-			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ECHO);
+			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 		}
 
         switch (message_code) {
 
-        case MessageCode::RUN:
+        case MessageData::RUN:
 			{
 				uint8_t index_found_i = 255;
 				if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
@@ -286,19 +286,19 @@ public:
 					#endif
 
 					if (_manifesto->runByIndex(index_found_i, json_message, this)) {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 					} else {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
 					}
 				} else {
-					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
+					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
 				}
 			}
 			// In the end sends back the processed message (single message, one-to-one)
 			replyMessage(json_message, true);
             break;
         
-        case MessageCode::SET:
+        case MessageData::SET:
 			if (json_message[ JsonKey::VALUE ].is<uint32_t>()) {
 				uint8_t index_found_i = 255;
 				if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
@@ -315,24 +315,24 @@ public:
 					#endif
 
 					if (_manifesto->setByIndex(index_found_i, json_message[ JsonKey::VALUE ].as<uint32_t>(), json_message, this)) {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 					} else {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
 					}
 				} else {
-					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
+					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
 				}
 				// Remove unecessary keys to reduce overhead data
 				json_message.remove( JsonKey::VALUE );
 			} else {
-				json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ERROR);
-				json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorCode::FIELDS);
+				json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
+				json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::FIELD);
 			}
 			// In the end sends back the processed message (single message, one-to-one)
 			replyMessage(json_message, true);
             break;
         
-        case MessageCode::GET:
+        case MessageData::GET:
 			{
 				uint8_t index_found_i = 255;
 				if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
@@ -352,20 +352,20 @@ public:
 					// The return of the value works as an implicit ROGER (avoids network flooding)
 					json_message[ JsonKey::VALUE ] = _manifesto->getByIndex(index_found_i, json_message, this);
 				} else {
-					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
+					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
 				}
 			}
 			// In the end sends back the processed message (single message, one-to-one)
 			replyMessage(json_message, true);
             break;
         
-        case MessageCode::TALK:
+        case MessageData::TALK:
             json_message[ JsonKey::DESCRIPTION ] = _desc;
 			// In the end sends back the processed message (single message, one-to-one)
 			replyMessage(json_message, true);
             break;
         
-        case MessageCode::LIST:
+        case MessageData::LIST:
             {   // Because of none_list !!!
                 bool no_list = true;
 
@@ -376,7 +376,7 @@ public:
                 Serial.println(class_name());
                 #endif
 
-				json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::RUN);
+				json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::RUN);
 				_manifesto->iterateRunsReset();
 				const IManifesto::Action* run;
 				uint8_t action_index = 0;
@@ -388,7 +388,7 @@ public:
 					replyMessage(json_message, true);	// One-to-Many
 				}
 
-                json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::SET);
+                json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::SET);
 				_manifesto->iterateSetsReset();
 				const IManifesto::Action* set;
 				action_index = 0;
@@ -400,7 +400,7 @@ public:
 					replyMessage(json_message, true);	// One-to-Many
 				}
 				
-                json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::GET);
+                json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::GET);
 				_manifesto->iterateGetsReset();
 				const IManifesto::Action* get;
 				action_index = 0;
@@ -413,13 +413,13 @@ public:
 				}
 
                 if(no_list) {
-                    json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NIL);
+                    json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 					replyMessage(json_message, true);	// One-to-Many
                 }
             }
             break;
         
-        case MessageCode::CHANNEL:
+        case MessageData::CHANNEL:
             if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
 
                 #ifdef JSON_TALKER_DEBUG
@@ -434,14 +434,14 @@ public:
 			replyMessage(json_message, true);
             break;
         
-        case MessageCode::SYS:
+        case MessageData::SYS:
 			if (json_message["s"].is<int>()) {
 
-        		SystemCode system_code = static_cast<SystemCode>(json_message["s"].as<int>());
+        		SystemData system_code = static_cast<SystemData>(json_message["s"].as<int>());
 
 				switch (system_code) {
 
-				case SystemCode::BOARD:
+				case SystemData::BOARD:
 					
 					// AVR Boards (Uno, Nano, Mega) - Check RAM size
 					#ifdef __AVR__
@@ -491,7 +491,7 @@ public:
 					// TO INSERT HERE EXTRA DATA !!
 					break;
 
-				case SystemCode::PING:
+				case SystemData::PING:
 				
 					#ifdef JSON_TALKER_DEBUG
 					Serial.print(F("\tPing replied as message code: "));
@@ -500,39 +500,39 @@ public:
 					// Replies as soon as possible (best case scenario)
 					break;
 
-				case SystemCode::DROPS:
+				case SystemData::DROPS:
 					json_message[ JsonKey::VALUE ] = get_drops();
 					break;
 
-				case SystemCode::DELAY:
+				case SystemData::DELAY:
 					json_message[ JsonKey::VALUE ] = get_delay();
 					break;
 
-				case SystemCode::MUTE:
+				case SystemData::MUTE:
 					if (!_muted_action) {
 						_muted_action = true;
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 					} else {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
 						json_message["r"] = "Already muted";
 					}
 					break;
-				case SystemCode::UNMUTE:
+				case SystemData::UNMUTE:
 					if (_muted_action) {
 						_muted_action = false;
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 					} else {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
 						json_message["r"] = "Already NOT muted";
 					}
 					break;
 
-				case SystemCode::MUTED:
+				case SystemData::MUTED:
 					json_message[ JsonKey::VALUE ] = static_cast<int>(_muted_action);
 					break;
 
 				default:
-					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
+					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
 					break;
 				}
 
@@ -541,13 +541,13 @@ public:
             }
             break;
         
-        case MessageCode::ECHO:
+        case MessageData::ECHO:
 			if (_manifesto) {
 				_manifesto->echo(json_message, this);
 			}
             break;
         
-        case MessageCode::ERROR:
+        case MessageData::ERROR:
 			if (_manifesto) {
 				_manifesto->error(json_message, this);
 			}

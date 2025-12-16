@@ -32,8 +32,8 @@ bool JsonTalker::remoteSend(JsonObject& json_message, bool as_reply, uint8_t tar
 
 	// It also sets the IDENTITY if applicable, these settings are of the Talker exclusive responsibility (NO DELEGATION TO SOCKET !!)
 	
-	MessageCode message_code = static_cast<MessageCode>(json_message[ JsonKey::MESSAGE ].as<int>());
-	if (message_code < MessageCode::ECHO) {
+	MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
+	if (message_code < MessageData::ECHO) {
 
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
@@ -41,7 +41,7 @@ bool JsonTalker::remoteSend(JsonObject& json_message, bool as_reply, uint8_t tar
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
-		if (_muted_action && message_code < MessageCode::TALK) return false;
+		if (_muted_action && message_code < MessageData::TALK) return false;
 
 		json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
 
@@ -53,8 +53,8 @@ bool JsonTalker::remoteSend(JsonObject& json_message, bool as_reply, uint8_t tar
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
-		json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ERROR);
-		json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorCode::IDENTITY);
+		json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
+		json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
 		json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
 
 	} else {
