@@ -92,13 +92,13 @@ uint8_t JsonTalker::get_delay() {
 	if (_socket) {	// Safe code
     	return _socket->get_max_delay();
 	}
-	return 0xFF - 1;	// 255
+	return 0xFF;	// 255
 }
 
 uint16_t JsonTalker::get_drops() {
 	if (_socket) {	// Safe code
     	return _socket->get_drops_count();
 	}
-	return 0xFFFF - 1;	// 2^16 - 1
+	return 0xFFFF;	// 2^16 - 1
 }
 
