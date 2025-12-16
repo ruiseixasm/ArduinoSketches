@@ -31,7 +31,7 @@ public:
     bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) override;
 
 
-	// Works as a router to C_LOCAL send
+	// Works as a repeater to LOCAL send
     bool processData(JsonObject& json_message, bool pre_validated = false) override {
         (void)pre_validated;	// Silence unused parameter warning
 
@@ -39,8 +39,8 @@ public:
 		Serial.print(_name);
 		Serial.print(F(": "));
 		#endif
-        uint16_t c_source = json_message[ JsonKey::SOURCE ].as<uint16_t>();
-		if (c_source == C_LOCAL) {
+        SourceData c_source = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
+		if (c_source == SourceData::LOCAL) {
 			#ifdef JSON_REPEATER_DEBUG
 			Serial.println(F("Received a LOCAL message"));
 			#endif

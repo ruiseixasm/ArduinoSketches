@@ -24,8 +24,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
-#define C_REMOTE ((uint16_t)0)
-#define C_LOCAL ((uint16_t)1)
 
 
 using SourceData = TalkieCodes::SourceData;
@@ -144,8 +142,8 @@ protected:
 		Serial.print(F(": "));
 		#endif
 
-		uint16_t c_source = json_message[ JsonKey::SOURCE ].as<uint16_t>();
-		if (c_source == C_LOCAL) {	// c_source == 1 means a local message while 0 means a remote one
+        SourceData c_source = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
+		if (c_source == SourceData::LOCAL) {
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("\tReplied a LOCAL message"));
 			#endif
