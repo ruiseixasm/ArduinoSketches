@@ -179,6 +179,11 @@ protected:
         return true;
     }
 
+
+	virtual void showReceivedMessage(const JsonObject& json_message) {
+
+	}
+
     
     uint8_t triggerTalkers() {
 
@@ -257,6 +262,17 @@ protected:
                     }
                 }
 
+				// Gives a chance to show it one time
+				DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
+				if (error) {
+					#ifdef BROADCASTSOCKET_DEBUG
+					Serial.println(F("ERROR: Failed to deserialize received data"));
+					#endif
+					return 0;
+				}
+				JsonObject json_message = _message_doc.as<JsonObject>();
+				showReceivedMessage(json_message);
+
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
 				_from_name = "";	// Registers a new from name
@@ -266,16 +282,18 @@ protected:
                     Serial.print(F("triggerTalkers9: Creating new JsonObject for talker: "));
                     Serial.println(_json_talkers[talker_i]->get_name());
                     #endif
-                    
-                    DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
-                    if (error) {
-                        #ifdef BROADCASTSOCKET_DEBUG
-                        Serial.println(F("ERROR: Failed to deserialize received data"));
-                        #endif
-                        return 0;
-                    }
-                    JsonObject json_message = _message_doc.as<JsonObject>();
 
+					if (talker_i > 0) {
+						DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
+						if (error) {
+							#ifdef BROADCASTSOCKET_DEBUG
+							Serial.println(F("ERROR: Failed to deserialize received data"));
+							#endif
+							return 0;
+						}
+						json_message = _message_doc.as<JsonObject>();
+					}
+                    
 					#ifdef BROADCASTSOCKET_DEBUG
 					Serial.print(F("triggerTalkers10: Triggering the talker: "));
 					Serial.println(_json_talkers[talker_i]->get_name());
