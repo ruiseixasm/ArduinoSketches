@@ -179,7 +179,15 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool checkJsonMessage(const JsonObject& json_message) { return true; }
+	virtual bool checkJsonMessage(const JsonObject& json_message) {
+		if (!json_message[ JsonKey::FROM ].is<String>()) {
+			#ifdef JSON_TALKER_DEBUG
+			Serial.println(F("ERROR: From key 'f' is missing"));
+			#endif
+			return false;
+		}
+		return true;
+	}
 
     
     uint8_t triggerTalkers() {

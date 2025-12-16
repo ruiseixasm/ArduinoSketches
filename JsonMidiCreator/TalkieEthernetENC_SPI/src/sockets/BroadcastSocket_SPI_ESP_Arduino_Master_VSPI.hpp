@@ -372,14 +372,11 @@ protected:
 	// Allows the overriding class to peek at the received JSON message
 	bool checkJsonMessage(const JsonObject& json_message) override {
 
-		if (!json_message[ JsonKey::FROM ].is<String>()) {
-			#ifdef JSON_TALKER_DEBUG
-			Serial.println(F("ERROR: From key 'f' is missing"));
-			#endif
-			return false;
+		if (BroadcastSocket::checkJsonMessage(json_message)) {
+			_from_name = json_message[ JsonKey::FROM ].as<String>();
+			return true;
 		}
-		_from_name = json_message[ JsonKey::FROM ].as<String>();
-		return true;
+		return false;
 	}
 
     
