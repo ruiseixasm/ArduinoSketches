@@ -19,10 +19,9 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
 #include "../BroadcastSocket.hpp"
 
-#define BROADCAST_SPI_DEBUG
+// #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
-
 
 #define ENABLE_DIRECT_ADDRESSING
 
@@ -496,16 +495,16 @@ protected:
 
 				String target_name = json_message[ JsonKey::TO ].as<String>();
 				if (target_name.length() > 0) {
-					as_reply = json_message[ target_name ].is<uint8_t>();	// Critical line
+					as_reply = _named_pins[ target_name ].is<uint8_t>();	// Critical line
 				} else {
 					as_reply = false;  // Empty string isn't a valid key
 				}
 				if (as_reply) {
-					_actual_ss_pin = json_message[ target_name ].as<uint8_t>();
+					_actual_ss_pin = _named_pins[ target_name ].as<uint8_t>();
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG
 					Serial.println(F("\t\tERROR: Failed to get the pin from name"));
-					if (json_message[ target_name ].is<int>()) {
+					if (_named_pins[ target_name ].is<int>()) {
 						Serial.println(F("\t\tNOTE: It's seen as an 'int' though"));
 					}
 					#endif
@@ -521,7 +520,8 @@ protected:
 				sendSPI(_sending_length, _actual_ss_pin);
 
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend4: --> Directly sent for the received pin -->"));
+				Serial.print(F("\tsend4: --> Directly sent for the received pin --> "));
+				Serial.println(_actual_ss_pin);
 				#endif
 
 			} else {    // Broadcast mode

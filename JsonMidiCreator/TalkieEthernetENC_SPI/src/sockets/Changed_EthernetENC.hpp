@@ -30,7 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"
 
 
-#define BROADCAST_ETHERNETENC_DEBUG
+// #define BROADCAST_ETHERNETENC_DEBUG
 
 #define ENABLE_DIRECT_ADDRESSING
 
@@ -105,7 +105,7 @@ protected:
         if (_udp && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 			
             IPAddress broadcastIP(255, 255, 255, 255);
-			
+
             #ifdef ENABLE_DIRECT_ADDRESSING
             
 			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
