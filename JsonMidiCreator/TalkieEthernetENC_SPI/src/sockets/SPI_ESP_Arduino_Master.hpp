@@ -460,10 +460,10 @@ protected:
 
 			#ifdef BROADCAST_SPI_DEBUG
 			if (_named_pins_doc.isNull()) {
-				Serial.println("\t\tERROR: The JsonObject isn't initiated");
+				Serial.println("\t\tERROR: The JsonDocument isn't initiated (still null)");
 			}
 			Serial.print(F("\tcheckJsonMessage3: Confirmed actual named pin: "));
-			Serial.println(_named_pins[from_name].as<int>());
+			Serial.println(_named_pins[from_name].as<uint8_t>());
 			#endif
 
 			return true;
@@ -505,7 +505,7 @@ protected:
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG
 					Serial.println(F("\t\tERROR: Failed to get the pin from name"));
-					if (json_message[ target_name ].is<int>()) {	
+					if (json_message[ target_name ].is<int>()) {
 						Serial.println(F("\t\tNOTE: It's seen as an 'int' though"));
 					}
 					#endif
