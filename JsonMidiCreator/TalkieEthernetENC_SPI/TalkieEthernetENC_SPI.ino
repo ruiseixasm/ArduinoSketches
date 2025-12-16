@@ -24,24 +24,35 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/sockets/Changed_EthernetENC.hpp"
 #include "src/sockets/SPI_ESP_Arduino_Master.hpp"
 #include "src/talkers/JsonRepeater.h"
+#include "src/manifestos/Spy.h"
 
 
+// TALKERS 
 const char t_ethernet_name[] = "t_ethernet";
 const char t_ethernet_desc[] = "I'm an Ethernet talker";
-JsonRepeater t_ethernet = JsonRepeater(t_ethernet_name, t_ethernet_desc);	// Just a repeater, doesn't need a Manifesto
+JsonRepeater t_ethernet = JsonRepeater(t_ethernet_name, t_ethernet_desc);	// Just a REPEATER, doesn't need a Manifesto
 const char t_spi_name[] = "t_spi";
 const char t_spi_desc[] = "I'm a SPI talker";
-JsonRepeater t_spi = JsonRepeater(t_spi_name, t_spi_desc);
-JsonTalker* t_ethernet_talkers[] = { &t_ethernet };   // It's an array of pointers
+JsonRepeater t_spi = JsonRepeater(t_spi_name, t_spi_desc);	// A REPEATER
+const char t_spy_name[] = "spy";
+const char t_spy_desc[] = "I'm a Spy and I spy the talkers' pings";
+Spy spy_manifesto;
+JsonTalker t_spy = JsonTalker(t_spy_name, t_spy_desc, &spy_manifesto);
+
+
+// LIST OF TALKERS FOR EACH SOCKET
+JsonTalker* t_ethernet_talkers[] = { &t_ethernet, &t_spy };   // It's an array of pointers
 JsonTalker* t_spi_talkers[] = { &t_spi };   // It's an array of pointers
+JsonTalker* all_talkers[] = { &t_ethernet, &t_spi, &t_spy };   // It's an array of pointers
+
+// SOCKETS
+
 // Singleton requires the & (to get a reference variable)
 auto& ethernet_socket = Changed_EthernetENC::instance(t_ethernet_talkers, sizeof(t_ethernet_talkers)/sizeof(JsonTalker*));
 int spi_pins[] = {4, 16};
-// int spi_pins[] = {4};
 auto& spi_socket = SPI_ESP_Arduino_Master::instance(
 	t_spi_talkers, sizeof(t_spi_talkers)/sizeof(JsonTalker*), spi_pins, sizeof(spi_pins)/sizeof(int)
 );
-JsonTalker* talkers[] = { &t_ethernet, &t_spi };   // It's an array of pointers
 
 
 
@@ -156,8 +167,8 @@ void setup() {
     Serial.println("Talker ready with EthernetENC!");
     Serial.println("Connecting Talkers with each other");
 
-    // Connect the talkers with each other (static variable)
-    JsonTalker::connectTalkers(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+    // Connects the all talkers with each other (static variable)
+    JsonTalker::connectTalkers(all_talkers, sizeof(all_talkers)/sizeof(JsonTalker*));
 
     // Final startup indication
     digitalWrite(LED_BUILTIN, HIGH);

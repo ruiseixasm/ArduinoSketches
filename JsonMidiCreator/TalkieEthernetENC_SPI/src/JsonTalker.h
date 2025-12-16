@@ -52,7 +52,6 @@ protected:
     uint8_t _channel = 0;
     bool _muted_action = false;
 
-
 public:
 
     // Explicit default constructor
@@ -64,10 +63,12 @@ public:
         }
 
 
+    void set_delay(uint8_t delay);
+    uint8_t get_delay();
+    uint16_t get_drops();
+	
+
     virtual const char* class_name() const { return "JsonTalker"; }
-
-
-protected:
 
     virtual bool remoteSend(JsonObject& json_message);
 
@@ -131,12 +132,6 @@ protected:
         return remoteSend(json_message);
     }
 
-    void set_delay(uint8_t delay);
-    uint8_t get_delay();
-    uint16_t get_drops();
-
-
-public:
 
     virtual void loop() {
         if (_manifesto) {
