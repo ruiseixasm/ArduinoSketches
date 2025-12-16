@@ -20,8 +20,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Slave.h"
 
 
-const char talker_name[] = "buzz";
-const char talker_desc[] = "I'm a buzzer";
+const char talker_name[] = "buzzer";
+const char talker_desc[] = "I'm a buzzer that buzzes";
 BuzzerManifesto talker_manifesto;
 JsonTalker talker = JsonTalker(talker_name, talker_desc, &talker_manifesto);
 JsonTalker* talkers[] = { &talker };   // It's an array of pointers of JsonTalker (keep it as JsonTalker!)

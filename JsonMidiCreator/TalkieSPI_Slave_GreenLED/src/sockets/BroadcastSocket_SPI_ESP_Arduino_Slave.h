@@ -28,6 +28,8 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket_SPI_ESP_Arduino_Slave : public BroadcastSocket {
 public:
 
+    const char* class_name() const override { return "BroadcastSocket_SPI_ESP_Arduino_Slave"; }
+
     enum StatusByte : uint8_t {
         ACK     = 0xF0, // Acknowledge
         NACK    = 0xF1, // Not acknowledged
@@ -92,9 +94,9 @@ protected:
 
 
 	bool availableReceivingBuffer(uint8_t wait_seconds = 3) override {
-		unsigned long start_waiting = millis();
+		uint16_t start_waiting = (uint16_t)millis();
 		while (_received_length_spi) {
-			if (millis() - start_waiting > 1000 * wait_seconds) {
+			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
 				return false;
 			}
 		}
@@ -102,9 +104,9 @@ protected:
 	}
 
 	bool availableSendingBuffer(uint8_t wait_seconds = 3) override {
-		unsigned long start_waiting = millis();
+		uint16_t start_waiting = (uint16_t)millis();
 		while (_sending_length_spi) {
-			if (millis() - start_waiting > 1000 * wait_seconds) {
+			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
 				
 				#ifdef BROADCASTSOCKET_DEBUG
 				Serial.println(F("\tavailableSendingBuffer: NOT available sending buffer"));
@@ -143,8 +145,40 @@ protected:
         return false;
     }
 
+    uint8_t receive() override {
+
+        // Need to call homologous method in super class first
+        uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+		length = _received_length_spi;
+
+		if (length) {
+			
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print(F("\treceive1: Received message: "));
+			Serial.write(_receiving_buffer, length);
+			Serial.println();
+			Serial.print(F("\treceive1: Received length: "));
+			Serial.println(length);
+			#endif
+			
+			_received_length = length;
+			BroadcastSocket::triggerTalkers();
+			_received_length_spi = 0;	// Allows the device to receive more data
+			_received_length = 0;
+		}
+
+        return length;
+    }
+
 
 public:
+
+    // Move ONLY the singleton instance method to subclass
+    static BroadcastSocket_SPI_ESP_Arduino_Slave& instance(JsonTalker** json_talkers, uint8_t talker_count) {
+
+        static BroadcastSocket_SPI_ESP_Arduino_Slave instance(json_talkers, talker_count);
+        return instance;
+    }
 
 	// Specific methods associated to Arduino SPI as Slave
 
@@ -303,40 +337,6 @@ public:
                     SPDR = NACK;
             }
         }
-    }
-
-
-    // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_SPI_ESP_Arduino_Slave& instance(JsonTalker** json_talkers, uint8_t talker_count) {
-
-        static BroadcastSocket_SPI_ESP_Arduino_Slave instance(json_talkers, talker_count);
-        return instance;
-    }
-
-
-    uint8_t receive() override {
-
-        // Need to call homologous method in super class first
-        uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
-		length = _received_length_spi;
-
-		if (length) {
-			
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\treceive1: Received message: "));
-			Serial.write(_receiving_buffer, length);
-			Serial.println();
-			Serial.print(F("\treceive1: Received length: "));
-			Serial.println(length);
-			#endif
-			
-			_received_length = length;
-			BroadcastSocket::triggerTalkers();
-			_received_length_spi = 0;	// Allows the device to receive more data
-			_received_length = 0;
-		}
-
-        return length;
     }
 
 };

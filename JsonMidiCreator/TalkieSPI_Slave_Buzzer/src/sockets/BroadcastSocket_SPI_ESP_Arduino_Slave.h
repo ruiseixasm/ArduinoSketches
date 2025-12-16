@@ -28,6 +28,8 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket_SPI_ESP_Arduino_Slave : public BroadcastSocket {
 public:
 
+    const char* class_name() const override { return "BroadcastSocket_SPI_ESP_Arduino_Slave"; }
+
     enum StatusByte : uint8_t {
         ACK     = 0xF0, // Acknowledge
         NACK    = 0xF1, // Not acknowledged
