@@ -445,9 +445,9 @@ public:
 					// AVR Boards (Uno, Nano, Mega) - Check RAM size
 					#ifdef __AVR__
 						#if (RAMEND - RAMSTART + 1) == 2048
-							json_message[ JsonKey::DESCRIPTION ] = "F(Arduino Uno/Nano (ATmega328P))";
+							json_message[ JsonKey::DESCRIPTION ] = F("Arduino Uno/Nano (ATmega328P)");
 						#elif (RAMEND - RAMSTART + 1) == 8192
-							json_message[ JsonKey::DESCRIPTION ] = "F(Arduino Mega (ATmega2560))";
+							json_message[ JsonKey::DESCRIPTION ] = F("Arduino Mega (ATmega2560)");
 						#else
 							json_message[ JsonKey::DESCRIPTION ] = "Unknown AVR Board";
 						#endif
@@ -486,7 +486,6 @@ public:
 
 					#endif
 
-					replyMessage(json_message, true);
 					// TO INSERT HERE EXTRA DATA !!
 					break;
 
