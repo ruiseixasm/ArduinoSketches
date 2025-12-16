@@ -31,28 +31,46 @@ bool JsonRepeater::remoteSend(JsonObject& json_message) {
 }
 
 
-// Works as a repeater to LOCAL send
-bool JsonRepeater::processData(JsonObject& json_message) {
+bool JsonRepeater::localSend(JsonObject& json_message) {
 
-	#ifdef JSON_REPEATER_DEBUG
+	#ifdef JSON_TALKER_DEBUG
+	Serial.print(F("\t"));
 	Serial.print(_name);
 	Serial.print(F(": "));
-	#endif
-	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
-	if (source_data == SourceData::LOCAL) {
-		#ifdef JSON_REPEATER_DEBUG
-		Serial.println(F("Received a LOCAL message"));
-		#endif
-		return remoteSend(json_message);
-	}
-	#ifdef JSON_REPEATER_DEBUG
-	Serial.println(F("Received a REMOTE message"));
+	Serial.println(F("Sending a LOCAL message"));
 	#endif
 
-	// Should make sure it doesn't send to same socket talkers, because they already received from REMOTE
-    if (!_socket) return localSend(json_message);
-	if (!_socket->hasTalker(this)) return localSend(json_message);
-	return false;
+	json_message[ JsonKey::SOURCE ] = static_cast<int>(SourceData::LOCAL);
+	// Triggers all local Talkers to processes the json_message
+	bool sent_message = false;
+	bool pre_validated = false;
+	for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+		if (_json_talkers[talker_i] != this) {  // Can't send to myself
+
+			// Should make sure it doesn't send to same socket talkers, because they already received from REMOTE
+			if (!_socket || !_socket->hasTalker(_json_talkers[talker_i])) {
+
+				// CREATE COPY for each talker
+				// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+				#if ARDUINOJSON_VERSION_MAJOR >= 7
+				JsonDocument doc_copy;
+				#else
+				StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
+				#endif
+				JsonObject json_copy = doc_copy.to<JsonObject>();
+				
+				// Copy all data from original
+				for (JsonPair kv : json_message) {
+					json_copy[kv.key()] = kv.value();
+				}
+			
+				pre_validated = _json_talkers[talker_i]->processData(json_copy);
+				sent_message = true;
+				if (!pre_validated) break;
+			}
+		}
+	}
+	return sent_message;
 }
 
 

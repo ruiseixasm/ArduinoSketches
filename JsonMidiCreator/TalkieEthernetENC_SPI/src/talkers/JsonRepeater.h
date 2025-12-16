@@ -29,7 +29,29 @@ public:
 
 
     bool remoteSend(JsonObject& json_message) override;
-    bool processData(JsonObject& json_message) override;
+    bool localSend(JsonObject& json_message) override;
+
+	// Works as a repeater to LOCAL send
+	bool processData(JsonObject& json_message) override {
+
+		#ifdef JSON_REPEATER_DEBUG
+		Serial.print(_name);
+		Serial.print(F(": "));
+		#endif
+		SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
+		if (source_data == SourceData::LOCAL) {
+			#ifdef JSON_REPEATER_DEBUG
+			Serial.println(F("Received a LOCAL message"));
+			#endif
+			return remoteSend(json_message);
+		}
+		#ifdef JSON_REPEATER_DEBUG
+		Serial.println(F("Received a REMOTE message"));
+		#endif
+
+		return localSend(json_message);
+	}
+
 };
 
 
