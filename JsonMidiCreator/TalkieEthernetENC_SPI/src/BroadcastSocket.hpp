@@ -308,7 +308,7 @@ protected:
 					}
 
 					// A non static method
-                    pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
+                    pre_validated = _json_talkers[talker_i]->processData(json_message);
                     if (!pre_validated) return 0;
                 }
                 

@@ -32,8 +32,7 @@ public:
 
 
 	// Works as a repeater to LOCAL send
-    bool processData(JsonObject& json_message, bool pre_validated = false) override {
-        (void)pre_validated;	// Silence unused parameter warning
+    bool processData(JsonObject& json_message) override {
 
 		#ifdef JSON_REPEATER_DEBUG
 		Serial.print(_name);

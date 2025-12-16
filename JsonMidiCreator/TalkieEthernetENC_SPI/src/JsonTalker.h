@@ -123,7 +123,7 @@ protected:
 						json_copy[kv.key()] = kv.value();
 					}
 				
-					pre_validated = _json_talkers[talker_i]->processData(json_copy, pre_validated);
+					pre_validated = _json_talkers[talker_i]->processData(json_copy);
 					sent_message = true;
 					if (!pre_validated) break;
 				}
@@ -199,7 +199,7 @@ public:
     bool muted() { return _muted_action; }
 
     
-    virtual bool processData(JsonObject& json_message, bool pre_validated = false) {
+    virtual bool processData(JsonObject& json_message) {
 
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("\tProcessing JSON message..."));
