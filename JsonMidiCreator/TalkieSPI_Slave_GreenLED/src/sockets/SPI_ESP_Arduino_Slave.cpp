@@ -12,26 +12,26 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#include "BroadcastSocket_SPI_ESP_Arduino_Slave.h"
+#include "SPI_ESP_Arduino_Slave.h"
 
 
-char* BroadcastSocket_SPI_ESP_Arduino_Slave::_ptr_receiving_buffer = nullptr;
-char* BroadcastSocket_SPI_ESP_Arduino_Slave::_ptr_sending_buffer = nullptr;
+char* SPI_ESP_Arduino_Slave::_ptr_receiving_buffer = nullptr;
+char* SPI_ESP_Arduino_Slave::_ptr_sending_buffer = nullptr;
 
 
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_receiving_index = 0;
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_received_length_spi = 0;
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_sending_index = 0;
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_validation_index = 0;
-volatile uint8_t BroadcastSocket_SPI_ESP_Arduino_Slave::_sending_length_spi = 0;
-volatile BroadcastSocket_SPI_ESP_Arduino_Slave::StatusByte BroadcastSocket_SPI_ESP_Arduino_Slave::_transmission_mode 
-									= BroadcastSocket_SPI_ESP_Arduino_Slave::StatusByte::NONE;
+volatile uint8_t SPI_ESP_Arduino_Slave::_receiving_index = 0;
+volatile uint8_t SPI_ESP_Arduino_Slave::_received_length_spi = 0;
+volatile uint8_t SPI_ESP_Arduino_Slave::_sending_index = 0;
+volatile uint8_t SPI_ESP_Arduino_Slave::_validation_index = 0;
+volatile uint8_t SPI_ESP_Arduino_Slave::_sending_length_spi = 0;
+volatile SPI_ESP_Arduino_Slave::StatusByte SPI_ESP_Arduino_Slave::_transmission_mode 
+									= SPI_ESP_Arduino_Slave::StatusByte::NONE;
 
 
 // Define ISR at GLOBAL SCOPE (outside the class)
 ISR(SPI_STC_vect) {
     // You need a way to call your class method from here
     // Possibly using a static method or singleton pattern
-    BroadcastSocket_SPI_ESP_Arduino_Slave::handleSPI_Interrupt();
+    SPI_ESP_Arduino_Slave::handleSPI_Interrupt();
 }
 

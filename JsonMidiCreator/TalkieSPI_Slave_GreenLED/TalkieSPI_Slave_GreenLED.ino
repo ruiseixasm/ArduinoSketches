@@ -28,7 +28,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // COMPILE WITH ARDUINO BOARD
 #include "src/manifestos/GreenManifesto.hpp"
 #include "src/JsonTalker.h"
-#include "src/sockets/BroadcastSocket_SPI_ESP_Arduino_Slave.h"
+#include "src/sockets/SPI_ESP_Arduino_Slave.h"
 
 
 const char talker_name[] = "green";
@@ -38,7 +38,7 @@ JsonTalker talker = JsonTalker(talker_name, talker_desc, &green_manifesto);
 JsonTalker* talkers[] = { &talker };   // It's an array of pointers of JsonTalker (keep it as JsonTalker!)
 // Singleton requires the & (to get a reference variable)
 
-auto& spi_socket = BroadcastSocket_SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+auto& spi_socket = SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
 
 
 
