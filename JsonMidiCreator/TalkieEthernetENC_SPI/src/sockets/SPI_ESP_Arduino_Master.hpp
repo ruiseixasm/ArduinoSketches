@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
 #include "../BroadcastSocket.hpp"
 
-// #define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
 
@@ -61,6 +61,17 @@ protected:
     uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
 	String _from_name = "";
+
+	
+    // JsonDocument intended to be reused
+    #if ARDUINOJSON_VERSION_MAJOR >= 7
+    JsonDocument _named_pins_doc;
+    #else
+    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _named_pins_doc;
+    #endif
+
+	JsonObject _named_pins;	// Automatically "null"
+
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
@@ -435,7 +446,8 @@ protected:
 	bool checkJsonMessage(const JsonObject& json_message) override {
 
 		if (BroadcastSocket::checkJsonMessage(json_message)) {
-			_from_name = json_message[ JsonKey::FROM ].as<String>();
+			String from_name = json_message[ JsonKey::FROM ].as<String>();
+			_named_pins[from_name] = _actual_ss_pin;
 			return true;
 		}
 		return false;
@@ -446,9 +458,7 @@ protected:
     bool send(const JsonObject& json_message) override {
 
 		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
-
-			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
-
+			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tsend1: Sent message: "));
 			Serial.write(_sending_buffer, _sending_length);
@@ -456,9 +466,16 @@ protected:
 			Serial.print(F("\tsend2: Sent length: "));
 			Serial.println(_sending_length);
 			#endif
-
+			
 			#ifdef ENABLE_DIRECT_ADDRESSING
+
+			bool as_reply = json_message[ JsonKey::TO ].is<String>();
 			if (as_reply) {
+				as_reply = json_message[ json_message[ JsonKey::TO ].as<String>() ].is<int>();
+			}
+
+			if (as_reply) {
+				_actual_ss_pin = json_message[ json_message[ JsonKey::TO ].as<String>() ].as<int>();
 				sendSPI(_sending_length, _actual_ss_pin);
 
 				#ifdef BROADCAST_SPI_DEBUG
@@ -555,6 +572,8 @@ protected:
 					break;
 				}
 			}
+			// _initiated is true
+			_named_pins = _named_pins_doc.as<JsonObject>();
 		}
 
 		#ifdef BROADCAST_SPI_DEBUG

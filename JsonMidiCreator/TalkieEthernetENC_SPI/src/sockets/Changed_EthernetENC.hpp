@@ -30,8 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"
 
 
-// #define BROADCAST_ETHERNETENC_DEBUG
-
+#define BROADCAST_ETHERNETENC_DEBUG
 
 #define ENABLE_DIRECT_ADDRESSING
 
@@ -105,10 +104,11 @@ protected:
 		
         if (_udp && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 			
-			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
             IPAddress broadcastIP(255, 255, 255, 255);
-            
+			
             #ifdef ENABLE_DIRECT_ADDRESSING
+            
+			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
             if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("\tFailed to begin packet"));
