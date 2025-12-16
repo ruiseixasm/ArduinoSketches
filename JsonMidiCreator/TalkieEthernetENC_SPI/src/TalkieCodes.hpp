@@ -40,27 +40,28 @@ struct TalkieCodes {
 
 
 	enum class MessageCode : int {
-		TALK,
-		LIST,
 		RUN,
 		SET,
 		GET,
+		TALK,
+		LIST,
+		CHANNEL,
 		SYS,
 		ECHO,
-		ERROR,
-		CHANNEL
+		ERROR
 	};
 
 
 	enum class SystemCode : int {
-		MUTE, UNMUTE, MUTED, BOARD, PING, DROPS, DELAY
+		BOARD, PING, DROPS, DELAY, MUTE, UNMUTE, MUTED
 	};
 
 
 	enum class EchoCode : int {
 		ROGER,
 		SAY_AGAIN,
-		NEGATIVE
+		NEGATIVE,
+		NIL
 	};
 
 

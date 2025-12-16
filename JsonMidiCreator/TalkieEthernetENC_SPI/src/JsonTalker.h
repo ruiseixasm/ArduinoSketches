@@ -51,7 +51,7 @@ protected:
     const char* _desc;      // Description of the Device
 	IManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
-    bool _muted = false;
+    bool _muted_action = false;
 
 
 public:
@@ -185,16 +185,16 @@ public:
     
 
     JsonTalker& mute() {    // It does NOT make a copy!
-        _muted = true;
+        _muted_action = true;
         return *this;
     }
 
     JsonTalker& unmute() {
-        _muted = false;
+        _muted_action = false;
         return *this;
     }
 
-    bool muted() { return _muted; }
+    bool muted() { return _muted_action; }
 
     
     virtual bool processData(JsonObject& json_message, bool pre_validated = false) {
@@ -257,7 +257,7 @@ public:
 		MessageCode message_code = static_cast<MessageCode>(json_message[ JsonKey::MESSAGE ].as<int>());
 
 		// Doesn't apply to ECHO nor ERROR
-		if (message_code != MessageCode::ECHO && message_code != MessageCode::ERROR) {
+		if (message_code < MessageCode::ECHO) {
 
 			// From one to many, starts to set the returning target in this single place only
 			json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
@@ -267,66 +267,8 @@ public:
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ECHO);
 		}
 
-        switch (message_code)
-        {
-        case MessageCode::TALK:
-            json_message[ JsonKey::DESCRIPTION ] = _desc;
-            replyMessage(json_message, true);	// Includes reply swap
-            break;
-        
-        case MessageCode::LIST:
-            {   // Because of none_list !!!
-                bool none_list = true;
+        switch (message_code) {
 
-                // In your list handler:
-                
-                #ifdef JSON_TALKER_DEBUG
-                Serial.print("\t=== This object is: ");
-                Serial.println(class_name());
-                #endif
-
-				json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::RUN);
-				_manifesto->iterateRunsReset();
-				const IManifesto::Action* run;
-				uint8_t action_index = 0;
-				while ((run = _manifesto->iterateRunsNext()) != nullptr) {	// No boilerplate
-					none_list = false;
-					json_message[ JsonKey::NAME ] = run->name;      // Direct access
-					json_message[ JsonKey::DESCRIPTION ] = run->desc;
-					json_message[ JsonKey::INDEX ] = action_index++;
-					replyMessage(json_message, true);
-				}
-
-                json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::SET);
-				_manifesto->iterateSetsReset();
-				const IManifesto::Action* set;
-				action_index = 0;
-				while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
-					none_list = false;
-					json_message[ JsonKey::NAME ] = set->name;      // Direct access
-					json_message[ JsonKey::DESCRIPTION ] = set->desc;
-					json_message[ JsonKey::INDEX ] = action_index++;
-					replyMessage(json_message, true);
-				}
-				
-                json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::GET);
-				_manifesto->iterateGetsReset();
-				const IManifesto::Action* get;
-				action_index = 0;
-				while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
-					none_list = false;
-					json_message[ JsonKey::NAME ] = get->name;      // Direct access
-					json_message[ JsonKey::DESCRIPTION ] = get->desc;
-					json_message[ JsonKey::INDEX ] = action_index++;
-					replyMessage(json_message, true);
-				}
-
-                if(none_list) {
-                    json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
-                }
-            }
-            break;
-        
         case MessageCode::RUN:
 			{
 				uint8_t index_found_i = 255;
@@ -351,8 +293,9 @@ public:
 				} else {
 					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
 				}
-				replyMessage(json_message, true);
 			}
+			// In the end sends back the processed message (single message, one-to-one)
+			replyMessage(json_message, true);
             break;
         
         case MessageCode::SET:
@@ -381,8 +324,12 @@ public:
 				}
 				// Remove unecessary keys to reduce overhead data
 				json_message.remove( JsonKey::VALUE );
-				replyMessage(json_message, true);
+			} else {
+				json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageCode::ERROR);
+				json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorCode::FIELDS);
 			}
+			// In the end sends back the processed message (single message, one-to-one)
+			replyMessage(json_message, true);
             break;
         
         case MessageCode::GET:
@@ -407,141 +354,69 @@ public:
 				} else {
 					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
 				}
-				replyMessage(json_message, true);
 			}
+			// In the end sends back the processed message (single message, one-to-one)
+			replyMessage(json_message, true);
             break;
         
-        case MessageCode::SYS:
-			if (json_message["s"].is<int>()) {
+        case MessageCode::TALK:
+            json_message[ JsonKey::DESCRIPTION ] = _desc;
+			// In the end sends back the processed message (single message, one-to-one)
+			replyMessage(json_message, true);
+            break;
+        
+        case MessageCode::LIST:
+            {   // Because of none_list !!!
+                bool no_list = true;
 
-        		SystemCode system_code = static_cast<SystemCode>(json_message["s"].as<int>());
+                // In your list handler:
+                
+                #ifdef JSON_TALKER_DEBUG
+                Serial.print("\t=== This object is: ");
+                Serial.println(class_name());
+                #endif
 
-				switch (system_code)
-				{
-				case SystemCode::MUTE:
-					if (!_muted) {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
-						_muted = true;
-					} else {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
-						json_message["r"] = "Already muted";
-					}
-					{
-						bool muted = _muted;
-						_muted = false;	// temporaily unmute device to send state
-						replyMessage(json_message, true);
-						_muted = muted;
-					}
-					break;
-				case SystemCode::UNMUTE:
-					if (_muted) {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
-						_muted = false;
-					} else {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
-						json_message["r"] = "Already NOT muted";
-					}
-					replyMessage(json_message, true);
-					break;
-				case SystemCode::MUTED:
-					json_message[ JsonKey::VALUE ] = static_cast<int>(_muted);
-					{
-						bool muted = _muted;
-						_muted = false;	// temporaily unmute device to send state
-						replyMessage(json_message, true);
-						_muted = muted;
-					}
-					break;
-				case SystemCode::BOARD:
-					
-				// AVR Boards (Uno, Nano, Mega) - Check RAM size
-				#ifdef __AVR__
-					#if (RAMEND - RAMSTART + 1) == 2048
-						json_message[ JsonKey::DESCRIPTION ] = "Arduino Uno/Nano (ATmega328P)";
-					#elif (RAMEND - RAMSTART + 1) == 8192
-						json_message[ JsonKey::DESCRIPTION ] = "Arduino Mega (ATmega2560)";
-					#else
-						json_message[ JsonKey::DESCRIPTION ] = "Unknown AVR Board";
-					#endif
-					
-				// ESP8266
-				#elif defined(ESP8266)
-					json_message[ JsonKey::DESCRIPTION ] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
-					
-				// ESP32
-				#elif defined(ESP32)
-					json_message[ JsonKey::DESCRIPTION ] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
-					
-				// Teensy Boards
-				#elif defined(TEENSYDUINO)
-					#if defined(__IMXRT1062__)
-						json_message[ JsonKey::DESCRIPTION ] = "Teensy 4.0/4.1 (i.MX RT1062)";
-					#elif defined(__MK66FX1M0__)
-						json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.6 (MK66FX1M0)";
-					#elif defined(__MK64FX512__)
-						json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.5 (MK64FX512)";
-					#elif defined(__MK20DX256__)
-						json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.2/3.1 (MK20DX256)";
-					#elif defined(__MKL26Z64__)
-						json_message[ JsonKey::DESCRIPTION ] = "Teensy LC (MKL26Z64)";
-					#else
-						json_message[ JsonKey::DESCRIPTION ] = "Unknown Teensy Board";
-					#endif
-
-				// ARM (Due, Zero, etc.)
-				#elif defined(__arm__)
-					json_message[ JsonKey::DESCRIPTION ] = "ARM-based Board";
-
-				// Unknown Board
-				#else
-					json_message[ JsonKey::DESCRIPTION ] = "Unknown Board";
-
-				#endif
-
-					replyMessage(json_message, true);
-
-					// TO INSERT HERE EXTRA DATA !!
-					
-					break;
-
-				case SystemCode::PING:
-				
-					#ifdef JSON_TALKER_DEBUG
-					Serial.print(F("\tPing replied as message code: "));
-					Serial.println(json_message[ JsonKey::MESSAGE ].is<int>());
-					#endif
-					// Replies as soon as possible (best case scenario)
-					replyMessage(json_message, true);
-					break;
-
-				case SystemCode::DROPS:
-					json_message[ JsonKey::VALUE ] = get_drops();
-					replyMessage(json_message, true);
-					break;
-
-				case SystemCode::DELAY:
-					json_message[ JsonKey::VALUE ] = get_delay();
-					replyMessage(json_message, true);
-					break;
-
-				default:
-					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
-					replyMessage(json_message, true);
-					break;
+				json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::RUN);
+				_manifesto->iterateRunsReset();
+				const IManifesto::Action* run;
+				uint8_t action_index = 0;
+				while ((run = _manifesto->iterateRunsNext()) != nullptr) {	// No boilerplate
+					no_list = false;
+					json_message[ JsonKey::NAME ] = run->name;      // Direct access
+					json_message[ JsonKey::DESCRIPTION ] = run->desc;
+					json_message[ JsonKey::INDEX ] = action_index++;
+					replyMessage(json_message, true);	// One-to-Many
 				}
+
+                json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::SET);
+				_manifesto->iterateSetsReset();
+				const IManifesto::Action* set;
+				action_index = 0;
+				while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
+					no_list = false;
+					json_message[ JsonKey::NAME ] = set->name;      // Direct access
+					json_message[ JsonKey::DESCRIPTION ] = set->desc;
+					json_message[ JsonKey::INDEX ] = action_index++;
+					replyMessage(json_message, true);	// One-to-Many
+				}
+				
+                json_message[ JsonKey::ACTION ] = static_cast<int>(MessageCode::GET);
+				_manifesto->iterateGetsReset();
+				const IManifesto::Action* get;
+				action_index = 0;
+				while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
+					no_list = false;
+					json_message[ JsonKey::NAME ] = get->name;      // Direct access
+					json_message[ JsonKey::DESCRIPTION ] = get->desc;
+					json_message[ JsonKey::INDEX ] = action_index++;
+					replyMessage(json_message, true);	// One-to-Many
+				}
+
+                if(no_list) {
+                    json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NIL);
+					replyMessage(json_message, true);	// One-to-Many
+                }
             }
-            break;
-        
-        case MessageCode::ECHO:
-			if (_manifesto) {
-				_manifesto->echo(json_message, this);
-			}
-            break;
-        
-        case MessageCode::ERROR:
-			if (_manifesto) {
-				_manifesto->error(json_message, this);
-			}
             break;
         
         case MessageCode::CHANNEL:
@@ -555,7 +430,127 @@ public:
                 _channel = json_message[ JsonKey::VALUE ].as<uint8_t>();
             }
             json_message[ JsonKey::VALUE ] = _channel;
-            replyMessage(json_message, true);
+			// In the end sends back the processed message (single message, one-to-one)
+			replyMessage(json_message, true);
+            break;
+        
+        case MessageCode::SYS:
+			if (json_message["s"].is<int>()) {
+
+        		SystemCode system_code = static_cast<SystemCode>(json_message["s"].as<int>());
+
+				switch (system_code) {
+
+				case SystemCode::BOARD:
+					
+					// AVR Boards (Uno, Nano, Mega) - Check RAM size
+					#ifdef __AVR__
+						#if (RAMEND - RAMSTART + 1) == 2048
+							json_message[ JsonKey::DESCRIPTION ] = "F(Arduino Uno/Nano (ATmega328P))";
+						#elif (RAMEND - RAMSTART + 1) == 8192
+							json_message[ JsonKey::DESCRIPTION ] = "F(Arduino Mega (ATmega2560))";
+						#else
+							json_message[ JsonKey::DESCRIPTION ] = "Unknown AVR Board";
+						#endif
+						
+					// ESP8266
+					#elif defined(ESP8266)
+						json_message[ JsonKey::DESCRIPTION ] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
+						
+					// ESP32
+					#elif defined(ESP32)
+						json_message[ JsonKey::DESCRIPTION ] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
+						
+					// Teensy Boards
+					#elif defined(TEENSYDUINO)
+						#if defined(__IMXRT1062__)
+							json_message[ JsonKey::DESCRIPTION ] = "Teensy 4.0/4.1 (i.MX RT1062)";
+						#elif defined(__MK66FX1M0__)
+							json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.6 (MK66FX1M0)";
+						#elif defined(__MK64FX512__)
+							json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.5 (MK64FX512)";
+						#elif defined(__MK20DX256__)
+							json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.2/3.1 (MK20DX256)";
+						#elif defined(__MKL26Z64__)
+							json_message[ JsonKey::DESCRIPTION ] = "Teensy LC (MKL26Z64)";
+						#else
+							json_message[ JsonKey::DESCRIPTION ] = "Unknown Teensy Board";
+						#endif
+
+					// ARM (Due, Zero, etc.)
+					#elif defined(__arm__)
+						json_message[ JsonKey::DESCRIPTION ] = "ARM-based Board";
+
+					// Unknown Board
+					#else
+						json_message[ JsonKey::DESCRIPTION ] = "Unknown Board";
+
+					#endif
+
+					replyMessage(json_message, true);
+					// TO INSERT HERE EXTRA DATA !!
+					break;
+
+				case SystemCode::PING:
+				
+					#ifdef JSON_TALKER_DEBUG
+					Serial.print(F("\tPing replied as message code: "));
+					Serial.println(json_message[ JsonKey::MESSAGE ].is<int>());
+					#endif
+					// Replies as soon as possible (best case scenario)
+					break;
+
+				case SystemCode::DROPS:
+					json_message[ JsonKey::VALUE ] = get_drops();
+					break;
+
+				case SystemCode::DELAY:
+					json_message[ JsonKey::VALUE ] = get_delay();
+					break;
+
+				case SystemCode::MUTE:
+					if (!_muted_action) {
+						_muted_action = true;
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
+					} else {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message["r"] = "Already muted";
+					}
+					break;
+				case SystemCode::UNMUTE:
+					if (_muted_action) {
+						_muted_action = false;
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
+					} else {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
+						json_message["r"] = "Already NOT muted";
+					}
+					break;
+
+				case SystemCode::MUTED:
+					json_message[ JsonKey::VALUE ] = static_cast<int>(_muted_action);
+					break;
+
+				default:
+					json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::SAY_AGAIN);
+					break;
+				}
+
+				// In the end sends back the processed message (single message, one-to-one)
+				replyMessage(json_message, true);
+            }
+            break;
+        
+        case MessageCode::ECHO:
+			if (_manifesto) {
+				_manifesto->echo(json_message, this);
+			}
+            break;
+        
+        case MessageCode::ERROR:
+			if (_manifesto) {
+				_manifesto->error(json_message, this);
+			}
             break;
         
         default:
