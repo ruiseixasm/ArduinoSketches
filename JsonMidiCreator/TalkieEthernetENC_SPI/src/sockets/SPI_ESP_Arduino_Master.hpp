@@ -60,7 +60,6 @@ protected:
     int* _ss_pins;
     uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
-	String _from_name = "";
 
 	
     // JsonDocument intended to be reused
@@ -447,7 +446,22 @@ protected:
 
 		if (BroadcastSocket::checkJsonMessage(json_message)) {
 			String from_name = json_message[ JsonKey::FROM ].as<String>();
+
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print(F("\tcheckJsonMessage1: Saved actual named pin: "));
+			Serial.println(_actual_ss_pin);
+			#endif
+
+			// Refresh it each time (don't lose saved data because it is in _named_pins_doc)
+			_named_pins = _named_pins_doc.as<JsonObject>();
 			_named_pins[from_name] = _actual_ss_pin;
+
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print(F("\tcheckJsonMessage2: Confirmed actual named pin: "));
+			Serial.println(_named_pins[from_name].as<int>());
+
+			#endif
+
 			return true;
 		}
 		return false;
@@ -471,15 +485,39 @@ protected:
 
 			bool as_reply = json_message[ JsonKey::TO ].is<String>();
 			if (as_reply) {
-				as_reply = json_message[ json_message[ JsonKey::TO ].as<String>() ].is<int>();
+
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.println(F("\tsend3: json_message TO is a String"));
+				#endif
+
+				String target_name = json_message[ JsonKey::TO ].as<String>();
+				if (target_name.length() > 0) {
+					as_reply = json_message[ target_name ].is<uint8_t>();	// Critical line
+				} else {
+					as_reply = false;  // Empty string isn't a valid key
+				}
+				if (as_reply) {
+					_actual_ss_pin = json_message[ target_name ].as<uint8_t>();
+				} else {
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println(F("\t\tERROR: Failed to get the pin from name"));
+					if (json_message[ target_name ].is<int>()) {	
+						Serial.println(F("\t\tNOTE: It's seen as an 'int' though"));
+					}
+					#endif
+				}
+			} else {
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.println(F("\tsend3: json_message TO is NOT a String or doesn't exist"));
+				#endif
 			}
 
+
 			if (as_reply) {
-				_actual_ss_pin = json_message[ json_message[ JsonKey::TO ].as<String>() ].as<int>();
 				sendSPI(_sending_length, _actual_ss_pin);
 
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend3: --> Directly sent for the received pin -->"));
+				Serial.println(F("\tsend4: --> Directly sent for the received pin -->"));
 				#endif
 
 			} else {    // Broadcast mode
@@ -488,7 +526,7 @@ protected:
 				}
 				
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend3: --> Broadcast sent to all pins -->"));
+				Serial.println(F("\tsend4: --> Broadcast sent to all pins -->"));
 				#endif
 
 			}
@@ -498,7 +536,7 @@ protected:
 			}
 
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.println(F("\tsend3: --> Broadcast sent to all pins -->"));
+			Serial.println(F("\tsend4: --> Broadcast sent to all pins -->"));
 			#endif
 
 			#endif
@@ -535,7 +573,7 @@ protected:
 					Serial.println(_ss_pins[ss_pin_i]);
 					#endif
 
-					_actual_ss_pin = _ss_pins[ss_pin_i];
+					_actual_ss_pin = static_cast<uint8_t>(_ss_pins[ss_pin_i]);
 					_received_length = length;
 					triggerTalkers();
 				}
@@ -572,8 +610,6 @@ protected:
 					break;
 				}
 			}
-			// _initiated is true
-			_named_pins = _named_pins_doc.as<JsonObject>();
 		}
 
 		#ifdef BROADCAST_SPI_DEBUG
