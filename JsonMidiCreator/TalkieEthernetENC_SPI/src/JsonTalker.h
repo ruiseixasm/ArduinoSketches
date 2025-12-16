@@ -83,7 +83,7 @@ protected:
 		Serial.println(F("Sending a LOCAL message"));
 		#endif
 
-        json_message[ JsonKey::CHECKSUM ] = C_LOCAL;	// 'c' = 1 means C_LOCAL communication
+        json_message[ JsonKey::SOURCE ] = C_LOCAL;	// 'c' = 1 means C_LOCAL communication
         // Triggers all local Talkers to processes the json_message
         bool sent_message = false;
 		if (target_index < _talker_count) {
