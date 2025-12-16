@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SOCKET_ETHERNETENC_HPP
-#define BROADCAST_SOCKET_ETHERNETENC_HPP
+#ifndef CHANGED_ETHERNETENC_HPP
+#define CHANGED_ETHERNETENC_HPP
 
     // writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
 
@@ -35,7 +35,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define ENABLE_DIRECT_ADDRESSING
 
 
-class BroadcastSocket_EthernetENC : public BroadcastSocket {
+class Changed_EthernetENC : public BroadcastSocket {
 private:
     uint16_t _port = 5005;
     IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
@@ -44,7 +44,7 @@ private:
 protected:
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_EthernetENC(JsonTalker** json_talkers, uint8_t talker_count)
+    Changed_EthernetENC(JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {}
 
 
@@ -99,12 +99,12 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_EthernetENC& instance(JsonTalker** json_talkers, uint8_t talker_count) {
-        static BroadcastSocket_EthernetENC instance(json_talkers, talker_count);
+    static Changed_EthernetENC& instance(JsonTalker** json_talkers, uint8_t talker_count) {
+        static Changed_EthernetENC instance(json_talkers, talker_count);
         return instance;
     }
 
-    const char* class_name() const override { return "BroadcastSocket_EthernetENC"; }
+    const char* class_name() const override { return "Changed_EthernetENC"; }
 
 
     void set_port(uint16_t port) {
@@ -153,4 +153,4 @@ public:
     void set_udp(EthernetUDP* udp) { _udp = udp; }
 };
 
-#endif // BROADCAST_SOCKET_ETHERNETENC_HPP
+#endif // CHANGED_ETHERNETENC_HPP

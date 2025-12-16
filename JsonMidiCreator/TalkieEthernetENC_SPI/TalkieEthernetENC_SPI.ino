@@ -21,7 +21,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
-#include "src/sockets/BroadcastSocket_Changed_EthernetENC.hpp"
+#include "src/sockets/Changed_EthernetENC.hpp"
 #include "src/sockets/SPI_ESP_Arduino_Master.hpp"
 #include "src/talkers/JsonRepeater.h"
 
@@ -35,7 +35,7 @@ JsonRepeater t_spi = JsonRepeater(t_spi_name, t_spi_desc);
 JsonTalker* t_ethernet_talkers[] = { &t_ethernet };   // It's an array of pointers
 JsonTalker* t_spi_talkers[] = { &t_spi };   // It's an array of pointers
 // Singleton requires the & (to get a reference variable)
-auto& ethernet_socket = BroadcastSocket_EthernetENC::instance(t_ethernet_talkers, sizeof(t_ethernet_talkers)/sizeof(JsonTalker*));
+auto& ethernet_socket = Changed_EthernetENC::instance(t_ethernet_talkers, sizeof(t_ethernet_talkers)/sizeof(JsonTalker*));
 int spi_pins[] = {4, 16};
 // int spi_pins[] = {4};
 auto& spi_socket = SPI_ESP_Arduino_Master::instance(

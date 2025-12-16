@@ -11,15 +11,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_VSPI_HPP
-#define BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_VSPI_HPP
+#ifndef SPI_ESP_ARDUINO_MASTER_VSPI_HPP
+#define SPI_ESP_ARDUINO_MASTER_VSPI_HPP
 
 
 #include <SPI.h>
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
 #include "../BroadcastSocket.hpp"
 
-// #define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
 
@@ -448,17 +448,37 @@ protected:
 				#ifdef ENABLE_DIRECT_ADDRESSING
 				if (as_reply) {
 					sendSPI(_sending_length, _actual_ss_pin);
+
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println(F("\tsend3: Directly sent for the received pin"));
+					#endif
+
 				} else if (target_index < _ss_pins_count) {
 					sendSPI(_sending_length, _ss_pins[target_index]);
+					
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println(F("\tsend3: Directly sent to the target index pin"));
+					#endif
+
 				} else {    // Broadcast mode
 					for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 						sendSPI(_sending_length, _ss_pins[ss_pin_i]);
 					}
+					
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println(F("\tsend3: Broadcast sent to all pins"));
+					#endif
+
 				}
 				#else
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 					sendSPI(_sending_length, _ss_pins[ss_pin_i]);
 				}
+
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.println(F("\tsend3: Broadcast sent to all pins"));
+				#endif
+
 				#endif
 
 				_sending_length = 0;	// Marks sending buffer available
@@ -574,4 +594,4 @@ public:
     }
 };
 
-#endif // BROADCAST_SOCKET_SPI_ESP_ARDUINO_MASTER_VSPI_HPP
+#endif // SPI_ESP_ARDUINO_MASTER_VSPI_HPP
