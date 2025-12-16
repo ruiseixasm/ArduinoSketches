@@ -369,9 +369,8 @@ protected:
 	}
 
 
-    virtual bool send(const JsonObject& json_message, uint8_t target_index = 255) {
+    virtual bool send(const JsonObject& json_message) {
         (void)json_message; // Silence unused parameter warning
-        (void)target_index; // Silence unused parameter warning
 
         if (_sending_length < 3*4 + 2) {
 
@@ -439,7 +438,7 @@ public:
 
 
     
-    bool remoteSend(JsonObject& json_message, uint8_t target_index = 255) {
+    bool remoteSend(JsonObject& json_message) {
 
 		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
 		json_message[ JsonKey::CHECKSUM ] = 0;

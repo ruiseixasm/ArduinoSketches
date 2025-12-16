@@ -28,7 +28,7 @@ public:
         : JsonTalker(name, desc, nullptr) {}
 
 
-    bool remoteSend(JsonObject& json_message, uint8_t target_index = 255) override;
+    bool remoteSend(JsonObject& json_message) override;
 
 
 	// Works as a repeater to LOCAL send

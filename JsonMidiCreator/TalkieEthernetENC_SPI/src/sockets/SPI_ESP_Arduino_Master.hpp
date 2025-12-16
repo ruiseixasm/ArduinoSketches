@@ -445,12 +445,12 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(const JsonObject& json_message, uint8_t target_index = 255) override {
+    bool send(const JsonObject& json_message) override {
 
-		if (_initiated && BroadcastSocket::send(json_message, target_index)) {	// Very important pre processing !!
+		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 
 			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
-			
+
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tsend1: Sent message: "));
 			Serial.write(_sending_buffer, _sending_length);
@@ -465,13 +465,6 @@ protected:
 
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("\tsend3: --> Directly sent for the received pin -->"));
-				#endif
-
-			} else if (target_index < _ss_pins_count) {
-				sendSPI(_sending_length, _ss_pins[target_index]);
-				
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend3: --> Directly sent to the target index pin -->"));
 				#endif
 
 			} else {    // Broadcast mode

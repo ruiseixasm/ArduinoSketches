@@ -50,7 +50,7 @@ protected:
         : BroadcastSocket(json_talkers, talker_count) {}
 
 
-		
+
     uint8_t receive() override {
         if (_udp == nullptr) return 0;
 
@@ -103,9 +103,9 @@ protected:
 	}
 
 
-    bool send(const JsonObject& json_message, uint8_t target_index = 255) override {
+    bool send(const JsonObject& json_message) override {
 		
-        if (_udp && BroadcastSocket::send(json_message, target_index)) {	// Very important pre processing !!
+        if (_udp && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 			
 			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
             IPAddress broadcastIP(255, 255, 255, 255);
