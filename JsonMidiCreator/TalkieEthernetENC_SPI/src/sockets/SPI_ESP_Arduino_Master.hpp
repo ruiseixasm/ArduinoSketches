@@ -526,7 +526,6 @@ protected:
     }
 
 
-
 	bool initiate() {
 		
 		if (_spi_instance) {
