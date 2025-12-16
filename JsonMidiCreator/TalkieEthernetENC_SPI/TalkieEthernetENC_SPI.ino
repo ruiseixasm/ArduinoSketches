@@ -28,10 +28,10 @@ https://github.com/ruiseixasm/JsonTalkie
 
 const char t_ethernet_name[] = "t_ethernet";
 const char t_ethernet_desc[] = "I'm an Ethernet talker";
-JsonRepeater t_ethernet = JsonRepeater(t_ethernet_name, t_ethernet_desc, nullptr);	// Just a repeater, no need for Manifesto
+JsonRepeater t_ethernet = JsonRepeater(t_ethernet_name, t_ethernet_desc);	// Just a repeater, doesn't need a Manifesto
 const char t_spi_name[] = "t_spi";
 const char t_spi_desc[] = "I'm a SPI talker";
-JsonRepeater t_spi = JsonRepeater(t_spi_name, t_spi_desc, nullptr);
+JsonRepeater t_spi = JsonRepeater(t_spi_name, t_spi_desc);
 JsonTalker* t_ethernet_talkers[] = { &t_ethernet };   // It's an array of pointers
 JsonTalker* t_spi_talkers[] = { &t_spi };   // It's an array of pointers
 // Singleton requires the & (to get a reference variable)
