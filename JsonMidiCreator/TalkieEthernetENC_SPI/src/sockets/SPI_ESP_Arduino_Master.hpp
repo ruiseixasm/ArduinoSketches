@@ -448,7 +448,9 @@ protected:
 			String from_name = json_message[ JsonKey::FROM ].as<String>();
 
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tcheckJsonMessage1: Saved actual named pin: "));
+			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
+			Serial.println(from_name);
+			Serial.print(F("\tcheckJsonMessage2: Saved actual named pin: "));
 			Serial.println(_actual_ss_pin);
 			#endif
 
@@ -457,9 +459,8 @@ protected:
 			_named_pins[from_name] = _actual_ss_pin;
 
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tcheckJsonMessage2: Confirmed actual named pin: "));
+			Serial.print(F("\tcheckJsonMessage3: Confirmed actual named pin: "));
 			Serial.println(_named_pins[from_name].as<int>());
-
 			#endif
 
 			return true;
