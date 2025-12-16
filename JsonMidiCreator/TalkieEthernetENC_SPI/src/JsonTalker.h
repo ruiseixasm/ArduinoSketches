@@ -28,6 +28,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define C_LOCAL ((uint16_t)1)
 
 
+using SourceData = TalkieCodes::SourceData;
 using MessageData = TalkieCodes::MessageData;
 using SystemData = TalkieCodes::SystemData;
 using EchoData = TalkieCodes::EchoData;
@@ -83,7 +84,7 @@ protected:
 		Serial.println(F("Sending a LOCAL message"));
 		#endif
 
-        json_message[ JsonKey::SOURCE ] = C_LOCAL;	// 'c' = 1 means C_LOCAL communication
+        json_message[ JsonKey::SOURCE ] = static_cast<int>(SourceData::LOCAL);
         // Triggers all local Talkers to processes the json_message
         bool sent_message = false;
 		if (target_index < _talker_count) {
