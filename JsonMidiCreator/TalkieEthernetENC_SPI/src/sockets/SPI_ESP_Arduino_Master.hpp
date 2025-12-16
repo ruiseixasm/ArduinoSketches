@@ -438,7 +438,7 @@ protected:
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("ERROR: From key 'f' is missing"));
 			#endif
-			return;
+			return false;
 		}
 		_from_name = json_message[ JsonKey::FROM ].as<String>();
 		return true;
