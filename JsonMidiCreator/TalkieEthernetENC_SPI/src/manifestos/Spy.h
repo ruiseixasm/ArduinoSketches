@@ -35,7 +35,7 @@ protected:
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
     Action runs[1] = {
-		{"ping", "Ping every talker around me and report to you"}
+		{"ping", "I ping every talker around me"}
     };
     
     Action sets[0] = {
