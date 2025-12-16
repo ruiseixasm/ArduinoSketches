@@ -116,22 +116,6 @@ protected:
     }
 
 
-public:
-
-    // Move ONLY the singleton instance method to subclass
-    static Changed_EthernetENC& instance(JsonTalker** json_talkers, uint8_t talker_count) {
-        static Changed_EthernetENC instance(json_talkers, talker_count);
-        return instance;
-    }
-
-    const char* class_name() const override { return "Changed_EthernetENC"; }
-
-
-    void set_port(uint16_t port) {
-        _port = port;
-    }
-    
-
     uint8_t receive() override {
         if (_udp == nullptr) return 0;
 
@@ -170,7 +154,21 @@ public:
         return 0;   // nothing received
     }
 
+
+public:
+
+    // Move ONLY the singleton instance method to subclass
+    static Changed_EthernetENC& instance(JsonTalker** json_talkers, uint8_t talker_count) {
+        static Changed_EthernetENC instance(json_talkers, talker_count);
+        return instance;
+    }
+
+    const char* class_name() const override { return "Changed_EthernetENC"; }
+
+
+    void set_port(uint16_t port) { _port = port; }
     void set_udp(EthernetUDP* udp) { _udp = udp; }
+	
 };
 
 #endif // CHANGED_ETHERNETENC_HPP

@@ -172,7 +172,7 @@ void loop() {
     // Maintain DHCP lease (important for long-running applications)
     Ethernet.maintain();
     
-    ethernet_socket.receive();
-    spi_socket.receive();
+    ethernet_socket.loop();
+    spi_socket.loop();
 }
 
