@@ -69,7 +69,7 @@ protected:
     StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _named_pins_doc;
     #endif
 
-	JsonObject _named_pins;	// Automatically "null"
+	JsonObject _named_pins;	// Automatically "null", needs to be initiated though!
 
 
     // Needed for the compiler, the base class is the one being called though
@@ -459,6 +459,9 @@ protected:
 			_named_pins[from_name] = _actual_ss_pin;
 
 			#ifdef BROADCAST_SPI_DEBUG
+			if (_named_pins_doc.isNull()) {
+				Serial.println("\t\tERROR: The JsonObject isn't initiated");
+			}
 			Serial.print(F("\tcheckJsonMessage3: Confirmed actual named pin: "));
 			Serial.println(_named_pins[from_name].as<int>());
 			#endif
@@ -611,6 +614,11 @@ protected:
 					break;
 				}
 			}
+			// _initiated is true at this point
+			// deserializeJson() - loads from buffer (makes it an object)
+			// to<JsonObject>() - creates empty object
+			// to<JsonArray>() - creates empty array
+			_named_pins = _named_pins_doc.to<JsonObject>();	// Convert null → empty object
 		}
 
 		#ifdef BROADCAST_SPI_DEBUG
