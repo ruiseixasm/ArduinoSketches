@@ -29,7 +29,8 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../BroadcastSocket.hpp"
 
-// #define BROADCAST_ETHERNETENC_DEBUG
+
+#define BROADCAST_ETHERNETENC_DEBUG
 
 
 #define ENABLE_DIRECT_ADDRESSING
@@ -61,14 +62,33 @@ protected:
                 Serial.println(F("\tFailed to begin packet"));
                 #endif
                 return false;
-            }
+            } else {
+				
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				if (_source_ip == broadcastIP) {
+
+					Serial.println(F("\tsend1: --> Broadcast sent to the 255.255.255.255 address -->"));
+
+				} else {
+
+					Serial.println(F("\tsend1: --> Directly sent to the received IP address -->"));
+					
+				}
+				#endif
+			}
             #else
             if (!_udp->beginPacket(broadcastIP, _port)) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("\tFailed to begin packet"));
                 #endif
                 return false;
-            }
+            } else {
+									
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				Serial.println(F("\tsend1: --> Broadcast sent to the 255.255.255.255 address -->"));
+				#endif
+
+			}
             #endif
 
             size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(_sending_buffer), _sending_length);

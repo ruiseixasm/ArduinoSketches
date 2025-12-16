@@ -450,14 +450,14 @@ protected:
 					sendSPI(_sending_length, _actual_ss_pin);
 
 					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println(F("\tsend3: Directly sent for the received pin"));
+					Serial.println(F("\tsend3: --> Directly sent for the received pin -->"));
 					#endif
 
 				} else if (target_index < _ss_pins_count) {
 					sendSPI(_sending_length, _ss_pins[target_index]);
 					
 					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println(F("\tsend3: Directly sent to the target index pin"));
+					Serial.println(F("\tsend3: --> Directly sent to the target index pin -->"));
 					#endif
 
 				} else {    // Broadcast mode
@@ -466,7 +466,7 @@ protected:
 					}
 					
 					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println(F("\tsend3: Broadcast sent to all pins"));
+					Serial.println(F("\tsend3: --> Broadcast sent to all pins -->"));
 					#endif
 
 				}
@@ -476,7 +476,7 @@ protected:
 				}
 
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend3: Broadcast sent to all pins"));
+				Serial.println(F("\tsend3: --> Broadcast sent to all pins -->"));
 				#endif
 
 				#endif
