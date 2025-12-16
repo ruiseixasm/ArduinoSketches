@@ -51,7 +51,7 @@ protected:
     const char* _desc;      // Description of the Device
 	IManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
-    bool _muted = false;
+    bool _muted_action = false;
 
 
 public:
@@ -185,16 +185,16 @@ public:
     
 
     JsonTalker& mute() {    // It does NOT make a copy!
-        _muted = true;
+        _muted_action = true;
         return *this;
     }
 
     JsonTalker& unmute() {
-        _muted = false;
+        _muted_action = false;
         return *this;
     }
 
-    bool muted() { return _muted; }
+    bool muted() { return _muted_action; }
 
     
     virtual bool processData(JsonObject& json_message, bool pre_validated = false) {
@@ -509,18 +509,18 @@ public:
 					break;
 
 				case SystemCode::MUTE:
-					if (!_muted) {
+					if (!_muted_action) {
 						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
-						_muted = true;
+						_muted_action = true;
 					} else {
 						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
 						json_message["r"] = "Already muted";
 					}
 					break;
 				case SystemCode::UNMUTE:
-					if (_muted) {
+					if (_muted_action) {
 						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
-						_muted = false;
+						_muted_action = false;
 					} else {
 						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
 						json_message["r"] = "Already NOT muted";
@@ -528,7 +528,7 @@ public:
 					break;
 
 				case SystemCode::MUTED:
-					json_message[ JsonKey::VALUE ] = static_cast<int>(_muted);
+					json_message[ JsonKey::VALUE ] = static_cast<int>(_muted_action);
 					break;
 
 				default:
