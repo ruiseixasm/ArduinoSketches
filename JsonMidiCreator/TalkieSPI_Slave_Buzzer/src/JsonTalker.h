@@ -510,8 +510,8 @@ public:
 
 				case SystemCode::MUTE:
 					if (!_muted_action) {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
 						_muted_action = true;
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
 					} else {
 						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
 						json_message["r"] = "Already muted";
@@ -519,8 +519,8 @@ public:
 					break;
 				case SystemCode::UNMUTE:
 					if (_muted_action) {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
 						_muted_action = false;
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::ROGER);
 					} else {
 						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoCode::NEGATIVE);
 						json_message["r"] = "Already NOT muted";
