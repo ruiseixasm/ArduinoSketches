@@ -29,7 +29,7 @@ public:
 
 
 	// Works as a router to LOCAL_C send
-    bool processData(JsonObject& json_message, bool pre_validated = false) override {
+    bool processData(JsonObject& json_message) override {
         (void)pre_validated;	// Silence unused parameter warning
 
 		#ifdef REPEATER_TALKER_DEBUG

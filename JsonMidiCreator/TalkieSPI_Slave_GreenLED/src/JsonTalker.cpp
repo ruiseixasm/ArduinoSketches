@@ -20,7 +20,7 @@ JsonTalker** JsonTalker::_json_talkers = nullptr;
 uint8_t JsonTalker::_talker_count = 0;
 
 
-bool JsonTalker::remoteSend(JsonObject& json_message, bool as_reply, uint8_t target_index) {
+bool JsonTalker::remoteSend(JsonObject& json_message, uint8_t target_index) {
     if (!_socket) return false;
 
 	#ifdef JSON_TALKER_DEBUG
@@ -67,7 +67,7 @@ bool JsonTalker::remoteSend(JsonObject& json_message, bool as_reply, uint8_t tar
 
 	}
 
-    return _socket->remoteSend(json_message, as_reply, target_index);
+    return _socket->remoteSend(json_message, target_index);
 }
 
 
