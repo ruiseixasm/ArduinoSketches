@@ -179,7 +179,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual void showJsonMessage(const JsonObject& json_message) {}
+	virtual bool checkJsonMessage(const JsonObject& json_message) { return true; }
 
     
     uint8_t triggerTalkers() {
@@ -269,7 +269,7 @@ protected:
 				}
 				JsonObject json_message = _message_doc.as<JsonObject>();
 
-				showJsonMessage(json_message);
+				if (!checkJsonMessage(json_message)) return 0;
 
 				if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) {
 					#ifdef JSON_TALKER_DEBUG

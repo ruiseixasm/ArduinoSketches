@@ -432,7 +432,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	void showJsonMessage(const JsonObject& json_message) override {
+	bool checkJsonMessage(const JsonObject& json_message) override {
 
 		if (!json_message[ JsonKey::FROM ].is<String>()) {
 			#ifdef JSON_TALKER_DEBUG
@@ -441,6 +441,7 @@ protected:
 			return;
 		}
 		_from_name = json_message[ JsonKey::FROM ].as<String>();
+		return true;
 	}
 
     
