@@ -24,14 +24,14 @@ public:
 
     const char* class_name() const override { return "JsonRepeater"; }
 
-    JsonRepeater(const char* name, const char* desc, IManifesto* manifesto)
-        : JsonTalker(name, desc, manifesto) {}
+    JsonRepeater(const char* name, const char* desc)	// Has no Manifesto, it's just a repeater, without Actions
+        : JsonTalker(name, desc, nullptr) {}
 
 
     bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) override;
 
 
-	// Works as a router to LOCAL_C send
+	// Works as a router to C_LOCAL send
     bool processData(JsonObject& json_message, bool pre_validated = false) override {
         (void)pre_validated;	// Silence unused parameter warning
 
@@ -39,8 +39,8 @@ public:
 		Serial.print(_name);
 		Serial.print(F(": "));
 		#endif
-        uint16_t c = json_message[ JsonKey::CHECKSUM ].as<uint16_t>();
-		if (c == LOCAL_C) {
+        uint16_t c_source = json_message[ JsonKey::CHECKSUM ].as<uint16_t>();
+		if (c_source == C_LOCAL) {
 			#ifdef JSON_REPEATER_DEBUG
 			Serial.println(F("Received a LOCAL message"));
 			#endif
