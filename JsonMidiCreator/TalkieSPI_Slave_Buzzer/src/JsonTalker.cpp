@@ -76,20 +76,29 @@ BroadcastSocket& JsonTalker::getSocket() {
 }
 
 const char* JsonTalker::socket_class_name() {
-	return _socket->class_name();
+	if (_socket) {	// Safe code
+		return _socket->class_name();
+	}
+	return "";
 }
 
 void JsonTalker::set_delay(uint8_t delay) {
-    return _socket->set_max_delay(delay);
+	if (_socket) {	// Safe code
+    	return _socket->set_max_delay(delay);
+	}
 }
 
 uint8_t JsonTalker::get_delay() {
-    return _socket->get_max_delay();
+	if (_socket) {	// Safe code
+    	return _socket->get_max_delay();
+	}
+	return 0xFF - 1;	// 255
 }
 
 uint16_t JsonTalker::get_drops() {
-    return _socket->get_drops_count();
+	if (_socket) {	// Safe code
+    	return _socket->get_drops_count();
+	}
+	return 0xFFFF - 1;	// 2^16 - 1
 }
-
-
 
