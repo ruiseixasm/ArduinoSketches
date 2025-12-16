@@ -35,6 +35,7 @@ public:
     IManifesto() = default;
     virtual ~IManifesto() = default;
 
+
     struct Action {
         const char* name;
         const char* desc;

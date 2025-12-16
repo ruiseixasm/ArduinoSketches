@@ -176,8 +176,12 @@ public:
 
 
 	// Getter and setters
+
     void setSocket(BroadcastSocket* socket) { _socket = socket; }
     BroadcastSocket& getSocket();
+
+	const char* socket_class_name();
+
     const char* get_name() { return _name; }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
@@ -499,11 +503,19 @@ public:
 					break;
 
 				case SystemData::DROPS:
-					json_message[ JsonKey::VALUE ] = get_drops();
+					if (_socket) {
+						json_message[ JsonKey::VALUE ] = get_drops();
+					} else {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
+					}
 					break;
 
 				case SystemData::DELAY:
-					json_message[ JsonKey::VALUE ] = get_delay();
+					if (_socket) {
+						json_message[ JsonKey::VALUE ] = get_delay();
+					} else {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
+					}
 					break;
 
 				case SystemData::MUTE:
@@ -526,7 +538,31 @@ public:
 					break;
 
 				case SystemData::MUTED:
-					json_message[ JsonKey::VALUE ] = static_cast<int>(_muted_action);
+					if (_muted_action) {
+						json_message[ JsonKey::VALUE ] = 1;
+					} else {
+						json_message[ JsonKey::VALUE ] = 0;
+					}
+					break;
+
+				case SystemData::SOCKET:
+					if (_socket) {
+						json_message[ JsonKey::VALUE ] = socket_class_name();
+					} else {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
+					}
+					break;
+
+				case SystemData::TALKER:
+					json_message[ JsonKey::VALUE ] = class_name();
+					break;
+
+				case SystemData::MANIFESTO:
+					if (_manifesto) {
+						json_message[ JsonKey::VALUE ] = _manifesto->class_name();
+					} else {
+						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
+					}
 					break;
 
 				default:

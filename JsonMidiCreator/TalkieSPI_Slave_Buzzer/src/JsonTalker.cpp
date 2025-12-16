@@ -75,6 +75,10 @@ BroadcastSocket& JsonTalker::getSocket() {
 	return *_socket;
 }
 
+const char* JsonTalker::socket_class_name() {
+	return _socket->class_name();
+}
+
 void JsonTalker::set_delay(uint8_t delay) {
     return _socket->set_max_delay(delay);
 }
