@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"    // MUST include the full definition!
 
 
-bool JsonRepeater::remoteSend(JsonObject& json_message, bool as_reply, uint8_t target_index) {
+bool JsonRepeater::remoteSend(JsonObject& json_message, uint8_t target_index) {
     if (!_socket) return false;	// Ignores if it's muted or not
 
 	#ifdef JSON_REPEATER_DEBUG
@@ -29,6 +29,6 @@ bool JsonRepeater::remoteSend(JsonObject& json_message, bool as_reply, uint8_t t
 	// DOESN'T SET IDENTITY, IT'S ONLY A REPEATER !!
 	
 
-    return _socket->remoteSend(json_message, as_reply, target_index);
+    return _socket->remoteSend(json_message, target_index);
 }
 

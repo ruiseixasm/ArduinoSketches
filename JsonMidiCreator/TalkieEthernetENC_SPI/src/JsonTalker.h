@@ -69,10 +69,9 @@ public:
 
 protected:
 
-    virtual bool remoteSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255);
+    virtual bool remoteSend(JsonObject& json_message, uint8_t target_index = 255);
 
-    virtual bool localSend(JsonObject& json_message, bool as_reply = false, uint8_t target_index = 255) {
-        (void)as_reply; 	// Silence unused parameter warning
+    virtual bool localSend(JsonObject& json_message, uint8_t target_index = 255) {
         (void)target_index; // Silence unused parameter warning
 
 		#ifdef JSON_TALKER_DEBUG
@@ -134,7 +133,7 @@ protected:
     }
 
 
-    virtual bool replyMessage(JsonObject& json_message, bool as_reply = true) {
+    virtual bool replyMessage(JsonObject& json_message) {
 
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("\t"));
@@ -147,12 +146,12 @@ protected:
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("\tReplied a LOCAL message"));
 			#endif
-			return localSend(json_message, as_reply);
+			return localSend(json_message);
 		}
 		#ifdef JSON_TALKER_DEBUG
 		Serial.println(F("Replied a REMOTE message"));
 		#endif
-        return remoteSend(json_message, as_reply);
+        return remoteSend(json_message);
     }
 
     void set_delay(uint8_t delay);
@@ -206,32 +205,6 @@ public:
         Serial.println(F("\tProcessing JSON message..."));
         #endif
         
-        if (!pre_validated) {
-
-            if (!json_message[ JsonKey::FROM ].is<String>()) {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(0);
-                #endif
-                return false;
-            }
-            if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(4);
-                #endif
-                json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ];
-                json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
-                json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
-				// Wrong type of identifier or no identifier, so, it has to insert new identifier
-                json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
-				// From one to many, starts to set the returning target in this single place only
-				json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
-				json_message[ JsonKey::FROM ] = _name;
-
-                replyMessage(json_message, true);	// Includes reply swap
-                return false;
-            }
-        }
-
         
         bool dont_interrupt = true;   // Doesn't interrupt next talkers process
 
@@ -298,7 +271,7 @@ public:
 				}
 			}
 			// In the end sends back the processed message (single message, one-to-one)
-			replyMessage(json_message, true);
+			replyMessage(json_message);
             break;
         
         case MessageData::SET:
@@ -332,7 +305,7 @@ public:
 				json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::FIELD);
 			}
 			// In the end sends back the processed message (single message, one-to-one)
-			replyMessage(json_message, true);
+			replyMessage(json_message);
             break;
         
         case MessageData::GET:
@@ -359,13 +332,13 @@ public:
 				}
 			}
 			// In the end sends back the processed message (single message, one-to-one)
-			replyMessage(json_message, true);
+			replyMessage(json_message);
             break;
         
         case MessageData::TALK:
             json_message[ JsonKey::DESCRIPTION ] = _desc;
 			// In the end sends back the processed message (single message, one-to-one)
-			replyMessage(json_message, true);
+			replyMessage(json_message);
             break;
         
         case MessageData::LIST:
@@ -388,7 +361,7 @@ public:
 					json_message[ JsonKey::NAME ] = run->name;      // Direct access
 					json_message[ JsonKey::DESCRIPTION ] = run->desc;
 					json_message[ JsonKey::INDEX ] = action_index++;
-					replyMessage(json_message, true);	// One-to-Many
+					replyMessage(json_message);	// One-to-Many
 				}
 
                 json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::SET);
@@ -400,7 +373,7 @@ public:
 					json_message[ JsonKey::NAME ] = set->name;      // Direct access
 					json_message[ JsonKey::DESCRIPTION ] = set->desc;
 					json_message[ JsonKey::INDEX ] = action_index++;
-					replyMessage(json_message, true);	// One-to-Many
+					replyMessage(json_message);	// One-to-Many
 				}
 				
                 json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::GET);
@@ -412,12 +385,12 @@ public:
 					json_message[ JsonKey::NAME ] = get->name;      // Direct access
 					json_message[ JsonKey::DESCRIPTION ] = get->desc;
 					json_message[ JsonKey::INDEX ] = action_index++;
-					replyMessage(json_message, true);	// One-to-Many
+					replyMessage(json_message);	// One-to-Many
 				}
 
                 if(no_list) {
                     json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
-					replyMessage(json_message, true);	// One-to-Many
+					replyMessage(json_message);	// One-to-Many
                 }
             }
             break;
@@ -434,7 +407,7 @@ public:
             }
             json_message[ JsonKey::VALUE ] = _channel;
 			// In the end sends back the processed message (single message, one-to-one)
-			replyMessage(json_message, true);
+			replyMessage(json_message);
             break;
         
         case MessageData::SYS:
@@ -571,7 +544,7 @@ public:
 				}
 
 				// In the end sends back the processed message (single message, one-to-one)
-				replyMessage(json_message, true);
+				replyMessage(json_message);
             }
             break;
         
