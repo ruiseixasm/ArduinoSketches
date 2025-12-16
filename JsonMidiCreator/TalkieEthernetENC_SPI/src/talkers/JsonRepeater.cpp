@@ -25,10 +25,34 @@ bool JsonRepeater::remoteSend(JsonObject& json_message) {
 	Serial.println(F("Sending a REMOTE message"));
 	#endif
 
-
 	// DOESN'T SET IDENTITY, IT'S ONLY A REPEATER !!
 	
-
     return _socket->remoteSend(json_message);
 }
+
+
+// Works as a repeater to LOCAL send
+bool JsonRepeater::processData(JsonObject& json_message) {
+
+	#ifdef JSON_REPEATER_DEBUG
+	Serial.print(_name);
+	Serial.print(F(": "));
+	#endif
+	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
+	if (source_data == SourceData::LOCAL) {
+		#ifdef JSON_REPEATER_DEBUG
+		Serial.println(F("Received a LOCAL message"));
+		#endif
+		return remoteSend(json_message);
+	}
+	#ifdef JSON_REPEATER_DEBUG
+	Serial.println(F("Received a REMOTE message"));
+	#endif
+
+	// Should make sure it doesn't send to same socket talkers, because they already received from REMOTE
+    if (!_socket) return localSend(json_message);
+	if (!_socket->hasTalker(this)) return localSend(json_message);
+	return false;
+}
+
 
