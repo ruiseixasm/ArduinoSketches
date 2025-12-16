@@ -21,6 +21,7 @@ struct TalkieCodes {
 
 	// Add a string "enum" struct
     struct JsonKey {
+        static constexpr const char* SOURCE			= "c";
         static constexpr const char* CHECKSUM		= "c";
         static constexpr const char* IDENTITY 		= "i";
         static constexpr const char* MESSAGE 		= "m";

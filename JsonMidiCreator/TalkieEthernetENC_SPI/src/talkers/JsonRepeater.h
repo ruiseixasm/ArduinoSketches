@@ -39,7 +39,7 @@ public:
 		Serial.print(_name);
 		Serial.print(F(": "));
 		#endif
-        uint16_t c_source = json_message[ JsonKey::CHECKSUM ].as<uint16_t>();
+        uint16_t c_source = json_message[ JsonKey::SOURCE ].as<uint16_t>();
 		if (c_source == C_LOCAL) {
 			#ifdef JSON_REPEATER_DEBUG
 			Serial.println(F("Received a LOCAL message"));
