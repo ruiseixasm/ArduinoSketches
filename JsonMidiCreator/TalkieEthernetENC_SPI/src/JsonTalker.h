@@ -141,8 +141,8 @@ protected:
 		Serial.print(F(": "));
 		#endif
 
-        SourceData c_source = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
-		if (c_source == SourceData::LOCAL) {
+        SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
+		if (source_data == SourceData::LOCAL) {
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("\tReplied a LOCAL message"));
 			#endif

@@ -38,8 +38,8 @@ public:
 		Serial.print(_name);
 		Serial.print(F(": "));
 		#endif
-        SourceData c_source = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
-		if (c_source == SourceData::LOCAL) {
+        SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
+		if (source_data == SourceData::LOCAL) {
 			#ifdef JSON_REPEATER_DEBUG
 			Serial.println(F("Received a LOCAL message"));
 			#endif
