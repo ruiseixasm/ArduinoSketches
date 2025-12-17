@@ -51,9 +51,9 @@ struct TalkieCodes {
 		SET,
 		GET,
 		TALK,
+		CHANNEL,
 		PING,
 		LIST,
-		CHANNEL,
 		SYS,
 		ECHO,
 		ERROR

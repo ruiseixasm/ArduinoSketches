@@ -384,6 +384,21 @@ public:
 				transmitMessage(json_message);
 				break;
 			
+			case MessageData::CHANNEL:
+				if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
+
+					#ifdef JSON_TALKER_DEBUG
+					Serial.print(F("\tChannel B value is an <uint8_t>: "));
+					Serial.println(json_message[ JsonKey::VALUE ].is<uint8_t>());
+					#endif
+
+					_channel = json_message[ JsonKey::VALUE ].as<uint8_t>();
+				}
+				json_message[ JsonKey::VALUE ] = _channel;
+				// In the end sends back the processed message (single message, one-to-one)
+				transmitMessage(json_message);
+				break;
+			
 			case MessageData::PING:
 				// Talker name already set in FROM (ready to transmit)
 				transmitMessage(json_message);
@@ -441,21 +456,6 @@ public:
 						transmitMessage(json_message);	// One-to-Many
 					}
 				}
-				break;
-			
-			case MessageData::CHANNEL:
-				if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
-
-					#ifdef JSON_TALKER_DEBUG
-					Serial.print(F("\tChannel B value is an <uint8_t>: "));
-					Serial.println(json_message[ JsonKey::VALUE ].is<uint8_t>());
-					#endif
-
-					_channel = json_message[ JsonKey::VALUE ].as<uint8_t>();
-				}
-				json_message[ JsonKey::VALUE ] = _channel;
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
 				break;
 			
 			case MessageData::SYS:
