@@ -81,30 +81,33 @@ public:
 		Serial.println(F("Sending a LOCAL message"));
 		#endif
 
-        json_message[ JsonKey::SOURCE ] = static_cast<int>(SourceData::LOCAL);
-        // Triggers all local Talkers to processes the json_message
-        bool sent_message = false;
-		bool pre_validated = false;
-		for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-			if (_json_talkers[talker_i] != this) {  // Can't send to myself
+		if (_json_talkers) {	// Safe code
 
-				// CREATE COPY for each talker
-				// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-				#if ARDUINOJSON_VERSION_MAJOR >= 7
-				JsonDocument doc_copy;
-				#else
-				StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
-				#endif
-				JsonObject json_copy = doc_copy.to<JsonObject>();
+			json_message[ JsonKey::SOURCE ] = static_cast<int>(SourceData::LOCAL);
+			// Triggers all local Talkers to processes the json_message
+			bool sent_message = false;
+			bool pre_validated = false;
+			for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+				if (_json_talkers[talker_i] != this) {  // Can't send to myself
+
+					// CREATE COPY for each talker
+					// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+					#if ARDUINOJSON_VERSION_MAJOR >= 7
+					JsonDocument doc_copy;
+					#else
+					StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
+					#endif
+					JsonObject json_copy = doc_copy.to<JsonObject>();
+					
+					// Copy all data from original
+					for (JsonPair kv : json_message) {
+						json_copy[kv.key()] = kv.value();
+					}
 				
-				// Copy all data from original
-				for (JsonPair kv : json_message) {
-					json_copy[kv.key()] = kv.value();
+					pre_validated = _json_talkers[talker_i]->processMessage(json_copy);
+					sent_message = true;
+					if (!pre_validated) break;
 				}
-			
-				pre_validated = _json_talkers[talker_i]->processMessage(json_copy);
-				sent_message = true;
-				if (!pre_validated) break;
 			}
 		}
         return sent_message;
