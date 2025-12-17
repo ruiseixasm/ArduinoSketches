@@ -43,6 +43,9 @@ protected:
     EthernetUDP* _udp = nullptr;
 	String _from_name = "";
 
+    // ===== cache our own IP =====
+    IPAddress _local_ip;
+
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
     Changed_EthernetENC(JsonTalker** json_talkers, uint8_t talker_count)
@@ -59,6 +62,12 @@ protected:
         // Receive packets
         int packetSize = _udp->parsePacket();
         if (packetSize > 0) {
+
+            // ===== DROP self-sent packets =====
+            if (_udp->remoteIP() == _local_ip) {
+                _udp->flush();   // discard payload
+                return 0;
+            }
 
             // Avoids overflow
             if (packetSize > BROADCAST_SOCKET_BUFFER_SIZE) return 0;
@@ -179,7 +188,11 @@ public:
 
 
     void set_port(uint16_t port) { _port = port; }
-    void set_udp(EthernetUDP* udp) { _udp = udp; }
+    void set_udp(EthernetUDP* udp) {
+        _udp = udp;
+        // ===== store local IP for self-filtering =====
+        _local_ip = Ethernet.localIP();
+    }
 
 };
 
