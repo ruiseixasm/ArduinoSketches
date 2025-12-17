@@ -53,7 +53,7 @@ private:
         if (length < BROADCAST_SOCKET_BUFFER_SIZE) {
             memcpy(_receiving_buffer, data, length);
             memcpy(_source_ip, src_ip, 4);
-            _data_length = length;
+            _data_length = length;  // Where is marked as received (> 0)
         }
     }
 
