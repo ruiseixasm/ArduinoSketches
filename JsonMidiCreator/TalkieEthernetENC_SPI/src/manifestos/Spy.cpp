@@ -21,21 +21,26 @@ using SystemData = TalkieCodes::SystemData;
 // Index-based operations (simplified examples)
 bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
 	
-	if (index < runsCount()) {
-		// Actual implementation would do something based on index
-		switch(index) {
-			case 0:
-			{
-				// from-to already reversed
-				// In the beginning I know no one, so I ask them to talk
-				json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::TALK);
-				// Keep track of the original talker
-				original_talker = json_message[ JsonKey::TO ].as<String>();	// Explicit conversion
-				json_message.remove( JsonKey::TO );	// Needs to be for everybody
-				talker->replyMessage(json_message);
-				return true;
+	// As a spy it only answers to REMOTE calls
+	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ] );
+	if (source_data == SourceData::REMOTE) {
+
+		if (index < runsCount()) {
+			// Actual implementation would do something based on index
+			switch(index) {
+				case 0:
+				{
+					// from-to already reversed
+					// In the beginning I know no one, so I ask them to talk
+					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::TALK);
+					// Keep track of the original talker
+					original_talker = json_message[ JsonKey::TO ].as<String>();	// Explicit conversion
+					json_message.remove( JsonKey::TO );	// Needs to be for everybody
+					talker->replyMessage(json_message);
+					return true;
+				}
+				break;
 			}
-			break;
 		}
 	}
 	return false;
@@ -44,37 +49,42 @@ bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker
 
 void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 	
-	MessageData original_message = static_cast<MessageData>(json_message[ JsonKey::ORIGINAL ].as<int>());
+	// As a Spy it only spies LOCAL talkers
+	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ] );
+	if (source_data == SourceData::LOCAL) {
 
-	switch (original_message) {
+		MessageData original_message = static_cast<MessageData>(json_message[ JsonKey::ORIGINAL ].as<int>());
 
-	case MessageData::TALK:
-		// from-to not yet reversed, doing it now
-		json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
-		json_message[ JsonKey::FROM ] = talker->get_name();
-		// Now that they started to talk, I ask for more information
-		json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::SYS);
-		json_message[ JsonKey::SYSTEM ] = static_cast<int>(SystemData::PING);
-		// The id will be set by me at the exit point (same clock)
-		talker->replyMessage(json_message);
-		break;
-	
-	case MessageData::SYS:
-		// Need to check first if it's a answer to a ping
-		if (json_message[ JsonKey::SYSTEM ] == static_cast<int>(SystemData::PING)) {
-			// Time to calculate the delay
-			uint16_t actual_time = static_cast<uint16_t>(millis());
-			uint16_t message_time = json_message[ JsonKey::TIMESTAMP ];
-			uint16_t time_delay = actual_time - message_time;
-			// Report back to the original talker T as echo (it's waiting for it)
-			json_message[ JsonKey::TO ] = original_talker;	// Already an echo message
-			json_message[ JsonKey::VALUE ] = time_delay;
+		switch (original_message) {
+
+		case MessageData::TALK:
+			// from-to not yet reversed, doing it now
+			json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
+			json_message[ JsonKey::FROM ] = talker->get_name();
+			// Now that they started to talk, I ask for more information
+			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::SYS);
+			json_message[ JsonKey::SYSTEM ] = static_cast<int>(SystemData::PING);
+			// The id will be set by me at the exit point (same clock)
 			talker->replyMessage(json_message);
-		}
-		break;
+			break;
+		
+		case MessageData::SYS:
+			// Need to check first if it's a answer to a ping
+			if (json_message[ JsonKey::SYSTEM ] == static_cast<int>(SystemData::PING)) {
+				// Time to calculate the delay
+				uint16_t actual_time = static_cast<uint16_t>(millis());
+				uint16_t message_time = json_message[ JsonKey::TIMESTAMP ];
+				uint16_t time_delay = actual_time - message_time;
+				// Report back to the original talker T as echo (it's waiting for it)
+				json_message[ JsonKey::TO ] = original_talker;	// Already an echo message
+				json_message[ JsonKey::VALUE ] = time_delay;
+				talker->replyMessage(json_message);
+			}
+			break;
 
-	default:
-		break;
+		default:
+			break;
+		}
 	}
 }
 
