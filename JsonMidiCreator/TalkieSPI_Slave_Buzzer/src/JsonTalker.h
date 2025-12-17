@@ -70,7 +70,9 @@ public:
 
     virtual const char* class_name() const { return "JsonTalker"; }
 
+	
     virtual bool remoteSend(JsonObject& json_message);
+
 
     virtual bool localSend(JsonObject& json_message) {
 
@@ -81,6 +83,43 @@ public:
 		Serial.println(F("Sending a LOCAL message"));
 		#endif
 
+		// It also sets the IDENTITY if applicable, these settings are of the Talker exclusive responsibility (NO DELEGATION TO SOCKET !!)
+		MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
+		if (message_code < MessageData::ECHO) {
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
+			serializeJson(json_message, Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			// Muted is only applicable to REMOTE sends in order to avoid overloading
+
+			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
+
+		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("\tERROR: Response message with a wrong or without an identifier, now being set (i): "));
+			serializeJson(json_message, Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
+			json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
+			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
+
+		} else {	// For ECHO and ERROR replies
+			
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
+			serializeJson(json_message, Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+		}
+
+		// Tags the message as LOCAL sourced
 		json_message[ JsonKey::SOURCE ] = static_cast<int>(SourceData::LOCAL);
 		// Triggers all local Talkers to processes the json_message
 		bool sent_message = false;
@@ -109,6 +148,7 @@ public:
 		}
         return sent_message;
     }
+
 
     virtual bool hereSend(JsonObject& json_message) {
 
@@ -148,7 +188,7 @@ public:
 					return hereSend(json_message);
 
 				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
-				case SourceData::REMOTE: break;
+				default: break;
 			}
 		}
 		// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)

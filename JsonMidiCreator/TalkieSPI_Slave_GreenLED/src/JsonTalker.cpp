@@ -24,14 +24,13 @@ bool JsonTalker::remoteSend(JsonObject& json_message) {
     if (!_socket) return false;
 
 	#ifdef JSON_TALKER_DEBUG
+	Serial.print(F("\t"));
 	Serial.print(_name);
 	Serial.print(F(": "));
 	Serial.println(F("Sending a REMOTE message"));
 	#endif
 
-
 	// It also sets the IDENTITY if applicable, these settings are of the Talker exclusive responsibility (NO DELEGATION TO SOCKET !!)
-	
 	MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
 	if (message_code < MessageData::ECHO) {
 
