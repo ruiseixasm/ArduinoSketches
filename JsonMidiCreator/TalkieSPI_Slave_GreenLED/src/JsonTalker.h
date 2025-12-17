@@ -49,7 +49,7 @@ protected:
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
 	IManifesto* _manifesto = nullptr;
-    uint8_t _channel = 0;
+    uint8_t _channel = static_cast<uint8_t>(millis());	// Avoids a common channel for everyone (OTHERWISE DANGEROUS)
     bool _muted_action = false;
 
 public:
@@ -203,8 +203,13 @@ public:
         Serial.println(F("\tProcessing JSON message..."));
         #endif
         
-        
         bool dont_interrupt = true;   // Doesn't interrupt next talkers process
+
+		if (!json_message[ JsonKey::MESSAGE ].is<int>()) {
+			return false;
+		}
+
+		MessageData message_data = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
 
         // Is it for me?
         if (json_message[ JsonKey::TO ].is<uint8_t>()) {
@@ -219,16 +224,15 @@ public:
             } else {
                 dont_interrupt = false; // Found by name, interrupts next Talkers process
             }
-        }   // else: If it has no "t" it means for every Talkers
-
+        } else if (message_data != MessageData::TALK) {	// Only TALK can be broadcasted
+			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL IF NECESSARY)
+		}
 
         #ifdef JSON_TALKER_DEBUG
         Serial.print(F("\tProcess: "));
         serializeJson(json_message, Serial);
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
-
-		MessageData message_data = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
 
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageData::ECHO) {
