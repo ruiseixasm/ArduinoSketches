@@ -151,6 +151,7 @@ public:
 
     virtual bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) {
         (void)index;		// Silence unused parameter warning
+        (void)value;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
         return false;
