@@ -64,7 +64,7 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 		if (json_message[ JsonKey::SYSTEM ] == static_cast<int>(SystemData::PING)) {
 			// Time to calculate the delay
 			uint16_t actual_time = static_cast<uint16_t>(millis());
-			uint16_t message_time = json_message[ JsonKey::IDENTITY ];
+			uint16_t message_time = json_message[ JsonKey::TIMESTAMP ];
 			uint16_t time_delay = actual_time - message_time;
 			// Report back to the original talker T as echo (it's waiting for it)
 			json_message[ JsonKey::TO ] = original_talker;	// Already an echo message
