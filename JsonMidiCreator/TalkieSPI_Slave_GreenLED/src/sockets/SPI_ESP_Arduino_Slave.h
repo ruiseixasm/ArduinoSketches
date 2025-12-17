@@ -141,7 +141,6 @@ protected:
             _sending_length_spi = _sending_length;
 			
 		}
-
         return false;
     }
 
