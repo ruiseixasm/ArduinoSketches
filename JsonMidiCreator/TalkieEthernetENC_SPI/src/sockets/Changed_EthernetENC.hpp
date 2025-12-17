@@ -71,12 +71,22 @@ protected:
 				Serial.println(F("\treceive1: Dropped packet for being sent from this socket"));
 				Serial.print(F("\t\tRemote IP: "));
             	Serial.println(_udp->remoteIP());
-				Serial.print(F("\t\tLocal IP: "));
+				Serial.print(F("\t\tLocal IP:  "));
             	Serial.println(_local_ip);
 				#endif
 				
                 return 0;
-            }
+            } else {
+				
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				Serial.println(F("\treceive1: Packet NOT sent from this socket"));
+				Serial.print(F("\t\tRemote IP: "));
+            	Serial.println(_udp->remoteIP());
+				Serial.print(F("\t\tLocal IP:  "));
+            	Serial.println(_local_ip);
+				#endif
+				
+			}
 
             // Avoids overflow
             if (packetSize > BROADCAST_SOCKET_BUFFER_SIZE) return 0;
@@ -91,7 +101,7 @@ protected:
             Serial.print(_udp->remoteIP());
             Serial.print(F(" to "));
             Serial.print(_local_ip);
-            Serial.print(F(" -> "));
+            Serial.print(F(" -->      "));
             Serial.println(_receiving_buffer);
             #endif
             
@@ -137,11 +147,11 @@ protected:
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
 				if (as_reply && _source_ip != broadcastIP) {
 
-					Serial.println(F("\tsend1: --> Directly sent to the received IP address -->"));
+					Serial.print(F("\tsend1: --> Directly sent to the received IP address --> "));
 					
 				} else {
 					
-					Serial.println(F("\tsend1: --> Broadcast sent to the 255.255.255.255 address -->"));
+					Serial.print(F("\tsend1: --> Broadcast sent to the 255.255.255.255 address --> "));
 					
 				}
 				#endif
@@ -155,7 +165,7 @@ protected:
             } else {
 									
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
-				Serial.println(F("\tsend1: --> Broadcast sent to the 255.255.255.255 address -->"));
+				Serial.print(F("\tsend1: --> Broadcast sent to the 255.255.255.255 address --> "));
 				#endif
 
 			}
@@ -166,13 +176,12 @@ protected:
 
             if (!_udp->endPacket()) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
-                Serial.println(F("\t\tERROR: Failed to end packet"));
+                Serial.println(F("\n\t\tERROR: Failed to end packet"));
                 #endif
                 return false;
             }
 
             #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.print(F("\t\tsend2: "));
             Serial.write(_sending_buffer, _sending_length);
             Serial.println();
             #endif

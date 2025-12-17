@@ -85,6 +85,7 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 				}
 				break;
 
+			default: break;
 		}
 	}
 }
