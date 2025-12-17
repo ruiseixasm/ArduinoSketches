@@ -77,10 +77,13 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 						uint16_t actual_time = static_cast<uint16_t>(millis());
 						uint16_t message_time = json_message[ JsonKey::TIMESTAMP ].as<uint16_t>();
 						uint16_t time_delay = actual_time - message_time;
-						// Report back to the original talker T as echo (it's waiting for it)
-						json_message[ JsonKey::TO ] = original_talker;	// Already an echo message
 						json_message[ JsonKey::VALUE ] = time_delay;
-						talker->remoteSend(json_message);	// Finally answers to the REMOTE caller
+						// Prepares headers for the original REMOTE sender
+						json_message[ JsonKey::TO ] = original_talker;	// Already an echo message
+						json_message[ JsonKey::ORIGINAL ] = static_cast<int>(MessageData::RUN);
+						json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
+						// Finally answers to the REMOTE caller
+						talker->remoteSend(json_message);
 					}
 				}
 				break;
