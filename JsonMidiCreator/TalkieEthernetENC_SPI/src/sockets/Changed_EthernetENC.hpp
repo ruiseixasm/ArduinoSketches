@@ -30,7 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"
 
 
-// #define BROADCAST_ETHERNETENC_DEBUG
+#define BROADCAST_ETHERNETENC_DEBUG
 
 #define ENABLE_DIRECT_ADDRESSING
 
@@ -62,10 +62,19 @@ protected:
         // Receive packets
         int packetSize = _udp->parsePacket();
         if (packetSize > 0) {
-
+			
             // ===== [SELF IP] DROP self-sent packets =====
             if (_udp->remoteIP() == _local_ip) {
                 _udp->flush();   // discard payload
+				
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				Serial.println(F("\treceive1: Dropped packet for being sent from this socket"));
+				Serial.print(F("\t\tRemote IP: "));
+            	Serial.println(_udp->remoteIP());
+				Serial.print(F("\t\tLocal IP: "));
+            	Serial.println(_local_ip);
+				#endif
+				
                 return 0;
             }
 
@@ -80,8 +89,8 @@ protected:
             Serial.print(packetSize);
             Serial.print(F("B from "));
             Serial.print(_udp->remoteIP());
-            Serial.print(F(":"));
-            Serial.print(_udp->remotePort());
+            Serial.print(F(" to "));
+            Serial.print(_local_ip);
             Serial.print(F(" -> "));
             Serial.println(_receiving_buffer);
             #endif
@@ -157,13 +166,13 @@ protected:
 
             if (!_udp->endPacket()) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
-                Serial.println(F("\tFailed to end packet"));
+                Serial.println(F("\t\tERROR: Failed to end packet"));
                 #endif
                 return false;
             }
 
             #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.print(F("\tsend1: "));
+            Serial.print(F("\t\tsend2: "));
             Serial.write(_sending_buffer, _sending_length);
             Serial.println();
             #endif
