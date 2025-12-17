@@ -32,7 +32,7 @@ public:
     bool localSend(JsonObject& json_message) override;
 
 	// Works as a repeater to LOCAL send
-	bool processData(JsonObject& json_message) override {
+	bool processMessage(JsonObject& json_message) override {
 
 		#ifdef JSON_REPEATER_DEBUG
 		Serial.print(_name);
