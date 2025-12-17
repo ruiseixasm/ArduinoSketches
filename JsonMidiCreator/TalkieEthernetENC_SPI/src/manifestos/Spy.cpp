@@ -35,6 +35,7 @@ void Spy::loop(JsonTalker* talker) {
 
 		json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::TALK);
 		json_message[ JsonKey::FROM ] = talker->get_name();
+		// At this moment it's already setting a TIMESTAMP able to be used
 		talker->localSend(json_message);	// Only inquires locally
 	}
 }
@@ -74,34 +75,21 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 		switch (original_message) {
 
 			case MessageData::TALK:
-				// from-to not yet reversed, doing it now
-				json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
-				json_message[ JsonKey::FROM ] = talker->get_name();
-				// Now that they started to talk, I ask for more information
-				json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::SYS);
-				json_message[ JsonKey::SYSTEM ] = static_cast<int>(SystemData::PING);
-				// Removed the DESCRIPTION to avoid extra load
-				json_message.remove( JsonKey::DESCRIPTION );
-				// The id will be set by me at the exit point (same clock)
-				talker->localSend(json_message);	// Only inquires locally
-				break;
-			
-			case MessageData::SYS:
+				// There is no need to send a SYS message given that the ECHO to TALK preserves the TIMESTAMP
 				if (json_message[ JsonKey::TIMESTAMP ].is<uint16_t>()) {
-					// Need to check first if it's a answer to a ping
-					if (json_message[ JsonKey::SYSTEM ] == static_cast<int>(SystemData::PING)) {
-						// Time to calculate the delay
-						uint16_t actual_time = static_cast<uint16_t>(millis());
-						uint16_t message_time = json_message[ JsonKey::TIMESTAMP ].as<uint16_t>();
-						uint16_t time_delay = actual_time - message_time;
-						json_message[ JsonKey::VALUE ] = time_delay;
-						// Prepares headers for the original REMOTE sender
-						json_message[ JsonKey::TO ] = _original_talker;	// Already an echo message
-						json_message[ JsonKey::ORIGINAL ] = static_cast<int>(MessageData::RUN);
-						json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
-						// Finally answers to the REMOTE caller
-						talker->remoteSend(json_message);
-					}
+					// In condition to calculate the delay right away, no need to extra messages
+					uint16_t actual_time = static_cast<uint16_t>(millis());
+					uint16_t message_time = json_message[ JsonKey::TIMESTAMP ].as<uint16_t>();
+					uint16_t time_delay = actual_time - message_time;
+					json_message[ JsonKey::VALUE ] = time_delay;
+					// Prepares headers for the original REMOTE sender
+					json_message[ JsonKey::TO ] = _original_talker;	// Already an echo message
+					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
+					// It's possible to mimic a direct response from the LOCAL talkers here
+					json_message[ JsonKey::ORIGINAL ] = static_cast<int>(MessageData::SYS);
+					json_message[ JsonKey::SYSTEM ] = static_cast<int>(SystemData::PING);
+					// Finally answers to the REMOTE caller
+					talker->remoteSend(json_message);
 				}
 				break;
 
