@@ -51,6 +51,7 @@ struct TalkieCodes {
 		SET,
 		GET,
 		TALK,
+		PING,
 		LIST,
 		CHANNEL,
 		SYS,
@@ -60,7 +61,7 @@ struct TalkieCodes {
 
 
 	enum class SystemData : int {
-		BOARD, PING, DROPS, DELAY, MUTE, UNMUTE, MUTED, SOCKET, TALKER, MANIFESTO
+		BOARD, DROPS, DELAY, MUTE, UNMUTE, MUTED, SOCKET, TALKER, MANIFESTO
 	};
 
 

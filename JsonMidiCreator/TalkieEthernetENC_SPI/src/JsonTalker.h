@@ -264,8 +264,9 @@ public:
             } else {
                 dont_interrupt = false; // Found by name, interrupts next Talkers process
             }
-        } else if (message_data != MessageData::TALK) {	// Only TALK can be broadcasted
-			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL IF NECESSARY)
+        } else if (message_data < MessageData::TALK || message_data > MessageData::PING) {
+			// Only TALK and PING can be broadcasted
+			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
 		}
 
         #ifdef JSON_TALKER_DEBUG
@@ -380,6 +381,11 @@ public:
 			case MessageData::TALK:
 				json_message[ JsonKey::DESCRIPTION ] = _desc;
 				// In the end sends back the processed message (single message, one-to-one)
+				transmitMessage(json_message);
+				break;
+			
+			case MessageData::PING:
+				// Talker name already set in FROM (ready to transmit)
 				transmitMessage(json_message);
 				break;
 			
@@ -506,15 +512,6 @@ public:
 						#endif
 
 						// TO INSERT HERE EXTRA DATA !!
-						break;
-
-					case SystemData::PING:
-					
-						#ifdef JSON_TALKER_DEBUG
-						Serial.print(F("\tPing replied as message code: "));
-						Serial.println(json_message[ JsonKey::MESSAGE ].is<int>());
-						#endif
-						// Replies as soon as possible (best case scenario)
 						break;
 
 					case SystemData::DROPS:
