@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 
 
-// #define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -156,9 +156,9 @@ protected:
 			_sending_length = new_length;
 
             bool at_c = false;
-            for (uint8_t i = _sending_length - 1; data_i > 5; --i) {	// 'i = _sending_length - 1' because it's a binary processing, no '\0' to take into consideration
+            for (uint8_t i = new_length - 1; data_i > 4; i--) {	// 'i = new_length - 1' because it's a binary processing, no '\0' to take into consideration
                 
-                if (_sending_buffer[data_i - 2] == ':') {
+                if (_sending_buffer[data_i - 2] == ':') {	// Must find it at 5 the least (> 4)
                     if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
                         at_c = true;
                     }
@@ -171,7 +171,7 @@ protected:
                         continue;       // Avoids the copy of the char
                     }
                 }
-                _sending_buffer[i] = _sending_buffer[data_i--]; // Does an offset
+                _sending_buffer[i] = _sending_buffer[data_i--]; // Does an offset (NOTE the continue above)
             }
         }
         return true;
@@ -395,23 +395,30 @@ protected:
         Serial.println();
         #endif
 
-        insertChecksum();	// Where the CHECKSUM is set
-        
-        if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+        if (insertChecksum()) {	// Where the CHECKSUM is set
 
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("ERROR: Message too big"));
-            #endif
+			if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
 
-            return false;
-        }
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.println(F("ERROR: Message too big"));
+				#endif
 
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("send2: "));
-        Serial.write(_sending_buffer, _sending_length);
-        Serial.println();
-        #endif
+				return false;
+			}
 
+			#ifdef BROADCASTSOCKET_DEBUG
+			Serial.print(F("send2: "));
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
+			#endif
+
+		} else {
+			
+			#ifdef BROADCASTSOCKET_DEBUG
+			Serial.println(F("ERROR: Couldn't insert Checksum"));
+			#endif
+        	return false;
+		}
         return true;
     }
 
