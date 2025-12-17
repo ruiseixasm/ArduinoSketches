@@ -56,6 +56,8 @@ public:
 					#endif
 					return hereSend(json_message);	// Straight transmission
 				
+				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
+				case SourceData::LOCAL: break;		// Cross transmission
 			}
 		}
 		// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)

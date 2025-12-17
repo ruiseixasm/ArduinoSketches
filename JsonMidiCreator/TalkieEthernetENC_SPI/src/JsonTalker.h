@@ -147,6 +147,8 @@ public:
 					#endif
 					return hereSend(json_message);
 
+				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
+				case SourceData::REMOTE: break;
 			}
 		}
 		// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
