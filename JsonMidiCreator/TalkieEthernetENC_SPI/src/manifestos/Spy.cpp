@@ -18,6 +18,28 @@ https://github.com/ruiseixasm/JsonTalkie
 using MessageData = TalkieCodes::MessageData;
 using SystemData = TalkieCodes::SystemData;
 
+
+void Spy::loop(JsonTalker* talker) {
+	
+	if (_ping) {
+		_ping = false;
+		
+		// CREATE a new json_message
+		// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+		#if ARDUINOJSON_VERSION_MAJOR >= 7
+		JsonDocument doc_copy;
+		#else
+		StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
+		#endif
+		JsonObject json_message = doc_copy.to<JsonObject>();
+
+		json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::TALK);
+		json_message[ JsonKey::FROM ] = talker->get_name();
+		talker->localSend(json_message);	// Only inquires locally
+	}
+}
+
+
 // Index-based operations (simplified examples)
 bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
 	
@@ -29,14 +51,9 @@ bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker
 			// Actual implementation would do something based on index
 			switch(index) {
 				case 0:
-				{
-					// from-to already reversed
-					// In the beginning I know no one, so I ask them to talk
-					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::TALK);
-					// Keep track of the original talker (Already swapped here, that's why TO is used)
-					original_talker = json_message[ JsonKey::TO ].as<String>();	// Explicit conversion
-					json_message.remove( JsonKey::TO );	// Needs to be for everybody
-					talker->localSend(json_message);	// Only inquires locally
+				{	// Keeps the REMOTE caller name (TO because it's already swapped)
+					_original_talker = json_message[ JsonKey::TO ].as<String>();	// Explicit conversion
+					_ping = true;
 					return true;
 				}
 				break;
@@ -79,7 +96,7 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 						uint16_t time_delay = actual_time - message_time;
 						json_message[ JsonKey::VALUE ] = time_delay;
 						// Prepares headers for the original REMOTE sender
-						json_message[ JsonKey::TO ] = original_talker;	// Already an echo message
+						json_message[ JsonKey::TO ] = _original_talker;	// Already an echo message
 						json_message[ JsonKey::ORIGINAL ] = static_cast<int>(MessageData::RUN);
 						json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 						// Finally answers to the REMOTE caller

@@ -30,7 +30,8 @@ public:
 
 protected:
 
-	String original_talker = "";
+	String _original_talker = "";
+	bool _ping = false;
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
@@ -55,6 +56,8 @@ protected:
 
 
 public:
+
+	void loop(JsonTalker* talker) override;
 
     // Action implementations - MUST be implemented by derived
     bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override;

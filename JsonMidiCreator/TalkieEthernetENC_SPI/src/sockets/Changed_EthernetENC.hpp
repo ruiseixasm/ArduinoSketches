@@ -30,7 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"
 
 
-#define BROADCAST_ETHERNETENC_DEBUG
+// #define BROADCAST_ETHERNETENC_DEBUG
 
 #define ENABLE_DIRECT_ADDRESSING
 
@@ -147,7 +147,9 @@ protected:
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
 				if (as_reply && _source_ip != broadcastIP) {
 
-					Serial.print(F("\tsend1: --> Directly sent to the received IP address --> "));
+					Serial.print(F("\tsend1: --> Directly sent to the  "));
+					Serial.print(_source_ip);
+					Serial.print(F(" address --> "));
 					
 				} else {
 					
