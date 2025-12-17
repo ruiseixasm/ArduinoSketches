@@ -31,7 +31,7 @@ public:
     bool remoteSend(JsonObject& json_message) override;
     bool localSend(JsonObject& json_message) override;
 
-	// Works as a repeater to LOCAL send
+	
 	bool processMessage(JsonObject& json_message) override {
 
 		#ifdef JSON_REPEATER_DEBUG
@@ -40,32 +40,29 @@ public:
 		Serial.print(F(": "));
 		#endif
 
-        SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
-		switch (source_data) {
+		if (json_message[ JsonKey::SOURCE ].is<int>()) {
+			SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
+			switch (source_data) {
 
-			case SourceData::REMOTE:
-				#ifdef JSON_REPEATER_DEBUG
-				Serial.println(F("Repeated a REMOTE message LOCALLY"));
-				#endif
-				return localSend(json_message);		// Cross transmission
-			
-			case SourceData::LOCAL:
-				#ifdef JSON_REPEATER_DEBUG
-				Serial.println(F("Repeated a LOCAL message REMOTELY"));
-				#endif
-				return remoteSend(json_message);	// Cross transmission
-			
-			case SourceData::HERE:
-				#ifdef JSON_REPEATER_DEBUG
-				Serial.println(F("Repeated an HERE message to HERE"));
-				#endif
-				return hereSend(json_message);		// Straight transmission
-
+				case SourceData::REMOTE:
+					#ifdef JSON_REPEATER_DEBUG
+					Serial.println(F("Repeated a REMOTE message LOCALLY"));
+					#endif
+					return localSend(json_message);	// Cross transmission
+				
+				case SourceData::HERE:
+					#ifdef JSON_REPEATER_DEBUG
+					Serial.println(F("Repeated an HERE message to HERE"));
+					#endif
+					return hereSend(json_message);	// Straight transmission
+				
+			}
 		}
+		// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 		#ifdef JSON_REPEATER_DEBUG
-		Serial.println(F("ERROR: No repeating, message missing SOURCE key"));
+		Serial.println(F("Repeated a LOCAL message REMOTELY"));
 		#endif
-		return false;
+		return remoteSend(json_message);			// Cross transmission
 	}
 
 };

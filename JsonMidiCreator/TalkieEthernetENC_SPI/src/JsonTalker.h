@@ -131,29 +131,29 @@ public:
 		Serial.print(F(": "));
 		#endif
 
-        SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
-		switch (source_data) {
+		if (json_message[ JsonKey::SOURCE ].is<int>()) {
+			SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
+			switch (source_data) {
 
-			case SourceData::REMOTE:
-				#ifdef JSON_TALKER_DEBUG
-				Serial.println(F("\tReplied a REMOTE message"));
-				#endif
-				return remoteSend(json_message);
-			
-			case SourceData::LOCAL:
-				#ifdef JSON_TALKER_DEBUG
-				Serial.println(F("\tReplied a LOCAL message"));
-				#endif
-				return localSend(json_message);
-			
-			case SourceData::HERE:
-				#ifdef JSON_TALKER_DEBUG
-				Serial.println(F("\tReplied an HERE message"));
-				#endif
-				return hereSend(json_message);
+				case SourceData::LOCAL:
+					#ifdef JSON_TALKER_DEBUG
+					Serial.println(F("\tReplied a LOCAL message"));
+					#endif
+					return localSend(json_message);
+				
+				case SourceData::HERE:
+					#ifdef JSON_TALKER_DEBUG
+					Serial.println(F("\tReplied an HERE message"));
+					#endif
+					return hereSend(json_message);
 
+			}
 		}
-		return false;
+		// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
+		#ifdef JSON_TALKER_DEBUG
+		Serial.println(F("\tReplied a REMOTE message"));
+		#endif
+		return remoteSend(json_message);
     }
 
 
