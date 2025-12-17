@@ -35,21 +35,34 @@ public:
 	bool processMessage(JsonObject& json_message) override {
 
 		#ifdef JSON_REPEATER_DEBUG
+		Serial.print(F("\t"));
 		Serial.print(_name);
 		Serial.print(F(": "));
 		#endif
-		SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
-		if (source_data == SourceData::LOCAL) {
-			#ifdef JSON_REPEATER_DEBUG
-			Serial.println(F("Received a LOCAL message"));
-			#endif
-			return remoteSend(json_message);
-		}
-		#ifdef JSON_REPEATER_DEBUG
-		Serial.println(F("Received a REMOTE message"));
-		#endif
 
-		return localSend(json_message);
+        SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
+		switch (source_data) {
+
+			case SourceData::REMOTE:
+				#ifdef JSON_REPEATER_DEBUG
+				Serial.println(F("\tReplied a REMOTE message"));
+				#endif
+				return localSend(json_message);		// Cross transmission
+			
+			case SourceData::LOCAL:
+				#ifdef JSON_REPEATER_DEBUG
+				Serial.println(F("\tReplied a LOCAL message"));
+				#endif
+				return remoteSend(json_message);	// Cross transmission
+			
+			case SourceData::HERE:
+				#ifdef JSON_REPEATER_DEBUG
+				Serial.println(F("\tReplied an HERE message"));
+				#endif
+				return hereSend(json_message);		// Straight transmission
+
+		}
+		return false;
 	}
 
 };

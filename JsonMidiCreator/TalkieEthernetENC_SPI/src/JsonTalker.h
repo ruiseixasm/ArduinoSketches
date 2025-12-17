@@ -136,7 +136,7 @@ public:
 
 			case SourceData::REMOTE:
 				#ifdef JSON_TALKER_DEBUG
-				Serial.println(F("\tReplied a LOCAL message"));
+				Serial.println(F("\tReplied a REMOTE message"));
 				#endif
 				return remoteSend(json_message);
 			
@@ -148,7 +148,7 @@ public:
 			
 			case SourceData::HERE:
 				#ifdef JSON_TALKER_DEBUG
-				Serial.println(F("\tReplied a LOCAL message"));
+				Serial.println(F("\tReplied an HERE message"));
 				#endif
 				return hereSend(json_message);
 
