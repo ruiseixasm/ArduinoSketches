@@ -49,7 +49,7 @@ protected:
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
 	IManifesto* _manifesto = nullptr;
-    uint8_t _channel = 0;
+    uint8_t _channel = static_cast<uint8_t>(millis());	// Avoids a common channel for everyone (OTHERWISE DANGEROUS)
     bool _muted_action = false;
 
 public:
