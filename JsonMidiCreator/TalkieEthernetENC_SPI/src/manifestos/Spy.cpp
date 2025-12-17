@@ -22,7 +22,7 @@ using SystemData = TalkieCodes::SystemData;
 bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
 	
 	// As a spy it only answers to REMOTE calls
-	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ] );
+	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
 	if (source_data == SourceData::REMOTE) {
 
 		if (index < runsCount()) {
@@ -50,10 +50,10 @@ bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker
 void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 	
 	// As a Spy it only spies LOCAL talkers
-	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ] );
+	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
 	if (source_data == SourceData::LOCAL) {
 
-		MessageData original_message = static_cast<MessageData>(json_message[ JsonKey::ORIGINAL ].as<int>());
+		MessageData original_message = static_cast<MessageData>( json_message[ JsonKey::ORIGINAL ].as<int>() );
 
 		switch (original_message) {
 
@@ -65,7 +65,7 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::SYS);
 			json_message[ JsonKey::SYSTEM ] = static_cast<int>(SystemData::PING);
 			// The id will be set by me at the exit point (same clock)
-			talker->replyMessage(json_message);
+			talker->localSend(json_message);	// Only inquires locally
 			break;
 		
 		case MessageData::SYS:
@@ -78,7 +78,7 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 				// Report back to the original talker T as echo (it's waiting for it)
 				json_message[ JsonKey::TO ] = original_talker;	// Already an echo message
 				json_message[ JsonKey::VALUE ] = time_delay;
-				talker->replyMessage(json_message);
+				talker->remoteSend(json_message);	// Finally answers to the REMOTE caller
 			}
 			break;
 
