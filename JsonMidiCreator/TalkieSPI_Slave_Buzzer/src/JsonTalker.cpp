@@ -74,13 +74,15 @@ void JsonTalker::setSocket(BroadcastSocket* socket) {
 	_socket = socket;
 	// AVOIDS EVERY TALKER WITH THE SAME CHANNEL
 	// XOR is great for 8-bit mixing
-	_channel ^= strlen(socket->class_name());
+	if (_socket) {		// Safe code
+		_channel ^= strlen(_socket->class_name());
+	}
 	_channel ^= strlen(this->class_name()) << 1;    // Shift before XOR
 	_channel ^= strlen(_name) << 2;
 	_channel ^= strlen(_desc) << 3;
 	// Add microsecond LSB for entropy
 	_channel ^= micros() & 0xFF;
-	if (_manifesto) {
+	if (_manifesto) {	// Safe code
 		_channel ^= strlen(_manifesto->class_name()) << 4;
 		_channel = _manifesto->getChannel(_channel, this);
 	}
