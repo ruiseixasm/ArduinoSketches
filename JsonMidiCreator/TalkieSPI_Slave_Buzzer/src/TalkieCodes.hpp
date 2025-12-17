@@ -23,6 +23,7 @@ struct TalkieCodes {
     struct JsonKey {
         static constexpr const char* SOURCE			= "c";
         static constexpr const char* CHECKSUM		= "c";
+        static constexpr const char* TIMESTAMP		= "i";
         static constexpr const char* IDENTITY 		= "i";
         static constexpr const char* MESSAGE 		= "m";
         static constexpr const char* ORIGINAL 		= "o";
@@ -41,7 +42,7 @@ struct TalkieCodes {
 
 
 	enum class SourceData : int {
-		REMOTE, LOCAL
+		REMOTE, LOCAL, HERE
 	};
 
 

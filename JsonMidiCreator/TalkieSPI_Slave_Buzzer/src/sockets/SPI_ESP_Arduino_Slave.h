@@ -125,9 +125,9 @@ protected:
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(bool as_reply = false, uint8_t target_index = 255) override {
+    bool send(const JsonObject& json_message) override {
 
-		if (BroadcastSocket::send(as_reply, target_index)) {	// Very important pre processing !!
+		if (BroadcastSocket::send(json_message)) {	// Very important pre processing !!
             
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tsend1: Sent message: "));

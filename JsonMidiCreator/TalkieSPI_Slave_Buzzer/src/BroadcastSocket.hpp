@@ -34,12 +34,10 @@ protected:
 	uint8_t _received_length = 0;
 	uint8_t _sending_length = 0;
 
-	String _from_name = "";
-	
     // Pointer PRESERVE the polymorphism while objects don't!
     JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
-    uint8_t _max_delay_ms = 5;
     uint8_t _talker_count = 0;
+    uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
     uint16_t _last_local_time = 0;
     uint16_t _last_remote_time = 0;
@@ -74,7 +72,7 @@ protected:
         bool at_m = false;
         bool at_c = false;
         bool at_i = false;
-        uint8_t data_i = 3;
+        uint8_t data_i = 4;	// Optimized {"c": ...
         for (uint8_t i = data_i; i < _received_length; ++i) {
             if (_receiving_buffer[i] == ':') {
                 if (_receiving_buffer[i - 2] == 'c' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
@@ -158,9 +156,9 @@ protected:
 			_sending_length = new_length;
 
             bool at_c = false;
-            for (uint8_t i = _sending_length - 1; data_i > 5; --i) {	// 'i = _sending_length - 1' because it's a binary processing, no '\0' to take into consideration
+            for (uint8_t i = new_length - 1; data_i > 4; i--) {	// 'i = new_length - 1' because it's a binary processing, no '\0' to take into consideration
                 
-                if (_sending_buffer[data_i - 2] == ':') {
+                if (_sending_buffer[data_i - 2] == ':') {	// Must find it at 5 the least (> 4)
                     if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
                         at_c = true;
                     }
@@ -173,11 +171,23 @@ protected:
                         continue;       // Avoids the copy of the char
                     }
                 }
-                _sending_buffer[i] = _sending_buffer[data_i--]; // Does an offset
+                _sending_buffer[i] = _sending_buffer[data_i--]; // Does an offset (NOTE the continue above)
             }
         }
         return true;
     }
+
+
+	// Allows the overriding class to peek at the received JSON message
+	virtual bool checkJsonMessage(const JsonObject& json_message) {
+		if (!json_message[ JsonKey::FROM ].is<String>()) {
+			#ifdef JSON_TALKER_DEBUG
+			Serial.println(F("ERROR: From key 'f' is missing"));
+			#endif
+			return false;
+		}
+		return true;
+	}
 
     
     uint8_t triggerTalkers() {
@@ -257,58 +267,61 @@ protected:
                     }
                 }
 
+				// Gives a chance to show it one time
+				DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
+				if (error) {
+					#ifdef BROADCASTSOCKET_DEBUG
+					Serial.println(F("ERROR: Failed to deserialize received data"));
+					#endif
+					return 0;
+				}
+				JsonObject json_message = _message_doc.as<JsonObject>();
+
+				if (!checkJsonMessage(json_message)) return 0;
+
+				if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) {
+					#ifdef JSON_TALKER_DEBUG
+					Serial.println(4);
+					#endif
+					json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ];
+					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
+					json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
+					// Wrong type of identifier or no identifier, so, it has to insert new identifier
+					json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
+					// From one to many, starts to set the returning target in this single place only
+					json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
+
+					remoteSend(json_message);	// Includes reply swap
+					return 0;
+				}
+				
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
-				_from_name = "";	// Registers a new from name
-                for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+                for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
 
                     #ifdef BROADCASTSOCKET_DEBUG
                     Serial.print(F("triggerTalkers9: Creating new JsonObject for talker: "));
                     Serial.println(_json_talkers[talker_i]->get_name());
                     #endif
-                    
-                    DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
-                    if (error) {
-                        #ifdef BROADCASTSOCKET_DEBUG
-                        Serial.println(F("ERROR: Failed to deserialize received data"));
-                        #endif
-                        return 0;
-                    }
-                    JsonObject json_message = _message_doc.as<JsonObject>();
 
+					if (talker_i > 0) {
+						DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
+						if (error) {
+							#ifdef BROADCASTSOCKET_DEBUG
+							Serial.println(F("ERROR: Failed to deserialize received data"));
+							#endif
+							return 0;
+						}
+						json_message = _message_doc.as<JsonObject>();
+					}
+                    
 					#ifdef BROADCASTSOCKET_DEBUG
 					Serial.print(F("triggerTalkers10: Triggering the talker: "));
 					Serial.println(_json_talkers[talker_i]->get_name());
 					#endif
 
-					if (_from_name == "") {
-						if (!json_message[ JsonKey::FROM ].is<String>()) {
-							#ifdef JSON_TALKER_DEBUG
-							Serial.println(F("ERROR: From key 'f' is missing"));
-							#endif
-							return 0;
-						}
-						_from_name = json_message[ JsonKey::FROM ].as<String>();
-
-						if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) {
-							#ifdef JSON_TALKER_DEBUG
-							Serial.println(4);
-							#endif
-							json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ];
-							json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
-							json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
-							// Wrong type of identifier or no identifier, so, it has to insert new identifier
-							json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
-							// From one to many, starts to set the returning target in this single place only
-							json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
-
-							remoteSend(json_message);	// Includes reply swap
-							return 0;
-						}
-					}
-
 					// A non static method
-                    pre_validated = _json_talkers[talker_i]->processData(json_message);
+                    pre_validated = _json_talkers[talker_i]->processMessage(json_message);
                     if (!pre_validated) return 0;
                 }
                 
@@ -364,9 +377,8 @@ protected:
 	}
 
 
-    virtual bool send(bool as_reply = false, uint8_t target_index = 255) {
-        (void)as_reply; 	// Silence unused parameter warning
-        (void)target_index; // Silence unused parameter warning
+    virtual bool send(const JsonObject& json_message) {
+        (void)json_message; // Silence unused parameter warning
 
         if (_sending_length < 3*4 + 2) {
 
@@ -383,23 +395,30 @@ protected:
         Serial.println();
         #endif
 
-        insertChecksum();	// Where the CHECKSUM is set
-        
-        if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+        if (insertChecksum()) {	// Where the CHECKSUM is set
 
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("ERROR: Message too big"));
-            #endif
+			if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
 
-            return false;
-        }
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.println(F("ERROR: Message too big"));
+				#endif
 
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("send2: "));
-        Serial.write(_sending_buffer, _sending_length);
-        Serial.println();
-        #endif
+				return false;
+			}
 
+			#ifdef BROADCASTSOCKET_DEBUG
+			Serial.print(F("send2: "));
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
+			#endif
+
+		} else {
+			
+			#ifdef BROADCASTSOCKET_DEBUG
+			Serial.println(F("ERROR: Couldn't insert Checksum"));
+			#endif
+        	return false;
+		}
         return true;
     }
 
@@ -432,8 +451,17 @@ public:
         }
     }
 
+
+	bool hasTalker(JsonTalker* json_talker) {
+
+        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+			if (_json_talkers[talker_i] == json_talker) return true;
+		}
+		return false;
+	}
     
-    bool remoteSend(JsonObject& json_message, uint8_t target_index = 255) {
+
+    bool remoteSend(JsonObject& json_message) {
 
 		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
 		json_message[ JsonKey::CHECKSUM ] = 0;
@@ -460,12 +488,7 @@ public:
 			Serial.println(_sending_length);
 			#endif
 
-			if (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name) {
-				return send(true, target_index);	// send is internally triggered, so, this method can hardly be static
-			} else {
-				return send(false, target_index);
-			}
-
+			return send(json_message);
 		}
 
 		return false;
