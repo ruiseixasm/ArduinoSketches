@@ -36,7 +36,7 @@ bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker
 					// Keep track of the original talker
 					original_talker = json_message[ JsonKey::TO ].as<String>();	// Explicit conversion
 					json_message.remove( JsonKey::TO );	// Needs to be for everybody
-					talker->replyMessage(json_message);
+					talker->localSend(json_message);	// Only inquires locally
 					return true;
 				}
 				break;
