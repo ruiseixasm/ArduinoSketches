@@ -265,8 +265,10 @@ public:
                 dont_interrupt = false; // Found by name, interrupts next Talkers process
             }
         } else if (message_data < MessageData::TALK || message_data > MessageData::PING) {
-			// Only TALK and PING can be broadcasted
+			// Only TALK, CHANNEL and PING can be broadcasted
 			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
+		} else if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
+			return false;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
 		}
 
         #ifdef JSON_TALKER_DEBUG
