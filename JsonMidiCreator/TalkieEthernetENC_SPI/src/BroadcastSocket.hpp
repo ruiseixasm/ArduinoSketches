@@ -72,7 +72,7 @@ protected:
         bool at_m = false;
         bool at_c = false;
         bool at_i = false;
-        uint8_t data_i = 3;
+        uint8_t data_i = 4;	// Optimized {"c": ...
         for (uint8_t i = data_i; i < _received_length; ++i) {
             if (_receiving_buffer[i] == ':') {
                 if (_receiving_buffer[i - 2] == 'c' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {

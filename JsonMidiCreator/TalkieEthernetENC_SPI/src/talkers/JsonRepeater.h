@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../JsonTalker.h"         // Includes the ArduinoJson Library
 
-// #define JSON_REPEATER_DEBUG
+#define JSON_REPEATER_DEBUG
 
 
 class JsonRepeater : public JsonTalker {
@@ -45,23 +45,26 @@ public:
 
 			case SourceData::REMOTE:
 				#ifdef JSON_REPEATER_DEBUG
-				Serial.println(F("\tReplied a REMOTE message"));
+				Serial.println(F("Repeated a REMOTE message LOCALLY"));
 				#endif
 				return localSend(json_message);		// Cross transmission
 			
 			case SourceData::LOCAL:
 				#ifdef JSON_REPEATER_DEBUG
-				Serial.println(F("\tReplied a LOCAL message"));
+				Serial.println(F("Repeated a LOCAL message REMOTELY"));
 				#endif
 				return remoteSend(json_message);	// Cross transmission
 			
 			case SourceData::HERE:
 				#ifdef JSON_REPEATER_DEBUG
-				Serial.println(F("\tReplied an HERE message"));
+				Serial.println(F("Repeated an HERE message to HERE"));
 				#endif
 				return hereSend(json_message);		// Straight transmission
 
 		}
+		#ifdef JSON_REPEATER_DEBUG
+		Serial.println(F("ERROR: No repeating, message missing SOURCE key"));
+		#endif
 		return false;
 	}
 
