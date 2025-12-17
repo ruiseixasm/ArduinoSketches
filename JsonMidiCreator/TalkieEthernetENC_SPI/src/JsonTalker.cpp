@@ -73,13 +73,16 @@ bool JsonTalker::remoteSend(JsonObject& json_message) {
 void JsonTalker::setSocket(BroadcastSocket* socket) {
 	_socket = socket;
 	// AVOIDS EVERY TALKER WITH THE SAME CHANNEL
-	_channel += strlen(socket->class_name());
-	_channel += strlen(this->class_name());
-	_channel += strlen(_name);	// Required at constructor
-	_channel += strlen(_desc);
-	if (_manifesto) {	// Safe code
-		_channel += strlen(_manifesto->class_name());
+	// XOR is great for 8-bit mixing
+	_channel ^= strlen(socket->class_name());
+	_channel ^= strlen(this->class_name()) << 1;    // Shift before XOR
+	_channel ^= strlen(_name) << 2;
+	_channel ^= strlen(_desc) << 3;
+	if (_manifesto) {
+		_channel ^= strlen(_manifesto->class_name()) << 4;
 	}
+	// Add microsecond LSB for entropy
+	_channel ^= micros() & 0xFF;
 }
 
 BroadcastSocket& JsonTalker::getSocket() {
