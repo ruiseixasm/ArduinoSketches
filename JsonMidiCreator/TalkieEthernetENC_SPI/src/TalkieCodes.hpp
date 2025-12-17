@@ -42,7 +42,7 @@ struct TalkieCodes {
 
 
 	enum class SourceData : int {
-		REMOTE, LOCAL
+		REMOTE, LOCAL, HERE
 	};
 
 
