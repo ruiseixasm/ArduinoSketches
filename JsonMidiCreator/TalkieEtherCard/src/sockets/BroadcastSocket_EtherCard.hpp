@@ -30,11 +30,19 @@ private:
     static uint8_t _source_ip[4];
     static size_t _data_length;
 
+    // ===== [SELF IP] cache our own IP =====
+    static uint8_t _local_ip[4];
+
     static void staticCallback(uint16_t src_port, uint8_t* src_ip, uint16_t dst_port, 
                           const char* data, uint16_t length) {
 
         (void)src_port; // Silence unused parameter warning
         (void)dst_port; // Silence unused parameter warning
+
+        // ===== [SELF IP] DROP self-sent packets =====
+        if (memcmp(src_ip, _local_ip, 4) == 0) {
+            return;   // silently discard
+        }
 
         #ifdef BROADCAST_ETHERCARD_DEBUG
         Serial.print(F("R: "));
@@ -67,6 +75,9 @@ public:
     }
 
     void set_port(uint16_t port) {
+
+        // ===== [SELF IP] store local IP for self-filtering =====
+        memcpy(_local_ip, ether.myip, 4);
         _port = port;
         ether.udpServerListenOnPort(staticCallback, port);
     }
@@ -106,6 +117,8 @@ public:
 
 uint8_t BroadcastSocket_EtherCard::_source_ip[4] = {0};
 size_t BroadcastSocket_EtherCard::_data_length = 0;
+// ===== [SELF IP] =====
+uint8_t BroadcastSocket_EtherCard::_local_ip[4] = {0};
 
 
 #endif // BROADCAST_SOCKET_ETHERCARD_HPP
