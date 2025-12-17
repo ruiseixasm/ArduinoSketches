@@ -110,6 +110,18 @@ public:
         return sent_message;
     }
 
+    virtual bool hereSend(JsonObject& json_message) {
+
+		#ifdef JSON_TALKER_DEBUG
+		Serial.print(F("\t"));
+		Serial.print(_name);
+		Serial.print(F(": "));
+		Serial.println(F("Sending a HERE message"));
+		#endif
+
+        return processData(json_message);
+    }
+
 
     virtual bool replyMessage(JsonObject& json_message) {
 
@@ -138,7 +150,7 @@ public:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tReplied a LOCAL message"));
 				#endif
-				return processData(json_message);
+				return hereSend(json_message);
 
 		}
 		return false;
