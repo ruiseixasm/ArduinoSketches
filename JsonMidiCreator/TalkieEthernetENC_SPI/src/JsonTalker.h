@@ -120,16 +120,28 @@ public:
 		#endif
 
         SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
-		if (source_data == SourceData::LOCAL) {
-			#ifdef JSON_TALKER_DEBUG
-			Serial.println(F("\tReplied a LOCAL message"));
-			#endif
-			return localSend(json_message);
+		switch (source_data) {
+
+			case SourceData::REMOTE:
+				#ifdef JSON_TALKER_DEBUG
+				Serial.println(F("\tReplied a LOCAL message"));
+				#endif
+				return remoteSend(json_message);
+			
+			case SourceData::LOCAL:
+				#ifdef JSON_TALKER_DEBUG
+				Serial.println(F("\tReplied a LOCAL message"));
+				#endif
+				return localSend(json_message);
+			
+			case SourceData::HERE:
+				#ifdef JSON_TALKER_DEBUG
+				Serial.println(F("\tReplied a LOCAL message"));
+				#endif
+				return processData(json_message);
+
 		}
-		#ifdef JSON_TALKER_DEBUG
-		Serial.println(F("Replied a REMOTE message"));
-		#endif
-        return remoteSend(json_message);
+		return false;
     }
 
 
