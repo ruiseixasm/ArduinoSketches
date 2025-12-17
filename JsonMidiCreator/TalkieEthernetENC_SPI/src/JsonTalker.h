@@ -174,7 +174,7 @@ public:
 
 	// Getter and setters
 
-    void setSocket(BroadcastSocket* socket) { _socket = socket; }
+    void setSocket(BroadcastSocket* socket);
     BroadcastSocket& getSocket();
 
 	const char* socket_class_name();

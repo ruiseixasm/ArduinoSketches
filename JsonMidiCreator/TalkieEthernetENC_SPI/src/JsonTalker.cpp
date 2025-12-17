@@ -70,6 +70,17 @@ bool JsonTalker::remoteSend(JsonObject& json_message) {
     return _socket->remoteSend(json_message);
 }
 
+void JsonTalker::setSocket(BroadcastSocket* socket) {
+	_socket = socket;
+	// AVOIDS EVERY TALKER WITH THE SAME CHANNEL
+	_channel += strlen(socket->class_name());
+	_channel += strlen(this->class_name());
+	_channel += strlen(_name);	// Required at constructor
+	_channel += strlen(_desc);
+	if (_manifesto) {	// Safe code
+		_channel += strlen(_manifesto->class_name());
+	}
+}
 
 BroadcastSocket& JsonTalker::getSocket() {
 	return *_socket;
