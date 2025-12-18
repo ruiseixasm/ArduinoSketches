@@ -34,17 +34,17 @@ protected:
     uint16_t _total_calls = 0;
 
 
-    Call calls[4] = {
+    Action calls[4] = {
 		{"on", "Turns led ON"},
 		{"off", "Turns led OFF"},
 		{"bpm_10", "Sets the Tempo in BPM x 10"},
 		{"bpm_10", "Gets the Tempo in BPM x 10"}
     };
     
-    const Call* getCallsArray() const override { return calls; }
+    const Action* getCallsArray() const override { return calls; }
 
     // Size methods
-    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Call); }
+    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
 public:
@@ -53,7 +53,7 @@ public:
     bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
         (void)talker;		// Silence unused parameter warning
 		
-		if (index >= sizeof(calls)/sizeof(Call)) return false;
+		if (index >= sizeof(calls)/sizeof(Action)) return false;
 		
 		// Actual implementation would do something based on index
 		switch(index) {

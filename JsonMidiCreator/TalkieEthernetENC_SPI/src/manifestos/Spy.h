@@ -36,22 +36,22 @@ protected:
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Call calls[1] = {
+    Action calls[1] = {
 		{"ping", "I ping every talker around me"}
     };
     
-    const Call* getCallsArray() const override { return calls; }
+    const Action* getCallsArray() const override { return calls; }
 
     // Size methods
-    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Call); }
+    uint8_t actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
 public:
 
 	void loop(JsonTalker* talker) override;
 
-    // Call implementations - MUST be implemented by derived
-    bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override;
+    // Action implementations - MUST be implemented by derived
+    bool actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override;
     void echo(JsonObject& json_message, JsonTalker* talker) override;
     void error(JsonObject& json_message, JsonTalker* talker) override;
 

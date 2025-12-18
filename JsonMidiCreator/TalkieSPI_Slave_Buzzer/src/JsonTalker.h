@@ -380,7 +380,7 @@ public:
 					#endif
 
 					_manifesto->iterateCallsReset();
-					const TalkerManifesto::Call* run;
+					const TalkerManifesto::Action* run;
 					uint8_t action_index = 0;
 					while ((run = _manifesto->iterateCallsNext()) != nullptr) {	// No boilerplate
 						no_list = false;

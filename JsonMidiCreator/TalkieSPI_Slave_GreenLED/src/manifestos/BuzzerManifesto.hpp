@@ -34,16 +34,16 @@ protected:
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Call calls[3] = {
+    Action calls[3] = {
 		{"buzz", "Buzz for a while"},
         {"ms", "Sets the buzzing duration"},
         {"ms", "Gets the buzzing duration"}
     };
     
-    const Call* getCallsArray() const override { return calls; }
+    const Action* getCallsArray() const override { return calls; }
 
     // Size methods
-    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Call); }
+    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
 public:

@@ -37,7 +37,7 @@ public:
     virtual ~TalkerManifesto() = default;
 
 
-    struct Call {
+    struct Action {
         const char* name;
         const char* desc;
     };
@@ -57,10 +57,10 @@ protected:
     // Iterator states
     uint8_t callsIterIdx = 0;
 
-    virtual const Call* getCallsArray() const = 0;
+    virtual const Action* getCallsArray() const = 0;
 
     // Size methods
-    virtual uint8_t callsCount() const = 0;
+    virtual uint8_t actionsCount() const = 0;
 
 
 public:
@@ -75,22 +75,22 @@ public:
         (void)talker;		// Silence unused parameter warning
 	}
 
-	virtual void iterateCallsReset() {
+	virtual void iterateActionsReset() {
 		callsIterIdx = 0;
 	}
 
 
     // Iterator next methods - IMPLEMENTED in base class
-    virtual const Call* iterateCallsNext() {
-        if (callsIterIdx < callsCount()) {
+    virtual const Action* iterateActionNext() {
+        if (callsIterIdx < actionsCount()) {
             return &getCallsArray()[callsIterIdx++];
         }
         return nullptr;
     }
     
     // Name-based index search - IMPLEMENTED in base class
-    virtual uint8_t callIndex(const char* name) const {
-        for (uint8_t i = 0; i < callsCount(); i++) {
+    virtual uint8_t actionIndex(const char* name) const {
+        for (uint8_t i = 0; i < actionsCount(); i++) {
             if (strcmp(getCallsArray()[i].name, name) == 0) {
                 return i;
             }
@@ -99,12 +99,12 @@ public:
     }
     
     // Numeric index validation
-    virtual uint8_t callIndex(uint8_t index) const {
-        return (index < callsCount()) ? index : 255;
+    virtual uint8_t actionIndex(uint8_t index) const {
+        return (index < actionsCount()) ? index : 255;
     }
     
-    // Call implementations - MUST be implemented by derived
-    virtual bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
+    // Action implementations - MUST be implemented by derived
+    virtual bool actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
         (void)index;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning

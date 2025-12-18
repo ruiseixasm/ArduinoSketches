@@ -317,9 +317,9 @@ public:
 				{
 					uint8_t index_found_i = 255;
 					if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
-						index_found_i = _manifesto->callIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
+						index_found_i = _manifesto->actionIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
 					} else if (json_message[ JsonKey::NAME ].is<const char *>()) {
-						index_found_i = _manifesto->callIndex(json_message[ JsonKey::NAME ].as<const char *>());
+						index_found_i = _manifesto->actionIndex(json_message[ JsonKey::NAME ].as<const char *>());
 					}
 					if (index_found_i < 255) {
 
@@ -329,7 +329,7 @@ public:
 						Serial.println(F(", now being processed..."));
 						#endif
 
-						if (_manifesto->callByIndex(index_found_i, json_message, this)) {
+						if (_manifesto->actionByIndex(index_found_i, json_message, this)) {
 							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 						} else {
 							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
@@ -379,10 +379,10 @@ public:
 					Serial.println(class_name());
 					#endif
 
-					_manifesto->iterateCallsReset();
-					const TalkerManifesto::Call* run;
+					_manifesto->iterateActionsReset();
+					const TalkerManifesto::Action* run;
 					uint8_t action_index = 0;
-					while ((run = _manifesto->iterateCallsNext()) != nullptr) {	// No boilerplate
+					while ((run = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
 						no_list = false;
 						json_message[ JsonKey::NAME ] = run->name;      // Direct access
 						json_message[ JsonKey::DESCRIPTION ] = run->desc;

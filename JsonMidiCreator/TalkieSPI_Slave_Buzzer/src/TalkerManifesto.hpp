@@ -37,7 +37,7 @@ public:
     virtual ~TalkerManifesto() = default;
 
 
-    struct Call {
+    struct Action {
         const char* name;
         const char* desc;
     };
@@ -57,7 +57,7 @@ protected:
     // Iterator states
     uint8_t callsIterIdx = 0;
 
-    virtual const Call* getCallsArray() const = 0;
+    virtual const Action* getCallsArray() const = 0;
 
     // Size methods
     virtual uint8_t callsCount() const = 0;
@@ -81,7 +81,7 @@ public:
 
 
     // Iterator next methods - IMPLEMENTED in base class
-    virtual const Call* iterateCallsNext() {
+    virtual const Action* iterateCallsNext() {
         if (callsIterIdx < callsCount()) {
             return &getCallsArray()[callsIterIdx++];
         }
@@ -103,7 +103,7 @@ public:
         return (index < callsCount()) ? index : 255;
     }
     
-    // Call implementations - MUST be implemented by derived
+    // Action implementations - MUST be implemented by derived
     virtual bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
         (void)index;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
