@@ -140,7 +140,7 @@ public:
 
 			// _muted_calls mutes CALL echoes only
 			if (_muted_calls && _received_message == MessageData::CALL) {
-				_received_message = MessageData::TALK;	// Avoids false returns
+				_received_message = MessageData::NOISE;	// Avoids false CALLS return
 				return false;
 			}
 
