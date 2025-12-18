@@ -55,7 +55,7 @@ public:
 protected:
 	
     // Iterator states
-    uint8_t callsIterIdx = 0;
+    uint8_t actionsIterIdx = 0;
 
     virtual const Action* getActionsArray() const = 0;
 
@@ -76,14 +76,14 @@ public:
 	}
 
 	virtual void iterateActionsReset() {
-		callsIterIdx = 0;
+		actionsIterIdx = 0;
 	}
 
 
     // Iterator next methods - IMPLEMENTED in base class
     virtual const Action* iterateActionNext() {
-        if (callsIterIdx < actionsCount()) {
-            return &getActionsArray()[callsIterIdx++];
+        if (actionsIterIdx < actionsCount()) {
+            return &getActionsArray()[actionsIterIdx++];
         }
         return nullptr;
     }
