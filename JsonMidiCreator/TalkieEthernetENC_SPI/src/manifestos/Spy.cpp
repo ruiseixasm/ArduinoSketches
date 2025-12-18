@@ -74,12 +74,11 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 		MessageData original_message = static_cast<MessageData>( json_message[ JsonKey::ORIGINAL ].as<int>() );
 		switch (original_message) {
 
-			case MessageData::TALK:
-				// There is no need to send a SYS message given that the ECHO to TALK preserves the TIMESTAMP
-				if (json_message[ JsonKey::TIMESTAMP ].is<uint16_t>()) {
+			case MessageData::PING:
+				{
 					// In condition to calculate the delay right away, no need to extra messages
 					uint16_t actual_time = static_cast<uint16_t>(millis());
-					uint16_t message_time = json_message[ JsonKey::TIMESTAMP ].as<uint16_t>();
+					uint16_t message_time = json_message[ JsonKey::TIMESTAMP ].as<uint16_t>();	// must have
 					uint16_t time_delay = actual_time - message_time;
 					json_message[ JsonKey::VALUE ] = time_delay;
 					// Prepares headers for the original REMOTE sender
@@ -90,7 +89,7 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 				}
 				break;
 
-			default: break;
+			default: break;	// Ignores all the rest
 		}
 	}
 }
