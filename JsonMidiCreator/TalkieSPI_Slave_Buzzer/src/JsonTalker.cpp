@@ -99,6 +99,13 @@ const char* JsonTalker::socket_class_name() {
 	return "";
 }
 
+const char* JsonTalker::board_name() {
+	if (_socket) {	// Safe code
+		return _socket->board_name();
+	}
+	return "";
+}
+
 void JsonTalker::set_delay(uint8_t delay) {
 	if (_socket) {	// Safe code
     	return _socket->set_max_delay(delay);

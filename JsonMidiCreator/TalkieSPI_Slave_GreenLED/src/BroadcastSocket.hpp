@@ -51,20 +51,6 @@ protected:
     #endif
 
 
-    static uint16_t generateChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
-
     uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {
         
         uint16_t data_checksum = 0;
@@ -442,6 +428,65 @@ public:
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
+
+	
+	static const char* board_name() {
+		
+		#ifdef __AVR__
+			#if (RAMEND - RAMSTART + 1) == 2048
+				return "Arduino Uno/Nano (ATmega328P)";
+			#elif (RAMEND - RAMSTART + 1) == 8192
+				return "Arduino Mega (ATmega2560)";
+			#else
+				return "Unknown AVR Board";
+			#endif
+			
+		#elif defined(ESP8266)
+			static char buffer[50];
+			snprintf(buffer, sizeof(buffer), "ESP8266 (Chip ID: %u)", ESP.getChipId());
+			return buffer;
+			
+		#elif defined(ESP32)
+			static char buffer[50];
+			snprintf(buffer, sizeof(buffer), "ESP32 (Rev: %d)", ESP.getChipRevision());
+			return buffer;
+			
+		#elif defined(TEENSYDUINO)
+			#if defined(__IMXRT1062__)
+				return "Teensy 4.0/4.1 (i.MX RT1062)";
+			#elif defined(__MK66FX1M0__)
+				return "Teensy 3.6 (MK66FX1M0)";
+			#elif defined(__MK64FX512__)
+				return "Teensy 3.5 (MK64FX512)";
+			#elif defined(__MK20DX256__)
+				return "Teensy 3.2/3.1 (MK20DX256)";
+			#elif defined(__MKL26Z64__)
+				return "Teensy LC (MKL26Z64)";
+			#else
+				return "Unknown Teensy Board";
+			#endif
+
+		#elif defined(__arm__)
+			return "ARM-based Board";
+
+		#else
+			return "Unknown Board";
+
+		#endif
+	}
+
+    static uint16_t generateChecksum(const char* net_data, const size_t len) {
+        // 16-bit word and XORing
+        uint16_t checksum = 0;
+        for (size_t i = 0; i < len; i += 2) {
+            uint16_t chunk = net_data[i] << 8;
+            if (i + 1 < len) {
+                chunk |= net_data[i + 1];
+            }
+            checksum ^= chunk;
+        }
+        return checksum;
+    }
 
 
     virtual void loop() {
