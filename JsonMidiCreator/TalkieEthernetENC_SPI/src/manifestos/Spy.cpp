@@ -81,6 +81,7 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 					uint16_t message_time = json_message[ JsonKey::TIMESTAMP ].as<uint16_t>();	// must have
 					uint16_t time_delay = actual_time - message_time;
 					json_message[ JsonKey::VALUE ] = time_delay;
+					json_message[ JsonKey::REPLY ] = json_message[ JsonKey::FROM ];	// Informs the Talker as reply
 					// Prepares headers for the original REMOTE sender
 					json_message[ JsonKey::TO ] = _original_talker;
 					json_message[ JsonKey::FROM ] = talker->get_name();	// Avoids swapping
