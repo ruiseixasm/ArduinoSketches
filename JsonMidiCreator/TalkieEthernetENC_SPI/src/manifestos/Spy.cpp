@@ -57,8 +57,8 @@ bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker
 				case 0:
 				{	// Has FROM for sure
 					_original_talker = json_message[ JsonKey::FROM ].as<String>();	// Explicit conversion
-					if (json_message[ JsonKey::DESCRIPTION ].is<String>()) {
-						_ping_talker = json_message[ JsonKey::DESCRIPTION ].as<String>();
+					if (json_message[ JsonKey::VALUE ].is<String>()) {
+						_ping_talker = json_message[ JsonKey::VALUE ].as<String>();
 					} else {
 						_ping_talker = "";
 					}
