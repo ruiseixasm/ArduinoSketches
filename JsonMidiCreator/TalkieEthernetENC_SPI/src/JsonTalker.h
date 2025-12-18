@@ -51,8 +51,8 @@ protected:
     const char* _desc;      // Description of the Device
 	TalkerManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
-	MessageData _received_message = MessageData::TALK;
-	Original _original_message;
+	MessageData _received_message = MessageData::NOISE;
+	Original _original_message = {0, MessageData::NOISE};
     bool _muted_calls = false;
 
 public:
