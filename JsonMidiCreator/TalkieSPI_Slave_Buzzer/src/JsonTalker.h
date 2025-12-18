@@ -69,7 +69,6 @@ public:
     BroadcastSocket& getSocket();
 
 	const char* socket_class_name();
-	const char* board_name();
 
     const char* get_name() { return _name; }
     void set_channel(uint8_t channel) { _channel = channel; }
@@ -480,7 +479,7 @@ public:
 
 						case SystemData::BOARD:
 							if (_socket) {
-								json_message[ JsonKey::DESCRIPTION ] = board_name();
+								json_message[ JsonKey::DESCRIPTION ] = board_description();
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
@@ -577,6 +576,53 @@ public:
         }
         return dont_interrupt;
     }
+
+	
+	static const char* board_description() {
+		
+		#ifdef __AVR__
+			#if (RAMEND - RAMSTART + 1) == 2048
+				return "Arduino Uno/Nano (ATmega328P)";
+			#elif (RAMEND - RAMSTART + 1) == 8192
+				return "Arduino Mega (ATmega2560)";
+			#else
+				return "Unknown AVR Board";
+			#endif
+			
+		#elif defined(ESP8266)
+			static char buffer[50];
+			snprintf(buffer, sizeof(buffer), "ESP8266 (Chip ID: %u)", ESP.getChipId());
+			return buffer;
+			
+		#elif defined(ESP32)
+			static char buffer[50];
+			snprintf(buffer, sizeof(buffer), "ESP32 (Rev: %d)", ESP.getChipRevision());
+			return buffer;
+			
+		#elif defined(TEENSYDUINO)
+			#if defined(__IMXRT1062__)
+				return "Teensy 4.0/4.1 (i.MX RT1062)";
+			#elif defined(__MK66FX1M0__)
+				return "Teensy 3.6 (MK66FX1M0)";
+			#elif defined(__MK64FX512__)
+				return "Teensy 3.5 (MK64FX512)";
+			#elif defined(__MK20DX256__)
+				return "Teensy 3.2/3.1 (MK20DX256)";
+			#elif defined(__MKL26Z64__)
+				return "Teensy LC (MKL26Z64)";
+			#else
+				return "Unknown Teensy Board";
+			#endif
+
+		#elif defined(__arm__)
+			return "ARM-based Board";
+
+		#else
+			return "Unknown Board";
+
+		#endif
+	}
+
 
 };
 
