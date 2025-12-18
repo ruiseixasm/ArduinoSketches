@@ -57,6 +57,8 @@ bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* tal
 				case 0:
 				{	// Has FROM for sure
 					_original_talker = json_message[ JsonKey::FROM ].as<String>();	// Explicit conversion
+					_original_message.identity = json_message[ JsonKey::IDENTITY ].as<uint16_t>();
+					_original_message.message_data = MessageData::PING;	// It's is the emulated message (not CALL)
 					if (json_message[ valueKey(0) ].is<String>()) {
 						_ping_talker = json_message[ valueKey(0) ].as<String>();
 					} else {
@@ -89,6 +91,9 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 				// Prepares headers for the original REMOTE sender
 				json_message[ JsonKey::TO ] = _original_talker;
 				json_message[ JsonKey::FROM ] = talker->get_name();	// Avoids swapping
+				// Emulates the REMOTE original call
+				json_message[ JsonKey::IDENTITY ] = _original_message.identity;
+				// It's already an ECHO message, it's because of that that entered here
 				// Finally answers to the REMOTE caller by repeating all other json fields
 				talker->remoteSend(json_message);
 			}

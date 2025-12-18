@@ -31,6 +31,7 @@ public:
 protected:
 
 	String _original_talker = "";
+	Original _original_message = {0, MessageData::NOISE};
 	String _ping_talker = "";
 	bool _ping = false;
 
