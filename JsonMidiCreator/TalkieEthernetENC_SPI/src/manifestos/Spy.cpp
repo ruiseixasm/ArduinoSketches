@@ -75,8 +75,8 @@ bool Spy::callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talke
 
 void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 	
-	MessageData original_message = static_cast<MessageData>( json_message[ JsonKey::ORIGINAL ].as<int>() );
-	switch (original_message) {
+	Original original_message = talker->get_original();
+	switch (original_message.message_data) {
 
 		case MessageData::PING:
 			{

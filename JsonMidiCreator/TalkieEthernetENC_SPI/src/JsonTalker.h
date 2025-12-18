@@ -51,7 +51,7 @@ protected:
     const char* _desc;      // Description of the Device
 	TalkerManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
-	Original _original;
+	Original _original_message;
     bool _muted_calls = false;
 
 public:
@@ -78,8 +78,10 @@ public:
 	const char* socket_class_name();
 
     const char* get_name() { return _name; }
+    const char* get_desc() { return _desc; }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
+    Original& get_original() { return _original_message; }
     
     JsonTalker& mute() {    // It does NOT make a copy!
         _muted_calls = true;
@@ -136,10 +138,10 @@ public:
 			#endif
 
 			// _muted_calls mutes CALL echoes only
-			if (_muted_calls && _original.message_data == MessageData::CALL) return false;
+			if (_muted_calls && _original_message.message_data == MessageData::CALL) return false;
 
-			_original.identity = (uint16_t)millis();
-			json_message[ JsonKey::IDENTITY ] = _original.identity;
+			_original_message.identity = (uint16_t)millis();
+			json_message[ JsonKey::IDENTITY ] = _original_message.identity;
 
 		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
 
@@ -151,8 +153,8 @@ public:
 
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
 			json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
-			_original.identity = (uint16_t)millis();
-			json_message[ JsonKey::IDENTITY ] = _original.identity;
+			_original_message.identity = (uint16_t)millis();
+			json_message[ JsonKey::IDENTITY ] = _original_message.identity;
 
 		} else {
 			
@@ -305,7 +307,7 @@ public:
 
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageData::ECHO) {
-			_original.message_data = message_data;
+			_original_message.message_data = message_data;
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 		}
 
@@ -486,7 +488,11 @@ public:
 			
 			case MessageData::ECHO:
 				if (_manifesto) {
-					_manifesto->echo(json_message, this);
+					// Makes sure it has the same id first (echo condition)
+					uint16_t message_id = json_message[ JsonKey::IDENTITY ].as<uint16_t>();
+					if (message_id == _original_message.identity) {
+						_manifesto->echo(json_message, this);
+					}
 				}
 				break;
 			

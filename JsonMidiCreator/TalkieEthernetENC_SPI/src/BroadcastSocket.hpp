@@ -269,7 +269,6 @@ protected:
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
-					json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ];
 					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
 					json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
 					// Wrong type of identifier or no identifier, so, it has to insert new identifier
