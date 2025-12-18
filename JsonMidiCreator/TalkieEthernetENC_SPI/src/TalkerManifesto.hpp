@@ -22,19 +22,19 @@ using MessageData = TalkieCodes::MessageData;
 
 class JsonTalker;
 
-class IManifesto {
+class TalkerManifesto {
 
 public:
 
-    virtual const char* class_name() const { return "IManifesto"; }
+    virtual const char* class_name() const { return "TalkerManifesto"; }
 
-    IManifesto(const IManifesto&) = delete;
-    IManifesto& operator=(const IManifesto&) = delete;
-    IManifesto(IManifesto&&) = delete;
-    IManifesto& operator=(IManifesto&&) = delete;
+    TalkerManifesto(const TalkerManifesto&) = delete;
+    TalkerManifesto& operator=(const TalkerManifesto&) = delete;
+    TalkerManifesto(TalkerManifesto&&) = delete;
+    TalkerManifesto& operator=(TalkerManifesto&&) = delete;
     
-    IManifesto() = default;
-    virtual ~IManifesto() = default;
+    TalkerManifesto() = default;
+    virtual ~TalkerManifesto() = default;
 
 
     struct Call {

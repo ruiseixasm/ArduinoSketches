@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include <ArduinoJson.h>    // Include ArduinoJson Library
-#include "IManifesto.hpp"
+#include "TalkerManifesto.hpp"
 #include "TalkieCodes.hpp"
 
 
@@ -32,7 +32,7 @@ using SystemData = TalkieCodes::SystemData;
 using EchoData = TalkieCodes::EchoData;
 using ErrorData = TalkieCodes::ErrorData;
 using JsonKey = TalkieCodes::JsonKey;
-using Original = IManifesto::Original;
+using Original = TalkerManifesto::Original;
 
 
 class BroadcastSocket;
@@ -49,17 +49,17 @@ protected:
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
-	IManifesto* _manifesto = nullptr;
+	TalkerManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
 	Original _original;
-    bool _muted_action = false;
+    bool _muted_calls = false;
 
 public:
 
     // Explicit default constructor
     JsonTalker() = delete;
         
-    JsonTalker(const char* name, const char* desc, IManifesto* manifesto)
+    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto)
         : _name(name), _desc(desc), _manifesto(manifesto) {
             // Nothing to see here
         }
@@ -77,16 +77,16 @@ public:
     uint8_t get_channel() { return _channel; }
     
     JsonTalker& mute() {    // It does NOT make a copy!
-        _muted_action = true;
+        _muted_calls = true;
         return *this;
     }
 
     JsonTalker& unmute() {
-        _muted_action = false;
+        _muted_calls = false;
         return *this;
     }
 
-    bool muted() { return _muted_action; }
+    bool muted() { return _muted_calls; }
 
     void set_delay(uint8_t delay);
     uint8_t get_delay();
@@ -130,9 +130,9 @@ public:
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
-			if (_muted_action && _original.message_data == MessageData::CALL) return false;
+			// _muted_calls mutes CALL echoes only
+			if (_muted_calls && _original.message_data == MessageData::CALL) return false;
 
-			
 			_original.identity = (uint16_t)millis();
 			json_message[ JsonKey::IDENTITY ] = _original.identity;
 
@@ -374,7 +374,7 @@ public:
 
 					json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::CALL);
 					_manifesto->iterateCallsReset();
-					const IManifesto::Call* run;
+					const TalkerManifesto::Call* run;
 					uint8_t action_index = 0;
 					while ((run = _manifesto->iterateCallsNext()) != nullptr) {	// No boilerplate
 						no_list = false;
@@ -423,8 +423,8 @@ public:
 							break;
 
 						case SystemData::MUTE:
-							if (!_muted_action) {
-								_muted_action = true;
+							if (!_muted_calls) {
+								_muted_calls = true;
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
@@ -433,8 +433,8 @@ public:
 							break;
 
 						case SystemData::UNMUTE:
-							if (_muted_action) {
-								_muted_action = false;
+							if (_muted_calls) {
+								_muted_calls = false;
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
@@ -443,7 +443,7 @@ public:
 							break;
 
 						case SystemData::MUTED:
-							if (_muted_action) {
+							if (_muted_calls) {
 								json_message[ JsonKey::VALUE ] = 1;
 							} else {
 								json_message[ JsonKey::VALUE ] = 0;

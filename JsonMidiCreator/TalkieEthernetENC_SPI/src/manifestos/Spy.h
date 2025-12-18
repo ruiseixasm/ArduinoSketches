@@ -14,18 +14,18 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef SPY_MANIFESTO_H
 #define SPY_MANIFESTO_H
 
-#include "../IManifesto.hpp"
+#include "../TalkerManifesto.hpp"
 
 // #define SPY_MANIFESTO_DEBUG
 
 using JsonKey = TalkieCodes::JsonKey;
 
-class Spy : public IManifesto {
+class Spy : public TalkerManifesto {
 public:
 
     const char* class_name() const override { return "Spy"; }
 
-    Spy() : IManifesto() {}	// Constructor
+    Spy() : TalkerManifesto() {}	// Constructor
 
 
 protected:
