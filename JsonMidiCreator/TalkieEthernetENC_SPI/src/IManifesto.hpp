@@ -18,6 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <ArduinoJson.h>    // Include ArduinoJson Library
 #include "TalkieCodes.hpp"
 
+using MessageData = TalkieCodes::MessageData;
 
 class JsonTalker;
 
@@ -40,6 +41,11 @@ public:
         const char* name;
         const char* desc;
     };
+
+	struct Original {
+		uint16_t identity;
+		MessageData message_data;
+	};
 
 
 protected:

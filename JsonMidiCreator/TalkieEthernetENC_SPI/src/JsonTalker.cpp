@@ -30,44 +30,10 @@ bool JsonTalker::remoteSend(JsonObject& json_message) {
 	Serial.println(F("Sending a REMOTE message"));
 	#endif
 
-	updateFrom(json_message, _name);
-	// It also sets the IDENTITY if applicable, these settings are of the Talker exclusive responsibility (NO DELEGATION TO SOCKET !!)
-	MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
-	if (message_code < MessageData::ECHO) {
-
-		#ifdef JSON_TALKER_DEBUG
-		Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
-		serializeJson(json_message, Serial);
-		Serial.println();  // optional: just to add a newline after the JSON
-		#endif
-
-		if (_muted_action && message_code == MessageData::CALL) return false;
-
-		json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
-
-	} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
-
-		#ifdef JSON_TALKER_DEBUG
-		Serial.print(F("remoteSend1: Response message with a wrong or without an identifier, now being set (i): "));
-		serializeJson(json_message, Serial);
-		Serial.println();  // optional: just to add a newline after the JSON
-		#endif
-
-		json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
-		json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
-		json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
-
-	} else {
-		
-		#ifdef JSON_TALKER_DEBUG
-		Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
-		serializeJson(json_message, Serial);
-		Serial.println();  // optional: just to add a newline after the JSON
-		#endif
-
+	if (prepareMessage(json_message)) {
+    	return _socket->remoteSend(json_message);
 	}
-	remove(json_message[ JsonKey::ORIGINAL ]);	// Identified by "i" REMOTELY
-    return _socket->remoteSend(json_message);
+	return false;
 }
 
 void JsonTalker::setSocket(BroadcastSocket* socket) {

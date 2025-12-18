@@ -32,6 +32,7 @@ using SystemData = TalkieCodes::SystemData;
 using EchoData = TalkieCodes::EchoData;
 using ErrorData = TalkieCodes::ErrorData;
 using JsonKey = TalkieCodes::JsonKey;
+using Original = IManifesto::Original;
 
 
 class BroadcastSocket;
@@ -50,6 +51,7 @@ protected:
     const char* _desc;      // Description of the Device
 	IManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
+	Original _original;
     bool _muted_action = false;
 
 public:
@@ -107,20 +109,56 @@ public:
     }
 
 
-	static bool updateFrom(JsonObject& json_message, const char* from_name) {
+	bool prepareMessage(JsonObject& json_message) {
 		if (json_message[ JsonKey::FROM ].is<const char*>()) {
-			if (strcmp(json_message[ JsonKey::FROM ].as<const char*>(), from_name) != 0) {
-				// FROM is different from from_name, must be swapped
+			if (strcmp(json_message[ JsonKey::FROM ].as<const char*>(), _name) != 0) {
+				// FROM is different from _name, must be swapped
 				json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
-				json_message[ JsonKey::FROM ] = from_name;
-				return true;
+				json_message[ JsonKey::FROM ] = _name;
 			}
 		} else {
 			// FROM doesn't even exist (must have)
-			json_message[ JsonKey::FROM ] = from_name;
-			return true;
+			json_message[ JsonKey::FROM ] = _name;
 		}
-		return false;
+
+		MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
+		if (message_code < MessageData::ECHO) {
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
+			serializeJson(json_message, Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			if (_muted_action && _original.message_data == MessageData::CALL) return false;
+
+			
+			_original.identity = (uint16_t)millis();
+			json_message[ JsonKey::IDENTITY ] = _original.identity;
+
+		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("remoteSend1: Response message with a wrong or without an identifier, now being set (i): "));
+			serializeJson(json_message, Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
+			json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
+			_original.identity = (uint16_t)millis();
+			json_message[ JsonKey::IDENTITY ] = _original.identity;
+
+		} else {
+			
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
+			serializeJson(json_message, Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+		}
+		return true;
 	}
 
 	
@@ -136,70 +174,38 @@ public:
 		Serial.println(F("Sending a LOCAL message"));
 		#endif
 
-		// It also sets the IDENTITY if applicable, these settings are of the Talker exclusive responsibility (NO DELEGATION TO SOCKET !!)
-		MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
-		if (message_code < MessageData::ECHO) {
+		if (prepareMessage(json_message)) {
 
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
-			serializeJson(json_message, Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
+			// Tags the message as LOCAL sourced
+			json_message[ JsonKey::SOURCE ] = static_cast<int>(SourceData::LOCAL);
+			// Triggers all local Talkers to processes the json_message
+			bool sent_message = false;
+			bool pre_validated = false;
+			for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
+				if (_json_talkers[talker_i] != this) {  // Can't send to myself
 
-			// Muted is only applicable to REMOTE sends in order to avoid overloading
-			updateFrom(json_message, _name);
-			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
-
-		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
-
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("\tERROR: Response message with a wrong or without an identifier, now being set (i): "));
-			serializeJson(json_message, Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
-			json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
-			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
-
-		} else {	// For ECHO and ERROR replies
-			
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
-			serializeJson(json_message, Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-		}
-
-		// Tags the message as LOCAL sourced
-		json_message[ JsonKey::SOURCE ] = static_cast<int>(SourceData::LOCAL);
-		// Triggers all local Talkers to processes the json_message
-		bool sent_message = false;
-		bool pre_validated = false;
-		for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
-			if (_json_talkers[talker_i] != this) {  // Can't send to myself
-
-				// CREATE COPY for each talker
-				// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-				#if ARDUINOJSON_VERSION_MAJOR >= 7
-				JsonDocument doc_copy;
-				#else
-				StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
-				#endif
-				JsonObject json_copy = doc_copy.to<JsonObject>();
+					// CREATE COPY for each talker
+					// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+					#if ARDUINOJSON_VERSION_MAJOR >= 7
+					JsonDocument doc_copy;
+					#else
+					StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
+					#endif
+					JsonObject json_copy = doc_copy.to<JsonObject>();
+					
+					// Copy all data from original
+					for (JsonPair kv : json_message) {
+						json_copy[kv.key()] = kv.value();
+					}
 				
-				// Copy all data from original
-				for (JsonPair kv : json_message) {
-					json_copy[kv.key()] = kv.value();
+					pre_validated = _json_talkers[talker_i]->processMessage(json_copy);
+					sent_message = true;
+					if (!pre_validated) break;
 				}
-			
-				pre_validated = _json_talkers[talker_i]->processMessage(json_copy);
-				sent_message = true;
-				if (!pre_validated) break;
 			}
+			return sent_message;
 		}
-        return sent_message;
+		return false;
     }
 
 
@@ -264,7 +270,7 @@ public:
 			return false;
 		}
 
-		MessageData message_data = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
+		MessageData message_data = static_cast<MessageData>( json_message[ JsonKey::MESSAGE ].as<int>() );
 
         // Is it for me?
         if (json_message[ JsonKey::TO ].is<uint8_t>()) {
@@ -294,7 +300,7 @@ public:
 
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageData::ECHO) {
-			json_message[ JsonKey::ORIGINAL ] = static_cast<int>(message_data);	// Temporary data control (remove for REMOTE sending)
+			_original.message_data = message_data;
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 		}
 
