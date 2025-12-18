@@ -51,7 +51,8 @@ protected:
     const char* _desc;      // Description of the Device
 	TalkerManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
-	Original _original_message;
+	MessageData _received_message = MessageData::NOISE;
+	Original _original_message = {0, MessageData::NOISE};
     bool _muted_calls = false;
 
 public:
@@ -128,8 +129,8 @@ public:
 			json_message[ JsonKey::FROM ] = _name;
 		}
 
-		MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
-		if (message_code < MessageData::ECHO) {
+		MessageData message_data = static_cast<MessageData>( json_message[ JsonKey::MESSAGE ].as<int>() );
+		if (message_data < MessageData::ECHO) {
 
 			#ifdef JSON_TALKER_DEBUG
 			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
@@ -138,10 +139,17 @@ public:
 			#endif
 
 			// _muted_calls mutes CALL echoes only
-			if (_muted_calls && _original_message.message_data == MessageData::CALL) return false;
+			if (_muted_calls && _received_message == MessageData::CALL) {
+				_received_message = MessageData::NOISE;	// Avoids false CALLS return
+				return false;
+			}
 
-			_original_message.identity = (uint16_t)millis();
-			json_message[ JsonKey::IDENTITY ] = _original_message.identity;
+			uint16_t message_id = (uint16_t)millis();
+			json_message[ JsonKey::IDENTITY ] = message_id;
+			if (message_data < MessageData::ECHO) {
+				_original_message.identity = message_id;
+				_original_message.message_data = message_data;
+			}
 
 		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
 
@@ -153,8 +161,7 @@ public:
 
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
 			json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
-			_original_message.identity = (uint16_t)millis();
-			json_message[ JsonKey::IDENTITY ] = _original_message.identity;
+			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
 
 		} else {
 			
@@ -307,7 +314,7 @@ public:
 
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageData::ECHO) {
-			_original_message.message_data = message_data;
+			_received_message = static_cast<MessageData>( json_message[ JsonKey::MESSAGE ].as<int>() );
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 		}
 
@@ -317,9 +324,9 @@ public:
 				{
 					uint8_t index_found_i = 255;
 					if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
-						index_found_i = _manifesto->callIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
+						index_found_i = _manifesto->actionIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
 					} else if (json_message[ JsonKey::NAME ].is<const char *>()) {
-						index_found_i = _manifesto->callIndex(json_message[ JsonKey::NAME ].as<const char *>());
+						index_found_i = _manifesto->actionIndex(json_message[ JsonKey::NAME ].as<const char *>());
 					}
 					if (index_found_i < 255) {
 
@@ -329,7 +336,7 @@ public:
 						Serial.println(F(", now being processed..."));
 						#endif
 
-						if (_manifesto->callByIndex(index_found_i, json_message, this)) {
+						if (_manifesto->actionByIndex(index_found_i, json_message, this)) {
 							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 						} else {
 							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
@@ -379,10 +386,10 @@ public:
 					Serial.println(class_name());
 					#endif
 
-					_manifesto->iterateCallsReset();
+					_manifesto->iterateActionsReset();
 					const TalkerManifesto::Action* run;
 					uint8_t action_index = 0;
-					while ((run = _manifesto->iterateCallsNext()) != nullptr) {	// No boilerplate
+					while ((run = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
 						no_list = false;
 						json_message[ JsonKey::NAME ] = run->name;      // Direct access
 						json_message[ JsonKey::DESCRIPTION ] = run->desc;

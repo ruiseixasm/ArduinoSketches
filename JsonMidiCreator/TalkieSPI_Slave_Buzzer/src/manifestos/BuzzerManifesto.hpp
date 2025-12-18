@@ -44,10 +44,10 @@ protected:
 		{"ms", "Gets the buzzing duration"}
     };
     
-    const Action* getCallsArray() const override { return calls; }
+    const Action* getActionsArray() const override { return calls; }
 
     // Size methods
-    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Action); }
+    uint8_t actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
 public:
@@ -63,10 +63,10 @@ public:
 
     
     // Index-based operations (simplified examples)
-    bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
+    bool actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
-		if (index < callsCount()) {
+		if (index < actionsCount()) {
 			// Actual implementation would do something based on index
 			switch(index) {
 
