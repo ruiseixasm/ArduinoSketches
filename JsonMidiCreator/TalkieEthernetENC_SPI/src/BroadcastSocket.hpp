@@ -231,7 +231,7 @@ protected:
 
                     MessageData message_code = static_cast<MessageData>(message_code_int);
 
-                    if (!(message_code < MessageData::RUN || message_code > MessageData::GET)) {
+                    if (message_code < MessageData::LIST) {	// Only does time control on Actions (drops) (< LIST)
 
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.print(F("triggerTalkers6: Message code requires delay check: "));
