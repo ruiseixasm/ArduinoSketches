@@ -63,12 +63,48 @@ public:
         }
 
 
+	// Getter and setters
+
+    void setSocket(BroadcastSocket* socket);
+    BroadcastSocket& getSocket();
+
+	const char* socket_class_name();
+
+    const char* get_name() { return _name; }
+    void set_channel(uint8_t channel) { _channel = channel; }
+    uint8_t get_channel() { return _channel; }
+    
+    JsonTalker& mute() {    // It does NOT make a copy!
+        _muted_action = true;
+        return *this;
+    }
+
+    JsonTalker& unmute() {
+        _muted_action = false;
+        return *this;
+    }
+
+    bool muted() { return _muted_action; }
+
     void set_delay(uint8_t delay);
     uint8_t get_delay();
     uint16_t get_drops();
 	
 
     virtual const char* class_name() const { return "JsonTalker"; }
+
+
+    virtual void loop() {
+        if (_manifesto) {
+            _manifesto->loop(this);
+        }
+    }
+
+
+    static void connectTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
+        _json_talkers = json_talkers;
+        _talker_count = talker_count;
+    }
 
 
 	static bool updateFrom(JsonObject& json_message, const char* from_name) {
@@ -214,44 +250,6 @@ public:
 		#endif
 		return remoteSend(json_message);
     }
-
-
-    virtual void loop() {
-        if (_manifesto) {
-            _manifesto->loop(this);
-        }
-    }
-
-
-    static void connectTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
-        _json_talkers = json_talkers;
-        _talker_count = talker_count;
-    }
-
-
-	// Getter and setters
-
-    void setSocket(BroadcastSocket* socket);
-    BroadcastSocket& getSocket();
-
-	const char* socket_class_name();
-
-    const char* get_name() { return _name; }
-    void set_channel(uint8_t channel) { _channel = channel; }
-    uint8_t get_channel() { return _channel; }
-    
-
-    JsonTalker& mute() {    // It does NOT make a copy!
-        _muted_action = true;
-        return *this;
-    }
-
-    JsonTalker& unmute() {
-        _muted_action = false;
-        return *this;
-    }
-
-    bool muted() { return _muted_action; }
 
     
     virtual bool processMessage(JsonObject& json_message) {
