@@ -41,16 +41,16 @@ protected:
 		{"bpm_10", "Gets the Tempo in BPM x 10"}
     };
     
-    const Action* getCallsArray() const override { return calls; }
+    const Action* getActionsArray() const override { return calls; }
 
     // Size methods
-    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Action); }
+    uint8_t actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
 public:
     
     // Index-based operations (simplified examples)
-    bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
+    bool actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
         (void)talker;		// Silence unused parameter warning
 		
 		if (index >= sizeof(calls)/sizeof(Action)) return false;
