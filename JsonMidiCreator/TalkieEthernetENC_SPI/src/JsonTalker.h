@@ -71,15 +71,16 @@ public:
     virtual const char* class_name() const { return "JsonTalker"; }
 
 
-	static bool setFrom(JsonObject& json_message, const char* from_name) {
+	static bool updateFrom(JsonObject& json_message, const char* from_name) {
 		if (json_message[ JsonKey::FROM ].is<const char*>()) {
 			if (strcmp(json_message[ JsonKey::FROM ].as<const char*>(), from_name) != 0) {
+				// FROM is different from from_name, must be swapped
 				json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
 				json_message[ JsonKey::FROM ] = from_name;
 				return true;
 			}
 		} else {
-			// FROM doesn't even exist
+			// FROM doesn't even exist (must have)
 			json_message[ JsonKey::FROM ] = from_name;
 			return true;
 		}
@@ -110,7 +111,7 @@ public:
 			#endif
 
 			// Muted is only applicable to REMOTE sends in order to avoid overloading
-			setFrom(json_message, _name);
+			updateFrom(json_message, _name);
 			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
 
 		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)

@@ -30,7 +30,7 @@ bool JsonTalker::remoteSend(JsonObject& json_message) {
 	Serial.println(F("Sending a REMOTE message"));
 	#endif
 
-	setFrom(json_message, _name);
+	updateFrom(json_message, _name);
 	// It also sets the IDENTITY if applicable, these settings are of the Talker exclusive responsibility (NO DELEGATION TO SOCKET !!)
 	MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
 	if (message_code < MessageData::ECHO) {
