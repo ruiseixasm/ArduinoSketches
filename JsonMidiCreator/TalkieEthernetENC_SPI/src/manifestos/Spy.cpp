@@ -67,31 +67,26 @@ bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker
 
 void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 	
-	// As a Spy it only spies LOCAL talkers
-	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
-	if (source_data == SourceData::LOCAL) {
+	MessageData original_message = static_cast<MessageData>( json_message[ JsonKey::ORIGINAL ].as<int>() );
+	switch (original_message) {
 
-		MessageData original_message = static_cast<MessageData>( json_message[ JsonKey::ORIGINAL ].as<int>() );
-		switch (original_message) {
+		case MessageData::PING:
+			{
+				// In condition to calculate the delay right away, no need to extra messages
+				uint16_t actual_time = static_cast<uint16_t>(millis());
+				uint16_t message_time = json_message[ JsonKey::TIMESTAMP ].as<uint16_t>();	// must have
+				uint16_t time_delay = actual_time - message_time;
+				json_message[ JsonKey::VALUE ] = time_delay;
+				json_message[ JsonKey::REPLY ] = json_message[ JsonKey::FROM ];	// Informs the Talker as reply
+				// Prepares headers for the original REMOTE sender
+				json_message[ JsonKey::TO ] = _original_talker;
+				json_message[ JsonKey::FROM ] = talker->get_name();	// Avoids swapping
+				// Finally answers to the REMOTE caller by repeating all other json fields
+				talker->remoteSend(json_message);
+			}
+			break;
 
-			case MessageData::PING:
-				{
-					// In condition to calculate the delay right away, no need to extra messages
-					uint16_t actual_time = static_cast<uint16_t>(millis());
-					uint16_t message_time = json_message[ JsonKey::TIMESTAMP ].as<uint16_t>();	// must have
-					uint16_t time_delay = actual_time - message_time;
-					json_message[ JsonKey::VALUE ] = time_delay;
-					json_message[ JsonKey::REPLY ] = json_message[ JsonKey::FROM ];	// Informs the Talker as reply
-					// Prepares headers for the original REMOTE sender
-					json_message[ JsonKey::TO ] = _original_talker;
-					json_message[ JsonKey::FROM ] = talker->get_name();	// Avoids swapping
-					// Finally answers to the REMOTE caller by repeating all other json fields
-					talker->remoteSend(json_message);
-				}
-				break;
-
-			default: break;	// Ignores all the rest
-		}
+		default: break;	// Ignores all the rest
 	}
 }
 

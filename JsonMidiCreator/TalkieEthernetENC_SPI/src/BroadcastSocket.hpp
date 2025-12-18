@@ -51,20 +51,6 @@ protected:
     #endif
 
 
-    static uint16_t generateChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
-
     uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {
         
         uint16_t data_checksum = 0;
@@ -442,6 +428,20 @@ public:
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
+
+	
+    static uint16_t generateChecksum(const char* net_data, const size_t len) {
+        // 16-bit word and XORing
+        uint16_t checksum = 0;
+        for (size_t i = 0; i < len; i += 2) {
+            uint16_t chunk = net_data[i] << 8;
+            if (i + 1 < len) {
+                chunk |= net_data[i + 1];
+            }
+            checksum ^= chunk;
+        }
+        return checksum;
+    }
 
 
     virtual void loop() {
