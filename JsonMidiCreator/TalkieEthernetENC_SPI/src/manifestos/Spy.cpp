@@ -45,13 +45,13 @@ void Spy::loop(JsonTalker* talker) {
 
 
 // Index-based operations (simplified examples)
-bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
+bool Spy::callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
 	
 	// As a spy it only answers to REMOTE calls
 	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
 	if (source_data == SourceData::REMOTE) {
 
-		if (index < runsCount()) {
+		if (index < callsCount()) {
 			// Actual implementation would do something based on index
 			switch(index) {
 				case 0:

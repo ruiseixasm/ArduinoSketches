@@ -36,24 +36,14 @@ protected:
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action runs[1] = {
+    Action calls[1] = {
 		{"ping", "I ping every talker around me"}
     };
     
-    Action sets[0] = {
-    };
-    
-    Action gets[0] = {
-    };
-
-    const Action* getRunsArray() const override { return runs; }
-    const Action* getSetsArray() const override { return sets; }
-    const Action* getGetsArray() const override { return gets; }
+    const Action* getCallsArray() const override { return calls; }
 
     // Size methods
-    uint8_t runsCount() const override { return sizeof(runs)/sizeof(Action); }
-    uint8_t setsCount() const override { return sizeof(sets)/sizeof(Action); }
-    uint8_t getsCount() const override { return sizeof(gets)/sizeof(Action); }
+    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
 public:
@@ -61,7 +51,7 @@ public:
 	void loop(JsonTalker* talker) override;
 
     // Action implementations - MUST be implemented by derived
-    bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override;
+    bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override;
     void echo(JsonObject& json_message, JsonTalker* talker) override;
     void error(JsonObject& json_message, JsonTalker* talker) override;
 

@@ -45,18 +45,12 @@ public:
 protected:
 	
     // Iterator states
-    uint8_t runsIterIdx = 0;
-    uint8_t setsIterIdx = 0;
-    uint8_t getsIterIdx = 0;
+    uint8_t callsIterIdx = 0;
 
-    virtual const Action* getRunsArray() const = 0;
-    virtual const Action* getSetsArray() const = 0;
-    virtual const Action* getGetsArray() const = 0;
+    virtual const Action* getCallsArray() const = 0;
 
     // Size methods
-    virtual uint8_t runsCount() const = 0;
-    virtual uint8_t setsCount() const = 0;
-    virtual uint8_t getsCount() const = 0;
+    virtual uint8_t callsCount() const = 0;
 
 
 public:
@@ -71,105 +65,42 @@ public:
         (void)talker;		// Silence unused parameter warning
 	}
 
-	virtual void iterateRunsReset() {
-		runsIterIdx = 0;
-	}
-
-	virtual void iterateSetsReset() {
-		setsIterIdx = 0;
-	}
-
-	virtual void iterateGetsReset() {
-		getsIterIdx = 0;
+	virtual void iterateCallsReset() {
+		callsIterIdx = 0;
 	}
 
 
     // Iterator next methods - IMPLEMENTED in base class
-    virtual const Action* iterateRunsNext() {
-        if (runsIterIdx < runsCount()) {
-            return &getRunsArray()[runsIterIdx++];
+    virtual const Action* iterateCallsNext() {
+        if (callsIterIdx < callsCount()) {
+            return &getCallsArray()[callsIterIdx++];
         }
         return nullptr;
     }
     
-    virtual const Action* iterateSetsNext() {
-        if (setsIterIdx < setsCount()) {
-            return &getSetsArray()[setsIterIdx++];
-        }
-        return nullptr;
-    }
-    
-    virtual const Action* iterateGetsNext() {
-        if (getsIterIdx < getsCount()) {
-            return &getGetsArray()[getsIterIdx++];
-        }
-        return nullptr;
-    }
-
     // Name-based index search - IMPLEMENTED in base class
-    virtual uint8_t runIndex(const char* name) const {
-        for (uint8_t i = 0; i < runsCount(); i++) {
-            if (strcmp(getRunsArray()[i].name, name) == 0) {
+    virtual uint8_t callIndex(const char* name) const {
+        for (uint8_t i = 0; i < callsCount(); i++) {
+            if (strcmp(getCallsArray()[i].name, name) == 0) {
                 return i;
             }
         }
         return 255;
     }
     
-    virtual uint8_t setIndex(const char* name) const {
-        for (uint8_t i = 0; i < setsCount(); i++) {
-            if (strcmp(getSetsArray()[i].name, name) == 0) {
-                return i;
-            }
-        }
-        return 255;
-    }
-    
-    virtual uint8_t getIndex(const char* name) const {
-        for (uint8_t i = 0; i < getsCount(); i++) {
-            if (strcmp(getGetsArray()[i].name, name) == 0) {
-                return i;
-            }
-        }
-        return 255;
-    }
-
     // Numeric index validation
-    virtual uint8_t runIndex(uint8_t index) const {
-        return (index < runsCount()) ? index : 255;
+    virtual uint8_t callIndex(uint8_t index) const {
+        return (index < callsCount()) ? index : 255;
     }
     
-    virtual uint8_t setIndex(uint8_t index) const {
-        return (index < setsCount()) ? index : 255;
-    }
-    
-    virtual uint8_t getIndex(uint8_t index) const {
-        return (index < getsCount()) ? index : 255;
-    }
-
     // Action implementations - MUST be implemented by derived
-    virtual bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
+    virtual bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
         (void)index;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
         return false;
 	}
 
-    virtual bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) {
-        (void)index;		// Silence unused parameter warning
-        (void)value;		// Silence unused parameter warning
-        (void)json_message;	// Silence unused parameter warning
-        (void)talker;		// Silence unused parameter warning
-        return false;
-	}
-
-    virtual uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) const {
-        (void)index;		// Silence unused parameter warning
-        (void)json_message;	// Silence unused parameter warning
-        (void)talker;		// Silence unused parameter warning
-        return 0;
-	}
-  
 
     virtual void echo(JsonObject& json_message, JsonTalker* talker) {
         (void)json_message;	// Silence unused parameter warning
