@@ -292,9 +292,9 @@ public:
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
-		json_message[ JsonKey::ORIGINAL ] = static_cast<int>(message_data);
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageData::ECHO) {
+			json_message[ JsonKey::ORIGINAL ] = static_cast<int>(message_data);
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 		}
 
