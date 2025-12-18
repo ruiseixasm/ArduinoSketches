@@ -300,7 +300,7 @@ public:
 
         switch (message_data) {
 
-			case MessageData::RUN:
+			case MessageData::CALL:
 				{
 					uint8_t index_found_i = 255;
 					if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
@@ -321,67 +321,6 @@ public:
 						} else {
 							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
 						}
-					} else {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
-					}
-				}
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
-				break;
-			
-			case MessageData::SET:
-				if (json_message[ JsonKey::VALUE ].is<uint32_t>()) {
-					uint8_t index_found_i = 255;
-					if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
-						index_found_i = _manifesto->setIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
-					} else if (json_message[ JsonKey::NAME ].is<const char *>()) {
-						index_found_i = _manifesto->setIndex(json_message[ JsonKey::NAME ].as<const char *>());
-					}
-					if (index_found_i < 255) {
-
-						#ifdef JSON_TALKER_DEBUG
-						Serial.print(F("\tSET found at "));
-						Serial.print(index_found_i);
-						Serial.println(F(", now being processed..."));
-						#endif
-
-						if (_manifesto->setByIndex(index_found_i, json_message[ JsonKey::VALUE ].as<uint32_t>(), json_message, this)) {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
-						} else {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
-						}
-					} else {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
-					}
-					// Remove unecessary keys to reduce overhead data
-					json_message.remove( JsonKey::VALUE );
-				} else {
-					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
-					json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::FIELD);
-				}
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
-				break;
-			
-			case MessageData::GET:
-				{
-					uint8_t index_found_i = 255;
-					if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
-						index_found_i = _manifesto->getIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
-					} else if (json_message[ JsonKey::NAME ].is<const char *>()) {
-						index_found_i = _manifesto->getIndex(json_message[ JsonKey::NAME ].as<const char *>());
-					}
-					if (index_found_i < 255) {
-
-						#ifdef JSON_TALKER_DEBUG
-						Serial.print(F("\tGET found at "));
-						Serial.print(index_found_i);
-						Serial.println(F(", now being processed..."));
-						#endif
-
-						// No memory leaks because message_doc exists in the listen() method stack
-						// The return of the value works as an implicit ROGER (avoids network flooding)
-						json_message[ JsonKey::VALUE ] = _manifesto->getByIndex(index_found_i, json_message, this);
 					} else {
 						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
 					}
@@ -427,7 +366,7 @@ public:
 					Serial.println(class_name());
 					#endif
 
-					json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::RUN);
+					json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::CALL);
 					_manifesto->iterateRunsReset();
 					const IManifesto::Action* run;
 					uint8_t action_index = 0;
@@ -435,30 +374,6 @@ public:
 						no_list = false;
 						json_message[ JsonKey::NAME ] = run->name;      // Direct access
 						json_message[ JsonKey::DESCRIPTION ] = run->desc;
-						json_message[ JsonKey::INDEX ] = action_index++;
-						transmitMessage(json_message);	// One-to-Many
-					}
-
-					json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::SET);
-					_manifesto->iterateSetsReset();
-					const IManifesto::Action* set;
-					action_index = 0;
-					while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
-						no_list = false;
-						json_message[ JsonKey::NAME ] = set->name;      // Direct access
-						json_message[ JsonKey::DESCRIPTION ] = set->desc;
-						json_message[ JsonKey::INDEX ] = action_index++;
-						transmitMessage(json_message);	// One-to-Many
-					}
-					
-					json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::GET);
-					_manifesto->iterateGetsReset();
-					const IManifesto::Action* get;
-					action_index = 0;
-					while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
-						no_list = false;
-						json_message[ JsonKey::NAME ] = get->name;      // Direct access
-						json_message[ JsonKey::DESCRIPTION ] = get->desc;
 						json_message[ JsonKey::INDEX ] = action_index++;
 						transmitMessage(json_message);	// One-to-Many
 					}

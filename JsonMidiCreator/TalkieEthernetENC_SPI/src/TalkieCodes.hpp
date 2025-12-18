@@ -47,9 +47,7 @@ struct TalkieCodes {
 
 
 	enum class MessageData : int {
-		RUN,
-		SET,
-		GET,
+		CALL,
 		LIST,
 		SYS,
 		TALK,
