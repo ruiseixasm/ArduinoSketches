@@ -70,6 +70,22 @@ public:
 
     virtual const char* class_name() const { return "JsonTalker"; }
 
+
+	static bool setFrom(JsonObject& json_message, const char* from_name) {
+		if (json_message[ JsonKey::FROM ].is<const char*>()) {
+			if (strcmp(json_message[ JsonKey::FROM ].as<const char*>(), from_name) != 0) {
+				json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
+				json_message[ JsonKey::FROM ] = from_name;
+				return true;
+			}
+		} else {
+			// FROM doesn't even exist
+			json_message[ JsonKey::FROM ] = from_name;
+			return true;
+		}
+		return false;
+	}
+
 	
     virtual bool remoteSend(JsonObject& json_message);
 
@@ -94,7 +110,7 @@ public:
 			#endif
 
 			// Muted is only applicable to REMOTE sends in order to avoid overloading
-
+			setFrom(json_message, _name);
 			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
 
 		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
@@ -277,14 +293,9 @@ public:
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
+		json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ].as<int>();
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageData::ECHO) {
-
-			// From one to many, starts to set the returning target in this single place only
-			json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
-			json_message[ JsonKey::FROM ] = _name;
-
-			json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ].as<int>();
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 		}
 

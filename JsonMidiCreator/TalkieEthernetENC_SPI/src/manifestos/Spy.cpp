@@ -34,6 +34,7 @@ void Spy::loop(JsonTalker* talker) {
 		JsonObject json_message = doc_copy.to<JsonObject>();
 
 		json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::TALK);
+		// Missing TO makes it a Broadcast message
 		json_message[ JsonKey::FROM ] = talker->get_name();
 		// At this moment it's already setting a TIMESTAMP able to be used
 		talker->localSend(json_message);	// Only inquires locally
@@ -52,8 +53,8 @@ bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker
 			// Actual implementation would do something based on index
 			switch(index) {
 				case 0:
-				{	// Keeps the REMOTE caller name (TO because it's already swapped)
-					_original_talker = json_message[ JsonKey::TO ].as<String>();	// Explicit conversion
+				{	// Has FROM for sure
+					_original_talker = json_message[ JsonKey::FROM ].as<String>();	// Explicit conversion
 					_ping = true;
 					return true;
 				}
@@ -83,6 +84,7 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 					uint16_t time_delay = actual_time - message_time;
 					json_message[ JsonKey::VALUE ] = time_delay;
 					// Prepares headers for the original REMOTE sender
+					json_message[ JsonKey::FROM ] = talker->get_name();	// Avoids swapping
 					json_message[ JsonKey::TO ] = _original_talker;	// Already an echo message
 					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 					// It's possible to mimic a direct response from the LOCAL talkers here
