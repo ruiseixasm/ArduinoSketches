@@ -85,7 +85,7 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 					// Prepares headers for the original REMOTE sender
 					json_message[ JsonKey::TO ] = _original_talker;
 					json_message[ JsonKey::FROM ] = talker->get_name();	// Avoids swapping
-					// Finally answers to the REMOTE caller
+					// Finally answers to the REMOTE caller by repeating all other json fields
 					talker->remoteSend(json_message);
 				}
 				break;
