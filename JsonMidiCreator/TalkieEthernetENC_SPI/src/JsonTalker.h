@@ -51,6 +51,7 @@ protected:
     const char* _desc;      // Description of the Device
 	TalkerManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
+	MessageData _received_message = MessageData::TALK;
 	Original _original_message;
     bool _muted_calls = false;
 
@@ -128,8 +129,8 @@ public:
 			json_message[ JsonKey::FROM ] = _name;
 		}
 
-		MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
-		if (message_code < MessageData::ECHO) {
+		MessageData message_data = static_cast<MessageData>( json_message[ JsonKey::MESSAGE ].as<int>() );
+		if (message_data < MessageData::ECHO) {
 
 			#ifdef JSON_TALKER_DEBUG
 			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
@@ -138,10 +139,17 @@ public:
 			#endif
 
 			// _muted_calls mutes CALL echoes only
-			if (_muted_calls && _original_message.message_data == MessageData::CALL) return false;
+			if (_muted_calls && _received_message == MessageData::CALL) {
+				_received_message = MessageData::TALK;	// Avoids false returns
+				return false;
+			}
 
-			_original_message.identity = (uint16_t)millis();
-			json_message[ JsonKey::IDENTITY ] = _original_message.identity;
+			uint16_t message_id = (uint16_t)millis();
+			json_message[ JsonKey::IDENTITY ] = message_id;
+			if (message_data < MessageData::ECHO) {
+				_original_message.identity = message_id;
+				_original_message.message_data = message_data;
+			}
 
 		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
 
@@ -153,8 +161,7 @@ public:
 
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
 			json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
-			_original_message.identity = (uint16_t)millis();
-			json_message[ JsonKey::IDENTITY ] = _original_message.identity;
+			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
 
 		} else {
 			
@@ -307,7 +314,7 @@ public:
 
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageData::ECHO) {
-			_original_message.message_data = message_data;
+			_received_message = static_cast<MessageData>( json_message[ JsonKey::MESSAGE ].as<int>() );
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 		}
 
