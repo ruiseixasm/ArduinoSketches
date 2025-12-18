@@ -41,7 +41,7 @@ bool JsonTalker::remoteSend(JsonObject& json_message) {
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
-		if (_muted_action && message_code <= MessageData::GET) return false;
+		if (_muted_action && message_code == MessageData::CALL) return false;
 
 		json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
 
@@ -66,7 +66,7 @@ bool JsonTalker::remoteSend(JsonObject& json_message) {
 		#endif
 
 	}
-
+	remove(json_message[ JsonKey::ORIGINAL ]);	// Identified by "i" REMOTELY
     return _socket->remoteSend(json_message);
 }
 

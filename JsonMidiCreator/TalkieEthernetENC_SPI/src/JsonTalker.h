@@ -294,7 +294,7 @@ public:
 
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageData::ECHO) {
-			json_message[ JsonKey::ORIGINAL ] = static_cast<int>(message_data);
+			json_message[ JsonKey::ORIGINAL ] = static_cast<int>(message_data);	// Temporary data control (remove for REMOTE sending)
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 		}
 
