@@ -47,14 +47,7 @@ struct TalkieCodes {
 
 
 	enum class MessageData : int {
-		CALL,
-		LIST,
-		SYS,
-		TALK,
-		CHANNEL,
-		PING,
-		ECHO,
-		ERROR
+		CALL, LIST, SYS, TALK, CHANNEL, PING, ECHO, ERROR
 	};
 
 
