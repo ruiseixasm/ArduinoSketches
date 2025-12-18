@@ -14,10 +14,10 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef SYSTEM_MANAGER_HPP
 #define SYSTEM_MANAGER_HPP
 
-#include "../IManifesto.hpp"
+#include "../TalkerManifesto.hpp"
 
 
-class SystemManager : public IManifesto {
+class SystemManager : public TalkerManifesto {
 
 protected:
 

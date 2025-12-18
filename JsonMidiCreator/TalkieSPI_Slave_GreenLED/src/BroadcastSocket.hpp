@@ -217,7 +217,7 @@ protected:
 
                     MessageData message_code = static_cast<MessageData>(message_code_int);
 
-                    if (message_code <= MessageData::GET) {	// Only does time control on Actions (drops) (<= GET)
+                    if (message_code == MessageData::CALL) {	// Only does time control on Calls (drops)
 
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.print(F("triggerTalkers6: Message code requires delay check: "));
@@ -269,7 +269,6 @@ protected:
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
-					json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ];
 					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
 					json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
 					// Wrong type of identifier or no identifier, so, it has to insert new identifier

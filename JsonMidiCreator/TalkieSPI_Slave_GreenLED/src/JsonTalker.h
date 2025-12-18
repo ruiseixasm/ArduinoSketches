@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include <ArduinoJson.h>    // Include ArduinoJson Library
-#include "IManifesto.hpp"
+#include "TalkerManifesto.hpp"
 #include "TalkieCodes.hpp"
 
 
@@ -32,6 +32,7 @@ using SystemData = TalkieCodes::SystemData;
 using EchoData = TalkieCodes::EchoData;
 using ErrorData = TalkieCodes::ErrorData;
 using JsonKey = TalkieCodes::JsonKey;
+using Original = TalkerManifesto::Original;
 
 
 class BroadcastSocket;
@@ -48,19 +49,25 @@ protected:
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
-	IManifesto* _manifesto = nullptr;
+	TalkerManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
-    bool _muted_action = false;
+	Original _original_message;
+    bool _muted_calls = false;
 
 public:
 
     // Explicit default constructor
     JsonTalker() = delete;
         
-    JsonTalker(const char* name, const char* desc, IManifesto* manifesto)
+    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto)
         : _name(name), _desc(desc), _manifesto(manifesto) {
             // Nothing to see here
         }
+
+
+	static const char* valueKey(size_t nth = 0) {
+		return TalkieCodes::valueKey(nth);
+	}
 
 
 	// Getter and setters
@@ -71,20 +78,22 @@ public:
 	const char* socket_class_name();
 
     const char* get_name() { return _name; }
+    const char* get_desc() { return _desc; }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() { return _channel; }
+    Original& get_original() { return _original_message; }
     
     JsonTalker& mute() {    // It does NOT make a copy!
-        _muted_action = true;
+        _muted_calls = true;
         return *this;
     }
 
     JsonTalker& unmute() {
-        _muted_action = false;
+        _muted_calls = false;
         return *this;
     }
 
-    bool muted() { return _muted_action; }
+    bool muted() { return _muted_calls; }
 
     void set_delay(uint8_t delay);
     uint8_t get_delay();
@@ -107,20 +116,56 @@ public:
     }
 
 
-	static bool updateFrom(JsonObject& json_message, const char* from_name) {
+	bool prepareMessage(JsonObject& json_message) {
 		if (json_message[ JsonKey::FROM ].is<const char*>()) {
-			if (strcmp(json_message[ JsonKey::FROM ].as<const char*>(), from_name) != 0) {
-				// FROM is different from from_name, must be swapped
+			if (strcmp(json_message[ JsonKey::FROM ].as<const char*>(), _name) != 0) {
+				// FROM is different from _name, must be swapped
 				json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
-				json_message[ JsonKey::FROM ] = from_name;
-				return true;
+				json_message[ JsonKey::FROM ] = _name;
 			}
 		} else {
 			// FROM doesn't even exist (must have)
-			json_message[ JsonKey::FROM ] = from_name;
-			return true;
+			json_message[ JsonKey::FROM ] = _name;
 		}
-		return false;
+
+		MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
+		if (message_code < MessageData::ECHO) {
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
+			serializeJson(json_message, Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			// _muted_calls mutes CALL echoes only
+			if (_muted_calls && _original_message.message_data == MessageData::CALL) return false;
+
+			_original_message.identity = (uint16_t)millis();
+			json_message[ JsonKey::IDENTITY ] = _original_message.identity;
+
+		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("remoteSend1: Response message with a wrong or without an identifier, now being set (i): "));
+			serializeJson(json_message, Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
+			json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
+			_original_message.identity = (uint16_t)millis();
+			json_message[ JsonKey::IDENTITY ] = _original_message.identity;
+
+		} else {
+			
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
+			serializeJson(json_message, Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+		}
+		return true;
 	}
 
 	
@@ -136,70 +181,38 @@ public:
 		Serial.println(F("Sending a LOCAL message"));
 		#endif
 
-		// It also sets the IDENTITY if applicable, these settings are of the Talker exclusive responsibility (NO DELEGATION TO SOCKET !!)
-		MessageData message_code = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
-		if (message_code < MessageData::ECHO) {
+		if (prepareMessage(json_message)) {
 
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
-			serializeJson(json_message, Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
+			// Tags the message as LOCAL sourced
+			json_message[ JsonKey::SOURCE ] = static_cast<int>(SourceData::LOCAL);
+			// Triggers all local Talkers to processes the json_message
+			bool sent_message = false;
+			bool pre_validated = false;
+			for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
+				if (_json_talkers[talker_i] != this) {  // Can't send to myself
 
-			// Muted is only applicable to REMOTE sends in order to avoid overloading
-			updateFrom(json_message, _name);
-			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
-
-		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
-
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("\tERROR: Response message with a wrong or without an identifier, now being set (i): "));
-			serializeJson(json_message, Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
-			json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
-			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
-
-		} else {	// For ECHO and ERROR replies
-			
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
-			serializeJson(json_message, Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-		}
-
-		// Tags the message as LOCAL sourced
-		json_message[ JsonKey::SOURCE ] = static_cast<int>(SourceData::LOCAL);
-		// Triggers all local Talkers to processes the json_message
-		bool sent_message = false;
-		bool pre_validated = false;
-		for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
-			if (_json_talkers[talker_i] != this) {  // Can't send to myself
-
-				// CREATE COPY for each talker
-				// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-				#if ARDUINOJSON_VERSION_MAJOR >= 7
-				JsonDocument doc_copy;
-				#else
-				StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
-				#endif
-				JsonObject json_copy = doc_copy.to<JsonObject>();
+					// CREATE COPY for each talker
+					// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+					#if ARDUINOJSON_VERSION_MAJOR >= 7
+					JsonDocument doc_copy;
+					#else
+					StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
+					#endif
+					JsonObject json_copy = doc_copy.to<JsonObject>();
+					
+					// Copy all data from original
+					for (JsonPair kv : json_message) {
+						json_copy[kv.key()] = kv.value();
+					}
 				
-				// Copy all data from original
-				for (JsonPair kv : json_message) {
-					json_copy[kv.key()] = kv.value();
+					pre_validated = _json_talkers[talker_i]->processMessage(json_copy);
+					sent_message = true;
+					if (!pre_validated) break;
 				}
-			
-				pre_validated = _json_talkers[talker_i]->processMessage(json_copy);
-				sent_message = true;
-				if (!pre_validated) break;
 			}
+			return sent_message;
 		}
-        return sent_message;
+		return false;
     }
 
 
@@ -264,7 +277,7 @@ public:
 			return false;
 		}
 
-		MessageData message_data = static_cast<MessageData>(json_message[ JsonKey::MESSAGE ].as<int>());
+		MessageData message_data = static_cast<MessageData>( json_message[ JsonKey::MESSAGE ].as<int>() );
 
         // Is it for me?
         if (json_message[ JsonKey::TO ].is<uint8_t>()) {
@@ -279,10 +292,10 @@ public:
             } else {
                 dont_interrupt = false; // Found by name, interrupts next Talkers process
             }
-        } else if (message_data < MessageData::TALK || message_data > MessageData::PING) {
+        } else if (message_data > MessageData::PING) {
 			// Only TALK, CHANNEL and PING can be broadcasted
 			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
-		} else if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
+		} else if (json_message[ valueKey(0) ].is<uint8_t>()) {
 			return false;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
 		}
 
@@ -294,19 +307,19 @@ public:
 
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageData::ECHO) {
-			json_message[ JsonKey::ORIGINAL ] = static_cast<int>(message_data);
+			_original_message.message_data = message_data;
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 		}
 
         switch (message_data) {
 
-			case MessageData::RUN:
+			case MessageData::CALL:
 				{
 					uint8_t index_found_i = 255;
 					if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
-						index_found_i = _manifesto->runIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
+						index_found_i = _manifesto->callIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
 					} else if (json_message[ JsonKey::NAME ].is<const char *>()) {
-						index_found_i = _manifesto->runIndex(json_message[ JsonKey::NAME ].as<const char *>());
+						index_found_i = _manifesto->callIndex(json_message[ JsonKey::NAME ].as<const char *>());
 					}
 					if (index_found_i < 255) {
 
@@ -316,72 +329,11 @@ public:
 						Serial.println(F(", now being processed..."));
 						#endif
 
-						if (_manifesto->runByIndex(index_found_i, json_message, this)) {
+						if (_manifesto->callByIndex(index_found_i, json_message, this)) {
 							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 						} else {
 							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
 						}
-					} else {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
-					}
-				}
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
-				break;
-			
-			case MessageData::SET:
-				if (json_message[ JsonKey::VALUE ].is<uint32_t>()) {
-					uint8_t index_found_i = 255;
-					if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
-						index_found_i = _manifesto->setIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
-					} else if (json_message[ JsonKey::NAME ].is<const char *>()) {
-						index_found_i = _manifesto->setIndex(json_message[ JsonKey::NAME ].as<const char *>());
-					}
-					if (index_found_i < 255) {
-
-						#ifdef JSON_TALKER_DEBUG
-						Serial.print(F("\tSET found at "));
-						Serial.print(index_found_i);
-						Serial.println(F(", now being processed..."));
-						#endif
-
-						if (_manifesto->setByIndex(index_found_i, json_message[ JsonKey::VALUE ].as<uint32_t>(), json_message, this)) {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
-						} else {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
-						}
-					} else {
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
-					}
-					// Remove unecessary keys to reduce overhead data
-					json_message.remove( JsonKey::VALUE );
-				} else {
-					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
-					json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::FIELD);
-				}
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
-				break;
-			
-			case MessageData::GET:
-				{
-					uint8_t index_found_i = 255;
-					if (json_message[ JsonKey::INDEX ].is<uint8_t>()) {
-						index_found_i = _manifesto->getIndex(json_message[ JsonKey::INDEX ].as<uint8_t>());
-					} else if (json_message[ JsonKey::NAME ].is<const char *>()) {
-						index_found_i = _manifesto->getIndex(json_message[ JsonKey::NAME ].as<const char *>());
-					}
-					if (index_found_i < 255) {
-
-						#ifdef JSON_TALKER_DEBUG
-						Serial.print(F("\tGET found at "));
-						Serial.print(index_found_i);
-						Serial.println(F(", now being processed..."));
-						#endif
-
-						// No memory leaks because message_doc exists in the listen() method stack
-						// The return of the value works as an implicit ROGER (avoids network flooding)
-						json_message[ JsonKey::VALUE ] = _manifesto->getByIndex(index_found_i, json_message, this);
 					} else {
 						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
 					}
@@ -397,16 +349,16 @@ public:
 				break;
 			
 			case MessageData::CHANNEL:
-				if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
+				if (json_message[ valueKey(0) ].is<uint8_t>()) {
 
 					#ifdef JSON_TALKER_DEBUG
 					Serial.print(F("\tChannel B value is an <uint8_t>: "));
-					Serial.println(json_message[ JsonKey::VALUE ].is<uint8_t>());
+					Serial.println(json_message[ valueKey(0) ].is<uint8_t>());
 					#endif
 
-					_channel = json_message[ JsonKey::VALUE ].as<uint8_t>();
+					_channel = json_message[ valueKey(0) ].as<uint8_t>();
 				}
-				json_message[ JsonKey::VALUE ] = _channel;
+				json_message[ valueKey(0) ] = _channel;
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitMessage(json_message);
 				break;
@@ -427,38 +379,13 @@ public:
 					Serial.println(class_name());
 					#endif
 
-					json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::RUN);
-					_manifesto->iterateRunsReset();
-					const IManifesto::Action* run;
+					_manifesto->iterateCallsReset();
+					const TalkerManifesto::Call* run;
 					uint8_t action_index = 0;
-					while ((run = _manifesto->iterateRunsNext()) != nullptr) {	// No boilerplate
+					while ((run = _manifesto->iterateCallsNext()) != nullptr) {	// No boilerplate
 						no_list = false;
 						json_message[ JsonKey::NAME ] = run->name;      // Direct access
 						json_message[ JsonKey::DESCRIPTION ] = run->desc;
-						json_message[ JsonKey::INDEX ] = action_index++;
-						transmitMessage(json_message);	// One-to-Many
-					}
-
-					json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::SET);
-					_manifesto->iterateSetsReset();
-					const IManifesto::Action* set;
-					action_index = 0;
-					while ((set = _manifesto->iterateSetsNext()) != nullptr) {	// No boilerplate
-						no_list = false;
-						json_message[ JsonKey::NAME ] = set->name;      // Direct access
-						json_message[ JsonKey::DESCRIPTION ] = set->desc;
-						json_message[ JsonKey::INDEX ] = action_index++;
-						transmitMessage(json_message);	// One-to-Many
-					}
-					
-					json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::GET);
-					_manifesto->iterateGetsReset();
-					const IManifesto::Action* get;
-					action_index = 0;
-					while ((get = _manifesto->iterateGetsNext()) != nullptr) {	// No boilerplate
-						no_list = false;
-						json_message[ JsonKey::NAME ] = get->name;      // Direct access
-						json_message[ JsonKey::DESCRIPTION ] = get->desc;
 						json_message[ JsonKey::INDEX ] = action_index++;
 						transmitMessage(json_message);	// One-to-Many
 					}
@@ -487,7 +414,7 @@ public:
 
 						case SystemData::DROPS:
 							if (_socket) {
-								json_message[ JsonKey::VALUE ] = get_drops();
+								json_message[ valueKey(0) ] = get_drops();
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
@@ -495,15 +422,15 @@ public:
 
 						case SystemData::DELAY:
 							if (_socket) {
-								json_message[ JsonKey::VALUE ] = get_delay();
+								json_message[ valueKey(0) ] = get_delay();
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
 							break;
 
 						case SystemData::MUTE:
-							if (!_muted_action) {
-								_muted_action = true;
+							if (!_muted_calls) {
+								_muted_calls = true;
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
@@ -512,8 +439,8 @@ public:
 							break;
 
 						case SystemData::UNMUTE:
-							if (_muted_action) {
-								_muted_action = false;
+							if (_muted_calls) {
+								_muted_calls = false;
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
@@ -522,28 +449,28 @@ public:
 							break;
 
 						case SystemData::MUTED:
-							if (_muted_action) {
-								json_message[ JsonKey::VALUE ] = 1;
+							if (_muted_calls) {
+								json_message[ valueKey(0) ] = 1;
 							} else {
-								json_message[ JsonKey::VALUE ] = 0;
+								json_message[ valueKey(0) ] = 0;
 							}
 							break;
 
 						case SystemData::SOCKET:
 							if (_socket) {
-								json_message[ JsonKey::VALUE ] = socket_class_name();
+								json_message[ valueKey(0) ] = socket_class_name();
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
 							break;
 
 						case SystemData::TALKER:
-							json_message[ JsonKey::VALUE ] = class_name();
+							json_message[ valueKey(0) ] = class_name();
 							break;
 
 						case SystemData::MANIFESTO:
 							if (_manifesto) {
-								json_message[ JsonKey::VALUE ] = _manifesto->class_name();
+								json_message[ valueKey(0) ] = _manifesto->class_name();
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
@@ -561,7 +488,11 @@ public:
 			
 			case MessageData::ECHO:
 				if (_manifesto) {
-					_manifesto->echo(json_message, this);
+					// Makes sure it has the same id first (echo condition)
+					uint16_t message_id = json_message[ JsonKey::IDENTITY ].as<uint16_t>();
+					if (message_id == _original_message.identity) {
+						_manifesto->echo(json_message, this);
+					}
 				}
 				break;
 			

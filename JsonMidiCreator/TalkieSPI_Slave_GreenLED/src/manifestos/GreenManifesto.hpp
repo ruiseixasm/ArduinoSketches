@@ -14,17 +14,17 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef GREEN_MANIFESTO_HPP
 #define GREEN_MANIFESTO_HPP
 
-#include "../IManifesto.hpp"
+#include "../TalkerManifesto.hpp"
 
 // #define GREEN_TALKER_DEBUG
 
 
-class GreenManifesto : public IManifesto {
+class GreenManifesto : public TalkerManifesto {
 public:
 
     const char* class_name() const override { return "GreenManifesto"; }
 
-    GreenManifesto() : IManifesto() {}	// Constructor
+    GreenManifesto() : TalkerManifesto() {}	// Constructor
 
 
 protected:

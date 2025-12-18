@@ -26,19 +26,31 @@ struct TalkieCodes {
         static constexpr const char* TIMESTAMP		= "i";
         static constexpr const char* IDENTITY 		= "i";
         static constexpr const char* MESSAGE 		= "m";
-        static constexpr const char* ORIGINAL 		= "o";
         static constexpr const char* FROM 			= "f";
         static constexpr const char* TO 			= "t";
         static constexpr const char* SYSTEM 		= "s";
         static constexpr const char* ERROR 			= "e";
-        static constexpr const char* VALUE 			= "v";
-        static constexpr const char* REPLY 			= "r";
-        static constexpr const char* ROGER 			= "g";
-        static constexpr const char* ACTION 		= "a";
+        static constexpr const char* ROGER 			= "r";
         static constexpr const char* NAME 			= "n";
         static constexpr const char* INDEX 			= "x";
         static constexpr const char* DESCRIPTION	= "d";
     };
+
+
+	static const char* valueKey(size_t nth = 0) {
+		switch (nth) {
+			case 1: 	return "1";
+			case 2: 	return "2";
+			case 3: 	return "3";
+			case 4: 	return "4";
+			case 5: 	return "5";
+			case 6: 	return "6";
+			case 7: 	return "7";
+			case 8: 	return "8";
+			case 9: 	return "9";
+			default: 	return "0";
+		}
+	}
 
 
 	enum class SourceData : int {
@@ -47,16 +59,7 @@ struct TalkieCodes {
 
 
 	enum class MessageData : int {
-		RUN,
-		SET,
-		GET,
-		LIST,
-		SYS,
-		TALK,
-		CHANNEL,
-		PING,
-		ECHO,
-		ERROR
+		TALK, CHANNEL, PING, CALL, LIST, SYS, ECHO, ERROR
 	};
 
 

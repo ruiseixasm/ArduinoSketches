@@ -14,18 +14,18 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BUZZER_MANIFESTO_HPP
 #define BUZZER_MANIFESTO_HPP
 
-#include "../IManifesto.hpp"
+#include "../TalkerManifesto.hpp"
 
 // #define BUZZER_MANIFESTO_DEBUG
 
 const int BUZZ_PIN = 2; // External BUZZER pin
 
-class BuzzerManifesto : public IManifesto {
+class BuzzerManifesto : public TalkerManifesto {
 public:
 
     const char* class_name() const override { return "BuzzerManifesto"; }
 
-    BuzzerManifesto() : IManifesto() {}	// Constructor
+    BuzzerManifesto() : TalkerManifesto() {}	// Constructor
 
 
 protected:
