@@ -57,7 +57,7 @@ protected:
     // Iterator states
     uint8_t callsIterIdx = 0;
 
-    virtual const Action* getCallsArray() const = 0;
+    virtual const Action* getActionsArray() const = 0;
 
     // Size methods
     virtual uint8_t actionsCount() const = 0;
@@ -83,7 +83,7 @@ public:
     // Iterator next methods - IMPLEMENTED in base class
     virtual const Action* iterateActionNext() {
         if (callsIterIdx < actionsCount()) {
-            return &getCallsArray()[callsIterIdx++];
+            return &getActionsArray()[callsIterIdx++];
         }
         return nullptr;
     }
@@ -91,7 +91,7 @@ public:
     // Name-based index search - IMPLEMENTED in base class
     virtual uint8_t actionIndex(const char* name) const {
         for (uint8_t i = 0; i < actionsCount(); i++) {
-            if (strcmp(getCallsArray()[i].name, name) == 0) {
+            if (strcmp(getActionsArray()[i].name, name) == 0) {
                 return i;
             }
         }

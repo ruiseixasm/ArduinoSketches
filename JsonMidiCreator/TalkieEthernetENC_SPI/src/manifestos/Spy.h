@@ -40,7 +40,7 @@ protected:
 		{"ping", "I ping every talker around me"}
     };
     
-    const Action* getCallsArray() const override { return calls; }
+    const Action* getActionsArray() const override { return calls; }
 
     // Size methods
     uint8_t actionsCount() const override { return sizeof(calls)/sizeof(Action); }
