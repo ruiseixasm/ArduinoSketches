@@ -377,7 +377,6 @@ public:
 					Serial.println(class_name());
 					#endif
 
-					json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::CALL);
 					_manifesto->iterateCallsReset();
 					const TalkerManifesto::Call* run;
 					uint8_t action_index = 0;
