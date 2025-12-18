@@ -14,7 +14,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BUZZER_MANIFESTO_HPP
 #define BUZZER_MANIFESTO_HPP
 
-#include "../IManifesto.hpp"
+#include "../TalkerManifesto.hpp"
 
 // #define BUZZER_MANIFESTO_DEBUG
 
@@ -23,12 +23,12 @@ https://github.com/ruiseixasm/JsonTalkie
 
 using JsonKey = TalkieCodes::JsonKey;
 
-class BuzzerManifesto : public IManifesto {
+class BuzzerManifesto : public TalkerManifesto {
 public:
 
     const char* class_name() const override { return "BuzzerManifesto"; }
 
-    BuzzerManifesto() : IManifesto() {}	// Constructor
+    BuzzerManifesto() : TalkerManifesto() {}	// Constructor
 
 
 protected:
@@ -38,26 +38,16 @@ protected:
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action runs[1] = {
-		{"buzz", "Buzz for a while"}
+    Call calls[3] = {
+		{"buzz", "Buzz for a while"},
+		{"ms", "Sets the buzzing duration"},
+		{"ms", "Gets the buzzing duration"}
     };
     
-    Action sets[1] = {
-        {"ms", "Sets the buzzing duration"}
-    };
-    
-    Action gets[1] = {
-        {"ms", "Gets the buzzing duration"}
-    };
-
-    const Action* getRunsArray() const override { return runs; }
-    const Action* getSetsArray() const override { return sets; }
-    const Action* getGetsArray() const override { return gets; }
+    const Call* getCallsArray() const override { return calls; }
 
     // Size methods
-    uint8_t runsCount() const override { return sizeof(runs)/sizeof(Action); }
-    uint8_t setsCount() const override { return sizeof(sets)/sizeof(Action); }
-    uint8_t getsCount() const override { return sizeof(gets)/sizeof(Action); }
+    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Call); }
 
 
 public:
@@ -73,12 +63,13 @@ public:
 
     
     // Index-based operations (simplified examples)
-    bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
+    bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
-		if (index < runsCount()) {
+		if (index < callsCount()) {
 			// Actual implementation would do something based on index
 			switch(index) {
+
 				case 0:
 				{
 					#ifdef BUZZER_MANIFESTO_DEBUG
@@ -103,36 +94,19 @@ public:
 					return true;
 				}
 				break;
+
+				case 1:
+					_buzz_duration_ms = json_message[ valueKey(0) ].as<uint16_t>();
+					return true;
+				break;
+
+				// case 2:
+				// 	return _buzz_duration_ms;
 			}
 		}
 		return false;
 	}
     
-    bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) override {
-        (void)json_message;	// Silence unused parameter warning
-        (void)talker;		// Silence unused parameter warning
-        if (index < setsCount()) {
-			switch(index) {
-				case 0:
-					_buzz_duration_ms = value;
-					return true;
-					break;
-			}
-		}
-        return false;
-    }
-    
-    uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) const override {
-        (void)json_message;	// Silence unused parameter warning
-        (void)talker;		// Silence unused parameter warning
-        if (index < getsCount()) {
-			switch(index) {
-				case 0: return _buzz_duration_ms;
-			}
-		}
-        return 0;
-    }
-
 
     void echo(JsonObject& json_message, JsonTalker* talker) override {
         (void)talker;		// Silence unused parameter warning
