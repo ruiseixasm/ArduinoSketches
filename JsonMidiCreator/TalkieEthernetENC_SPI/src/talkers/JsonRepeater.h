@@ -24,7 +24,7 @@ public:
 
     const char* class_name() const override { return "JsonRepeater"; }
 
-    JsonRepeater(const char* name, const char* desc)	// Has no Manifesto, it's just a repeater, without Actions
+    JsonRepeater(const char* name, const char* desc)	// Has no Manifesto, it's just a repeater, without Calls
         : JsonTalker(name, desc, nullptr) {}
 
 

@@ -368,7 +368,7 @@ public:
 
 					json_message[ JsonKey::ACTION ] = static_cast<int>(MessageData::CALL);
 					_manifesto->iterateCallsReset();
-					const IManifesto::Action* run;
+					const IManifesto::Call* run;
 					uint8_t action_index = 0;
 					while ((run = _manifesto->iterateCallsNext()) != nullptr) {	// No boilerplate
 						no_list = false;
