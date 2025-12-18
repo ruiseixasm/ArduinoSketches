@@ -70,6 +70,23 @@ public:
 
     virtual const char* class_name() const { return "JsonTalker"; }
 
+
+	static bool updateFrom(JsonObject& json_message, const char* from_name) {
+		if (json_message[ JsonKey::FROM ].is<const char*>()) {
+			if (strcmp(json_message[ JsonKey::FROM ].as<const char*>(), from_name) != 0) {
+				// FROM is different from from_name, must be swapped
+				json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
+				json_message[ JsonKey::FROM ] = from_name;
+				return true;
+			}
+		} else {
+			// FROM doesn't even exist (must have)
+			json_message[ JsonKey::FROM ] = from_name;
+			return true;
+		}
+		return false;
+	}
+
 	
     virtual bool remoteSend(JsonObject& json_message);
 
@@ -94,7 +111,7 @@ public:
 			#endif
 
 			// Muted is only applicable to REMOTE sends in order to avoid overloading
-
+			updateFrom(json_message, _name);
 			json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
 
 		} else if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
@@ -177,13 +194,13 @@ public:
 
 				case SourceData::LOCAL:
 					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tReplied a LOCAL message"));
+					Serial.println(F("\tTransmitted a LOCAL message"));
 					#endif
 					return localSend(json_message);
 				
 				case SourceData::HERE:
 					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tReplied an HERE message"));
+					Serial.println(F("\tTransmitted an HERE message"));
 					#endif
 					return hereSend(json_message);
 
@@ -193,7 +210,7 @@ public:
 		}
 		// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 		#ifdef JSON_TALKER_DEBUG
-		Serial.println(F("\tReplied a REMOTE message"));
+		Serial.println(F("\tTransmitted a REMOTE message"));
 		#endif
 		return remoteSend(json_message);
     }
@@ -264,8 +281,11 @@ public:
             } else {
                 dont_interrupt = false; // Found by name, interrupts next Talkers process
             }
-        } else if (message_data != MessageData::TALK) {	// Only TALK can be broadcasted
-			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL IF NECESSARY)
+        } else if (message_data < MessageData::TALK || message_data > MessageData::PING) {
+			// Only TALK, CHANNEL and PING can be broadcasted
+			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
+		} else if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
+			return false;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
 		}
 
         #ifdef JSON_TALKER_DEBUG
@@ -274,14 +294,9 @@ public:
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
+		json_message[ JsonKey::ORIGINAL ] = static_cast<int>(message_data);
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageData::ECHO) {
-
-			// From one to many, starts to set the returning target in this single place only
-			json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
-			json_message[ JsonKey::FROM ] = _name;
-
-			json_message[ JsonKey::ORIGINAL ] = json_message[ JsonKey::MESSAGE ].as<int>();
 			json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ECHO);
 		}
 
@@ -383,6 +398,26 @@ public:
 				transmitMessage(json_message);
 				break;
 			
+			case MessageData::CHANNEL:
+				if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
+
+					#ifdef JSON_TALKER_DEBUG
+					Serial.print(F("\tChannel B value is an <uint8_t>: "));
+					Serial.println(json_message[ JsonKey::VALUE ].is<uint8_t>());
+					#endif
+
+					_channel = json_message[ JsonKey::VALUE ].as<uint8_t>();
+				}
+				json_message[ JsonKey::VALUE ] = _channel;
+				// In the end sends back the processed message (single message, one-to-one)
+				transmitMessage(json_message);
+				break;
+			
+			case MessageData::PING:
+				// Talker name already set in FROM (ready to transmit)
+				transmitMessage(json_message);
+				break;
+			
 			case MessageData::LIST:
 				{   // Because of none_list !!!
 					bool no_list = true;
@@ -435,21 +470,6 @@ public:
 						transmitMessage(json_message);	// One-to-Many
 					}
 				}
-				break;
-			
-			case MessageData::CHANNEL:
-				if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
-
-					#ifdef JSON_TALKER_DEBUG
-					Serial.print(F("\tChannel B value is an <uint8_t>: "));
-					Serial.println(json_message[ JsonKey::VALUE ].is<uint8_t>());
-					#endif
-
-					_channel = json_message[ JsonKey::VALUE ].as<uint8_t>();
-				}
-				json_message[ JsonKey::VALUE ] = _channel;
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
 				break;
 			
 			case MessageData::SYS:
@@ -506,15 +526,6 @@ public:
 						#endif
 
 						// TO INSERT HERE EXTRA DATA !!
-						break;
-
-					case SystemData::PING:
-					
-						#ifdef JSON_TALKER_DEBUG
-						Serial.print(F("\tPing replied as message code: "));
-						Serial.println(json_message[ JsonKey::MESSAGE ].is<int>());
-						#endif
-						// Replies as soon as possible (best case scenario)
 						break;
 
 					case SystemData::DROPS:
