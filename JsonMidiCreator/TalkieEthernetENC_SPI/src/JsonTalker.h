@@ -194,13 +194,13 @@ public:
 
 				case SourceData::LOCAL:
 					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tReplied a LOCAL message"));
+					Serial.println(F("\tTransmitted a LOCAL message"));
 					#endif
 					return localSend(json_message);
 				
 				case SourceData::HERE:
 					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tReplied an HERE message"));
+					Serial.println(F("\tTransmitted an HERE message"));
 					#endif
 					return hereSend(json_message);
 
@@ -210,7 +210,7 @@ public:
 		}
 		// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 		#ifdef JSON_TALKER_DEBUG
-		Serial.println(F("\tReplied a REMOTE message"));
+		Serial.println(F("\tTransmitted a REMOTE message"));
 		#endif
 		return remoteSend(json_message);
     }
