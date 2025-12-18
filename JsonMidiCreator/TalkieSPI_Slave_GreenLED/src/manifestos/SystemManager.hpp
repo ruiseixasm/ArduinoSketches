@@ -23,18 +23,18 @@ protected:
 
     static constexpr uint8_t MAX_ACTIONS = 10;
     
-    Action runs[MAX_ACTIONS] = {
+    Call runs[MAX_ACTIONS] = {
         {"start", "Start the system"},
         {"stop", "Stop the system"},
         {"reset", "Reset to defaults"}
     };
     
-    Action sets[MAX_ACTIONS] = {
+    Call sets[MAX_ACTIONS] = {
         {"speed", "Set motor speed"},
         {"temp", "Set temperature"}
     };
     
-    Action gets[MAX_ACTIONS] = {
+    Call gets[MAX_ACTIONS] = {
         {"status", "Get system status"},
         {"counter", "Get operation counter"}
     };
@@ -66,7 +66,7 @@ public:
         return true; 
     }
     
-    Action* iterateRunsNext() override {
+    Call* iterateRunsNext() override {
         if (runsIterIdx < runsCount_) {
             return &runs[runsIterIdx++];
         }
@@ -78,7 +78,7 @@ public:
         return true; 
     }
     
-    Action* iterateSetsNext() override {
+    Call* iterateSetsNext() override {
         if (setsIterIdx < setsCount_) {
             return &sets[setsIterIdx++];
         }
@@ -90,7 +90,7 @@ public:
         return true; 
     }
     
-    Action* iterateGetsNext() override {
+    Call* iterateGetsNext() override {
         if (getsIterIdx < getsCount_) {
             return &gets[getsIterIdx++];
         }

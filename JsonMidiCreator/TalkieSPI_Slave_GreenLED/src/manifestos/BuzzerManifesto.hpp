@@ -34,35 +34,25 @@ protected:
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action runs[1] = {
-		{"buzz", "Buzz for a while"}
-    };
-    
-    Action sets[1] = {
-        {"ms", "Sets the buzzing duration"}
-    };
-    
-    Action gets[1] = {
+    Call calls[3] = {
+		{"buzz", "Buzz for a while"},
+        {"ms", "Sets the buzzing duration"},
         {"ms", "Gets the buzzing duration"}
     };
-
-    const Action* getRunsArray() const override { return runs; }
-    const Action* getSetsArray() const override { return sets; }
-    const Action* getGetsArray() const override { return gets; }
+    
+    const Call* getCallsArray() const override { return calls; }
 
     // Size methods
-    uint8_t runsCount() const override { return sizeof(runs)/sizeof(Action); }
-    uint8_t setsCount() const override { return sizeof(sets)/sizeof(Action); }
-    uint8_t getsCount() const override { return sizeof(gets)/sizeof(Action); }
+    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Call); }
 
 
 public:
     
     // Index-based operations (simplified examples)
-    bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
+    bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
-		if (index < runsCount()) {
+		if (index < callsCount()) {
 			// Actual implementation would do something based on index
 			switch(index) {
 				case 0:
@@ -94,31 +84,6 @@ public:
 		return false;
 	}
     
-    bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) override {
-        (void)json_message;	// Silence unused parameter warning
-        (void)talker;		// Silence unused parameter warning
-        if (index < setsCount()) {
-			switch(index) {
-				case 0:
-					_buzz_time_ms = value;
-					return true;
-					break;
-			}
-		}
-        return false;
-    }
-    
-    uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) const override {
-        (void)json_message;	// Silence unused parameter warning
-        (void)talker;		// Silence unused parameter warning
-        if (index < getsCount()) {
-			switch(index) {
-				case 0: return _buzz_time_ms;
-			}
-		}
-        return 0;
-    }
-
 };
 
 

@@ -31,42 +31,33 @@ protected:
 
     bool _is_led_on = false;  // keep track of state yourself, by default it's off
     uint16_t _bpm_10 = 1200;
-    uint16_t _total_runs = 0;
+    uint16_t _total_calls = 0;
 
 
-    Action runs[2] = {
+    Call calls[4] = {
 		{"on", "Turns led ON"},
-		{"off", "Turns led OFF"}
+		{"off", "Turns led OFF"},
+		{"bpm_10", "Sets the Tempo in BPM x 10"},
+		{"bpm_10", "Gets the Tempo in BPM x 10"}
     };
     
-    Action sets[1] = {
-        {"bpm_10", "Sets the Tempo in BPM x 10"}
-    };
-    
-    Action gets[1] = {
-        {"bpm_10", "Gets the Tempo in BPM x 10"}
-    };
-
-    const Action* getRunsArray() const override { return runs; }
-    const Action* getSetsArray() const override { return sets; }
-    const Action* getGetsArray() const override { return gets; }
+    const Call* getCallsArray() const override { return calls; }
 
     // Size methods
-    uint8_t runsCount() const override { return sizeof(runs)/sizeof(Action); }
-    uint8_t setsCount() const override { return sizeof(sets)/sizeof(Action); }
-    uint8_t getsCount() const override { return sizeof(gets)/sizeof(Action); }
+    uint8_t callsCount() const override { return sizeof(calls)/sizeof(Call); }
 
 
 public:
     
     // Index-based operations (simplified examples)
-    bool runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
+    bool callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
         (void)talker;		// Silence unused parameter warning
 		
-		if (index >= sizeof(runs)/sizeof(Action)) return false;
+		if (index >= sizeof(calls)/sizeof(Call)) return false;
 		
 		// Actual implementation would do something based on index
 		switch(index) {
+
 			case 0:
 			{
 				#ifdef GREEN_MANIFESTO_DEBUG
@@ -86,7 +77,7 @@ public:
 					#endif
 				#endif
 					_is_led_on = true;
-					_total_runs++;
+					_total_calls++;
 					return true;
 				} else {
 					json_message["r"] = "Already On!";
@@ -94,6 +85,7 @@ public:
 				}
 			}
 			break;
+
 			case 1:
 			{
 				#ifdef GREEN_MANIFESTO_DEBUG
@@ -105,7 +97,7 @@ public:
 					digitalWrite(GREEN_LED, LOW);
 				#endif
 					_is_led_on = false;
-					_total_runs++;
+					_total_calls++;
 				} else {
 					json_message["r"] = "Already Off!";
 					return false;
@@ -113,35 +105,18 @@ public:
 				return true;
 			}
 			break;
+			
+            case 2:
+                _bpm_10 = json_message[ valueKey(0) ].as<uint16_t>();
+                return true;
+                break;
+				
+            // case 3:
+			// 	return _bpm_10;
 		}
 		return false;
 	}
     
-    bool setByIndex(uint8_t index, uint32_t value, JsonObject& json_message, JsonTalker* talker) override {
-        (void)json_message;	// Silence unused parameter warning
-        (void)talker;		// Silence unused parameter warning
-        if (index >= sizeof(sets)/sizeof(Action)) return false;
-        
-        switch(index) {
-            case 0:
-                _bpm_10 = value;
-                return true;
-                break;
-        }
-        return false;
-    }
-    
-    uint32_t getByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) const override {
-        (void)json_message;	// Silence unused parameter warning
-        (void)talker;		// Silence unused parameter warning
-        if (index >= sizeof(gets)/sizeof(Action)) return 0;
-        
-        switch(index) {
-            case 0: return _bpm_10;
-        }
-        return 0;
-    }
-
 };
 
 
