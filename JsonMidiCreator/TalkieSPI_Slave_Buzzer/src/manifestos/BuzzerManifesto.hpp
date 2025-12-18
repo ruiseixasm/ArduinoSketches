@@ -112,8 +112,8 @@ public:
         (void)talker;		// Silence unused parameter warning
         Serial.print(json_message[ JsonKey::FROM ].as<String>());
         Serial.print(" - ");
-        if (json_message["r"].is<String>()) {
-            Serial.println(json_message["r"].as<String>());
+        if (json_message[ valueKey(0) ].is<String>()) {
+            Serial.println(json_message[ valueKey(0) ].as<String>());
         } else if (json_message[ JsonKey::DESCRIPTION ].is<String>()) {
             Serial.println(json_message[ JsonKey::DESCRIPTION ].as<String>());
         } else {
@@ -126,8 +126,8 @@ public:
         (void)talker;		// Silence unused parameter warning
         Serial.print(json_message[ JsonKey::FROM ].as<String>());
         Serial.print(" - ");
-        if (json_message["r"].is<String>()) {
-            Serial.println(json_message["r"].as<String>());
+        if (json_message[ valueKey(0) ].is<String>()) {
+            Serial.println(json_message[ valueKey(0) ].as<String>());
         } else if (json_message[ JsonKey::DESCRIPTION ].is<String>()) {
             Serial.println(json_message[ JsonKey::DESCRIPTION ].as<String>());
         } else {

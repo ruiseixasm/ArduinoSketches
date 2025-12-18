@@ -80,7 +80,7 @@ public:
 					_total_calls++;
 					return true;
 				} else {
-					json_message["r"] = "Already On!";
+					json_message[ valueKey(0) ] = "Already On!";
 					return false;
 				}
 			}
@@ -99,7 +99,7 @@ public:
 					_is_led_on = false;
 					_total_calls++;
 				} else {
-					json_message["r"] = "Already Off!";
+					json_message[ valueKey(0) ] = "Already Off!";
 					return false;
 				}
 				return true;
