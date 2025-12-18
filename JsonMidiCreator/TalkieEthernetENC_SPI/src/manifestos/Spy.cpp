@@ -57,8 +57,8 @@ bool Spy::callByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talke
 				case 0:
 				{	// Has FROM for sure
 					_original_talker = json_message[ JsonKey::FROM ].as<String>();	// Explicit conversion
-					if (json_message[ JsonKey::VALUE ].is<String>()) {
-						_ping_talker = json_message[ JsonKey::VALUE ].as<String>();
+					if (json_message[ valueKey(0) ].is<String>()) {
+						_ping_talker = json_message[ valueKey(0) ].as<String>();
 					} else {
 						_ping_talker = "";
 					}
@@ -84,7 +84,7 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 				uint16_t actual_time = static_cast<uint16_t>(millis());
 				uint16_t message_time = json_message[ JsonKey::TIMESTAMP ].as<uint16_t>();	// must have
 				uint16_t time_delay = actual_time - message_time;
-				json_message[ JsonKey::VALUE ] = time_delay;
+				json_message[ valueKey(0) ] = time_delay;
 				json_message[ JsonKey::REPLY ] = json_message[ JsonKey::FROM ];	// Informs the Talker as reply
 				// Prepares headers for the original REMOTE sender
 				json_message[ JsonKey::TO ] = _original_talker;

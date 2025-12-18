@@ -65,6 +65,11 @@ public:
         }
 
 
+	static const char* valueKey(size_t nth = 0) {
+		return TalkieCodes::valueKey(nth);
+	}
+
+
 	// Getter and setters
 
     void setSocket(BroadcastSocket* socket);
@@ -288,7 +293,7 @@ public:
         } else if (message_data > MessageData::PING) {
 			// Only TALK, CHANNEL and PING can be broadcasted
 			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
-		} else if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
+		} else if (json_message[ valueKey(0) ].is<uint8_t>()) {
 			return false;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
 		}
 
@@ -342,16 +347,16 @@ public:
 				break;
 			
 			case MessageData::CHANNEL:
-				if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
+				if (json_message[ valueKey(0) ].is<uint8_t>()) {
 
 					#ifdef JSON_TALKER_DEBUG
 					Serial.print(F("\tChannel B value is an <uint8_t>: "));
-					Serial.println(json_message[ JsonKey::VALUE ].is<uint8_t>());
+					Serial.println(json_message[ valueKey(0) ].is<uint8_t>());
 					#endif
 
-					_channel = json_message[ JsonKey::VALUE ].as<uint8_t>();
+					_channel = json_message[ valueKey(0) ].as<uint8_t>();
 				}
-				json_message[ JsonKey::VALUE ] = _channel;
+				json_message[ valueKey(0) ] = _channel;
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitMessage(json_message);
 				break;
@@ -408,7 +413,7 @@ public:
 
 						case SystemData::DROPS:
 							if (_socket) {
-								json_message[ JsonKey::VALUE ] = get_drops();
+								json_message[ valueKey(0) ] = get_drops();
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
@@ -416,7 +421,7 @@ public:
 
 						case SystemData::DELAY:
 							if (_socket) {
-								json_message[ JsonKey::VALUE ] = get_delay();
+								json_message[ valueKey(0) ] = get_delay();
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
@@ -444,27 +449,27 @@ public:
 
 						case SystemData::MUTED:
 							if (_muted_calls) {
-								json_message[ JsonKey::VALUE ] = 1;
+								json_message[ valueKey(0) ] = 1;
 							} else {
-								json_message[ JsonKey::VALUE ] = 0;
+								json_message[ valueKey(0) ] = 0;
 							}
 							break;
 
 						case SystemData::SOCKET:
 							if (_socket) {
-								json_message[ JsonKey::VALUE ] = socket_class_name();
+								json_message[ valueKey(0) ] = socket_class_name();
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
 							break;
 
 						case SystemData::TALKER:
-							json_message[ JsonKey::VALUE ] = class_name();
+							json_message[ valueKey(0) ] = class_name();
 							break;
 
 						case SystemData::MANIFESTO:
 							if (_manifesto) {
-								json_message[ JsonKey::VALUE ] = _manifesto->class_name();
+								json_message[ valueKey(0) ] = _manifesto->class_name();
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}

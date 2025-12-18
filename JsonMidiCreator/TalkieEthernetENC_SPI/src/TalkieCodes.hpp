@@ -31,7 +31,6 @@ struct TalkieCodes {
         static constexpr const char* TO 			= "t";
         static constexpr const char* SYSTEM 		= "s";
         static constexpr const char* ERROR 			= "e";
-        static constexpr const char* VALUE 			= "v";
         static constexpr const char* REPLY 			= "r";
         static constexpr const char* ROGER 			= "g";
         static constexpr const char* ACTION 		= "a";
@@ -41,7 +40,7 @@ struct TalkieCodes {
     };
 
 
-	static const char* valueData(size_t nth = 0) {
+	static const char* valueKey(size_t nth = 0) {
 		switch (nth) {
 			case 1: 	return "1";
 			case 2: 	return "2";
