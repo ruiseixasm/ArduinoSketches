@@ -50,11 +50,11 @@ struct TalkieCodes {
 		RUN,
 		SET,
 		GET,
+		LIST,
+		SYS,
 		TALK,
 		CHANNEL,
 		PING,
-		LIST,
-		SYS,
 		ECHO,
 		ERROR
 	};
