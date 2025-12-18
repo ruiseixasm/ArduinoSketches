@@ -69,6 +69,7 @@ public:
     BroadcastSocket& getSocket();
 
 	const char* socket_class_name();
+	const char* board_name();
 
     const char* get_name() { return _name; }
     void set_channel(uint8_t channel) { _channel = channel; }
@@ -477,121 +478,81 @@ public:
 
 					switch (system_code) {
 
-					case SystemData::BOARD:
-						
-						// AVR Boards (Uno, Nano, Mega) - Check RAM size
-						#ifdef __AVR__
-							#if (RAMEND - RAMSTART + 1) == 2048
-								json_message[ JsonKey::DESCRIPTION ] = F("Arduino Uno/Nano (ATmega328P)");
-							#elif (RAMEND - RAMSTART + 1) == 8192
-								json_message[ JsonKey::DESCRIPTION ] = F("Arduino Mega (ATmega2560)");
-							#else
-								json_message[ JsonKey::DESCRIPTION ] = "Unknown AVR Board";
-							#endif
-							
-						// ESP8266
-						#elif defined(ESP8266)
-							json_message[ JsonKey::DESCRIPTION ] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
-							
-						// ESP32
-						#elif defined(ESP32)
-							json_message[ JsonKey::DESCRIPTION ] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
-							
-						// Teensy Boards
-						#elif defined(TEENSYDUINO)
-							#if defined(__IMXRT1062__)
-								json_message[ JsonKey::DESCRIPTION ] = "Teensy 4.0/4.1 (i.MX RT1062)";
-							#elif defined(__MK66FX1M0__)
-								json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.6 (MK66FX1M0)";
-							#elif defined(__MK64FX512__)
-								json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.5 (MK64FX512)";
-							#elif defined(__MK20DX256__)
-								json_message[ JsonKey::DESCRIPTION ] = "Teensy 3.2/3.1 (MK20DX256)";
-							#elif defined(__MKL26Z64__)
-								json_message[ JsonKey::DESCRIPTION ] = "Teensy LC (MKL26Z64)";
-							#else
-								json_message[ JsonKey::DESCRIPTION ] = "Unknown Teensy Board";
-							#endif
+						case SystemData::BOARD:
+							if (_socket) {
+								json_message[ JsonKey::DESCRIPTION ] = board_name();
+							} else {
+								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
+							}
+							break;
 
-						// ARM (Due, Zero, etc.)
-						#elif defined(__arm__)
-							json_message[ JsonKey::DESCRIPTION ] = "ARM-based Board";
+						case SystemData::DROPS:
+							if (_socket) {
+								json_message[ JsonKey::VALUE ] = get_drops();
+							} else {
+								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
+							}
+							break;
 
-						// Unknown Board
-						#else
-							json_message[ JsonKey::DESCRIPTION ] = "Unknown Board";
+						case SystemData::DELAY:
+							if (_socket) {
+								json_message[ JsonKey::VALUE ] = get_delay();
+							} else {
+								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
+							}
+							break;
 
-						#endif
+						case SystemData::MUTE:
+							if (!_muted_action) {
+								_muted_action = true;
+								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
+							} else {
+								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
+								json_message["r"] = "Already muted";
+							}
+							break;
 
-						// TO INSERT HERE EXTRA DATA !!
-						break;
+						case SystemData::UNMUTE:
+							if (_muted_action) {
+								_muted_action = false;
+								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
+							} else {
+								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
+								json_message["r"] = "Already NOT muted";
+							}
+							break;
 
-					case SystemData::DROPS:
-						if (_socket) {
-							json_message[ JsonKey::VALUE ] = get_drops();
-						} else {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
-						}
-						break;
+						case SystemData::MUTED:
+							if (_muted_action) {
+								json_message[ JsonKey::VALUE ] = 1;
+							} else {
+								json_message[ JsonKey::VALUE ] = 0;
+							}
+							break;
 
-					case SystemData::DELAY:
-						if (_socket) {
-							json_message[ JsonKey::VALUE ] = get_delay();
-						} else {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
-						}
-						break;
+						case SystemData::SOCKET:
+							if (_socket) {
+								json_message[ JsonKey::VALUE ] = socket_class_name();
+							} else {
+								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
+							}
+							break;
 
-					case SystemData::MUTE:
-						if (!_muted_action) {
-							_muted_action = true;
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
-						} else {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
-							json_message["r"] = "Already muted";
-						}
-						break;
-					case SystemData::UNMUTE:
-						if (_muted_action) {
-							_muted_action = false;
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
-						} else {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
-							json_message["r"] = "Already NOT muted";
-						}
-						break;
+						case SystemData::TALKER:
+							json_message[ JsonKey::VALUE ] = class_name();
+							break;
 
-					case SystemData::MUTED:
-						if (_muted_action) {
-							json_message[ JsonKey::VALUE ] = 1;
-						} else {
-							json_message[ JsonKey::VALUE ] = 0;
-						}
-						break;
+						case SystemData::MANIFESTO:
+							if (_manifesto) {
+								json_message[ JsonKey::VALUE ] = _manifesto->class_name();
+							} else {
+								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
+							}
+							break;
 
-					case SystemData::SOCKET:
-						if (_socket) {
-							json_message[ JsonKey::VALUE ] = socket_class_name();
-						} else {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
-						}
-						break;
-
-					case SystemData::TALKER:
-						json_message[ JsonKey::VALUE ] = class_name();
-						break;
-
-					case SystemData::MANIFESTO:
-						if (_manifesto) {
-							json_message[ JsonKey::VALUE ] = _manifesto->class_name();
-						} else {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
-						}
-						break;
-
-					default:
-						json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
-						break;
+						default:
+							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::SAY_AGAIN);
+							break;
 					}
 
 					// In the end sends back the processed message (single message, one-to-one)
