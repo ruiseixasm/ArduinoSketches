@@ -34,6 +34,9 @@ void Spy::loop(JsonTalker* talker) {
 		JsonObject json_message = doc_copy.to<JsonObject>();
 
 		json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::PING);
+		if (_ping_talker != "") {
+			json_message[ JsonKey::TO ] = _ping_talker;
+		}
 		// Missing TO makes it a Broadcast message
 		// FROM and TIMESTAMP is automatically set by Send method
 		talker->localSend(json_message);	// Only inquires locally
@@ -54,6 +57,11 @@ bool Spy::runByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker
 				case 0:
 				{	// Has FROM for sure
 					_original_talker = json_message[ JsonKey::FROM ].as<String>();	// Explicit conversion
+					if (json_message[ JsonKey::DESCRIPTION ].is<String>()) {
+						_ping_talker = json_message[ JsonKey::DESCRIPTION ].as<String>();
+					} else {
+						_ping_talker = "";
+					}
 					_ping = true;
 					return true;
 				}

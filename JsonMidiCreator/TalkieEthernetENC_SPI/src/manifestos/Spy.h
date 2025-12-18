@@ -31,6 +31,7 @@ public:
 protected:
 
 	String _original_talker = "";
+	String _ping_talker = "";
 	bool _ping = false;
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
