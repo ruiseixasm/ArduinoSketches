@@ -279,7 +279,7 @@ public:
             } else {
                 dont_interrupt = false; // Found by name, interrupts next Talkers process
             }
-        } else if (message_data < MessageData::TALK || message_data > MessageData::PING) {
+        } else if (message_data > MessageData::PING) {
 			// Only TALK, CHANNEL and PING can be broadcasted
 			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
 		} else if (json_message[ JsonKey::VALUE ].is<uint8_t>()) {
