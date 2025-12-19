@@ -425,9 +425,9 @@ public:
 				break;
 			
 			case MessageValue::SYS:
-				if (json_message["s"].is<int>()) {
+				if (json_message[ TalkieKey::SYSTEM ].is<int>()) {
 
-					SystemValue system_code = static_cast<SystemValue>(json_message["s"].as<int>());
+					SystemValue system_code = static_cast<SystemValue>(json_message[ TalkieKey::SYSTEM ].as<int>());
 
 					switch (system_code) {
 
