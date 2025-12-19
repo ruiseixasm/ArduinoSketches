@@ -445,9 +445,7 @@ public:
 					switch (system_code) {
 
 						case InfoValue::BOARD:
-							if (_socket) {
-								json_message[ dataKey(0) ] = board_description();
-							}
+							json_message[ dataKey(0) ] = board_description();
 							break;
 
 						case InfoValue::DROPS:
@@ -480,9 +478,7 @@ public:
 							break;
 
 						case InfoValue::SOCKET:
-						if (_socket) {
-								json_message[ dataKey(0) ] = socket_class_name();
-							}
+							json_message[ dataKey(0) ] = socket_class_name();
 							break;
 
 						case InfoValue::TALKER:
