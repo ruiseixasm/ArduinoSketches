@@ -462,33 +462,20 @@ public:
 							break;
 
 						case SystemValue::MUTE:
-							if (!_muted_calls) {
-								_muted_calls = true;
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
+							if (json_message[ dataKey(0) ].is<uint8_t>()) {
+								uint8_t mute = json_message[ dataKey(0) ].as<uint8_t>();
+								if (mute) {
+									_muted_calls = true;
+								} else {
+									_muted_calls = false;
+								}
 							} else {
-								json_message[ dataKey(0) ] = "Already muted";
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NEGATIVE);
+								if (_muted_calls) {
+									json_message[ dataKey(0) ] = 1;
+								} else {
+									json_message[ dataKey(0) ] = 0;
+								}
 							}
-							break;
-
-						case SystemValue::UNMUTE:
-							if (_muted_calls) {
-								_muted_calls = false;
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
-							} else {
-								json_message[ dataKey(0) ] = "Already NOT muted";
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NEGATIVE);
-							}
-							break;
-
-						case SystemValue::MUTED:
-							if (_muted_calls) {
-								json_message[ dataKey(0) ] = 1;
-							} else {
-								json_message[ dataKey(0) ] = 0;
-							}
-							// Implicit ROGER
-							// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
 							break;
 
 						case SystemValue::SOCKET:

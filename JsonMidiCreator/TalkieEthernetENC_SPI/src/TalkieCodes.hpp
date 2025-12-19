@@ -64,7 +64,7 @@ struct TalkieCodes {
 
 
 	enum class SystemValue : int {
-		BOARD, DROPS, DELAY, MUTE, UNMUTE, MUTED, SOCKET, TALKER, MANIFESTO
+		BOARD, DROPS, DELAY, MUTE, SOCKET, TALKER, MANIFESTO
 	};
 
 
