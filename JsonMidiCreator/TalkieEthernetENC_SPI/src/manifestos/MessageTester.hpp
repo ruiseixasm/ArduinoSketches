@@ -11,42 +11,35 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BLUE_MANIFESTO_HPP
-#define BLUE_MANIFESTO_HPP
+#ifndef MESSAGE_TESTER_MANIFESTO_HPP
+#define MESSAGE_TESTER_MANIFESTO_HPP
 
 #include "../TalkerManifesto.hpp"
+#include "../JsonMessage.hpp"
 
-// #define GREEN_TALKER_DEBUG
+// #define MESSAGE_TESTER_DEBUG
 
 
-class BlueManifesto : public TalkerManifesto {
+class MessageTester : public TalkerManifesto {
 public:
 
-    const char* class_name() const override { return "BlueManifesto"; }
+    const char* class_name() const override { return "MessageTester"; }
 
-    BlueManifesto(uint8_t led_pin) : TalkerManifesto(), _led_pin(led_pin)
+    MessageTester() : TalkerManifesto()
 	{
-		pinMode(_led_pin, OUTPUT);
 	}	// Constructor
 
-    ~BlueManifesto()
+    ~MessageTester()
 	{	// ~TalkerManifesto() called automatically here
-		digitalWrite(_led_pin, LOW);
-		pinMode(_led_pin, INPUT);
 	}	// Destructor
 
 
 protected:
 
-	const uint8_t _led_pin;
-    bool _is_led_on = false;  	// keep track of state yourself, by default it's off
-    uint16_t _total_calls = 0;
 
-
-    Action calls[3] = {
-		{"on", "Turns led ON"},
-		{"off", "Turns led OFF"},
-		{"actions", "Returns the number of triggered Actions"}
+    Action calls[2] = {
+		{"all", "Tests all methods"},
+		{"has_key", "Test the method hasKey"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -68,44 +61,18 @@ public:
 
 			case 0:
 			{
-				#ifdef GREEN_MANIFESTO_DEBUG
-				Serial.println(F("\tCase 0 - Turning LED ON"));
-				#endif
-		
-				if (!_is_led_on) {
-					digitalWrite(_led_pin, HIGH);
-					_is_led_on = true;
-					_total_calls++;
-					return true;
-				} else {
-					json_message[ dataKey(0) ] = "Already On!";
-					return false;
-				}
+				
+
 			}
 			break;
 
 			case 1:
 			{
-				#ifdef GREEN_MANIFESTO_DEBUG
-				Serial.println(F("\tCase 1 - Turning LED OFF"));
-				#endif
-		
-				if (_is_led_on) {
-				digitalWrite(_led_pin, LOW);
-					_is_led_on = false;
-					_total_calls++;
-				} else {
-					json_message[ dataKey(0) ] = "Already Off!";
-					return false;
-				}
-				return true;
+				JsonMessage json_message;
+				const char* json_payload = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+
 			}
 			break;
-			
-            case 2:
-				json_message[ dataKey(0) ] = _total_calls;
-                return true;
-            break;
 				
             default: return false;
 		}
@@ -115,4 +82,4 @@ public:
 };
 
 
-#endif // BLUE_MANIFESTO_HPP
+#endif // MESSAGE_TESTER_MANIFESTO_HPP

@@ -26,8 +26,8 @@ https://github.com/ruiseixasm/JsonTalkie
 class JsonMessage {
 protected:
 
-	char _json_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-	uint8_t _length = 0;
+	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+	size_t _json_length = 0;
 
 
 public:
@@ -46,11 +46,11 @@ public:
     uint16_t getChecksum() {
         // 16-bit word and XORing
         uint16_t checksum = 0;
-		if (_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t i = 0; i < _length; i += 2) {
-				uint16_t chunk = _json_buffer[i] << 8;
-				if (i + 1 < _length) {
-					chunk |= _json_buffer[i + 1];
+		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			for (size_t i = 0; i < _json_length; i += 2) {
+				uint16_t chunk = _json_payload[i] << 8;
+				if (i + 1 < _json_length) {
+					chunk |= _json_payload[i + 1];
 				}
 				checksum ^= chunk;
 			}
@@ -58,12 +58,43 @@ public:
         return checksum;
     }
 
-	
-	bool hasKey(char key) const {
-		if (_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
-			for (uint8_t char_i = 4; char_i < _length; ++char_i) {	// 4 because it's the shortest position possible for ':'
-				if (_json_buffer[char_i] == ':') {
-					if (_json_buffer[char_i - 2] == key && _json_buffer[char_i - 3] == '"' && _json_buffer[char_i - 1] == '"') {
+	bool deserialize(const char* buffer, size_t length) {
+		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			for (size_t char_i = 0; char_i < length; ++char_i) {
+				_json_payload[char_i] = buffer[char_i];
+			}
+			_json_length = length;
+			return true;
+		}
+		return false;
+	}
+
+	size_t serialize(char* buffer, size_t size) const {
+		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
+				buffer[char_i] = _json_payload[char_i];
+			}
+			return _json_length;
+		}
+		return 0;
+	}
+
+	bool same_payload(const char* buffer, size_t size) const {
+		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
+				if (buffer[char_i] != _json_payload[char_i]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	bool has_key(char key) const {
+		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
+			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
+				if (_json_payload[char_i] == ':') {
+					if (_json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
 						return true;
 					}
 				}
