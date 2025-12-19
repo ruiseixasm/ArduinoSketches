@@ -265,10 +265,7 @@ public:
 		// Tags the message as NONE sourced
 		json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
 		// Despite being a NONE message it also needs to be prepared like any other
-		if (prepareMessage(json_message)) {
-			return processMessage(json_message);
-		}
-		return false;
+		return prepareMessage(json_message);
 	}
 
 
