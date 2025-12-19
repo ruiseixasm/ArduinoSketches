@@ -25,25 +25,38 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/sockets/SPI_ESP_Arduino_Master.hpp"
 #include "src/talkers/JsonRepeater.h"
 #include "src/manifestos/Spy.h"
+#include "src/manifestos/BlueManifesto.hpp"
 
 
 // TALKERS 
+// Ethernet Socket Repeater
 const char t_ethernet_name[] = "t_ethernet";
 const char t_ethernet_desc[] = "I'm an Ethernet talker";
 JsonRepeater t_ethernet = JsonRepeater(t_ethernet_name, t_ethernet_desc);	// Just a REPEATER, doesn't need a Manifesto
+
+// SPI Socket Repeater
 const char t_spi_name[] = "t_spi";
 const char t_spi_desc[] = "I'm a SPI talker";
 JsonRepeater t_spi = JsonRepeater(t_spi_name, t_spi_desc);	// A REPEATER
+
+// Spy Talker (being sockless devoids it of answering direct remote calls, and that also works, but differently)
 const char t_spy_name[] = "spy";
 const char t_spy_desc[] = "I'm a Spy and I spy the talkers' pings";
 Spy spy_manifesto;
 JsonTalker t_spy = JsonTalker(t_spy_name, t_spy_desc, &spy_manifesto);
 
+// Sockless Talker (blue led)
+const char t_sockless_name[] = "blue";
+const char t_sockless_desc[] = "I have no Socket, but I turn led Blue on and off";
+BlueManifesto blue_manifesto(2);
+JsonTalker t_sockless = JsonTalker(t_sockless_name, t_sockless_desc, &blue_manifesto);
+
 
 // LIST OF TALKERS FOR EACH SOCKET
 JsonTalker* t_ethernet_talkers[] = { &t_ethernet, &t_spy };   // It's an array of pointers
 JsonTalker* t_spi_talkers[] = { &t_spi };   // It's an array of pointers
-JsonTalker* all_talkers[] = { &t_ethernet, &t_spi, &t_spy };   // It's an array of pointers
+JsonTalker* all_talkers[] = { &t_ethernet, &t_spi, &t_spy, &t_sockless };	// It's an array of pointers
+
 
 // SOCKETS
 
