@@ -242,7 +242,7 @@ public:
     }
 
 
-    virtual bool hereSend(JsonObject& json_message) {
+    virtual bool selfSend(JsonObject& json_message) {
 
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("\t"));
@@ -281,7 +281,7 @@ public:
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(F("\tTransmitted an SELF message"));
 					#endif
-					return hereSend(json_message);
+					return selfSend(json_message);
 
 				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 				default: break;

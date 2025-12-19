@@ -54,7 +54,7 @@ public:
 					#ifdef JSON_REPEATER_DEBUG
 					Serial.println(F("Repeated an SELF message to SELF"));
 					#endif
-					return hereSend(json_message);	// Straight transmission
+					return selfSend(json_message);	// Straight transmission
 				
 				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 				default: break;
