@@ -396,29 +396,20 @@ public:
 				break;
 			
 			case MessageValue::LIST:
-				{   // Because of none_list !!!
-					bool no_list = true;
+				{   // Because of action_index and action !!!
 
-					// In your list handler:
-					
 					#ifdef JSON_TALKER_DEBUG
 					Serial.print("\t=== This object is: ");
 					Serial.println(class_name());
 					#endif
 
-					_manifesto->iterateActionsReset();
-					const TalkerManifesto::Action* run;
 					uint8_t action_index = 0;
-					while ((run = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
-						no_list = false;
+					const TalkerManifesto::Action* action;
+					_manifesto->iterateActionsReset();
+					while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
 						json_message[ dataKey(0) ] = action_index++;
-						json_message[ dataKey(1) ] = run->name;
-						json_message[ dataKey(2) ] = run->desc;
-						transmitMessage(json_message);	// One-to-Many
-					}
-
-					if(no_list) {
-						json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
+						json_message[ dataKey(1) ] = action->name;
+						json_message[ dataKey(2) ] = action->desc;
 						transmitMessage(json_message);	// One-to-Many
 					}
 				}
@@ -434,30 +425,18 @@ public:
 						case SystemValue::BOARD:
 							if (_socket) {
 								json_message[ dataKey(0) ] = board_description();
-								// Implicit ROGER
-								// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
-							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 							}
 							break;
 
 						case SystemValue::DROPS:
 							if (_socket) {
 								json_message[ dataKey(0) ] = get_drops();
-								// Implicit ROGER
-								// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
-							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 							}
 							break;
 
 						case SystemValue::DELAY:
 							if (_socket) {
 								json_message[ dataKey(0) ] = get_delay();
-								// Implicit ROGER
-								// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
-							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 							}
 							break;
 
@@ -481,32 +460,20 @@ public:
 						case SystemValue::SOCKET:
 						if (_socket) {
 								json_message[ dataKey(0) ] = socket_class_name();
-								// Implicit ROGER
-								// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
-							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 							}
 							break;
 
 						case SystemValue::TALKER:
 							json_message[ dataKey(0) ] = class_name();
-							// Implicit ROGER
-							// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
 							break;
 
 						case SystemValue::MANIFESTO:
 							if (_manifesto) {
 								json_message[ dataKey(0) ] = _manifesto->class_name();
-								// Implicit ROGER
-								// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
-							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 							}
 							break;
 
-						default:
-							json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::SAY_AGAIN);
-							break;
+						default: break;
 					}
 
 					// In the end sends back the processed message (single message, one-to-one)
