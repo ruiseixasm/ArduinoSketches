@@ -29,7 +29,6 @@ struct TalkieCodes {
         static constexpr const char* FROM 			= "f";
         static constexpr const char* TO 			= "t";
         static constexpr const char* SYSTEM 		= "s";
-        static constexpr const char* ERROR 			= "e";
         static constexpr const char* ACTION			= "a";
         static constexpr const char* ROGER 			= "r";
     };

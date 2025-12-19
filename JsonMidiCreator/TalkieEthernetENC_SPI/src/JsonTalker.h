@@ -179,7 +179,7 @@ public:
 			#endif
 
 			json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
-			json_message[ TalkieKey::ERROR ] = static_cast<int>(ErrorValue::IDENTITY);
+			json_message[ dataKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
 			json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
 
 		} else {
