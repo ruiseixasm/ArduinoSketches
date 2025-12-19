@@ -65,7 +65,8 @@ struct TalkieCodes {
 	};
 
 
-	enum class CallValue : int {
+	// Only applicable to CALL messages
+	enum class RogerValue : int {
 		ROGER, NEGATIVE, SAY_AGAIN, NIL
 	};
 

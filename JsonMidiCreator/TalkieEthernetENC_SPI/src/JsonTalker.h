@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
 using SystemValue = TalkieCodes::SystemValue;
-using CallValue = TalkieCodes::CallValue;
+using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
 using TalkieKey = TalkieCodes::TalkieKey;
 using Original = TalkerManifesto::Original;
@@ -357,12 +357,12 @@ public:
 
 						if (_manifesto->actionByIndex(index_found_i, json_message, this)) {
 							// ROGER should be implicit for CALL to spare json string size for more data (for dataKey(n))
-							// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
+							// json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::ROGER);
 						} else {
-							json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NEGATIVE);
+							json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::NEGATIVE);
 						}
 					} else {
-						json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::SAY_AGAIN);
+						json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::SAY_AGAIN);
 					}
 				}
 				// In the end sends back the processed message (single message, one-to-one)
