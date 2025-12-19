@@ -262,10 +262,8 @@ public:
 
 
 	virtual bool noneSend(JsonObject& json_message) {
-		// Tags the message as NONE sourced
-		json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
-		// Despite being a NONE message it also needs to be prepared like any other
-		return prepareMessage(json_message);
+		// It's absolutely neutral, does nothin, NONE
+		return true;
 	}
 
 
