@@ -412,6 +412,9 @@ public:
 						json_message[ dataKey(2) ] = action->desc;
 						transmitMessage(json_message);	// One-to-Many
 					}
+					if (!action_index) {
+						json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::NIL);
+					}
 				}
 				break;
 			
