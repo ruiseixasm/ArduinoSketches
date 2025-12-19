@@ -110,8 +110,8 @@ void Spy::error(JsonObject& json_message, JsonTalker* talker) {
 	Serial.print(" - ");
 	if (json_message["r"].is<String>()) {
 		Serial.println(json_message["r"].as<String>());
-	} else if (json_message[ TalkieKey::DESCRIPTION ].is<String>()) {
-		Serial.println(json_message[ TalkieKey::DESCRIPTION ].as<String>());
+	} else if (json_message[ dataKey(0) ].is<String>()) {
+		Serial.println(json_message[ dataKey(0) ].as<String>());
 	} else {
 		Serial.println(F("Empty error received!"));
 	}

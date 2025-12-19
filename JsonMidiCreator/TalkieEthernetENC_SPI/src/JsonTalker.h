@@ -370,7 +370,7 @@ public:
 				break;
 			
 			case MessageValue::TALK:
-				json_message[ TalkieKey::DESCRIPTION ] = _desc;
+				json_message[ dataKey(0) ] = _desc;
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitMessage(json_message);
 				break;
