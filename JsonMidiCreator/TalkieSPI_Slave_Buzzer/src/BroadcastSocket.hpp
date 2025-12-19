@@ -18,11 +18,14 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonTalker.h"
 #include "TalkieCodes.hpp"
 
+#ifndef BROADCAST_SOCKET_BUFFER_SIZE
+#define BROADCAST_SOCKET_BUFFER_SIZE 128
+#endif
+
 
 // #define BROADCASTSOCKET_DEBUG
 
-// Readjust if absolutely necessary
-#define BROADCAST_SOCKET_BUFFER_SIZE 128
+// Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
 class BroadcastSocket {

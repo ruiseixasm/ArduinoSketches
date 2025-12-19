@@ -19,12 +19,12 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkerManifesto.hpp"
 #include "TalkieCodes.hpp"
 
+#ifndef BROADCAST_SOCKET_BUFFER_SIZE
+#define BROADCAST_SOCKET_BUFFER_SIZE 128
+#endif
+
 
 // #define JSON_TALKER_DEBUG
-
-// Readjust if absolutely necessary
-#define BROADCAST_SOCKET_BUFFER_SIZE 128
-
 
 using SourceData = TalkieCodes::SourceData;
 using MessageData = TalkieCodes::MessageData;
@@ -62,8 +62,18 @@ public:
         
     JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto)
         : _name(name), _desc(desc), _manifesto(manifesto) {
-            // Nothing to see here
-        }
+		// AVOIDS EVERY TALKER WITH THE SAME CHANNEL
+		// XOR is great for 8-bit mixing
+		_channel ^= strlen(this->class_name()) << 1;    // Shift before XOR
+		_channel ^= strlen(_name) << 2;
+		_channel ^= strlen(_desc) << 3;
+		// Add microsecond LSB for entropy
+		_channel ^= micros() & 0xFF;
+		if (_manifesto) {	// Safe code
+			_channel ^= strlen(_manifesto->class_name()) << 4;
+			_channel = _manifesto->getChannel(_channel, this);
+		}
+    }
 
 
 	static const char* valueKey(size_t nth = 0) {
