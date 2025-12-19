@@ -29,41 +29,42 @@ bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* tal
 	SourceValue source_data = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
 	if (source_data == SourceValue::REMOTE) {
 
-		// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-		#if ARDUINOJSON_VERSION_MAJOR >= 7
-		JsonDocument ping_doc;
-		#else
-		StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> ping_doc;
-		#endif
-		JsonObject ping_message = ping_doc.to<JsonObject>();
-		ping_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
-
 		if (index < actionsCount()) {
 			// Actual implementation would do something based on index
 			switch(index) {
 				case 0:
-				{	// Has FROM for sure
+				{
+					ping = true;
+					// 1. Start by collecting info from message
 					_original_talker = json_message[ TalkieKey::FROM ].as<String>();	// Explicit conversion
 					_original_message.identity = json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
 					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
+					// 2. Repurpose it to be a LOCAL PING
+					json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
 					if (json_message[ dataKey(0) ].is<String>()) {
-						ping_message[ TalkieKey::TO ] = json_message[ dataKey(0) ].as<String>();
+						json_message[ TalkieKey::TO ] = json_message[ dataKey(0) ].as<String>();
+					} else {	// Removes the original TO
+						remove(json_message[ TalkieKey::TO ]);	// Without TO works as broadcast
 					}
-					// Disables the extra ROGER response to the caller by changing the SOURCE of the message from REMOTE to NONE
+					// 3. Sends the message LOCALLY
+					talker->localSend(json_message);	// Dispatches it directly as LOCAL
+					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
 					json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
-					ping = true;
-					talker->localSend(ping_message);	// Only inquires locally
 				}
 				break;
 				case 1:
-				{	// Has FROM for sure
+				{
+					ping = true;
+					// 1. Start by collecting info from message
 					_original_talker = json_message[ TalkieKey::FROM ].as<String>();	// Explicit conversion
 					_original_message.identity = json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
 					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
-					// Disables the extra ROGER response to the caller by changing the SOURCE of the message from REMOTE to NONE
+					// 2. Repurpose it to be a SELF PING
+					json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
+					// 3. Sends the message to myself
+					talker->selfSend(json_message);	// Dispatches it directly as LOCAL
+					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
 					json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
-					ping = true;
-					talker->selfSend(ping_message);		// Only inquires myself
 				}
 				break;
 			}

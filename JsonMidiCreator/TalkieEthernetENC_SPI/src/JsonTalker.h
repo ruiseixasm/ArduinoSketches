@@ -251,6 +251,8 @@ public:
 		Serial.println(F("Sending a SELF message"));
 		#endif
 
+		// Tags the message as LOCAL sourced
+		json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::SELF);
 		// Despite being an SELF message it also needs to be prepared like any other
 		if (prepareMessage(json_message)) {
 			return processMessage(json_message);
@@ -260,6 +262,8 @@ public:
 
 
 	virtual bool noneSend(JsonObject& json_message) {
+		// Tags the message as NONE sourced
+		json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
 		return true;	// None accepts everything and does nothing
 	}
 
