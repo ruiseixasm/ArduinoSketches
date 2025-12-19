@@ -251,7 +251,11 @@ public:
 		Serial.println(F("Sending a HERE message"));
 		#endif
 
-        return processMessage(json_message);
+		// Despite being an HERE message it also needs to be prepared like any other
+		if (prepareMessage(json_message)) {
+			return processMessage(json_message);
+		}
+		return false;
     }
 
 
