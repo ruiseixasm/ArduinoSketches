@@ -346,7 +346,8 @@ public:
 						#endif
 
 						if (_manifesto->actionByIndex(index_found_i, json_message, this)) {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
+							// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
+							// json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 						} else {
 							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
 						}
