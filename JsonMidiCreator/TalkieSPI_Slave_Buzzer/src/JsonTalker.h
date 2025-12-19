@@ -28,7 +28,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
-using SystemValue = TalkieCodes::SystemValue;
+using InfoValue = TalkieCodes::InfoValue;
 using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
 using TalkieKey = TalkieCodes::TalkieKey;
@@ -437,32 +437,30 @@ public:
 				}
 				break;
 			
-			case MessageValue::SYS:
-				if (json_message[ TalkieKey::SYSTEM ].is<int>()) {
+			case MessageValue::INFO:
+				if (json_message[ TalkieKey::INFO ].is<int>()) {
 
-					SystemValue system_code = static_cast<SystemValue>(json_message[ TalkieKey::SYSTEM ].as<int>());
+					InfoValue system_code = static_cast<InfoValue>(json_message[ TalkieKey::INFO ].as<int>());
 
 					switch (system_code) {
 
-						case SystemValue::BOARD:
-							if (_socket) {
-								json_message[ dataKey(0) ] = board_description();
-							}
+						case InfoValue::BOARD:
+							json_message[ dataKey(0) ] = board_description();
 							break;
 
-						case SystemValue::DROPS:
+						case InfoValue::DROPS:
 							if (_socket) {
 								json_message[ dataKey(0) ] = get_drops();
 							}
 							break;
 
-						case SystemValue::DELAY:
+						case InfoValue::DELAY:
 							if (_socket) {
 								json_message[ dataKey(0) ] = get_delay();
 							}
 							break;
 
-						case SystemValue::MUTE:
+						case InfoValue::MUTE:
 							if (json_message[ dataKey(0) ].is<uint8_t>()) {
 								uint8_t mute = json_message[ dataKey(0) ].as<uint8_t>();
 								if (mute) {
@@ -479,19 +477,19 @@ public:
 							}
 							break;
 
-						case SystemValue::SOCKET:
-						if (_socket) {
-								json_message[ dataKey(0) ] = socket_class_name();
-							}
+						case InfoValue::SOCKET:
+							json_message[ dataKey(0) ] = socket_class_name();
 							break;
 
-						case SystemValue::TALKER:
+						case InfoValue::TALKER:
 							json_message[ dataKey(0) ] = class_name();
 							break;
 
-						case SystemValue::MANIFESTO:
+						case InfoValue::MANIFESTO:
 							if (_manifesto) {
 								json_message[ dataKey(0) ] = _manifesto->class_name();
+							} else {
+								json_message[ dataKey(0) ] = "none";
 							}
 							break;
 

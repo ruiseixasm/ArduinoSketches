@@ -28,7 +28,7 @@ struct TalkieCodes {
         static constexpr const char* MESSAGE 		= "m";
         static constexpr const char* FROM 			= "f";
         static constexpr const char* TO 			= "t";
-        static constexpr const char* SYSTEM 		= "s";
+        static constexpr const char* INFO 			= "s";
         static constexpr const char* ACTION			= "a";
         static constexpr const char* ROGER 			= "r";
     };
@@ -56,11 +56,11 @@ struct TalkieCodes {
 
 
 	enum class MessageValue : int {
-		TALK, CHANNEL, PING, CALL, LIST, SYS, ECHO, ERROR, NOISE
+		TALK, CHANNEL, PING, CALL, LIST, INFO, ECHO, ERROR, NOISE
 	};
 
 
-	enum class SystemValue : int {
+	enum class InfoValue : int {
 		BOARD, DROPS, DELAY, MUTE, SOCKET, TALKER, MANIFESTO
 	};
 
