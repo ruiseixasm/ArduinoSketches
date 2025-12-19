@@ -186,10 +186,10 @@ public:
     static void handleSPI_Interrupt() {
 
         // WARNING 1:
-        //     AVOID PLACING HEAVY CODE OR CALL HERE. THIS INTERRUPTS THE LOOP!
+        //     AVOID PLACING HEAVY CODE OR CALL SELF. THIS INTERRUPTS THE LOOP!
 
         // WARNING 2:
-        //     AVOID PLACING Serial.print CALLS HERE BECAUSE IT WILL DELAY 
+        //     AVOID PLACING Serial.print CALLS SELF BECAUSE IT WILL DELAY 
         //     THE POSSIBILITY OF SPI CAPTURE AND RESPONSE IN TIME !!!
 
         // WARNING 3:

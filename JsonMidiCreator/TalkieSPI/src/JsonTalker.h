@@ -588,7 +588,7 @@ public:
 
                 replyMessage(json_message, true);
 
-                // TO INSERT HERE EXTRA DATA !!
+                // TO INSERT SELF EXTRA DATA !!
             }
             break;
         

@@ -248,10 +248,10 @@ public:
 		Serial.print(F("\t"));
 		Serial.print(_name);
 		Serial.print(F(": "));
-		Serial.println(F("Sending a HERE message"));
+		Serial.println(F("Sending a SELF message"));
 		#endif
 
-		// Despite being an HERE message it also needs to be prepared like any other
+		// Despite being an SELF message it also needs to be prepared like any other
 		if (prepareMessage(json_message)) {
 			return processMessage(json_message);
 		}
@@ -277,9 +277,9 @@ public:
 					#endif
 					return localSend(json_message);
 				
-				case SourceValue::HERE:
+				case SourceValue::SELF:
 					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tTransmitted an HERE message"));
+					Serial.println(F("\tTransmitted an SELF message"));
 					#endif
 					return hereSend(json_message);
 

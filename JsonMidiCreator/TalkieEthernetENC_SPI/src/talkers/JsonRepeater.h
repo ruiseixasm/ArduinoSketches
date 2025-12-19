@@ -50,9 +50,9 @@ public:
 					#endif
 					return localSend(json_message);	// Cross transmission
 				
-				case SourceValue::HERE:
+				case SourceValue::SELF:
 					#ifdef JSON_REPEATER_DEBUG
-					Serial.println(F("Repeated an HERE message to HERE"));
+					Serial.println(F("Repeated an SELF message to SELF"));
 					#endif
 					return hereSend(json_message);	// Straight transmission
 				
