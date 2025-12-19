@@ -71,7 +71,7 @@ public:
 	}
 
 	bool inSameSocket(const BroadcastSocket* socket) const {
-		if (_socket) {	// nullptr is NOT a socket
+		if (socket) {	// nullptr is NOT a socket
 			return socket == _socket;
 		}
 		return false;
