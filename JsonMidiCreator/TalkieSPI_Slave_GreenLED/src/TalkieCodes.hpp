@@ -51,7 +51,7 @@ struct TalkieCodes {
 
 
 	enum class SourceValue : int {
-		REMOTE, LOCAL, SELF
+		REMOTE, LOCAL, SELF, NONE
 	};
 
 

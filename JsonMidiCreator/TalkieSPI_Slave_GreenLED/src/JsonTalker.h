@@ -251,12 +251,20 @@ public:
 		Serial.println(F("Sending a SELF message"));
 		#endif
 
-		// Despite being an SELF message it also needs to be prepared like any other
+		// Tags the message as LOCAL sourced
+		json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::SELF);
+		// Despite being a SELF message it also needs to be prepared like any other
 		if (prepareMessage(json_message)) {
-			return processMessage(json_message);
+			return processMessage(json_message);	// Calls my self processMessage method right away
 		}
 		return false;
     }
+
+
+	virtual bool noneSend(JsonObject& json_message) {
+		// It's absolutely neutral, does nothing, NONE
+		return true;
+	}
 
 
     virtual bool transmitMessage(JsonObject& json_message) {
@@ -282,6 +290,12 @@ public:
 					Serial.println(F("\tTransmitted an SELF message"));
 					#endif
 					return selfSend(json_message);
+
+				case SourceValue::NONE:
+					#ifdef JSON_TALKER_DEBUG
+					Serial.println(F("\tTransmitted an SELF message"));
+					#endif
+					return noneSend(json_message);
 
 				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 				default: break;
