@@ -262,7 +262,7 @@ public:
 
 
 	virtual bool noneSend(JsonObject& json_message) {
-		// It's absolutely neutral, does nothin, NONE
+		// It's absolutely neutral, does nothing, NONE
 		return true;
 	}
 
