@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
     
 using MessageValue = TalkieCodes::MessageValue;
-using SystemValue = TalkieCodes::SystemValue;
+using InfoValue = TalkieCodes::InfoValue;
 
 
 
