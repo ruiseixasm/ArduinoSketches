@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
 using SystemValue = TalkieCodes::SystemValue;
-using EchoValue = TalkieCodes::EchoValue;
+using CallValue = TalkieCodes::CallValue;
 using ErrorValue = TalkieCodes::ErrorValue;
 using TalkieKey = TalkieCodes::TalkieKey;
 using Original = TalkerManifesto::Original;
@@ -357,12 +357,12 @@ public:
 
 						if (_manifesto->actionByIndex(index_found_i, json_message, this)) {
 							// ROGER should be implicit for CALL to spare json string size for more data (for dataKey(n))
-							// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
+							// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
 						} else {
-							json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NEGATIVE);
+							json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NEGATIVE);
 						}
 					} else {
-						json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::SAY_AGAIN);
+						json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::SAY_AGAIN);
 					}
 				}
 				// In the end sends back the processed message (single message, one-to-one)
@@ -418,7 +418,7 @@ public:
 					}
 
 					if(no_list) {
-						json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
+						json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 						transmitMessage(json_message);	// One-to-Many
 					}
 				}
@@ -435,9 +435,9 @@ public:
 							if (_socket) {
 								json_message[ dataKey(0) ] = board_description();
 								// Implicit ROGER
-								// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
+								// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
 							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
+								json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 							}
 							break;
 
@@ -445,9 +445,9 @@ public:
 							if (_socket) {
 								json_message[ dataKey(0) ] = get_drops();
 								// Implicit ROGER
-								// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
+								// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
 							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
+								json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 							}
 							break;
 
@@ -455,9 +455,9 @@ public:
 							if (_socket) {
 								json_message[ dataKey(0) ] = get_delay();
 								// Implicit ROGER
-								// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
+								// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
 							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
+								json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 							}
 							break;
 
@@ -482,30 +482,30 @@ public:
 						if (_socket) {
 								json_message[ dataKey(0) ] = socket_class_name();
 								// Implicit ROGER
-								// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
+								// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
 							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
+								json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 							}
 							break;
 
 						case SystemValue::TALKER:
 							json_message[ dataKey(0) ] = class_name();
 							// Implicit ROGER
-							// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
+							// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
 							break;
 
 						case SystemValue::MANIFESTO:
 							if (_manifesto) {
 								json_message[ dataKey(0) ] = _manifesto->class_name();
 								// Implicit ROGER
-								// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
+								// json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::ROGER);
 							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
+								json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::NIL);
 							}
 							break;
 
 						default:
-							json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::SAY_AGAIN);
+							json_message[ TalkieKey::ROGER ] = static_cast<int>(CallValue::SAY_AGAIN);
 							break;
 					}
 

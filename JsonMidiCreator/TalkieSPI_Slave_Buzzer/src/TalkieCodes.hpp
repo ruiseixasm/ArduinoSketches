@@ -65,7 +65,7 @@ struct TalkieCodes {
 	};
 
 
-	enum class EchoValue : int {
+	enum class CallValue : int {
 		ROGER, SAY_AGAIN, NEGATIVE, NIL
 	};
 
