@@ -40,7 +40,7 @@ bool JsonRepeater::localSend(JsonObject& json_message) {
 	Serial.println(F("Sending a LOCAL message"));
 	#endif
 
-	json_message[ JsonKey::SOURCE ] = static_cast<int>(SourceData::LOCAL);
+	json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::LOCAL);
 	// Triggers all local Talkers to processes the json_message
 	bool sent_message = false;
 	bool pre_validated = false;

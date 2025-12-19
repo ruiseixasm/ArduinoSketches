@@ -20,7 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 struct TalkieCodes {
 
 	// Add a string "enum" struct
-    struct JsonKey {
+    struct TalkieKey {
         static constexpr const char* SOURCE			= "c";
         static constexpr const char* CHECKSUM		= "c";
         static constexpr const char* TIMESTAMP		= "i";
@@ -37,7 +37,7 @@ struct TalkieCodes {
     };
 
 
-	static const char* valueKey(size_t nth = 0) {
+	static const char* dataKey(size_t nth = 0) {
 		switch (nth) {
 			case 1: 	return "1";
 			case 2: 	return "2";
@@ -53,27 +53,27 @@ struct TalkieCodes {
 	}
 
 
-	enum class SourceData : int {
+	enum class SourceValue : int {
 		REMOTE, LOCAL, HERE
 	};
 
 
-	enum class MessageData : int {
+	enum class MessageValue : int {
 		TALK, CHANNEL, PING, CALL, LIST, SYS, ECHO, ERROR, NOISE
 	};
 
 
-	enum class SystemData : int {
+	enum class SystemValue : int {
 		BOARD, DROPS, DELAY, MUTE, UNMUTE, MUTED, SOCKET, TALKER, MANIFESTO
 	};
 
 
-	enum class EchoData : int {
+	enum class EchoValue : int {
 		ROGER, SAY_AGAIN, NEGATIVE, NIL
 	};
 
 
-	enum class ErrorData : int {
+	enum class ErrorValue : int {
 		FROM, FIELD, CHECKSUM, MESSAGE, IDENTITY, DELAY, KEY, DATA
 	};
 

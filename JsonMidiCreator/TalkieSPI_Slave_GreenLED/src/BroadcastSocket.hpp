@@ -169,7 +169,7 @@ protected:
 
 	// Allows the overriding class to peek at the received JSON message
 	virtual bool checkJsonMessage(const JsonObject& json_message) {
-		if (!json_message[ JsonKey::FROM ].is<String>()) {
+		if (!json_message[ TalkieKey::FROM ].is<String>()) {
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("ERROR: From key 'f' is missing"));
 			#endif
@@ -218,9 +218,9 @@ protected:
                 
                 if (_max_delay_ms > 0) {
 
-                    MessageData message_code = static_cast<MessageData>(message_code_int);
+                    MessageValue message_code = static_cast<MessageValue>(message_code_int);
 
-                    if (message_code == MessageData::CALL) {	// Only does time control on Calls (drops)
+                    if (message_code == MessageValue::CALL) {	// Only does time control on Calls (drops)
 
                         #ifdef BROADCASTSOCKET_DEBUG
                         Serial.print(F("triggerTalkers6: Message code requires delay check: "));
@@ -268,16 +268,16 @@ protected:
 
 				if (!checkJsonMessage(json_message)) return 0;
 
-				if (!json_message[ JsonKey::IDENTITY ].is<uint16_t>()) {
+				if (!json_message[ TalkieKey::IDENTITY ].is<uint16_t>()) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
-					json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::ERROR);
-					json_message[ JsonKey::ERROR ] = static_cast<int>(ErrorData::IDENTITY);
+					json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
+					json_message[ TalkieKey::ERROR ] = static_cast<int>(ErrorValue::IDENTITY);
 					// Wrong type of identifier or no identifier, so, it has to insert new identifier
-					json_message[ JsonKey::IDENTITY ] = (uint16_t)millis();
+					json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
 					// From one to many, starts to set the returning target in this single place only
-					json_message[ JsonKey::TO ] = json_message[ JsonKey::FROM ];
+					json_message[ TalkieKey::TO ] = json_message[ TalkieKey::FROM ];
 
 					remoteSend(json_message);	// Includes reply swap
 					return 0;
@@ -457,7 +457,7 @@ public:
     bool remoteSend(JsonObject& json_message) {
 
 		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
-		json_message[ JsonKey::CHECKSUM ] = 0;
+		json_message[ TalkieKey::CHECKSUM ] = 0;
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));

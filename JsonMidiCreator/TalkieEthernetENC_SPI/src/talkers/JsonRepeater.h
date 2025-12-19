@@ -40,17 +40,17 @@ public:
 		Serial.print(F(": "));
 		#endif
 
-		if (json_message[ JsonKey::SOURCE ].is<int>()) {
-			SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
+		if (json_message[ TalkieKey::SOURCE ].is<int>()) {
+			SourceValue source_data = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
 			switch (source_data) {
 
-				case SourceData::REMOTE:
+				case SourceValue::REMOTE:
 					#ifdef JSON_REPEATER_DEBUG
 					Serial.println(F("Repeated a REMOTE message LOCALLY"));
 					#endif
 					return localSend(json_message);	// Cross transmission
 				
-				case SourceData::HERE:
+				case SourceValue::HERE:
 					#ifdef JSON_REPEATER_DEBUG
 					Serial.println(F("Repeated an HERE message to HERE"));
 					#endif

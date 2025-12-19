@@ -444,7 +444,7 @@ protected:
 	bool checkJsonMessage(const JsonObject& json_message) override {
 
 		if (BroadcastSocket::checkJsonMessage(json_message)) {
-			String from_name = json_message[ JsonKey::FROM ].as<String>();
+			String from_name = json_message[ TalkieKey::FROM ].as<String>();
 
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
@@ -486,14 +486,14 @@ protected:
 			
 			#ifdef ENABLE_DIRECT_ADDRESSING
 
-			bool as_reply = json_message[ JsonKey::TO ].is<String>();
+			bool as_reply = json_message[ TalkieKey::TO ].is<String>();
 			if (as_reply) {
 
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("\tsend3: json_message TO is a String"));
 				#endif
 
-				String target_name = json_message[ JsonKey::TO ].as<String>();
+				String target_name = json_message[ TalkieKey::TO ].as<String>();
 				if (target_name.length() > 0) {
 					as_reply = _named_pins[ target_name ].is<uint8_t>();	// Critical line
 				} else {

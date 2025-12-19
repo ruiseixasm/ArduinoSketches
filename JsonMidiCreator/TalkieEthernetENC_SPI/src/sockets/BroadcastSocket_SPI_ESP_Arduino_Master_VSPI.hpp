@@ -373,7 +373,7 @@ protected:
 	bool checkJsonMessage(const JsonObject& json_message) override {
 
 		if (BroadcastSocket::checkJsonMessage(json_message)) {
-			_from_name = json_message[ JsonKey::FROM ].as<String>();
+			_from_name = json_message[ TalkieKey::FROM ].as<String>();
 			return true;
 		}
 		return false;
@@ -385,7 +385,7 @@ protected:
 
 		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 
-			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
+			bool as_reply = (json_message[ TalkieKey::TO ].is<String>() && json_message[ TalkieKey::TO ].as<String>() == _from_name);
 
 			#ifdef ENABLE_DIRECT_ADDRESSING
 			if (as_reply) {

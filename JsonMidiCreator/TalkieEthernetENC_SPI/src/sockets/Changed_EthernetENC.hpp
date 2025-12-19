@@ -121,7 +121,7 @@ protected:
 	bool checkJsonMessage(const JsonObject& json_message) override {
 
 		if (BroadcastSocket::checkJsonMessage(json_message)) {
-			_from_name = json_message[ JsonKey::FROM ].as<String>();
+			_from_name = json_message[ TalkieKey::FROM ].as<String>();
 			return true;
 		}
 		return false;
@@ -136,7 +136,7 @@ protected:
 
             #ifdef ENABLE_DIRECT_ADDRESSING
             
-			bool as_reply = (json_message[ JsonKey::TO ].is<String>() && json_message[ JsonKey::TO ].as<String>() == _from_name);
+			bool as_reply = (json_message[ TalkieKey::TO ].is<String>() && json_message[ TalkieKey::TO ].as<String>() == _from_name);
             if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("\tFailed to begin packet"));

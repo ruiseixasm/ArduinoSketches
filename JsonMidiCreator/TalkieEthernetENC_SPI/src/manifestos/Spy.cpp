@@ -15,8 +15,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../JsonTalker.h"  // It NEEDS to know because the .h file doesn't
 
     
-using MessageData = TalkieCodes::MessageData;
-using SystemData = TalkieCodes::SystemData;
+using MessageValue = TalkieCodes::MessageValue;
+using SystemValue = TalkieCodes::SystemValue;
 
 
 void Spy::loop(JsonTalker* talker) {
@@ -33,9 +33,9 @@ void Spy::loop(JsonTalker* talker) {
 		#endif
 		JsonObject json_message = doc_copy.to<JsonObject>();
 
-		json_message[ JsonKey::MESSAGE ] = static_cast<int>(MessageData::PING);
+		json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
 		if (_ping_talker != "") {
-			json_message[ JsonKey::TO ] = _ping_talker;
+			json_message[ TalkieKey::TO ] = _ping_talker;
 		}
 		// Missing TO makes it a Broadcast message
 		// FROM and TIMESTAMP is automatically set by Send method
@@ -48,19 +48,19 @@ void Spy::loop(JsonTalker* talker) {
 bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
 	
 	// As a spy it only answers to REMOTE calls
-	SourceData source_data = static_cast<SourceData>( json_message[ JsonKey::SOURCE ].as<int>() );
-	if (source_data == SourceData::REMOTE) {
+	SourceValue source_data = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
+	if (source_data == SourceValue::REMOTE) {
 
 		if (index < actionsCount()) {
 			// Actual implementation would do something based on index
 			switch(index) {
 				case 0:
 				{	// Has FROM for sure
-					_original_talker = json_message[ JsonKey::FROM ].as<String>();	// Explicit conversion
-					_original_message.identity = json_message[ JsonKey::IDENTITY ].as<uint16_t>();
-					_original_message.message_data = MessageData::PING;	// It's is the emulated message (not CALL)
-					if (json_message[ valueKey(0) ].is<String>()) {
-						_ping_talker = json_message[ valueKey(0) ].as<String>();
+					_original_talker = json_message[ TalkieKey::FROM ].as<String>();	// Explicit conversion
+					_original_message.identity = json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
+					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
+					if (json_message[ dataKey(0) ].is<String>()) {
+						_ping_talker = json_message[ dataKey(0) ].as<String>();
 					} else {
 						_ping_talker = "";
 					}
@@ -80,19 +80,19 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 	Original original_message = talker->get_original();
 	switch (original_message.message_data) {
 
-		case MessageData::PING:
+		case MessageValue::PING:
 			{
 				// In condition to calculate the delay right away, no need to extra messages
 				uint16_t actual_time = static_cast<uint16_t>(millis());
-				uint16_t message_time = json_message[ JsonKey::TIMESTAMP ].as<uint16_t>();	// must have
+				uint16_t message_time = json_message[ TalkieKey::TIMESTAMP ].as<uint16_t>();	// must have
 				uint16_t time_delay = actual_time - message_time;
-				json_message[ valueKey(0) ] = time_delay;
-				json_message[ valueKey(1) ] = json_message[ JsonKey::FROM ];	// Informs the Talker as reply
+				json_message[ dataKey(0) ] = time_delay;
+				json_message[ dataKey(1) ] = json_message[ TalkieKey::FROM ];	// Informs the Talker as reply
 				// Prepares headers for the original REMOTE sender
-				json_message[ JsonKey::TO ] = _original_talker;
-				json_message[ JsonKey::FROM ] = talker->get_name();	// Avoids swapping
+				json_message[ TalkieKey::TO ] = _original_talker;
+				json_message[ TalkieKey::FROM ] = talker->get_name();	// Avoids swapping
 				// Emulates the REMOTE original call
-				json_message[ JsonKey::IDENTITY ] = _original_message.identity;
+				json_message[ TalkieKey::IDENTITY ] = _original_message.identity;
 				// It's already an ECHO message, it's because of that that entered here
 				// Finally answers to the REMOTE caller by repeating all other json fields
 				talker->remoteSend(json_message);
@@ -106,12 +106,12 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 
 void Spy::error(JsonObject& json_message, JsonTalker* talker) {
 	(void)talker;		// Silence unused parameter warning
-	Serial.print(json_message[ JsonKey::FROM ].as<String>());
+	Serial.print(json_message[ TalkieKey::FROM ].as<String>());
 	Serial.print(" - ");
 	if (json_message["r"].is<String>()) {
 		Serial.println(json_message["r"].as<String>());
-	} else if (json_message[ JsonKey::DESCRIPTION ].is<String>()) {
-		Serial.println(json_message[ JsonKey::DESCRIPTION ].as<String>());
+	} else if (json_message[ TalkieKey::DESCRIPTION ].is<String>()) {
+		Serial.println(json_message[ TalkieKey::DESCRIPTION ].as<String>());
 	} else {
 		Serial.println(F("Empty error received!"));
 	}

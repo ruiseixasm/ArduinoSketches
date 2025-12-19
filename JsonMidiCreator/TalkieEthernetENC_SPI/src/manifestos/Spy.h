@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // #define SPY_MANIFESTO_DEBUG
 
-using JsonKey = TalkieCodes::JsonKey;
+using TalkieKey = TalkieCodes::TalkieKey;
 
 class Spy : public TalkerManifesto {
 public:
@@ -31,7 +31,7 @@ public:
 protected:
 
 	String _original_talker = "";
-	Original _original_message = {0, MessageData::NOISE};
+	Original _original_message = {0, MessageValue::NOISE};
 	String _ping_talker = "";
 	bool _ping = false;
 
