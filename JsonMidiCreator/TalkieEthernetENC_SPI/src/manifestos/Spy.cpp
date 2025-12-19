@@ -41,11 +41,11 @@ bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* tal
 					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a LOCAL PING
 					json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
-					remove(json_message[ TalkieKey::TIMESTAMP ]);	// Makes sure a new TIMESTAMP is set (same as IDENTITY)
+					json_message.remove( TalkieKey::TIMESTAMP );	// Makes sure a new TIMESTAMP is set (same as IDENTITY)
 					if (json_message[ dataKey(0) ].is<String>()) {
 						json_message[ TalkieKey::TO ] = json_message[ dataKey(0) ].as<String>();
 					} else {	// Removes the original TO
-						remove(json_message[ TalkieKey::TO ]);	// Without TO works as broadcast
+						json_message.remove( TalkieKey::TO );	// Without TO works as broadcast
 					}
 					// 3. Sends the message LOCALLY
 					talker->localSend(json_message);	// Dispatches it directly as LOCAL
@@ -62,7 +62,7 @@ bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* tal
 					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a SELF PING
 					json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
-					remove(json_message[ TalkieKey::TIMESTAMP ]);	// Makes sure a new TIMESTAMP is set (same as IDENTITY)
+					json_message.remove( TalkieKey::TIMESTAMP );	// Makes sure a new TIMESTAMP is set (same as IDENTITY)
 					// 3. Sends the message to myself
 					talker->selfSend(json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
