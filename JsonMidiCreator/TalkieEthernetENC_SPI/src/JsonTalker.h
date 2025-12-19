@@ -433,7 +433,9 @@ public:
 
 						case SystemData::BOARD:
 							if (_socket) {
-								json_message[ JsonKey::DESCRIPTION ] = board_description();
+								json_message[ valueKey(0) ] = board_description();
+								// Implicit ROGER
+								// json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
@@ -442,6 +444,8 @@ public:
 						case SystemData::DROPS:
 							if (_socket) {
 								json_message[ valueKey(0) ] = get_drops();
+								// Implicit ROGER
+								// json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
@@ -450,6 +454,8 @@ public:
 						case SystemData::DELAY:
 							if (_socket) {
 								json_message[ valueKey(0) ] = get_delay();
+								// Implicit ROGER
+								// json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
@@ -460,8 +466,8 @@ public:
 								_muted_calls = true;
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
+								json_message[ valueKey(0) ] = "Already muted";
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
-								json_message["r"] = "Already muted";
 							}
 							break;
 
@@ -470,8 +476,8 @@ public:
 								_muted_calls = false;
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
+								json_message[ valueKey(0) ] = "Already NOT muted";
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
-								json_message["r"] = "Already NOT muted";
 							}
 							break;
 
@@ -481,11 +487,15 @@ public:
 							} else {
 								json_message[ valueKey(0) ] = 0;
 							}
+							// Implicit ROGER
+							// json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							break;
 
 						case SystemData::SOCKET:
-							if (_socket) {
+						if (_socket) {
 								json_message[ valueKey(0) ] = socket_class_name();
+								// Implicit ROGER
+								// json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
@@ -493,11 +503,15 @@ public:
 
 						case SystemData::TALKER:
 							json_message[ valueKey(0) ] = class_name();
+							// Implicit ROGER
+							// json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							break;
 
 						case SystemData::MANIFESTO:
 							if (_manifesto) {
 								json_message[ valueKey(0) ] = _manifesto->class_name();
+								// Implicit ROGER
+								// json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 							} else {
 								json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NIL);
 							}
