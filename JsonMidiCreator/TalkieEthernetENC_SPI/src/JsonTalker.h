@@ -492,6 +492,8 @@ public:
 						case SystemValue::MANIFESTO:
 							if (_manifesto) {
 								json_message[ dataKey(0) ] = _manifesto->class_name();
+							} else {
+								json_message[ dataKey(0) ] = "none";
 							}
 							break;
 

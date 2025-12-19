@@ -50,7 +50,7 @@ const char* JsonTalker::socket_class_name() {
 	if (_socket) {	// Safe code
 		return _socket->class_name();
 	}
-	return "";
+	return "none";
 }
 
 void JsonTalker::set_delay(uint8_t delay) {
