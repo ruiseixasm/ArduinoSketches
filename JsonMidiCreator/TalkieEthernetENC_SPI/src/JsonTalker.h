@@ -255,7 +255,7 @@ public:
 		json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::SELF);
 		// Despite being a SELF message it also needs to be prepared like any other
 		if (prepareMessage(json_message)) {
-			return processMessage(json_message);
+			return processMessage(json_message);	// Calls mu self processMEssage method right away
 		}
 		return false;
     }
