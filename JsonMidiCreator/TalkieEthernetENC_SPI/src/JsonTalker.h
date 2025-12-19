@@ -262,6 +262,7 @@ public:
 
 
 	virtual bool noneSend(JsonObject& json_message) {
+        (void)json_message; // Silence unused parameter warning
 		// It's absolutely neutral, does nothing, NONE
 		return true;
 	}
