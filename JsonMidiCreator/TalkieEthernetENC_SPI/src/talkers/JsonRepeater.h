@@ -56,6 +56,12 @@ public:
 					#endif
 					return selfSend(json_message);	// Straight transmission
 				
+				case SourceValue::NONE:
+					#ifdef JSON_REPEATER_DEBUG
+					Serial.println(F("\tTransmitted an SELF message"));
+					#endif
+					return noneSend(json_message);	// Straight transmission
+
 				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 				default: break;
 			}

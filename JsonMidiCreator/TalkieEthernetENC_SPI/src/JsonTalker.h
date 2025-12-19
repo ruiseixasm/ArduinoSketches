@@ -259,6 +259,11 @@ public:
     }
 
 
+	virtual bool noneSend(JsonObject& json_message) {
+		return true;	// None accepts everything and does nothing
+	}
+
+
     virtual bool transmitMessage(JsonObject& json_message) {
 
 		#ifdef JSON_TALKER_DEBUG
@@ -282,6 +287,12 @@ public:
 					Serial.println(F("\tTransmitted an SELF message"));
 					#endif
 					return selfSend(json_message);
+
+				case SourceValue::NONE:
+					#ifdef JSON_TALKER_DEBUG
+					Serial.println(F("\tTransmitted an SELF message"));
+					#endif
+					return noneSend(json_message);
 
 				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 				default: break;

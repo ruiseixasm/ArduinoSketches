@@ -19,37 +19,24 @@ using MessageValue = TalkieCodes::MessageValue;
 using SystemValue = TalkieCodes::SystemValue;
 
 
-void Spy::loop(JsonTalker* talker) {
-	
-	if (_ping) {
-		_ping = false;
-		
-		// CREATE a new json_message
-		// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-		#if ARDUINOJSON_VERSION_MAJOR >= 7
-		JsonDocument doc_copy;
-		#else
-		StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
-		#endif
-		JsonObject json_message = doc_copy.to<JsonObject>();
-
-		json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
-		if (_ping_talker != "") {
-			json_message[ TalkieKey::TO ] = _ping_talker;
-		}
-		// Missing TO makes it a Broadcast message
-		// FROM and TIMESTAMP is automatically set by Send method
-		talker->localSend(json_message);	// Only inquires locally
-	}
-}
-
 
 // Index-based operations (simplified examples)
 bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
 	
+	bool ping = false;
+
 	// As a spy it only answers to REMOTE calls
 	SourceValue source_data = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
 	if (source_data == SourceValue::REMOTE) {
+
+		// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+		#if ARDUINOJSON_VERSION_MAJOR >= 7
+		JsonDocument ping_doc;
+		#else
+		StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> ping_doc;
+		#endif
+		JsonObject ping_message = ping_doc.to<JsonObject>();
+		ping_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
 
 		if (index < actionsCount()) {
 			// Actual implementation would do something based on index
@@ -60,18 +47,25 @@ bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* tal
 					_original_message.identity = json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
 					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
 					if (json_message[ dataKey(0) ].is<String>()) {
-						_ping_talker = json_message[ dataKey(0) ].as<String>();
-					} else {
-						_ping_talker = "";
+						ping_message[ TalkieKey::TO ] = json_message[ dataKey(0) ].as<String>();
 					}
-					_ping = true;
-					return true;
+					ping = true;
+					talker->localSend(ping_message);	// Only inquires locally
+				}
+				break;
+				case 1:
+				{	// Has FROM for sure
+					_original_talker = json_message[ TalkieKey::FROM ].as<String>();	// Explicit conversion
+					_original_message.identity = json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
+					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
+					ping = true;
+					talker->selfSend(ping_message);		// Only inquires myself
 				}
 				break;
 			}
 		}
 	}
-	return false;
+	return ping;
 }
 
 

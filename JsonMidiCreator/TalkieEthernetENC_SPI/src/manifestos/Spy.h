@@ -32,13 +32,12 @@ protected:
 
 	String _original_talker = "";
 	Original _original_message = {0, MessageValue::NOISE};
-	String _ping_talker = "";
-	bool _ping = false;
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action calls[1] = {
-		{"ping", "I ping every talker around me"}
+    Action calls[2] = {
+		{"ping", "I ping every talker around me"},
+		{"ping_self", "I can even ping myself"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -48,8 +47,6 @@ protected:
 
 
 public:
-
-	void loop(JsonTalker* talker) override;
 
     // Action implementations - MUST be implemented by derived
     bool actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override;
