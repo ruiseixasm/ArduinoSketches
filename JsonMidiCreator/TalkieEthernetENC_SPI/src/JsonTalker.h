@@ -19,12 +19,12 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkerManifesto.hpp"
 #include "TalkieCodes.hpp"
 
+#ifndef BROADCAST_SOCKET_BUFFER_SIZE
+#define BROADCAST_SOCKET_BUFFER_SIZE 128
+#endif
+
 
 // #define JSON_TALKER_DEBUG
-
-// Readjust if absolutely necessary
-#define BROADCAST_SOCKET_BUFFER_SIZE 128
-
 
 using SourceData = TalkieCodes::SourceData;
 using MessageData = TalkieCodes::MessageData;
