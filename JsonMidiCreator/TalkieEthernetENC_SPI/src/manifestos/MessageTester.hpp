@@ -39,7 +39,7 @@ protected:
 
     Action calls[2] = {
 		{"all", "Tests all methods"},
-		{"has_key", "Test the method hasKey"}
+		{"has_key", "Test deserialize (fill up)"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -70,7 +70,7 @@ public:
 			{
 				JsonMessage json_message;
 				const char* json_payload = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
-
+				return json_message.deserialize(json_payload, sizeof(json_payload));
 			}
 			break;
 				

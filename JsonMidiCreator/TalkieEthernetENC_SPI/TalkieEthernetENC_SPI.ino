@@ -26,6 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/talkers/JsonRepeater.h"
 #include "src/manifestos/Spy.h"
 #include "src/manifestos/BlueManifesto.hpp"
+#include "src/manifestos/MessageTester.hpp"
 
 
 // TALKERS 
@@ -51,11 +52,17 @@ const char t_sockless_desc[] = "I have no Socket, but I turn led Blue on and off
 BlueManifesto blue_manifesto(2);
 JsonTalker t_sockless = JsonTalker(t_sockless_name, t_sockless_desc, &blue_manifesto);
 
+// Sockless Talker (JsonMessage tester)
+const char t_tester_name[] = "tester";
+const char t_tester_desc[] = "I test the JsonMessage class";
+MessageTester message_tester;
+JsonTalker t_tester = JsonTalker(t_tester_name, t_tester_desc, &message_tester);
+
 
 // LIST OF TALKERS FOR EACH SOCKET
 JsonTalker* t_ethernet_talkers[] = { &t_ethernet, &t_spy };   // It's an array of pointers
 JsonTalker* t_spi_talkers[] = { &t_spi };   // It's an array of pointers
-JsonTalker* all_talkers[] = { &t_ethernet, &t_spi, &t_spy, &t_sockless };	// It's an array of pointers
+JsonTalker* all_talkers[] = { &t_ethernet, &t_spi, &t_spy, &t_sockless, &t_tester };	// It's an array of pointers
 
 
 // SOCKETS
