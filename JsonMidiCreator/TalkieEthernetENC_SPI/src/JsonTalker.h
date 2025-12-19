@@ -147,8 +147,10 @@ public:
 
 			// _muted_calls mutes CALL echoes only
 			if (_muted_calls && _received_message == MessageData::CALL) {
-				_received_message = MessageData::NOISE;	// Avoids false CALLS return
+				_received_message = MessageData::NOISE;	// Avoids false mutes for self generated messages (safe code)
 				return false;
+			} else {
+				_received_message = MessageData::NOISE;	// Avoids false mutes for self generated messages (safe code)
 			}
 
 			uint16_t message_id = (uint16_t)millis();
