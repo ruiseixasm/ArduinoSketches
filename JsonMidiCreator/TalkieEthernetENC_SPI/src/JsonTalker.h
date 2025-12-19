@@ -70,6 +70,13 @@ public:
 		return TalkieCodes::valueKey(nth);
 	}
 
+	bool inSameSocket(const BroadcastSocket* socket) const {
+		if (_socket) {	// nullptr is NOT a socket
+			return socket == _socket;
+		}
+		return false;
+	}
+
 
 	// Getter and setters
 

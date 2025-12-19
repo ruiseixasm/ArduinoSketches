@@ -45,29 +45,25 @@ bool JsonRepeater::localSend(JsonObject& json_message) {
 	bool sent_message = false;
 	bool pre_validated = false;
 	for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-		if (_json_talkers[talker_i] != this) {  // Can't send to myself
+		if (_json_talkers[talker_i] != this && !_json_talkers[talker_i]->inSameSocket(_socket)) {  // Can't send to myself
 
-			// Should make sure it doesn't send to same socket talkers, because they already received from REMOTE
-			if (!_socket || !_socket->hasTalker(_json_talkers[talker_i])) {
-
-				// CREATE COPY for each talker
-				// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-				#if ARDUINOJSON_VERSION_MAJOR >= 7
-				JsonDocument doc_copy;
-				#else
-				StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
-				#endif
-				JsonObject json_copy = doc_copy.to<JsonObject>();
-				
-				// Copy all data from original
-				for (JsonPair kv : json_message) {
-					json_copy[kv.key()] = kv.value();
-				}
+			// CREATE COPY for each talker
+			// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
+			#if ARDUINOJSON_VERSION_MAJOR >= 7
+			JsonDocument doc_copy;
+			#else
+			StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
+			#endif
+			JsonObject json_copy = doc_copy.to<JsonObject>();
 			
-				pre_validated = _json_talkers[talker_i]->processMessage(json_copy);
-				sent_message = true;
-				if (!pre_validated) break;
+			// Copy all data from original
+			for (JsonPair kv : json_message) {
+				json_copy[kv.key()] = kv.value();
 			}
+		
+			pre_validated = _json_talkers[talker_i]->processMessage(json_copy);
+			sent_message = true;
+			if (!pre_validated) break;
 		}
 	}
 	return sent_message;

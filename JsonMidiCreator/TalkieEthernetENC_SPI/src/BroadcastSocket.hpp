@@ -451,15 +451,6 @@ public:
     }
 
 
-	bool hasTalker(JsonTalker* json_talker) {
-
-        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-			if (_json_talkers[talker_i] == json_talker) return true;
-		}
-		return false;
-	}
-    
-
     bool remoteSend(JsonObject& json_message) {
 
 		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
