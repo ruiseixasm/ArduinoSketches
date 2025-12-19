@@ -30,7 +30,7 @@ public:
 	}	// Constructor
 
     ~BlueManifesto()
-	{
+	{	// ~TalkerManifesto() called automatically here
 		digitalWrite(_led_pin, LOW);
 		pinMode(_led_pin, INPUT);
 	}	// Destructor
@@ -73,17 +73,7 @@ public:
 				#endif
 		
 				if (!_is_led_on) {
-				#ifdef GREEN_LED
-					#ifdef GREEN_MANIFESTO_DEBUG
-						Serial.print(F("\tGREEN_LED IS DEFINED as: "));
-						Serial.println(GREEN_LED);
-					#endif
-					digitalWrite(GREEN_LED, HIGH);
-				#else
-					#ifdef GREEN_MANIFESTO_DEBUG
-						Serial.println(F("\tGREEN_LED IS NOT DEFINED in this context!"));
-					#endif
-				#endif
+					digitalWrite(_led_pin, HIGH);
 					_is_led_on = true;
 					_total_calls++;
 					return true;
@@ -101,9 +91,7 @@ public:
 				#endif
 		
 				if (_is_led_on) {
-				#ifdef GREEN_LED
-					digitalWrite(GREEN_LED, LOW);
-				#endif
+				digitalWrite(_led_pin, LOW);
 					_is_led_on = false;
 					_total_calls++;
 				} else {
@@ -115,12 +103,11 @@ public:
 			break;
 			
             case 2:
-                _bpm_10 = json_message[ valueKey(0) ].as<uint16_t>();
+				json_message[ valueKey(0) ] = _total_calls;
                 return true;
-                break;
+            break;
 				
-            // case 3:
-			// 	return _bpm_10;
+            default: return false;
 		}
 		return false;
 	}
