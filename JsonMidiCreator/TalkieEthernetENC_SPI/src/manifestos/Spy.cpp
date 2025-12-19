@@ -49,6 +49,8 @@ bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* tal
 					if (json_message[ dataKey(0) ].is<String>()) {
 						ping_message[ TalkieKey::TO ] = json_message[ dataKey(0) ].as<String>();
 					}
+					// Disables the extra ROGER response to the caller by changing the SOURCE of the message from REMOTE to NONE
+					json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
 					ping = true;
 					talker->localSend(ping_message);	// Only inquires locally
 				}
@@ -58,6 +60,8 @@ bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* tal
 					_original_talker = json_message[ TalkieKey::FROM ].as<String>();	// Explicit conversion
 					_original_message.identity = json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
 					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
+					// Disables the extra ROGER response to the caller by changing the SOURCE of the message from REMOTE to NONE
+					json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
 					ping = true;
 					talker->selfSend(ping_message);		// Only inquires myself
 				}
