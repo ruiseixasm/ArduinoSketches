@@ -179,7 +179,7 @@ public:
 			#endif
 
 			json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
-			json_message[ TalkieKey::ERROR ] = static_cast<int>(ErrorValue::IDENTITY);
+			json_message[ dataKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
 			json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
 
 		} else {
@@ -342,10 +342,10 @@ public:
 			case MessageValue::CALL:
 				{
 					uint8_t index_found_i = 255;
-					if (json_message[ TalkieKey::INDEX ].is<uint8_t>()) {
-						index_found_i = _manifesto->actionIndex(json_message[ TalkieKey::INDEX ].as<uint8_t>());
-					} else if (json_message[ TalkieKey::NAME ].is<const char *>()) {
-						index_found_i = _manifesto->actionIndex(json_message[ TalkieKey::NAME ].as<const char *>());
+					if (json_message[ TalkieKey::ACTION ].is<uint8_t>()) {
+						index_found_i = _manifesto->actionIndex(json_message[ TalkieKey::ACTION ].as<uint8_t>());
+					} else if (json_message[ TalkieKey::ACTION ].is<const char *>()) {
+						index_found_i = _manifesto->actionIndex(json_message[ TalkieKey::ACTION ].as<const char *>());
 					}
 					if (index_found_i < 255) {
 
@@ -370,7 +370,7 @@ public:
 				break;
 			
 			case MessageValue::TALK:
-				json_message[ TalkieKey::DESCRIPTION ] = _desc;
+				json_message[ dataKey(0) ] = _desc;
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitMessage(json_message);
 				break;
@@ -411,9 +411,9 @@ public:
 					uint8_t action_index = 0;
 					while ((run = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
 						no_list = false;
-						json_message[ TalkieKey::NAME ] = run->name;      // Direct access
-						json_message[ TalkieKey::DESCRIPTION ] = run->desc;
-						json_message[ TalkieKey::INDEX ] = action_index++;
+						json_message[ dataKey(0) ] = action_index++;
+						json_message[ dataKey(1) ] = run->name;
+						json_message[ dataKey(2) ] = run->desc;
 						transmitMessage(json_message);	// One-to-Many
 					}
 
@@ -425,15 +425,17 @@ public:
 				break;
 			
 			case MessageValue::SYS:
-				if (json_message["s"].is<int>()) {
+				if (json_message[ TalkieKey::SYSTEM ].is<int>()) {
 
-					SystemValue system_code = static_cast<SystemValue>(json_message["s"].as<int>());
+					SystemValue system_code = static_cast<SystemValue>(json_message[ TalkieKey::SYSTEM ].as<int>());
 
 					switch (system_code) {
 
 						case SystemValue::BOARD:
 							if (_socket) {
-								json_message[ TalkieKey::DESCRIPTION ] = board_description();
+								json_message[ dataKey(0) ] = board_description();
+								// Implicit ROGER
+								// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
 							} else {
 								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
 							}
@@ -442,6 +444,8 @@ public:
 						case SystemValue::DROPS:
 							if (_socket) {
 								json_message[ dataKey(0) ] = get_drops();
+								// Implicit ROGER
+								// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
 							} else {
 								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
 							}
@@ -450,42 +454,35 @@ public:
 						case SystemValue::DELAY:
 							if (_socket) {
 								json_message[ dataKey(0) ] = get_delay();
+								// Implicit ROGER
+								// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
 							} else {
 								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
 							}
 							break;
 
 						case SystemValue::MUTE:
-							if (!_muted_calls) {
-								_muted_calls = true;
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
+							if (json_message[ dataKey(0) ].is<uint8_t>()) {
+								uint8_t mute = json_message[ dataKey(0) ].as<uint8_t>();
+								if (mute) {
+									_muted_calls = true;
+								} else {
+									_muted_calls = false;
+								}
 							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NEGATIVE);
-								json_message["r"] = "Already muted";
-							}
-							break;
-
-						case SystemValue::UNMUTE:
-							if (_muted_calls) {
-								_muted_calls = false;
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
-							} else {
-								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NEGATIVE);
-								json_message["r"] = "Already NOT muted";
-							}
-							break;
-
-						case SystemValue::MUTED:
-							if (_muted_calls) {
-								json_message[ dataKey(0) ] = 1;
-							} else {
-								json_message[ dataKey(0) ] = 0;
+								if (_muted_calls) {
+									json_message[ dataKey(0) ] = 1;
+								} else {
+									json_message[ dataKey(0) ] = 0;
+								}
 							}
 							break;
 
 						case SystemValue::SOCKET:
-							if (_socket) {
+						if (_socket) {
 								json_message[ dataKey(0) ] = socket_class_name();
+								// Implicit ROGER
+								// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
 							} else {
 								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
 							}
@@ -493,11 +490,15 @@ public:
 
 						case SystemValue::TALKER:
 							json_message[ dataKey(0) ] = class_name();
+							// Implicit ROGER
+							// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
 							break;
 
 						case SystemValue::MANIFESTO:
 							if (_manifesto) {
 								json_message[ dataKey(0) ] = _manifesto->class_name();
+								// Implicit ROGER
+								// json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::ROGER);
 							} else {
 								json_message[ TalkieKey::ROGER ] = static_cast<int>(EchoValue::NIL);
 							}

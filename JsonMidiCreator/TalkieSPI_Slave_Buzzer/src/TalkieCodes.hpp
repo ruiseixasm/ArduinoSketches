@@ -29,11 +29,8 @@ struct TalkieCodes {
         static constexpr const char* FROM 			= "f";
         static constexpr const char* TO 			= "t";
         static constexpr const char* SYSTEM 		= "s";
-        static constexpr const char* ERROR 			= "e";
+        static constexpr const char* ACTION			= "a";
         static constexpr const char* ROGER 			= "r";
-        static constexpr const char* NAME 			= "n";
-        static constexpr const char* INDEX 			= "x";
-        static constexpr const char* DESCRIPTION	= "d";
     };
 
 
@@ -64,7 +61,7 @@ struct TalkieCodes {
 
 
 	enum class SystemValue : int {
-		BOARD, DROPS, DELAY, MUTE, UNMUTE, MUTED, SOCKET, TALKER, MANIFESTO
+		BOARD, DROPS, DELAY, MUTE, SOCKET, TALKER, MANIFESTO
 	};
 
 
