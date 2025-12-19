@@ -70,6 +70,13 @@ public:
 		return TalkieCodes::valueKey(nth);
 	}
 
+	bool inSameSocket(const BroadcastSocket* socket) const {
+		if (_socket) {	// Being in nullptr is NOT in a socket
+			return socket == _socket;
+		}
+		return false;
+	}
+
 
 	// Getter and setters
 
@@ -140,8 +147,10 @@ public:
 
 			// _muted_calls mutes CALL echoes only
 			if (_muted_calls && _received_message == MessageData::CALL) {
-				_received_message = MessageData::NOISE;	// Avoids false CALLS return
+				_received_message = MessageData::NOISE;	// Avoids false mutes for self generated messages (safe code)
 				return false;
+			} else {
+				_received_message = MessageData::NOISE;	// Avoids false mutes for self generated messages (safe code)
 			}
 
 			uint16_t message_id = (uint16_t)millis();
@@ -337,7 +346,8 @@ public:
 						#endif
 
 						if (_manifesto->actionByIndex(index_found_i, json_message, this)) {
-							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
+							// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
+							// json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::ROGER);
 						} else {
 							json_message[ JsonKey::ROGER ] = static_cast<int>(EchoData::NEGATIVE);
 						}
