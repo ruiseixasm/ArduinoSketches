@@ -65,10 +65,9 @@ public:
 
 			case 0:
 			{
-				
-				if (!new_json_message.deserialize(json_payload, sizeof(json_payload))) return false;
-				if (!new_json_message.compare(json_payload, sizeof(json_payload))) return false;
-
+				for (uint8_t test_i = 1; test_i < actionsCount(); test_i++) {
+					if (!actionByIndex(test_i, json_message, talker)) return false;
+				}
 				return true;
 			}
 			break;
