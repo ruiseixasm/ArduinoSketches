@@ -79,7 +79,7 @@ public:
 		return 0;
 	}
 
-	bool same_payload(const char* buffer, size_t size) const {
+	bool compare(const char* buffer, size_t size) const {
 		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
 				if (buffer[char_i] != _json_payload[char_i]) {

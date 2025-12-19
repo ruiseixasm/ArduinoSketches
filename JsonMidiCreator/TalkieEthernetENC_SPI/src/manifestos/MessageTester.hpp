@@ -37,9 +37,10 @@ public:
 protected:
 
 
-    Action calls[2] = {
+    Action calls[3] = {
 		{"all", "Tests all methods"},
-		{"has_key", "Test deserialize (fill up)"}
+		{"deserialize", "Test deserialize (fill up)"},
+		{"compare", "Test if it's the same"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -56,21 +57,36 @@ public:
 		
 		if (index >= sizeof(calls)/sizeof(Action)) return false;
 		
+		const char* json_payload = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+		JsonMessage new_json_message;
+
 		// Actual implementation would do something based on index
 		switch(index) {
 
 			case 0:
 			{
 				
+				if (!new_json_message.deserialize(json_payload, sizeof(json_payload))) return false;
+				if (!new_json_message.compare(json_payload, sizeof(json_payload))) return false;
 
+				return true;
 			}
 			break;
 
 			case 1:
 			{
-				JsonMessage json_message;
-				const char* json_payload = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
-				return json_message.deserialize(json_payload, sizeof(json_payload));
+				if (!new_json_message.deserialize(json_payload, sizeof(json_payload))) return false;
+
+				return true;
+			}
+			break;
+
+			case 2:
+			{
+				if (!new_json_message.deserialize(json_payload, sizeof(json_payload))) return false;
+				if (!new_json_message.compare(json_payload, sizeof(json_payload))) return false;
+
+				return true;
 			}
 			break;
 				
