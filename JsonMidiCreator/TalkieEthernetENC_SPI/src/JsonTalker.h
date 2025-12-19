@@ -342,10 +342,10 @@ public:
 			case MessageValue::CALL:
 				{
 					uint8_t index_found_i = 255;
-					if (json_message[ TalkieKey::INDEX ].is<uint8_t>()) {
-						index_found_i = _manifesto->actionIndex(json_message[ TalkieKey::INDEX ].as<uint8_t>());
-					} else if (json_message[ TalkieKey::NAME ].is<const char *>()) {
-						index_found_i = _manifesto->actionIndex(json_message[ TalkieKey::NAME ].as<const char *>());
+					if (json_message[ TalkieKey::ACTION ].is<uint8_t>()) {
+						index_found_i = _manifesto->actionIndex(json_message[ TalkieKey::ACTION ].as<uint8_t>());
+					} else if (json_message[ TalkieKey::ACTION ].is<const char *>()) {
+						index_found_i = _manifesto->actionIndex(json_message[ TalkieKey::ACTION ].as<const char *>());
 					}
 					if (index_found_i < 255) {
 
@@ -411,9 +411,9 @@ public:
 					uint8_t action_index = 0;
 					while ((run = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
 						no_list = false;
-						json_message[ TalkieKey::NAME ] = run->name;      // Direct access
-						json_message[ TalkieKey::DESCRIPTION ] = run->desc;
-						json_message[ TalkieKey::INDEX ] = action_index++;
+						json_message[ dataKey(0) ] = action_index++;
+						json_message[ dataKey(1) ] = run->name;
+						json_message[ dataKey(2) ] = run->desc;
 						transmitMessage(json_message);	// One-to-Many
 					}
 
