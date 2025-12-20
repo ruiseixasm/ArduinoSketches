@@ -123,7 +123,7 @@ public:
 	}
 
 	uint8_t key_position(char key) const {
-		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
+		if (_json_length > 6 && _json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
 			for (uint8_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
 					return char_i + 1;	// Moves 1 after the ':' char (avoids extra thinking)
@@ -194,6 +194,21 @@ public:
 			checksum += _json_payload[char_i++] - '0';
 		}
 		return checksum;
+	}
+
+	bool extract_string(char key, char* out, size_t size) const {
+		uint8_t char_i = key_position(key);
+		if (char_i && _json_payload[char_i++] == '"') {
+			uint8_t out_i = 0;
+			while (_json_payload[char_i] != '"' && out_i < size && char_i <= BROADCAST_SOCKET_BUFFER_SIZE) {
+				out[out_i++] = _json_payload[char_i++];
+			}
+			if (out_i < size) {
+				out[out_i] = '\0';	// Makes sure the termination char is added
+				return true;
+			}
+		}
+		return false;
 	}
 
 };
