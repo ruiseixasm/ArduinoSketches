@@ -129,7 +129,7 @@ public:
 			if (_json_payload[++position] == '"') {
 				return STRING;
 			} else {
-				while (_json_payload[position] != '"') {
+				while (_json_payload[position] != ',') {
 					if (_json_payload[position] < '0' || _json_payload[position] > '9') {
 						return OTHER;
 					}
