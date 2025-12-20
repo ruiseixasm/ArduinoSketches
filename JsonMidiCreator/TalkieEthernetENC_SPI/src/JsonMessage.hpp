@@ -211,7 +211,7 @@ public:
 		return 0;
 	}
 
-	
+
 	bool compare(const char* in_string, size_t size) const {
 		if (size == _json_length) {
 			for (size_t char_j = 0; char_j < size; ++char_j) {
@@ -319,6 +319,29 @@ public:
 	}
 
 	// SETTERS
+
+	bool set(char key, uint32_t number, size_t colon_position = 4) {
+		colon_position = get_colon_position(key, colon_position);
+		if (colon_position) {
+			if (!remove(key, colon_position) return false;
+		}
+		// At this time there is no field key for sure, so, one can just add it right before the '}'
+		size_t number_size = number_of_digits(number);
+		size_t new_length = _json_length + number_size + 4 + 1;	// the usual key 4 plus the + 1 due to the ',' needed to be added
+		if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+			return false;
+		}
+		// Sets the key json data
+		char json_key[] = ",\"k\":";
+		json_key[2] = key;
+		for (size_t char_j = 0; char_j < 5; char_j++) {
+			_json_payload[_json_length - 2 + char_j] = json_key[char_j];
+		}
+		
+
+		return true;
+	}
+
 
 	bool swap_key(char old_key, char new_key, size_t colon_position = 4) {
 		size_t json_i = get_value_position(old_key, colon_position);
