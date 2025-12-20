@@ -186,7 +186,7 @@ public:
 		size_t field_length = 0;
 		json_i = value_position(key, json_i);
 		if (json_i) {
-			field_length = 4;	// All keys occupy 4 '"k":'
+			field_length = 4;	// All keys occupy 4 '"k":' chars
 			ValueType value_type = get_value_type(key, json_i - 1);
 			switch (value_type) {
 
