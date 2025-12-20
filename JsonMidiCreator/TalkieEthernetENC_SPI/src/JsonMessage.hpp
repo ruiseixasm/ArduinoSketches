@@ -335,7 +335,7 @@ public:
 		char json_key[] = ",\"k\":";
 		json_key[2] = key;
 		for (size_t char_j = 0; char_j < 5; char_j++) {
-			_json_payload[_json_length - 2 + char_j] = json_key[char_j];
+			_json_payload[_json_length - 1 + char_j] = json_key[char_j];
 		}
 		// To be added, it has to be from right to left
 		for (size_t json_i = new_length - 2; number; json_i--) {
@@ -343,7 +343,7 @@ public:
 			number /= 10; // Truncates the number (does a floor)
 		}
 		// Finally writes the last char '}'
-		_json_payload[_json_length - 1] = '}';
+		_json_payload[new_length - 1] = '}';
 		_json_length = new_length;
 		return true;
 	}
