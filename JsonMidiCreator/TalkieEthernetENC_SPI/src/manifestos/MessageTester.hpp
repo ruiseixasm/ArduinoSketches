@@ -37,13 +37,14 @@ public:
 protected:
 
 
-    Action calls[6] = {
+    Action calls[7] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
 		{"has", "Test if it finds the given char"},
 		{"has_not", "Test if DOESN't find the given char"},
-		{"length", "Test it has the right length"}
+		{"length", "Test it has the right length"},
+		{"type", "Test the type of value"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -69,6 +70,7 @@ public:
 
 			case 0:
 			{
+				json_message[ valueKey(0) ] = 0;	// 0 means none have failed
 				for (uint8_t test_i = 1; test_i < actionsCount(); test_i++) {
 					if (!actionByIndex(test_i, json_message, talker)) {
 						json_message[ valueKey(0) ] = test_i;
@@ -141,6 +143,24 @@ public:
 				json_message[ valueKey(0) ] = length;
 				if (new_json_message.get_length() != length) {
 					json_message[ valueKey(1) ] = new_json_message.get_length();
+					return false;
+				}
+				return true;
+			}
+			break;
+				
+			case 6:
+			{
+				if (new_json_message.value_type('c') != JsonMessage::INTEGER) {
+					json_message[ valueKey(0) ] = "c";
+					return false;
+				}
+				if (new_json_message.value_type('f') != JsonMessage::STRING) {
+					json_message[ valueKey(0) ] = "f";
+					return false;
+				}
+				if (new_json_message.value_type('e') != JsonMessage::VOID) {
+					json_message[ valueKey(0) ] = "e";
 					return false;
 				}
 				return true;

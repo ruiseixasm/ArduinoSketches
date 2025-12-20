@@ -24,6 +24,13 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 class JsonMessage {
+public:
+	
+	enum ValueType : int {
+		STRING, INTEGER, OTHER, VOID
+	};
+
+
 protected:
 
 	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
@@ -103,6 +110,35 @@ public:
 			}
 		}
 		return false;
+	}
+
+	size_t key_position(char key) const {
+		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
+			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
+				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
+					return char_i;
+				}
+			}
+		}
+		return 0;
+	}
+
+	ValueType value_type(char key) const {
+		size_t position = key_position(key);
+		if (position) {
+			if (_json_payload[++position] == '"') {
+				return STRING;
+			} else {
+				while (_json_payload[position] != '"') {
+					if (_json_payload[position] < '0' || _json_payload[position] > '9') {
+						return OTHER;
+					}
+					position++;
+				}
+				return INTEGER;
+			}
+		}
+		return VOID;
 	}
 
 };
