@@ -32,6 +32,7 @@ https://github.com/ruiseixasm/JsonTalkie
 using MessageKey = TalkieCodes::MessageKey;
 using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
+using RogerValue = TalkieCodes::RogerValue;
 
 
 class JsonMessage {
