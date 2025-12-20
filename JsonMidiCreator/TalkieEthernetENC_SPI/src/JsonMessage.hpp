@@ -213,7 +213,7 @@ public:
 
 	bool extract_string(char key, char* out, size_t size) const {
 		size_t char_i = key_position(key);
-		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE && size >= _json_length) {	// Safe code
 			if (char_i && _json_payload[char_i++] == '"') {
 				size_t out_i = 0;
 				while (_json_payload[char_i] != '"' && out_i < size && char_i < _json_length) {
