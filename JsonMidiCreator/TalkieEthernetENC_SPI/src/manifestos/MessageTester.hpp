@@ -20,6 +20,8 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define MESSAGE_TESTER_DEBUG
 
 
+using MessageValue = TalkieCodes::MessageValue;
+
 class MessageTester : public TalkerManifesto {
 public:
 
@@ -37,7 +39,7 @@ public:
 protected:
 
 
-    Action calls[10] = {
+    Action calls[11] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -47,7 +49,8 @@ protected:
 		{"type", "Test the type of value"},
 		{"fields", "Validate message fields"},
 		{"identity", "Extract the message identity"},
-		{"checksum", "Extract the message checksum"}
+		{"checksum", "Extract the message checksum"},
+		{"message", "Gets the message number"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -195,6 +198,14 @@ public:
 				json_message[ valueKey(0) ] = new_json_message.extract_checksum();
 				json_message[ valueKey(1) ] = 29973;
 				return new_json_message.extract_checksum() == 29973;
+			}
+			break;
+				
+			case 10:
+			{
+				json_message[ valueKey(0) ] = static_cast<int>(new_json_message.message_value());
+				json_message[ valueKey(1) ] = static_cast<int>(MessageValue::ECHO);
+				return new_json_message.message_value() == MessageValue::ECHO;	// 6 is ECHO
 			}
 			break;
 				

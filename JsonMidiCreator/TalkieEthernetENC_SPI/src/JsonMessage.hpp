@@ -24,6 +24,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 using MessageKey = TalkieCodes::MessageKey;
+using MessageValue = TalkieCodes::MessageValue;
 
 
 class JsonMessage {
@@ -153,6 +154,14 @@ public:
 		if (value_type('c') != INTEGER) return false;
 		if (value_type('f') != STRING) return false;
 		return true;
+	}
+
+	MessageValue message_value() const {
+		size_t position = key_position(MessageKey::MESSAGE) + 1;
+		if (position) {
+			return static_cast<MessageValue>(_json_payload[position + 1]);
+		}
+		return MessageValue::NOISE;
 	}
 
 	uint16_t extract_identity() const {
