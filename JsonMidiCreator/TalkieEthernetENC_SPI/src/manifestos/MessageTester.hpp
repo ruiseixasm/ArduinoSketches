@@ -277,10 +277,16 @@ public:
 			case 14:
 			{
 				const char final_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
-				if (!new_json_message.remove('m')) {	// The first key (no header ',' char)
+				if (!new_json_message.remove('m') || !new_json_message.compare_string(final_payload)) {	// The first key (no header ',' char)
+					json_message[ valueKey(0) ] = "first";
 					return false;
-				}				
-				return new_json_message.compare_string(final_payload);
+				}
+				const char single_key[] = "{\"i\":13825}";
+				if (!new_json_message.deserialize_string(single_key)) {
+					json_message[ valueKey(0) ] = "second";
+					return false;
+				}
+				return true;
 			}
 			break;
 				

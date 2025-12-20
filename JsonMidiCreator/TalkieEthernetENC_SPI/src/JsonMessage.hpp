@@ -204,7 +204,7 @@ public:
 
 	bool deserialize_string(const char* in_string) {
 		size_t char_j = 0;
-		while (char_j < BROADCAST_SOCKET_BUFFER_SIZE) {
+		while (char_j < BROADCAST_SOCKET_BUFFER_SIZE && in_string[char_j] != '\0') {
 			_json_payload[char_j] = in_string[char_j];
 			char_j++;
 		}
