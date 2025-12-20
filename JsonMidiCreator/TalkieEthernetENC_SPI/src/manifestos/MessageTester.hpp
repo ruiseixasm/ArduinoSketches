@@ -248,14 +248,12 @@ public:
 			{
 				bool set_match = false;
 				const char final_payload[] = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567}";
-				char out_payload[128] = {'\0'};	// Set payload
 				uint32_t big_number = 1234567;
 				if (new_json_message.set('0', big_number) && new_json_message.compare_string(final_payload)) {
 					set_match = true;
 				}
-				new_json_message.get_string('0', out_payload, 128);
-				json_message[ valueKey(0) ] = static_cast<const char*>(final_payload);
-				json_message[ valueKey(1) ] = static_cast<char*>(out_payload);
+				json_message[ valueKey(0) ] = sizeof(final_payload) - 1;
+				json_message[ valueKey(1) ] = new_json_message.get_length();
 				return set_match;
 			}
 			break;
