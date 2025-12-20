@@ -130,7 +130,7 @@ public:
 				return STRING;
 			} else {
 				while (_json_payload[position] != ',') {
-					if (_json_payload[position] < '0' || _json_payload[position] > '9') {
+					if (_json_payload[position] > '9' || _json_payload[position] < '0') {
 						return OTHER;
 					}
 					position++;
@@ -139,6 +139,14 @@ public:
 			}
 		}
 		return VOID;
+	}
+
+	bool validate_fields() const {
+		if (value_type('m') != INTEGER) return false;
+		if (value_type('c') != INTEGER) return false;
+		if (value_type('i') != INTEGER) return false;
+		if (value_type('f') != STRING) return false;
+		return true;
 	}
 
 };

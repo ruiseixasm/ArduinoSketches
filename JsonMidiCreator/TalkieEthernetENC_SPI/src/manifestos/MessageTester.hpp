@@ -37,14 +37,15 @@ public:
 protected:
 
 
-    Action calls[7] = {
+    Action calls[8] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
 		{"has", "Test if it finds the given char"},
 		{"has_not", "Test if DOESN't find the given char"},
 		{"length", "Test it has the right length"},
-		{"type", "Test the type of value"}
+		{"type", "Test the type of value"},
+		{"fields", "Validate message fields"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -70,13 +71,13 @@ public:
 
 			case 0:
 			{
-				json_message[ valueKey(0) ] = 0;	// 0 means none have failed
 				for (uint8_t test_i = 1; test_i < actionsCount(); test_i++) {
 					if (!actionByIndex(test_i, json_message, talker)) {
 						json_message[ valueKey(0) ] = test_i;
 						return false;
 					}
 				}
+				json_message[ valueKey(0) ] = 0;	// 0 means none have failed
 				return true;
 			}
 			break;
@@ -170,6 +171,12 @@ public:
 					return false;
 				}
 				return true;
+			}
+			break;
+				
+			case 7:
+			{
+				return new_json_message.validate_fields();
 			}
 			break;
 				
