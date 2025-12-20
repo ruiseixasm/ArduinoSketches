@@ -210,9 +210,9 @@ public:
 				
 			case 10:
 			{
-				json_message[ valueKey(0) ] = static_cast<int>(new_json_message.message_value());
+				json_message[ valueKey(0) ] = static_cast<int>(new_json_message.extract_message_value());
 				json_message[ valueKey(1) ] = static_cast<int>(MessageValue::ECHO);
-				return new_json_message.message_value() == MessageValue::ECHO;	// 6 is ECHO
+				return new_json_message.extract_message_value() == MessageValue::ECHO;	// 6 is ECHO
 			}
 			break;
 				

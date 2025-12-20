@@ -100,12 +100,14 @@ public:
 	}
 
 	bool compare(const char* buffer, size_t size) const {
-		if (size >= _json_length) {
+		if (size == _json_length) {
 			for (size_t char_j = 0; char_j < _json_length; ++char_j) {
 				if (buffer[char_j] != _json_payload[char_j]) {
 					return false;
 				}
 			}
+		} else {
+			return false;
 		}
 		return true;
 	}
@@ -164,7 +166,9 @@ public:
 		return true;
 	}
 
-	MessageValue message_value() const {
+	// EXTRACTORS
+
+	MessageValue extract_message_value() const {
 		size_t json_i = key_position(MessageKey::MESSAGE);
 		if (json_i) {
 			char number_char = _json_payload[json_i];
@@ -227,6 +231,34 @@ public:
 		}
 		return false;
 	}
+
+	// REMOVES
+
+	void remove_field(char key) {
+		size_t json_i = key_position(key);
+		if (json_i) {
+			
+
+		}
+	}
+
+	// RESETS
+
+	bool reset_field(char key) {
+
+		return false;
+	}
+
+	// INSERTERS
+
+	bool insert_message_value(MessageValue message_value) {
+		size_t json_i = key_position('m');
+		
+
+		return false;
+	}
+
+	
 
 };
 
