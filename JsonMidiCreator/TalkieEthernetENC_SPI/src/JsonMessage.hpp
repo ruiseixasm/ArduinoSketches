@@ -51,6 +51,25 @@ public:
 
     virtual const char* class_name() const { return "JsonMessage"; }
 
+	JsonMessage() {
+		reset();	// Initiate with the minimum
+	}
+
+	~JsonMessage() {
+		// Does nothing
+	}
+
+
+	static size_t number_of_digits(uint32_t number) {
+		size_t length = 0;
+		while (number > 0) {
+			number /= 10;
+			length++;
+		}
+		return length;
+	}
+
+
 	void reset() {
 		// Only static guarantees it won't live on the stack!
 		static const char default_payload[] = "{\"m\":0,\"i\":0,\"c\":0,\"f\":\"\"}";
@@ -63,14 +82,7 @@ public:
 		}
 	}
 
-	JsonMessage() {
-		reset();	// Initiate with the minimum
-	}
-
-	~JsonMessage() {
-		// Does nothing
-	}
-
+	
 
 	size_t get_length() const {
 		return _json_length;
