@@ -175,7 +175,7 @@ public:
 	}
 
 	bool validate_checksum() {
-		const uint16_t message_checksum = get_number('c');
+		const uint16_t message_checksum = static_cast<uint16_t>(get_number('c'));
 		if (!set('c', 0)) return false;	// Resets 'c' to 0
 		const uint16_t checksum = calculate_checksum();
 		return message_checksum == checksum;
@@ -295,6 +295,32 @@ public:
 		return json_number;
 	}
 
+	SourceValue get_source_value(size_t colon_position = 4) const {
+		SourceValue message_value = static_cast<SourceValue>(
+			get_number('c', colon_position)
+		);
+		return message_value;
+	}
+
+	MessageValue get_message_value(size_t colon_position = 4) const {
+		MessageValue message_value = static_cast<MessageValue>(
+			get_number('m', colon_position)
+		);
+		return message_value;
+	}
+
+	RogerValue get_roger_value(size_t colon_position = 4) const {
+		colon_position = get_colon_position('r', colon_position);
+		if (colon_position) {
+			RogerValue roger_value = static_cast<RogerValue>(
+				get_number('r', colon_position)
+			);
+			return roger_value;
+		}
+		return RogerValue::NIL;
+	}
+
+
 	bool get_string(char key, char* out_string, size_t size, size_t colon_position = 4) const {
 		size_t json_i = get_value_position(key, colon_position);
 		if (json_i && _json_payload[json_i++] == '"' && out_string && size) {	// Safe code
@@ -361,6 +387,28 @@ public:
 		_json_length = new_length;
 		return true;
 	}
+
+
+	bool set(SourceValue source_value, size_t colon_position = 4) {
+		size_t value_position = get_value_position('c', colon_position);
+		if (value_position) {
+			_json_payload[value_position] = static_cast<uint8_t>(source_value);
+			return true;
+		}
+		return false;
+	}
+
+
+	bool set(MessageValue message_value, size_t colon_position = 4) {
+		size_t value_position = get_value_position('m', colon_position);
+		if (value_position) {
+			_json_payload[value_position] = static_cast<uint8_t>(message_value);
+			return true;
+		}
+		return false;
+	}
+
+
 
 
 	bool swap_key(char old_key, char new_key, size_t colon_position = 4) {
