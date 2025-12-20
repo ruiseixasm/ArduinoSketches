@@ -213,19 +213,17 @@ public:
 
 	bool extract_string(char key, char* out, size_t size) const {
 		size_t json_i = key_position(key);
-		if (json_i && out && size) {	// Safe code
-			if (_json_payload[json_i++] == '"') {
-				size_t out_i = 0;
-				while (_json_payload[json_i] != '"' && json_i < _json_length && out_i < size) {
-					out[out_i++] = _json_payload[json_i++];
-				}
-				if (out_i < size) {
-					out[out_i] = '\0';	// Makes sure the termination char is added
-					return true;
-				}
-				out[0] = '\0';	// Clears all noisy fill if it fails
-				return false;
+		if (json_i && _json_payload[json_i++] == '"' && out && size) {	// Safe code
+			size_t char_j = 0;
+			while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < size) {
+				out[char_j++] = _json_payload[json_i++];
 			}
+			if (char_j < size) {
+				out[char_j] = '\0';	// Makes sure the termination char is added
+				return true;
+			}
+			out[0] = '\0';	// Clears all noisy fill if it fails
+			return false;
 		}
 		return false;
 	}
