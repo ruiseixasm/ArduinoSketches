@@ -34,7 +34,7 @@ struct TalkieCodes {
     };
 
 
-	static const char* dataKey(size_t nth = 0) {
+	static const char* valueKey(size_t nth = 0) {
 		switch (nth) {
 			case 1: 	return "1";
 			case 2: 	return "2";

@@ -48,8 +48,8 @@ public:
 		MessageValue message_data;
 	};
 
-	static const char* dataKey(size_t nth = 0) {
-		return TalkieCodes::dataKey(nth);
+	static const char* valueKey(size_t nth = 0) {
+		return TalkieCodes::valueKey(nth);
 	}
 
 

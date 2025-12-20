@@ -76,8 +76,8 @@ public:
     }
 
 
-	static const char* dataKey(size_t nth = 0) {
-		return TalkieCodes::dataKey(nth);
+	static const char* valueKey(size_t nth = 0) {
+		return TalkieCodes::valueKey(nth);
 	}
 
 	bool inSameSocket(const BroadcastSocket* socket) const {
@@ -179,7 +179,7 @@ public:
 			#endif
 
 			json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
-			json_message[ dataKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
+			json_message[ valueKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
 			json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
 
 		} else {
@@ -340,7 +340,7 @@ public:
         } else if (message_data > MessageValue::PING) {
 			// Only TALK, CHANNEL and PING can be broadcasted
 			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
-		} else if (json_message[ dataKey(0) ].is<uint8_t>()) {
+		} else if (json_message[ valueKey(0) ].is<uint8_t>()) {
 			return false;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
 		}
 
@@ -375,7 +375,7 @@ public:
 						#endif
 
 						if (_manifesto->actionByIndex(index_found_i, json_message, this)) {
-							// ROGER should be implicit for CALL to spare json string size for more data (for dataKey(n))
+							// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
 							// json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::ROGER);
 						} else {
 							json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::NEGATIVE);
@@ -389,22 +389,22 @@ public:
 				break;
 			
 			case MessageValue::TALK:
-				json_message[ dataKey(0) ] = _desc;
+				json_message[ valueKey(0) ] = _desc;
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitMessage(json_message);
 				break;
 			
 			case MessageValue::CHANNEL:
-				if (json_message[ dataKey(0) ].is<uint8_t>()) {
+				if (json_message[ valueKey(0) ].is<uint8_t>()) {
 
 					#ifdef JSON_TALKER_DEBUG
 					Serial.print(F("\tChannel B value is an <uint8_t>: "));
-					Serial.println(json_message[ dataKey(0) ].is<uint8_t>());
+					Serial.println(json_message[ valueKey(0) ].is<uint8_t>());
 					#endif
 
-					_channel = json_message[ dataKey(0) ].as<uint8_t>();
+					_channel = json_message[ valueKey(0) ].as<uint8_t>();
 				}
-				json_message[ dataKey(0) ] = _channel;
+				json_message[ valueKey(0) ] = _channel;
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitMessage(json_message);
 				break;
@@ -426,9 +426,9 @@ public:
 					const TalkerManifesto::Action* action;
 					_manifesto->iterateActionsReset();
 					while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
-						json_message[ dataKey(0) ] = action_index++;
-						json_message[ dataKey(1) ] = action->name;
-						json_message[ dataKey(2) ] = action->desc;
+						json_message[ valueKey(0) ] = action_index++;
+						json_message[ valueKey(1) ] = action->name;
+						json_message[ valueKey(2) ] = action->desc;
 						transmitMessage(json_message);	// One-to-Many
 					}
 					if (!action_index) {
@@ -445,24 +445,24 @@ public:
 					switch (system_code) {
 
 						case InfoValue::BOARD:
-							json_message[ dataKey(0) ] = board_description();
+							json_message[ valueKey(0) ] = board_description();
 							break;
 
 						case InfoValue::DROPS:
 							if (_socket) {
-								json_message[ dataKey(0) ] = get_drops();
+								json_message[ valueKey(0) ] = get_drops();
 							}
 							break;
 
 						case InfoValue::DELAY:
 							if (_socket) {
-								json_message[ dataKey(0) ] = get_delay();
+								json_message[ valueKey(0) ] = get_delay();
 							}
 							break;
 
 						case InfoValue::MUTE:
-							if (json_message[ dataKey(0) ].is<uint8_t>()) {
-								uint8_t mute = json_message[ dataKey(0) ].as<uint8_t>();
+							if (json_message[ valueKey(0) ].is<uint8_t>()) {
+								uint8_t mute = json_message[ valueKey(0) ].as<uint8_t>();
 								if (mute) {
 									_muted_calls = true;
 								} else {
@@ -470,26 +470,26 @@ public:
 								}
 							} else {
 								if (_muted_calls) {
-									json_message[ dataKey(0) ] = 1;
+									json_message[ valueKey(0) ] = 1;
 								} else {
-									json_message[ dataKey(0) ] = 0;
+									json_message[ valueKey(0) ] = 0;
 								}
 							}
 							break;
 
 						case InfoValue::SOCKET:
-							json_message[ dataKey(0) ] = socket_class_name();
+							json_message[ valueKey(0) ] = socket_class_name();
 							break;
 
 						case InfoValue::TALKER:
-							json_message[ dataKey(0) ] = class_name();
+							json_message[ valueKey(0) ] = class_name();
 							break;
 
 						case InfoValue::MANIFESTO:
 							if (_manifesto) {
-								json_message[ dataKey(0) ] = _manifesto->class_name();
+								json_message[ valueKey(0) ] = _manifesto->class_name();
 							} else {
-								json_message[ dataKey(0) ] = "none";
+								json_message[ valueKey(0) ] = "none";
 							}
 							break;
 

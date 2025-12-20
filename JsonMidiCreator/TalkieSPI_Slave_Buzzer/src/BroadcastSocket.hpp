@@ -273,7 +273,7 @@ protected:
 					Serial.println(4);
 					#endif
 					json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
-					json_message[ TalkieCodes::dataKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
+					json_message[ TalkieCodes::valueKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
 					// Wrong type of identifier or no identifier, so, it has to insert new identifier
 					json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
 					// From one to many, starts to set the returning target in this single place only

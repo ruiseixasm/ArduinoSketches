@@ -91,12 +91,30 @@ public:
 
 			case 3:
 			{
-				if (!new_json_message.has_key('m')) return false;
-				if (!new_json_message.has_key('c')) return false;
-				if (!new_json_message.has_key('f')) return false;
-				if (!new_json_message.has_key('i')) return false;
-				if (!new_json_message.has_key('0')) return false;
-				if (!new_json_message.has_key('t')) return false;
+				if (!new_json_message.has_key('m')) {
+					json_message[ valueKey(0) ] = "m";
+					return false;
+				}
+				if (!new_json_message.has_key('c')) {
+					json_message[ valueKey(0) ] = "c";
+					return false;
+				}
+				if (!new_json_message.has_key('f')) {
+					json_message[ valueKey(0) ] = "f";
+					return false;
+				}
+				if (!new_json_message.has_key('i')) {
+					json_message[ valueKey(0) ] = "i";
+					return false;
+				}
+				if (!new_json_message.has_key('0')) {
+					json_message[ valueKey(0) ] = "0";
+					return false;
+				}
+				if (!new_json_message.has_key('t')) {
+					json_message[ valueKey(0) ] = "t";
+					return false;
+				}
 				return true;
 			}
 			break;

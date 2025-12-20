@@ -96,7 +96,7 @@ public:
 				break;
 
 				case 1:
-					_buzz_duration_ms = json_message[ dataKey(0) ].as<uint16_t>();
+					_buzz_duration_ms = json_message[ valueKey(0) ].as<uint16_t>();
 					return true;
 				break;
 
@@ -112,10 +112,10 @@ public:
         (void)talker;		// Silence unused parameter warning
         Serial.print(json_message[ TalkieKey::FROM ].as<String>());
         Serial.print(" - ");
-        if (json_message[ dataKey(0) ].is<String>()) {
-            Serial.println(json_message[ dataKey(0) ].as<String>());
-        } else if (json_message[ dataKey(0) ].is<String>()) {
-            Serial.println(json_message[ dataKey(0) ].as<String>());
+        if (json_message[ valueKey(0) ].is<String>()) {
+            Serial.println(json_message[ valueKey(0) ].as<String>());
+        } else if (json_message[ valueKey(0) ].is<String>()) {
+            Serial.println(json_message[ valueKey(0) ].as<String>());
         } else {
             Serial.println(F("Empty echo received!"));
         }
@@ -126,10 +126,10 @@ public:
         (void)talker;		// Silence unused parameter warning
         Serial.print(json_message[ TalkieKey::FROM ].as<String>());
         Serial.print(" - ");
-        if (json_message[ dataKey(0) ].is<String>()) {
-            Serial.println(json_message[ dataKey(0) ].as<String>());
-        } else if (json_message[ dataKey(0) ].is<String>()) {
-            Serial.println(json_message[ dataKey(0) ].as<String>());
+        if (json_message[ valueKey(0) ].is<String>()) {
+            Serial.println(json_message[ valueKey(0) ].as<String>());
+        } else if (json_message[ valueKey(0) ].is<String>()) {
+            Serial.println(json_message[ valueKey(0) ].as<String>());
         } else {
             Serial.println(F("Empty error received!"));
         }
