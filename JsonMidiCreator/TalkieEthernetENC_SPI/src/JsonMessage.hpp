@@ -212,20 +212,15 @@ public:
 	}
 
 	bool extract_string(char key, char* out, size_t size) const {
-		size_t char_i = key_position(key);
-		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE && size >= _json_length) {	// Safe code
-			if (char_i && _json_payload[char_i++] == '"') {
+		size_t json_i = key_position(key);
+		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE && size > _json_length) {	// Safe code (must include the extra '\0')
+			if (json_i && _json_payload[json_i++] == '"') {
 				size_t out_i = 0;
-				while (_json_payload[char_i] != '"' && out_i < size && char_i < _json_length) {
-					out[out_i++] = _json_payload[char_i++];
+				while (_json_payload[json_i] != '"' && out_i < size && json_i < _json_length) {
+					out[out_i++] = _json_payload[json_i++];
 				}
-				if (out_i < size) {
-					out[out_i] = '\0';	// Makes sure the termination char is added
-					return true;
-				}
-				if (out_i) {	// safe code
-					out[0] = '\0';
-				}
+				out[out_i] = '\0';	// Makes sure the termination char is added
+				return true;
 			}
 		}
 		return false;
