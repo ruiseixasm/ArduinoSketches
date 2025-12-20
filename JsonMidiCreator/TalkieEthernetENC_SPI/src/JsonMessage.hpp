@@ -149,6 +149,12 @@ public:
 		return true;
 	}
 
+	uint16_t get_identity() const {
+		size_t position = key_position('i');
+
+		return 0;
+	}
+
 };
 
 
