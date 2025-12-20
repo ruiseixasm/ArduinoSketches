@@ -47,19 +47,6 @@ protected:
 	uint8_t _json_length = 0;	// BROADCAST_SOCKET_BUFFER_SIZE <= uint8_t
 
 
-public:
-
-    virtual const char* class_name() const { return "JsonMessage"; }
-
-	JsonMessage() {
-		reset();	// Initiate with the minimum
-	}
-
-	~JsonMessage() {
-		// Does nothing
-	}
-
-
 	static size_t number_of_digits(uint32_t number) {
 		size_t length = 0;
 		while (number > 0) {
@@ -82,13 +69,8 @@ public:
 		}
 	}
 
-	
 
-	size_t get_length() const {
-		return _json_length;
-	}
-
-    uint16_t getChecksum() {	// 16-bit word and XORing
+    uint16_t get_checksum() {	// 16-bit word and XORing
         uint16_t checksum = 0;
 		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t i = 0; i < _json_length; i += 2) {
@@ -101,6 +83,97 @@ public:
 		}
         return checksum;
     }
+
+	
+	size_t get_colon_position(char key, size_t colon_position = 4) const {
+		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
+			for (size_t json_i = colon_position; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
+				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
+					return json_i;
+				}
+			}
+		}
+		return 0;
+	}
+
+
+	size_t get_value_position(char key, size_t colon_position = 4) const {
+		size_t json_i = get_colon_position(key, colon_position);
+		if (json_i) {			//     01
+			return json_i + 1;	// {"k":x}
+		}
+		return 0;
+	}
+
+
+	size_t get_key_position(char key, size_t colon_position = 4) const {
+		size_t json_i = get_colon_position(key, colon_position);
+		if (json_i) {			//   210
+			return json_i - 2;	// {"k":x}
+		}
+		return 0;
+	}
+
+
+	size_t get_field_length(char key, size_t colon_position = 4) const {
+		size_t field_length = 0;
+		size_t json_i = get_value_position(key, colon_position);
+		if (json_i) {
+			field_length = 4;	// All keys occupy 4 '"k":' chars
+			ValueType value_type = get_value_type(key, json_i - 1);
+			switch (value_type) {
+
+				case ValueType::STRING:
+					field_length += 2;	// Adds the two '"' associated to the string
+					for (json_i++; json_i < _json_length && _json_payload[json_i] != '"'; json_i++) {
+						field_length++;
+					}
+					break;
+				
+				case ValueType::INTEGER:
+					for (; json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0'); json_i++) {
+						field_length++;
+					}
+					break;
+				
+				default: break;
+			}
+		}
+		return field_length;
+	}
+
+
+
+public:
+
+    virtual const char* class_name() const { return "JsonMessage"; }
+
+	JsonMessage() {
+		reset();	// Initiate with the minimum
+	}
+
+	~JsonMessage() {
+		// Does nothing
+	}
+
+
+	size_t get_length() const {
+		return _json_length;
+	}
+
+
+	bool validate_fields() const {
+		// Minimum length: '{"m":0,"i":0,"c":0,"f":"n"}' = 27
+		if (_json_length < 27) return false;
+		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
+		if (get_value_type('m') != INTEGER) return false;
+		if (get_number('m') > 9) return false;
+		if (get_value_type('i') != INTEGER) return false;
+		if (get_value_type('c') != INTEGER) return false;
+		if (get_value_type('f') != STRING) return false;
+		return true;
+	}
+
 
 	bool deserialize(const char* buffer, size_t length) {
 		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
@@ -138,6 +211,7 @@ public:
 		return 0;
 	}
 
+	
 	bool compare(const char* in_string, size_t size) const {
 		if (size == _json_length) {
 			for (size_t char_j = 0; char_j < size; ++char_j) {
@@ -162,67 +236,9 @@ public:
 	}
 
 
-	size_t get_colon_position(char key, size_t colon_position = 4) const {
-		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
-			for (size_t json_i = colon_position; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
-				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
-					return json_i;
-				}
-			}
-		}
-		return 0;
-	}
-
-
-	size_t get_value_position(char key, size_t colon_position = 4) const {
-		size_t json_i = get_colon_position(key, colon_position);
-		if (json_i) {			//     01
-			return json_i + 1;	// {"k":x}
-		}
-		return 0;
-	}
-
-
-	size_t get_key_position(char key, size_t colon_position = 4) const {
-		size_t json_i = get_colon_position(key, colon_position);
-		if (json_i) {			//   210
-			return json_i - 2;	// {"k":x}
-		}
-		return 0;
-	}
-
-
 	bool has_key(char key, size_t colon_position = 4) const {
 		size_t json_i = get_colon_position(key, colon_position);
 		return json_i > 0;
-	}
-
-
-	size_t get_field_length(char key, size_t colon_position = 4) const {
-		size_t field_length = 0;
-		size_t json_i = get_value_position(key, colon_position);
-		if (json_i) {
-			field_length = 4;	// All keys occupy 4 '"k":' chars
-			ValueType value_type = get_value_type(key, json_i - 1);
-			switch (value_type) {
-
-				case ValueType::STRING:
-					field_length += 2;	// Adds the two '"' associated to the string
-					for (json_i++; json_i < _json_length && _json_payload[json_i] != '"'; json_i++) {
-						field_length++;
-					}
-					break;
-				
-				case ValueType::INTEGER:
-					for (; json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0'); json_i++) {
-						field_length++;
-					}
-					break;
-				
-				default: break;
-			}
-		}
-		return field_length;
 	}
 
 
@@ -249,18 +265,6 @@ public:
 			}
 		}
 		return VOID;
-	}
-
-	bool validate_fields() const {
-		// Minimum length: '{"m":0,"i":0,"c":0,"f":"n"}' = 27
-		if (_json_length < 27) return false;
-		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
-		if (get_value_type('m') != INTEGER) return false;
-		if (get_number('m') > 9) return false;
-		if (get_value_type('i') != INTEGER) return false;
-		if (get_value_type('c') != INTEGER) return false;
-		if (get_value_type('f') != STRING) return false;
-		return true;
 	}
 
 	// GETTERS

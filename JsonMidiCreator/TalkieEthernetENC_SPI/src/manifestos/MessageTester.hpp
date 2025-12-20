@@ -39,7 +39,7 @@ public:
 protected:
 
 
-    Action calls[14] = {
+    Action calls[13] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -52,7 +52,6 @@ protected:
 		{"checksum", "Extract the message checksum"},
 		{"message", "Gets the message number"},
 		{"from", "Gets the from name string"},
-		{"field", "Gets the field length"},
 		{"remove", "Removes a given field"}
     };
     
@@ -174,19 +173,16 @@ public:
 				if (new_json_message.get_value_type('c') != JsonMessage::INTEGER) {
 					json_message[ valueKey(0) ] = "c";
 					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('c'));
-					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.get_value_position('c'));
 					return false;
 				}
 				if (new_json_message.get_value_type('f') != JsonMessage::STRING) {
 					json_message[ valueKey(0) ] = "f";
 					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('f'));
-					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.get_value_position('f'));
 					return false;
 				}
 				if (new_json_message.get_value_type('e') != JsonMessage::VOID) {
 					json_message[ valueKey(0) ] = "e";
 					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('e'));
-					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.get_value_position('e'));
 					return false;
 				}
 				return true;
@@ -241,16 +237,6 @@ public:
 			break;
 				
 			case 12:
-			{
-				char field_from[] = "\"f\":\"buzzer\"";
-				size_t from_length = sizeof(field_from) - 1;
-				json_message[ valueKey(0) ] = new_json_message.get_field_length('f');
-				json_message[ valueKey(1) ] = from_length;
-				return new_json_message.get_field_length('f') == from_length;
-			}
-			break;
-				
-			case 13:
 			{
 				char final_payload[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 				new_json_message.remove('f');
