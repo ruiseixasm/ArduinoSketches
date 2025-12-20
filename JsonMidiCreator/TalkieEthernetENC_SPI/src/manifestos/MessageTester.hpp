@@ -77,20 +77,24 @@ public:
 
 			case 0:
 			{
-				bool has_errors = false;
-				uint8_t field_i = 0;
+				uint8_t failed_tests[10] = {0};
+				uint8_t value_i = 0;
+				bool no_errors = true;
 				for (uint8_t test_i = 1; test_i < actionsCount(); test_i++) {
 					if (!actionByIndex(test_i, json_message, talker)) {
-						json_message[ valueKey(field_i++) ] = test_i;
-						has_errors = true;
+						failed_tests[value_i++] = test_i;
+						no_errors = false;
 					}
 				}
-				if (!has_errors) {
-					for (uint8_t value_i = 0; value_i < 10; value_i++) {	// Removes all 10 possible values
-						json_message.remove( valueKey(value_i) );
+				for (value_i = 0; value_i < 10; value_i++) {	// Removes all 10 possible values
+					json_message.remove( valueKey(value_i) );
+				}
+				if (!no_errors) {
+					for (value_i = 0; failed_tests[value_i] > 0 && value_i < 10; value_i++) {
+						json_message[ valueKey(value_i) ] = failed_tests[value_i];
 					}
 				}
-				return !has_errors;
+				return no_errors;
 			}
 			break;
 
@@ -103,7 +107,7 @@ public:
 
 			case 2:
 			{
-				if (!new_json_message.compare(json_payload, sizeof(json_payload))) return false;
+				if (!new_json_message.compare(json_payload, sizeof(json_payload) - 1)) return false;
 				return true;
 			}
 			break;
@@ -204,7 +208,7 @@ public:
 			{
 				json_message[ valueKey(0) ] = new_json_message.get_number('c');
 				json_message[ valueKey(1) ] = 29973;
-				return new_json_message.get_number('i') == 29973;
+				return new_json_message.get_number('c') == 29973;
 			}
 			break;
 				
