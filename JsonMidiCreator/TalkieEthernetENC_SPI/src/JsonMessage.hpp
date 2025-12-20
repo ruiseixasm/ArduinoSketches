@@ -223,8 +223,9 @@ public:
 					out[out_i] = '\0';	// Makes sure the termination char is added
 					return true;
 				}
-				// Always places the termination char regardless (safe code)
-				out[size - 1] = '\0';
+				if (out_i) {	// safe code
+					out[0] = '\0';
+				}
 			}
 		}
 		return false;
