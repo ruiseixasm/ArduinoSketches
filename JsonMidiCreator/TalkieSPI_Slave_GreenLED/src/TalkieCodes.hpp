@@ -34,6 +34,22 @@ struct TalkieCodes {
     };
 
 
+	// Add a char "enum" struct
+    struct MessageKey {
+        static constexpr const char SOURCE			= 'c';
+        static constexpr const char CHECKSUM		= 'c';
+        static constexpr const char TIMESTAMP		= 'i';
+        static constexpr const char IDENTITY 		= 'i';
+        static constexpr const char MESSAGE 		= 'm';
+        static constexpr const char FROM 			= 'f';
+        static constexpr const char TO 				= 't';
+        static constexpr const char INFO 			= 's';
+        static constexpr const char ACTION			= 'a';
+        static constexpr const char ROGER 			= 'r';
+    };
+
+
+
 	static const char* valueKey(size_t nth = 0) {
 		switch (nth) {
 			case 1: 	return "1";
