@@ -246,13 +246,17 @@ public:
 				
 			case 13:
 			{
-				
+				bool set_match = false;
 				const char final_payload[] = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567}";
+				char out_payload[128] = {'\0'};	// Set payload
 				uint32_t big_number = 1234567;
-				if (new_json_message.set('0', big_number)) {
-					return new_json_message.compare_string(final_payload);
+				if (new_json_message.set('0', big_number) && new_json_message.compare_string(final_payload)) {
+					set_match = true;
 				}
-				return false;
+				new_json_message.get_string('0', out_payload, 128);
+				json_message[ valueKey(0) ] = static_cast<const char*>(final_payload);
+				json_message[ valueKey(1) ] = static_cast<char*>(out_payload);
+				return set_match;
 			}
 			break;
 				
