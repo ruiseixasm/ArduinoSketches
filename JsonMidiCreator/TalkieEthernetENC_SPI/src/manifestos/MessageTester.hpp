@@ -238,9 +238,24 @@ public:
 				
 			case 12:
 			{
-				const char final_payload[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+				bool payloads_match = true;
+				const char final_payload1[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 				new_json_message.remove('f');
-				return new_json_message.compare_string(final_payload);
+				if (!new_json_message.compare_string(final_payload1)) {
+					json_message[ valueKey(0) ] = "Failed match 1";
+					payloads_match = false;
+				}
+				const char final_payload2[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"t\":\"Talker-7a\"}";
+				new_json_message.remove('0');
+				if (!new_json_message.compare_string(final_payload2)) {
+					if (payloads_match) {
+						json_message[ valueKey(0) ] = "Failed match 2";
+					} else {
+						json_message[ valueKey(1) ] = "Failed match 2";
+					}
+					payloads_match = false;
+				}
+				return payloads_match;
 			}
 			break;
 				
