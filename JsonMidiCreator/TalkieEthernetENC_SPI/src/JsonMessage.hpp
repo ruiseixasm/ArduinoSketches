@@ -133,7 +133,7 @@ public:
 			if (_json_payload[position] == '"') {
 				return STRING;
 			} else {
-				while (_json_payload[position] != ',') {
+				while (_json_payload[position] != ',' && _json_payload[position] != '}') {
 					if (_json_payload[position] > '9' || _json_payload[position] < '0') {
 						return OTHER;
 					}
@@ -164,6 +164,7 @@ public:
 		if (position) {
 			char number_char = _json_payload[position];
 			if (number_char > '9' || number_char < '0') return MessageValue::NOISE;
+			if (_json_payload[position + 1] != ',' && _json_payload[position + 1] != '}') return MessageValue::NOISE;
 			return static_cast<MessageValue>(number_char - '0');
 		}
 		return MessageValue::NOISE;
