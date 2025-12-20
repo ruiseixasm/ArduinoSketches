@@ -296,11 +296,15 @@ public:
 
 	// REMOVERS
 
-	bool remove_field(char key, size_t colon_position = 4) {
+	bool remove(char key, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, colon_position);
 		if (colon_position) {
 			size_t field_position = colon_position - 3;	// All keys occupy 3 '"k":' chars to the left of the colon
-			size_t field_length = get_field_length(key, colon_position);
+			size_t field_length = get_field_length(key, colon_position);	// Excludes possible heading ',' separation comma
+			if (_json_payload[field_position - 1] == ',') {	// the heading ',' has to be removed too
+				field_position--;
+				field_length++;
+			}
 			for (size_t json_i = field_position; json_i < _json_length - field_length; json_i++) {
                 _json_payload[json_i] = _json_payload[json_i + field_length];
             }

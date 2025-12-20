@@ -39,7 +39,7 @@ public:
 protected:
 
 
-    Action calls[13] = {
+    Action calls[14] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -52,7 +52,8 @@ protected:
 		{"checksum", "Extract the message checksum"},
 		{"message", "Gets the message number"},
 		{"from", "Gets the from name string"},
-		{"field", "Gets the field length"}
+		{"field", "Gets the field length"},
+		{"remove", "Removes a given field"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -246,6 +247,14 @@ public:
 				json_message[ valueKey(0) ] = new_json_message.get_field_length('f');
 				json_message[ valueKey(1) ] = from_length;
 				return new_json_message.get_field_length('f') == from_length;
+			}
+			break;
+				
+			case 13:
+			{
+				char final_payload[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+				new_json_message.remove('f');
+				return new_json_message.compare_string(final_payload);
 			}
 			break;
 				
