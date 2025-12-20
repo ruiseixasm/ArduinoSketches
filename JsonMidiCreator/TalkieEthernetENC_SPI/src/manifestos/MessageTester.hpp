@@ -39,7 +39,7 @@ public:
 protected:
 
 
-    Action calls[12] = {
+    Action calls[13] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -47,11 +47,12 @@ protected:
 		{"has_not", "Test if DOESN't find the given char"},
 		{"length", "Test it has the right length"},
 		{"type", "Test the type of value"},
-		{"fields", "Validate message fields"},
+		{"validate", "Validate message fields"},
 		{"identity", "Extract the message identity"},
 		{"checksum", "Extract the message checksum"},
 		{"message", "Gets the message number"},
-		{"from", "Gets the from name string"}
+		{"from", "Gets the from name string"},
+		{"field", "Gets the field length"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -172,19 +173,19 @@ public:
 				if (new_json_message.get_value_type('c') != JsonMessage::INTEGER) {
 					json_message[ valueKey(0) ] = "c";
 					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('c'));
-					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.value_position('c'));
+					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.get_value_position('c'));
 					return false;
 				}
 				if (new_json_message.get_value_type('f') != JsonMessage::STRING) {
 					json_message[ valueKey(0) ] = "f";
 					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('f'));
-					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.value_position('f'));
+					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.get_value_position('f'));
 					return false;
 				}
 				if (new_json_message.get_value_type('e') != JsonMessage::VOID) {
 					json_message[ valueKey(0) ] = "e";
 					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('e'));
-					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.value_position('e'));
+					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.get_value_position('e'));
 					return false;
 				}
 				return true;
@@ -235,6 +236,16 @@ public:
 				json_message[ valueKey(0) ] = static_cast<char*>(from_name);
 				json_message[ valueKey(1) ] = static_cast<char*>(out_name);
 				return from_match;
+			}
+			break;
+				
+			case 12:
+			{
+				char field_from[] = "\"f\":\"buzzer\"";
+				size_t from_length = sizeof(field_from) - 1;
+				json_message[ valueKey(0) ] = new_json_message.get_field_length('f');
+				json_message[ valueKey(1) ] = from_length;
+				return new_json_message.get_field_length('f') == from_length;
 			}
 			break;
 				

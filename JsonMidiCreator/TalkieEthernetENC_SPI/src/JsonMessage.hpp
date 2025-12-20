@@ -162,9 +162,9 @@ public:
 	}
 
 
-	size_t colon_position(char key, size_t colon_position = 4) const {
+	size_t get_colon_position(char key, size_t colon_position = 4) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
-			for (; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
+			for (size_t json_i = colon_position; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
 					return json_i;
 				}
@@ -174,8 +174,8 @@ public:
 	}
 
 
-	size_t value_position(char key, size_t colon_position = 4) const {
-		size_t json_i = colon_position(key, colon_position);
+	size_t get_value_position(char key, size_t colon_position = 4) const {
+		size_t json_i = get_colon_position(key, colon_position);
 		if (json_i) {			//     01
 			return json_i + 1;	// {"k":x}
 		}
@@ -183,8 +183,8 @@ public:
 	}
 
 
-	size_t key_position(char key, size_t colon_position = 4) const {
-		size_t json_i = colon_position(key, colon_position);
+	size_t get_key_position(char key, size_t colon_position = 4) const {
+		size_t json_i = get_colon_position(key, colon_position);
 		if (json_i) {			//   210
 			return json_i - 2;	// {"k":x}
 		}
@@ -193,14 +193,14 @@ public:
 
 
 	bool has_key(char key, size_t colon_position = 4) const {
-		size_t json_i = colon_position(key, colon_position);
+		size_t json_i = get_colon_position(key, colon_position);
 		return json_i > 0;
 	}
 
 
 	size_t get_field_length(char key, size_t colon_position = 4) const {
 		size_t field_length = 0;
-		size_t json_i = value_position(key, colon_position);
+		size_t json_i = get_value_position(key, colon_position);
 		if (json_i) {
 			field_length = 4;	// All keys occupy 4 '"k":' chars
 			ValueType value_type = get_value_type(key, json_i - 1);
@@ -227,7 +227,7 @@ public:
 
 
 	ValueType get_value_type(char key, size_t colon_position = 4) const {
-		size_t json_i = value_position(key, colon_position);
+		size_t json_i = get_value_position(key, colon_position);
 		if (json_i) {
 			if (_json_payload[json_i] == '"') {
 				for (json_i++; json_i < _json_length && _json_payload[json_i] != '"'; json_i++) {}
@@ -267,7 +267,7 @@ public:
 
 	uint32_t get_number(char key, size_t colon_position = 4) const {
 		uint32_t json_number = 0;
-		size_t json_i = value_position(key, colon_position);
+		size_t json_i = get_value_position(key, colon_position);
 		if (json_i) {
 			while (json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0')) {
 				json_number *= 10;
@@ -278,7 +278,7 @@ public:
 	}
 
 	bool get_string(char key, char* out_string, size_t size, size_t colon_position = 4) const {
-		size_t json_i = value_position(key, colon_position);
+		size_t json_i = get_value_position(key, colon_position);
 		if (json_i && _json_payload[json_i++] == '"' && out_string && size) {	// Safe code
 			size_t char_j = 0;
 			while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < size) {
@@ -296,19 +296,24 @@ public:
 
 	// REMOVERS
 
-	void remove_field(char key, size_t colon_position = 4) {
-		size_t json_i = value_position(key, colon_position);
-		size_t field_length = get_field_length(key, json_i - 1);
-		if (json_i) {
-			
-
+	bool remove_field(char key, size_t colon_position = 4) {
+		colon_position = get_colon_position(key, colon_position);
+		if (colon_position) {
+			size_t field_position = colon_position - 3;	// All keys occupy 3 '"k":' chars to the left of the colon
+			size_t field_length = get_field_length(key, colon_position);
+			for (size_t json_i = field_position; json_i < _json_length - field_length; json_i++) {
+                _json_payload[json_i] = _json_payload[json_i + field_length];
+            }
+			_json_length -= field_length;	// Finally updates the json_payload full length
+			return true;
 		}
+		return false;
 	}
 
 	// SETTERS
 
 	bool swap_key(char old_key, char new_key, size_t colon_position = 4) {
-		size_t json_i = value_position(old_key, colon_position);
+		size_t json_i = get_value_position(old_key, colon_position);
 		if (json_i) {
 			_json_payload[json_i] = new_key;
 			return true;
