@@ -80,8 +80,8 @@ public:
 
 	bool deserialize(const char* buffer, size_t length) {
 		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t char_i = 0; char_i < length; ++char_i) {
-				_json_payload[char_i] = buffer[char_i];
+			for (size_t char_j = 0; char_j < length; ++char_j) {
+				_json_payload[char_j] = buffer[char_j];
 			}
 			_json_length = length;
 			return true;
@@ -90,9 +90,9 @@ public:
 	}
 
 	size_t serialize(char* buffer, size_t size) const {
-		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
-				buffer[char_i] = _json_payload[char_i];
+		if (size >= _json_length) {
+			for (size_t json_i = 0; json_i < _json_length; ++json_i) {
+				buffer[json_i] = _json_payload[json_i];
 			}
 			return _json_length;
 		}
@@ -100,9 +100,9 @@ public:
 	}
 
 	bool compare(const char* buffer, size_t size) const {
-		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
-				if (buffer[char_i] != _json_payload[char_i]) {
+		if (size >= _json_length) {
+			for (size_t char_j = 0; char_j < _json_length; ++char_j) {
+				if (buffer[char_j] != _json_payload[char_j]) {
 					return false;
 				}
 			}
@@ -112,8 +112,8 @@ public:
 
 	bool has_key(char key) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
-			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
-				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
+			for (size_t json_i = 4; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
+				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
 					return true;
 				}
 			}
@@ -122,10 +122,10 @@ public:
 	}
 
 	size_t key_position(char key) const {
-		if (_json_length > 6 && _json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
-			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
-				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
-					return char_i + 1;	// Moves 1 after the ':' char (avoids extra thinking)
+		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
+			for (size_t json_i = 4; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
+				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
+					return json_i + 1;	// Moves 1 after the ':' char (avoids extra thinking)
 				}
 			}
 		}
@@ -133,18 +133,18 @@ public:
 	}
 
 	ValueType value_type(char key) const {
-		size_t position = key_position(key);
-		if (position) {
-			if (_json_payload[position] == '"') {
+		size_t json_i = key_position(key);
+		if (json_i) {
+			if (_json_payload[json_i] == '"') {
 				return STRING;
 			} else {
-				while (_json_payload[position] != ',' && _json_payload[position] != '}') {
-					if (_json_payload[position] > '9' || _json_payload[position] < '0') {
+				while (_json_payload[json_i] != ',' && _json_payload[json_i] != '}') {
+					if (_json_payload[json_i] > '9' || _json_payload[json_i] < '0') {
 						return OTHER;
 					}
-					position++;
+					json_i++;
 				}
-				if (_json_payload[position - 1] == ':') {
+				if (_json_payload[json_i - 1] == ':') {
 					return VOID;
 				}
 				return INTEGER;
@@ -165,11 +165,11 @@ public:
 	}
 
 	MessageValue message_value() const {
-		size_t position = key_position(MessageKey::MESSAGE);
-		if (position) {
-			char number_char = _json_payload[position];
+		size_t json_i = key_position(MessageKey::MESSAGE);
+		if (json_i) {
+			char number_char = _json_payload[json_i];
 			if (number_char > '9' || number_char < '0') return MessageValue::NOISE;
-			if (_json_payload[position + 1] != ',' && _json_payload[position + 1] != '}') return MessageValue::NOISE;
+			if (_json_payload[json_i + 1] != ',' && _json_payload[json_i + 1] != '}') return MessageValue::NOISE;
 			return static_cast<MessageValue>(number_char - '0');
 		}
 		return MessageValue::NOISE;
@@ -177,11 +177,11 @@ public:
 
 	uint16_t extract_identity() const {
 		uint16_t identity = 0;
-		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			size_t char_i = key_position(MessageKey::IDENTITY);
-			while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
+		size_t json_i = key_position(MessageKey::IDENTITY);
+		if (json_i) {
+			while (json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0')) {
 				identity *= 10;
-				identity += _json_payload[char_i++] - '0';
+				identity += _json_payload[json_i++] - '0';
 			}
 		}
 		return identity;
@@ -189,11 +189,11 @@ public:
 
 	uint16_t extract_checksum() const {
 		uint16_t checksum = 0;
-		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			size_t char_i = key_position(MessageKey::CHECKSUM);
-			while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
+		size_t json_i = key_position(MessageKey::CHECKSUM);
+		if (json_i) {
+			while (json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0')) {
 				checksum *= 10;
-				checksum += _json_payload[char_i++] - '0';
+				checksum += _json_payload[json_i++] - '0';
 			}
 		}
 		return checksum;
@@ -201,11 +201,11 @@ public:
 
 	uint32_t extract_number(char key) const {
 		uint32_t json_number = 0;
-		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			size_t char_i = key_position(key);
-			while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
+		size_t json_i = key_position(key);
+		if (json_i) {
+			while (json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0')) {
 				json_number *= 10;
-				json_number += _json_payload[char_i++] - '0';
+				json_number += _json_payload[json_i++] - '0';
 			}
 		}
 		return json_number;
@@ -213,14 +213,18 @@ public:
 
 	bool extract_string(char key, char* out, size_t size) const {
 		size_t json_i = key_position(key);
-		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE && size > _json_length) {	// Safe code (must include the extra '\0')
+		if (json_i && out && size) {	// Safe code
 			if (json_i && _json_payload[json_i++] == '"') {
 				size_t out_i = 0;
-				while (_json_payload[json_i] != '"' && json_i < _json_length) {
+				while (_json_payload[json_i] != '"' && json_i < _json_length && out_i < size) {
 					out[out_i++] = _json_payload[json_i++];
 				}
-				out[out_i] = '\0';	// Makes sure the termination char is added
-				return json_i < _json_length;
+				if (out_i < size) {
+					out[out_i] = '\0';	// Makes sure the termination char is added
+					return true;
+				}
+				out[0] = '\0';	// Clears all noisy fill if it fails
+				return false;
 			}
 		}
 		return false;
