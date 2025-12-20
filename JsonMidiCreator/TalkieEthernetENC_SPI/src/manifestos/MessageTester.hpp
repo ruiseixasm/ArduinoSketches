@@ -90,7 +90,7 @@ public:
 					json_message.remove( valueKey(value_i) );
 				}
 				if (!no_errors) {
-					for (value_i = 0; failed_tests[value_i] > 0 && value_i < 10; value_i++) {
+					for (value_i = 0; failed_tests[value_i] && value_i < 10; value_i++) {
 						json_message[ valueKey(value_i) ] = failed_tests[value_i];
 					}
 				}
@@ -108,6 +108,7 @@ public:
 			case 2:
 			{
 				if (!new_json_message.compare(json_payload, sizeof(json_payload) - 1)) return false;
+				if (!new_json_message.compare_string(json_payload)) return false;
 				return true;
 			}
 			break;
