@@ -278,12 +278,21 @@ public:
 			{
 				const char final_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 				if (!new_json_message.remove('m') || !new_json_message.compare_string(final_payload)) {	// The first key (no header ',' char)
-					json_message[ valueKey(0) ] = "first";
+					json_message[ valueKey(0) ] = "1st";
 					return false;
 				}
 				const char single_key[] = "{\"i\":13825}";
 				if (!new_json_message.deserialize_string(single_key)) {
-					json_message[ valueKey(0) ] = "second";
+					json_message[ valueKey(0) ] = "2nd";
+					return false;
+				}
+				if (!new_json_message.set('i', 32423)) {
+					json_message[ valueKey(0) ] = "3rd";
+					return false;
+				}
+				const char new_single_key[] = "{\"i\":32423}";
+				if (!new_json_message.compare_string(new_single_key)) {
+					json_message[ valueKey(0) ] = "4th";
 					return false;
 				}
 				return true;
