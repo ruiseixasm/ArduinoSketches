@@ -149,13 +149,13 @@ public:
 
 	bool validate_fields() const {
 		if (value_type('m') != INTEGER) return false;
-		if (value_type('c') != INTEGER) return false;
 		if (value_type('i') != INTEGER) return false;
+		if (value_type('c') != INTEGER) return false;
 		if (value_type('f') != STRING) return false;
 		return true;
 	}
 
-	uint16_t get_identity() const {
+	uint16_t extract_identity() const {
 		uint16_t identity = 0;
 		size_t char_i = key_position(MessageKey::IDENTITY) + 1;
         while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
@@ -163,6 +163,16 @@ public:
 			identity += _json_payload[char_i++] - '0';
 		}
 		return identity;
+	}
+
+	uint16_t extract_checksum() const {
+		uint16_t checksum = 0;
+		size_t char_i = key_position(MessageKey::CHECKSUM) + 1;
+        while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
+			checksum *= 10;
+			checksum += _json_payload[char_i++] - '0';
+		}
+		return checksum;
 	}
 
 };
