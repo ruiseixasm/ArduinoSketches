@@ -148,15 +148,19 @@ public:
 		size_t json_i = key_position(key);
 		if (json_i) {
 			if (_json_payload[json_i] == '"') {
+				for (json_i++; json_i < _json_length && _json_payload[json_i] != '"'; json_i++) {}
+				if (json_i == _json_length) {
+					return VOID;
+				}
 				return STRING;
 			} else {
-				while (_json_payload[json_i] != ',' && _json_payload[json_i] != '}') {
+				while (json_i < _json_length && _json_payload[json_i] != ',' && _json_payload[json_i] != '}') {
 					if (_json_payload[json_i] > '9' || _json_payload[json_i] < '0') {
 						return OTHER;
 					}
 					json_i++;
 				}
-				if (_json_payload[json_i - 1] == ':') {
+				if (json_i == _json_length) {
 					return VOID;
 				}
 				return INTEGER;
