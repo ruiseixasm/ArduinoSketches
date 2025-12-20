@@ -43,6 +43,10 @@ public:
 	}
 
 
+	size_t get_length() const {
+		return _json_length;
+	}
+
     uint16_t getChecksum() {
         // 16-bit word and XORing
         uint16_t checksum = 0;
@@ -93,17 +97,14 @@ public:
 	bool has_key(char key) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
 			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
-				if (_json_payload[char_i] == ':') {
-					if (_json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
-						return true;
-					}
+				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
+					return true;
 				}
 			}
 		}
 		return false;
 	}
 
-	
 };
 
 

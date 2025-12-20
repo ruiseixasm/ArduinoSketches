@@ -37,12 +37,13 @@ public:
 protected:
 
 
-    Action calls[5] = {
+    Action calls[6] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
 		{"has", "Test if it finds the given char"},
-		{"has_not", "Test if DOESN't find the given char"}
+		{"has_not", "Test if DOESN't find the given char"},
+		{"length", "Test it has the right length"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -59,7 +60,7 @@ public:
 		
 		if (index >= sizeof(calls)/sizeof(Action)) return false;
 		
-		const char* json_payload = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+		const char json_payload[] = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 		JsonMessage new_json_message;
 		new_json_message.deserialize(json_payload, sizeof(json_payload));
 
@@ -69,7 +70,10 @@ public:
 			case 0:
 			{
 				for (uint8_t test_i = 1; test_i < actionsCount(); test_i++) {
-					if (!actionByIndex(test_i, json_message, talker)) return false;
+					if (!actionByIndex(test_i, json_message, talker)) {
+						json_message[ valueKey(0) ] = test_i;
+						return false;
+					}
 				}
 				return true;
 			}
@@ -127,6 +131,18 @@ public:
 				if (new_json_message.has_key('j')) return false;
 				if (new_json_message.has_key('1')) return false;
 				if (new_json_message.has_key('u')) return false;
+				return true;
+			}
+			break;
+				
+			case 5:
+			{
+				size_t length = sizeof(json_payload);
+				json_message[ valueKey(0) ] = length;
+				if (new_json_message.get_length() != length) {
+					json_message[ valueKey(1) ] = new_json_message.get_length();
+					return false;
+				}
 				return true;
 			}
 			break;
