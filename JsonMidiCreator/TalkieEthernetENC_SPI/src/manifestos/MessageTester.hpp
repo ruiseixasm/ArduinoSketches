@@ -76,14 +76,20 @@ public:
 
 			case 0:
 			{
+				bool has_errors = false;
+				uint8_t field_i = 0;
 				for (uint8_t test_i = 1; test_i < actionsCount(); test_i++) {
 					if (!actionByIndex(test_i, json_message, talker)) {
-						json_message[ valueKey(0) ] = test_i;
-						return false;
+						json_message[ valueKey(field_i++) ] = test_i;
+						has_errors = true;
 					}
 				}
-				json_message[ valueKey(0) ] = 0;	// 0 means none have failed
-				return true;
+				if (!has_errors) {
+					for (uint8_t value_i = 0; value_i < 10; value_i++) {	// Removes all 10 possible values
+						json_message.remove( valueKey(value_i) );
+					}
+				}
+				return !has_errors;
 			}
 			break;
 
