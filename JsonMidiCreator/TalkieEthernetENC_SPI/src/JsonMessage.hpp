@@ -149,9 +149,9 @@ public:
 		return in_string[char_j] == '\0';
 	}
 
-	bool has_key(char key) const {
+	bool has_key(char key, size_t json_i = 4) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
-			for (size_t json_i = 4; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
+			for (; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
 					return true;
 				}
@@ -160,9 +160,9 @@ public:
 		return false;
 	}
 
-	size_t value_position(char key) const {
+	size_t value_position(char key, size_t json_i = 4) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
-			for (size_t json_i = 4; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
+			for (; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
 					return json_i + 1;	// Moves 1 after the ':' char (avoids extra thinking)
 				}
@@ -171,16 +171,16 @@ public:
 		return 0;
 	}
 
-	size_t key_position(char key) const {
-		size_t json_i = value_position(key);
+	size_t key_position(char key, size_t json_i = 4) const {
+		json_i = value_position(key, json_i);
 		if (json_i) {			//   3210
 			return json_i - 3;	// {"k":x}
 		}
 		return 0;
 	}
 
-	ValueType value_type(char key) const {
-		size_t json_i = value_position(key);
+	ValueType value_type(char key, size_t json_i = 4) const {
+		json_i = value_position(key, json_i);
 		if (json_i) {
 			if (_json_payload[json_i] == '"') {
 				for (json_i++; json_i < _json_length && _json_payload[json_i] != '"'; json_i++) {}
@@ -218,9 +218,9 @@ public:
 
 	// GETTERS
 
-	uint32_t get_number(char key) const {
+	uint32_t get_number(char key, size_t json_i = 4) const {
 		uint32_t json_number = 0;
-		size_t json_i = value_position(key);
+		json_i = value_position(key, json_i);
 		if (json_i) {
 			while (json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0')) {
 				json_number *= 10;
@@ -230,8 +230,8 @@ public:
 		return json_number;
 	}
 
-	bool get_string(char key, char* out_string, size_t size) const {
-		size_t json_i = value_position(key);
+	bool get_string(char key, char* out_string, size_t size, size_t json_i = 4) const {
+		json_i = value_position(key, json_i);
 		if (json_i && _json_payload[json_i++] == '"' && out_string && size) {	// Safe code
 			size_t char_j = 0;
 			while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < size) {
@@ -249,8 +249,8 @@ public:
 
 	// REMOVERS
 
-	void remove_field(char key) {
-		size_t json_i = value_position(key);
+	void remove_field(char key, size_t json_i = 4) {
+		json_i = value_position(key, json_i);
 		if (json_i) {
 			
 
@@ -259,8 +259,8 @@ public:
 
 	// SETTERS
 
-	bool swap_key(char old_key, char new_key) {
-		size_t json_i = value_position(old_key);
+	bool swap_key(char old_key, char new_key, size_t json_i = 4) {
+		json_i = value_position(old_key, json_i);
 		if (json_i) {
 			_json_payload[json_i] = new_key;
 			return true;
