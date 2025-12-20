@@ -350,6 +350,8 @@ public:
 			if (_json_payload[field_position - 1] == ',') {	// the heading ',' has to be removed too
 				field_position--;
 				field_length++;
+			} else if (_json_payload[field_position + field_length] == ',') {
+				field_length++;	// Changes the length only, to pick up the tailing ','
 			}
 			for (size_t json_i = field_position; json_i < _json_length - field_length; json_i++) {
                 _json_payload[json_i] = _json_payload[json_i + field_length];
