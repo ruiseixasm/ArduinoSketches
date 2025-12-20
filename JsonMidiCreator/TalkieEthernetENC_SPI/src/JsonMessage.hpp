@@ -190,7 +190,7 @@ public:
 		return json_number;
 	}
 
-	bool extract_string(char key, char* out_string, size_t size) const {
+	bool get_string(char key, char* out_string, size_t size) const {
 		size_t json_i = key_position(key);
 		if (json_i && _json_payload[json_i++] == '"' && out_string && size) {	// Safe code
 			size_t char_j = 0;

@@ -222,7 +222,7 @@ public:
 				bool from_match = false;
 				char from_name[] = "buzzer";
 				char out_name[16] = {'\0'};	// Name chars 16 sized (scheme adopted)
-				if (new_json_message.extract_string('f', out_name, 16)) {
+				if (new_json_message.get_string('f', out_name, 16)) {
 					if (strcmp(out_name, from_name) == 0) {
 						from_match = true;
 					}
