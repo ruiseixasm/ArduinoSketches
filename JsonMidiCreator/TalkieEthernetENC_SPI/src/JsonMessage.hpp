@@ -323,7 +323,7 @@ public:
 	bool set(char key, uint32_t number, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, colon_position);
 		if (colon_position) {
-			if (!remove(key, colon_position) return false;
+			if (!remove(key, colon_position)) return false;
 		}
 		// At this time there is no field key for sure, so, one can just add it right before the '}'
 		size_t number_size = number_of_digits(number);
@@ -339,7 +339,7 @@ public:
 		}
 		// To be added, it has to be from right to left
 		for (size_t json_i = new_length - 2; number; json_i--) {
-			_sending_buffer[json_i] = '0' + number % 10;
+			_json_payload[json_i] = '0' + number % 10;
 			number /= 10; // Truncates the number (does a floor)
 		}
 		// Finally writes the last char '}'

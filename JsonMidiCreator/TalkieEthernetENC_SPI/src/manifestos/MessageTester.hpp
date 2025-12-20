@@ -38,8 +38,7 @@ public:
 
 protected:
 
-
-    Action calls[13] = {
+    Action calls[14] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -52,7 +51,8 @@ protected:
 		{"checksum", "Extract the message checksum"},
 		{"message", "Gets the message number"},
 		{"from", "Gets the from name string"},
-		{"remove", "Removes a given field"}
+		{"remove", "Removes a given field"},
+		{"set", "Sets a given field"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -238,9 +238,21 @@ public:
 				
 			case 12:
 			{
-				char final_payload[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+				const char final_payload[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 				new_json_message.remove('f');
 				return new_json_message.compare_string(final_payload);
+			}
+			break;
+				
+			case 13:
+			{
+				
+				const char final_payload[] = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567}";
+				uint32_t big_number = 1234567;
+				if (new_json_message.set('0', big_number)) {
+					return new_json_message.compare_string(final_payload);
+				}
+				return false;
 			}
 			break;
 				
