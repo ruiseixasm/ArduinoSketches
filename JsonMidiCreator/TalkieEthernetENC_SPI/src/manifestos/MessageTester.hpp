@@ -39,7 +39,7 @@ public:
 protected:
 
 
-    Action calls[11] = {
+    Action calls[12] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -50,7 +50,8 @@ protected:
 		{"fields", "Validate message fields"},
 		{"identity", "Extract the message identity"},
 		{"checksum", "Extract the message checksum"},
-		{"message", "Gets the message number"}
+		{"message", "Gets the message number"},
+		{"from", "Gets the from name string"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -212,6 +213,22 @@ public:
 				json_message[ valueKey(0) ] = static_cast<int>(new_json_message.message_value());
 				json_message[ valueKey(1) ] = static_cast<int>(MessageValue::ECHO);
 				return new_json_message.message_value() == MessageValue::ECHO;	// 6 is ECHO
+			}
+			break;
+				
+			case 11:
+			{
+				bool from_match = false;
+				char from_name[] = "buzzer";
+				char out_name[16];	// Name chars 16 sized (scheme adopted)
+				if (new_json_message.extract_string('f', out_name, 16)) {
+					if (strcmp(out_name, from_name) == 0) {
+						from_match = true;
+					}
+				}
+				json_message[ valueKey(0) ] = static_cast<char*>(from_name);
+				json_message[ valueKey(1) ] = static_cast<char*>(out_name);
+				return from_match;
 			}
 			break;
 				

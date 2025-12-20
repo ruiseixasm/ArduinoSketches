@@ -44,7 +44,7 @@ public:
 protected:
 
 	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-	uint8_t _json_length = 0;
+	uint8_t _json_length = 0;	// BROADCAST_SOCKET_BUFFER_SIZE <= uint8_t
 
 
 public:
@@ -60,15 +60,14 @@ public:
 	}
 
 
-	uint8_t get_length() const {
+	size_t get_length() const {
 		return _json_length;
 	}
 
-    uint16_t getChecksum() {
-        // 16-bit word and XORing
+    uint16_t getChecksum() {	// 16-bit word and XORing
         uint16_t checksum = 0;
 		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (uint8_t i = 0; i < _json_length; i += 2) {
+			for (size_t i = 0; i < _json_length; i += 2) {
 				uint16_t chunk = _json_payload[i] << 8;
 				if (i + 1 < _json_length) {
 					chunk |= _json_payload[i + 1];
@@ -79,9 +78,9 @@ public:
         return checksum;
     }
 
-	bool deserialize(const char* buffer, uint8_t length) {
+	bool deserialize(const char* buffer, size_t length) {
 		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (uint8_t char_i = 0; char_i < length; ++char_i) {
+			for (size_t char_i = 0; char_i < length; ++char_i) {
 				_json_payload[char_i] = buffer[char_i];
 			}
 			_json_length = length;
@@ -90,9 +89,9 @@ public:
 		return false;
 	}
 
-	uint8_t serialize(char* buffer, uint8_t size) const {
+	size_t serialize(char* buffer, size_t size) const {
 		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (uint8_t char_i = 0; char_i < _json_length; ++char_i) {
+			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
 				buffer[char_i] = _json_payload[char_i];
 			}
 			return _json_length;
@@ -100,9 +99,9 @@ public:
 		return 0;
 	}
 
-	bool compare(const char* buffer, uint8_t size) const {
+	bool compare(const char* buffer, size_t size) const {
 		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (uint8_t char_i = 0; char_i < _json_length; ++char_i) {
+			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
 				if (buffer[char_i] != _json_payload[char_i]) {
 					return false;
 				}
@@ -113,7 +112,7 @@ public:
 
 	bool has_key(char key) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
-			for (uint8_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
+			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
 					return true;
 				}
@@ -122,9 +121,9 @@ public:
 		return false;
 	}
 
-	uint8_t key_position(char key) const {
+	size_t key_position(char key) const {
 		if (_json_length > 6 && _json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
-			for (uint8_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
+			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
 					return char_i + 1;	// Moves 1 after the ':' char (avoids extra thinking)
 				}
@@ -134,7 +133,7 @@ public:
 	}
 
 	ValueType value_type(char key) const {
-		uint8_t position = key_position(key);
+		size_t position = key_position(key);
 		if (position) {
 			if (_json_payload[position] == '"') {
 				return STRING;
@@ -166,7 +165,7 @@ public:
 	}
 
 	MessageValue message_value() const {
-		uint8_t position = key_position(MessageKey::MESSAGE);
+		size_t position = key_position(MessageKey::MESSAGE);
 		if (position) {
 			char number_char = _json_payload[position];
 			if (number_char > '9' || number_char < '0') return MessageValue::NOISE;
@@ -178,34 +177,52 @@ public:
 
 	uint16_t extract_identity() const {
 		uint16_t identity = 0;
-		uint8_t char_i = key_position(MessageKey::IDENTITY);
-        while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
-			identity *= 10;
-			identity += _json_payload[char_i++] - '0';
+		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			size_t char_i = key_position(MessageKey::IDENTITY);
+			while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
+				identity *= 10;
+				identity += _json_payload[char_i++] - '0';
+			}
 		}
 		return identity;
 	}
 
 	uint16_t extract_checksum() const {
 		uint16_t checksum = 0;
-		uint8_t char_i = key_position(MessageKey::CHECKSUM);
-        while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
-			checksum *= 10;
-			checksum += _json_payload[char_i++] - '0';
+		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			size_t char_i = key_position(MessageKey::CHECKSUM);
+			while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
+				checksum *= 10;
+				checksum += _json_payload[char_i++] - '0';
+			}
 		}
 		return checksum;
 	}
 
-	bool extract_string(char key, char* out, size_t size) const {
-		uint8_t char_i = key_position(key);
-		if (char_i && _json_payload[char_i++] == '"') {
-			uint8_t out_i = 0;
-			while (_json_payload[char_i] != '"' && out_i < size && char_i <= BROADCAST_SOCKET_BUFFER_SIZE) {
-				out[out_i++] = _json_payload[char_i++];
+	uint32_t extract_number(char key) const {
+		uint32_t json_number = 0;
+		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			size_t char_i = key_position(key);
+			while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
+				json_number *= 10;
+				json_number += _json_payload[char_i++] - '0';
 			}
-			if (out_i < size) {
-				out[out_i] = '\0';	// Makes sure the termination char is added
-				return true;
+		}
+		return json_number;
+	}
+
+	bool extract_string(char key, char* out, size_t size) const {
+		size_t char_i = key_position(key);
+		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			if (char_i && _json_payload[char_i++] == '"') {
+				size_t out_i = 0;
+				while (_json_payload[char_i] != '"' && out_i < size && char_i < _json_length) {
+					out[out_i++] = _json_payload[char_i++];
+				}
+				if (out_i < size) {
+					out[out_i] = '\0';	// Makes sure the termination char is added
+					return true;
+				}
 			}
 		}
 		return false;
