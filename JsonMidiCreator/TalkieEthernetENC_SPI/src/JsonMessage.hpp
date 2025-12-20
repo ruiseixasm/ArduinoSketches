@@ -101,7 +101,7 @@ public:
 
 	bool compare(const char* buffer, size_t size) const {
 		if (size == _json_length) {
-			for (size_t char_j = 0; char_j < _json_length; ++char_j) {
+			for (size_t char_j = 0; char_j < size; ++char_j) {
 				if (buffer[char_j] != _json_payload[char_j]) {
 					return false;
 				}
