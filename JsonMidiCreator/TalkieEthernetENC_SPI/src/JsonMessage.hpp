@@ -174,6 +174,7 @@ public:
 		if (_json_length < 27) return false;
 		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
 		if (value_type('m') != INTEGER) return false;
+		if (get_number('m') > 9) return false;
 		if (value_type('i') != INTEGER) return false;
 		if (value_type('c') != INTEGER) return false;
 		if (value_type('f') != STRING) return false;
