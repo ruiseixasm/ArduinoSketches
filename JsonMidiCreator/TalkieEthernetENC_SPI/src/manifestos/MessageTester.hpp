@@ -69,7 +69,7 @@ public:
 		
 		const char json_payload[] = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 		JsonMessage new_json_message;
-		new_json_message.deserialize(json_payload, sizeof(json_payload));
+		new_json_message.deserialize(json_payload, sizeof(json_payload) - 1);	// Discount the '\0' of the literal
 
 		// Actual implementation would do something based on index
 		switch(index) {
@@ -95,7 +95,7 @@ public:
 
 			case 1:
 			{
-				if (!new_json_message.deserialize(json_payload, sizeof(json_payload))) return false;
+				if (!new_json_message.deserialize(json_payload, sizeof(json_payload) - 1)) return false;
 				return true;
 			}
 			break;
@@ -151,10 +151,10 @@ public:
 				
 			case 5:
 			{
-				size_t length = sizeof(json_payload);
+				size_t length = sizeof(json_payload) - 1;	// Discount the '\0' char at the end
 				json_message[ valueKey(0) ] = length;
+				json_message[ valueKey(1) ] = new_json_message.get_length();
 				if (new_json_message.get_length() != length) {
-					json_message[ valueKey(1) ] = new_json_message.get_length();
 					return false;
 				}
 				return true;

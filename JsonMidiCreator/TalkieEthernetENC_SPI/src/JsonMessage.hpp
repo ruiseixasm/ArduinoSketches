@@ -151,7 +151,7 @@ public:
 	bool validate_fields() const {
 		// Minimum length: '{"m":0,"i":0,"c":0,"f":"n"}' = 27
 		if (_json_length < 27) return false;
-		// if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;
+		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
 		if (value_type('m') != INTEGER) return false;
 		if (value_type('i') != INTEGER) return false;
 		if (value_type('c') != INTEGER) return false;
