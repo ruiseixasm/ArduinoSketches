@@ -120,7 +120,7 @@ public:
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
 			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
-					return char_i;
+					return char_i + 1;	// Moves 1 after the ':' char (avoids extra thinking)
 				}
 			}
 		}
@@ -130,7 +130,7 @@ public:
 	ValueType value_type(char key) const {
 		size_t position = key_position(key);
 		if (position) {
-			if (_json_payload[++position] == '"') {
+			if (_json_payload[position] == '"') {
 				return STRING;
 			} else {
 				while (_json_payload[position] != ',') {
@@ -149,6 +149,9 @@ public:
 	}
 
 	bool validate_fields() const {
+		// Minimum length: '{"m":0,"i":0,"c":0,"f":"n"}' = 27
+		if (_json_length < 27) return false;
+		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;
 		if (value_type('m') != INTEGER) return false;
 		if (value_type('i') != INTEGER) return false;
 		if (value_type('c') != INTEGER) return false;
@@ -157,16 +160,18 @@ public:
 	}
 
 	MessageValue message_value() const {
-		size_t position = key_position(MessageKey::MESSAGE) + 1;
+		size_t position = key_position(MessageKey::MESSAGE);
 		if (position) {
-			return static_cast<MessageValue>(_json_payload[position + 1]);
+			char number_char = _json_payload[position];
+			if (number_char > '9' || number_char < '0') return MessageValue::NOISE;
+			return static_cast<MessageValue>(number_char - '0');
 		}
 		return MessageValue::NOISE;
 	}
 
 	uint16_t extract_identity() const {
 		uint16_t identity = 0;
-		size_t char_i = key_position(MessageKey::IDENTITY) + 1;
+		size_t char_i = key_position(MessageKey::IDENTITY);
         while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
 			identity *= 10;
 			identity += _json_payload[char_i++] - '0';
@@ -176,7 +181,7 @@ public:
 
 	uint16_t extract_checksum() const {
 		uint16_t checksum = 0;
-		size_t char_i = key_position(MessageKey::CHECKSUM) + 1;
+		size_t char_i = key_position(MessageKey::CHECKSUM);
         while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
 			checksum *= 10;
 			checksum += _json_payload[char_i++] - '0';
