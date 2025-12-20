@@ -51,8 +51,20 @@ public:
 
     virtual const char* class_name() const { return "JsonMessage"; }
 
+	void reset() {
+		// Only static guarantees it won't live on the stack!
+		static const char default_payload[] = "{\"m\":0,\"i\":0,\"c\":0,\"f\":\"\"}";
+		size_t default_length = sizeof(default_payload) - 1;
+		if (default_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			for (size_t char_j = 0; char_j < default_length; char_j++) {
+				_json_payload[char_j] = default_payload[char_j];
+			}
+			_json_length = default_length;
+		}
+	}
+
 	JsonMessage() {
-		// Does nothing
+		reset();	// Initiate with the minimum
 	}
 
 	~JsonMessage() {
@@ -78,10 +90,10 @@ public:
         return checksum;
     }
 
-	bool deserialize(const char* in_string, size_t length) {
+	bool deserialize(const char* buffer, size_t length) {
 		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t char_j = 0; char_j < length; ++char_j) {
-				_json_payload[char_j] = in_string[char_j];
+				_json_payload[char_j] = buffer[char_j];
 			}
 			_json_length = length;
 			return true;
@@ -89,10 +101,25 @@ public:
 		return false;
 	}
 
-	size_t serialize(char* in_string, size_t size) const {
+	bool deserialize_string(const char* in_string) {
+		size_t char_j = 0;
+		while (char_j < BROADCAST_SOCKET_BUFFER_SIZE) {
+			_json_payload[char_j] = in_string[char_j];
+			char_j++;
+		}
+		if (in_string[char_j] == '\0') {
+			_json_length = char_j;
+		} else {
+			reset();	// sets the length too
+			return false;
+		}
+		return true;
+	}
+
+	size_t serialize(char* buffer, size_t size) const {
 		if (size >= _json_length) {
 			for (size_t json_i = 0; json_i < _json_length; ++json_i) {
-				in_string[json_i] = _json_payload[json_i];
+				buffer[json_i] = _json_payload[json_i];
 			}
 			return _json_length;
 		}
@@ -133,7 +160,7 @@ public:
 		return false;
 	}
 
-	size_t key_position(char key) const {
+	size_t value_position(char key) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
 			for (size_t json_i = 4; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
@@ -144,8 +171,16 @@ public:
 		return 0;
 	}
 
+	size_t key_position(char key) const {
+		size_t json_i = value_position(key);
+		if (json_i) {			//   3210
+			return json_i - 3;	// {"k":x}
+		}
+		return 0;
+	}
+
 	ValueType value_type(char key) const {
-		size_t json_i = key_position(key);
+		size_t json_i = value_position(key);
 		if (json_i) {
 			if (_json_payload[json_i] == '"') {
 				for (json_i++; json_i < _json_length && _json_payload[json_i] != '"'; json_i++) {}
@@ -185,7 +220,7 @@ public:
 
 	uint32_t get_number(char key) const {
 		uint32_t json_number = 0;
-		size_t json_i = key_position(key);
+		size_t json_i = value_position(key);
 		if (json_i) {
 			while (json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0')) {
 				json_number *= 10;
@@ -196,7 +231,7 @@ public:
 	}
 
 	bool get_string(char key, char* out_string, size_t size) const {
-		size_t json_i = key_position(key);
+		size_t json_i = value_position(key);
 		if (json_i && _json_payload[json_i++] == '"' && out_string && size) {	// Safe code
 			size_t char_j = 0;
 			while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < size) {
@@ -215,7 +250,7 @@ public:
 	// REMOVERS
 
 	void remove_field(char key) {
-		size_t json_i = key_position(key);
+		size_t json_i = value_position(key);
 		if (json_i) {
 			
 
@@ -223,6 +258,15 @@ public:
 	}
 
 	// SETTERS
+
+	bool swap_key(char old_key, char new_key) {
+		size_t json_i = value_position(old_key);
+		if (json_i) {
+			_json_payload[json_i] = new_key;
+			return true;
+		}
+		return false;
+	}
 
 	bool set_field(char key) {
 
