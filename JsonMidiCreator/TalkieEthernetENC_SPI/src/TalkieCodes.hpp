@@ -66,28 +66,28 @@ struct TalkieCodes {
 	}
 
 
-	enum class SourceValue : int {
+	enum class SourceValue : uint8_t {
 		REMOTE, LOCAL, SELF, NONE
 	};
 
 
-	enum class MessageValue : int {
+	enum class MessageValue : uint8_t {
 		TALK, CHANNEL, PING, CALL, LIST, INFO, ECHO, ERROR, NOISE
 	};
 
 
-	enum class InfoValue : int {
+	enum class InfoValue : uint8_t {
 		BOARD, DROPS, DELAY, MUTE, SOCKET, TALKER, MANIFESTO
 	};
 
 
 	// Only applicable to CALL messages
-	enum class RogerValue : int {
+	enum class RogerValue : uint8_t {
 		ROGER, NEGATIVE, SAY_AGAIN, NIL
 	};
 
 
-	enum class ErrorValue : int {
+	enum class ErrorValue : uint8_t {
 		FROM, FIELD, CHECKSUM, MESSAGE, IDENTITY, DELAY, KEY, DATA
 	};
 

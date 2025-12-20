@@ -30,7 +30,7 @@ using MessageValue = TalkieCodes::MessageValue;
 class JsonMessage {
 public:
 	
-	enum ValueType : int {
+	enum ValueType : uint8_t {
 		STRING, INTEGER, OTHER, VOID
 	};
 
