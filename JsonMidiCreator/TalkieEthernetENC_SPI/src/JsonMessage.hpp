@@ -17,6 +17,12 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "TalkieCodes.hpp"
 
+// Guaranteed memory safety, constrained / schema-driven JSON protocol
+// Advisable maximum sizes:
+// 		f (from / name) → 16 bytes (15 + '\0')
+// 		d (description) → 64 bytes (63 + '\0')
+
+
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 #endif
@@ -38,7 +44,7 @@ public:
 protected:
 
 	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-	size_t _json_length = 0;
+	uint8_t _json_length = 0;
 
 
 public:
@@ -54,7 +60,7 @@ public:
 	}
 
 
-	size_t get_length() const {
+	uint8_t get_length() const {
 		return _json_length;
 	}
 
@@ -62,7 +68,7 @@ public:
         // 16-bit word and XORing
         uint16_t checksum = 0;
 		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t i = 0; i < _json_length; i += 2) {
+			for (uint8_t i = 0; i < _json_length; i += 2) {
 				uint16_t chunk = _json_payload[i] << 8;
 				if (i + 1 < _json_length) {
 					chunk |= _json_payload[i + 1];
@@ -73,9 +79,9 @@ public:
         return checksum;
     }
 
-	bool deserialize(const char* buffer, size_t length) {
+	bool deserialize(const char* buffer, uint8_t length) {
 		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t char_i = 0; char_i < length; ++char_i) {
+			for (uint8_t char_i = 0; char_i < length; ++char_i) {
 				_json_payload[char_i] = buffer[char_i];
 			}
 			_json_length = length;
@@ -84,9 +90,9 @@ public:
 		return false;
 	}
 
-	size_t serialize(char* buffer, size_t size) const {
+	uint8_t serialize(char* buffer, uint8_t size) const {
 		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
+			for (uint8_t char_i = 0; char_i < _json_length; ++char_i) {
 				buffer[char_i] = _json_payload[char_i];
 			}
 			return _json_length;
@@ -94,9 +100,9 @@ public:
 		return 0;
 	}
 
-	bool compare(const char* buffer, size_t size) const {
+	bool compare(const char* buffer, uint8_t size) const {
 		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
+			for (uint8_t char_i = 0; char_i < _json_length; ++char_i) {
 				if (buffer[char_i] != _json_payload[char_i]) {
 					return false;
 				}
@@ -107,7 +113,7 @@ public:
 
 	bool has_key(char key) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
-			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
+			for (uint8_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
 					return true;
 				}
@@ -116,9 +122,9 @@ public:
 		return false;
 	}
 
-	size_t key_position(char key) const {
+	uint8_t key_position(char key) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
-			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
+			for (uint8_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
 					return char_i + 1;	// Moves 1 after the ':' char (avoids extra thinking)
 				}
@@ -128,7 +134,7 @@ public:
 	}
 
 	ValueType value_type(char key) const {
-		size_t position = key_position(key);
+		uint8_t position = key_position(key);
 		if (position) {
 			if (_json_payload[position] == '"') {
 				return STRING;
@@ -160,7 +166,7 @@ public:
 	}
 
 	MessageValue message_value() const {
-		size_t position = key_position(MessageKey::MESSAGE);
+		uint8_t position = key_position(MessageKey::MESSAGE);
 		if (position) {
 			char number_char = _json_payload[position];
 			if (number_char > '9' || number_char < '0') return MessageValue::NOISE;
@@ -172,7 +178,7 @@ public:
 
 	uint16_t extract_identity() const {
 		uint16_t identity = 0;
-		size_t char_i = key_position(MessageKey::IDENTITY);
+		uint8_t char_i = key_position(MessageKey::IDENTITY);
         while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
 			identity *= 10;
 			identity += _json_payload[char_i++] - '0';
@@ -182,7 +188,7 @@ public:
 
 	uint16_t extract_checksum() const {
 		uint16_t checksum = 0;
-		size_t char_i = key_position(MessageKey::CHECKSUM);
+		uint8_t char_i = key_position(MessageKey::CHECKSUM);
         while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
 			checksum *= 10;
 			checksum += _json_payload[char_i++] - '0';
