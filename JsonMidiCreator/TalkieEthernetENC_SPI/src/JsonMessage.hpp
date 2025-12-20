@@ -44,7 +44,7 @@ public:
 protected:
 
 	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-	uint8_t _json_length = 0;	// BROADCAST_SOCKET_BUFFER_SIZE <= uint8_t
+	size_t _json_length = 0;
 
 
 	static size_t number_of_digits(uint32_t number) {
@@ -70,7 +70,7 @@ protected:
 	}
 
 
-    uint16_t get_checksum() {	// 16-bit word and XORing
+    uint16_t calculate_checksum() {	// 16-bit word and XORing
         uint16_t checksum = 0;
 		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t i = 0; i < _json_length; i += 2) {
@@ -172,6 +172,20 @@ public:
 		if (get_value_type('c') != INTEGER) return false;
 		if (get_value_type('f') != STRING) return false;
 		return true;
+	}
+
+	bool validate_checksum() {
+		const uint16_t message_checksum = get_number('c');
+		if (!set('c', 0)) return false;	// Resets 'c' to 0
+		const uint16_t checksum = calculate_checksum();
+		return message_checksum == checksum;
+	}
+
+	bool set_checksum() {
+		if (!set('c', 0)) return false;	// Resets 'c' to 0
+		const uint16_t checksum = calculate_checksum();
+		// Finally inserts the Checksum
+		return set('c', checksum);
 	}
 
 
