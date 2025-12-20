@@ -30,6 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 using MessageKey = TalkieCodes::MessageKey;
+using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
 
 
@@ -409,23 +410,20 @@ public:
 	}
 
 
-
-
 	bool swap_key(char old_key, char new_key, size_t colon_position = 4) {
-		size_t json_i = get_value_position(old_key, colon_position);
-		if (json_i) {
-			_json_payload[json_i] = new_key;
+		size_t key_position = get_key_position(old_key, colon_position);
+		if (key_position) {
+			_json_payload[key_position] = new_key;
 			return true;
 		}
 		return false;
 	}
 
+
 	bool set_field(char key) {
 
 		return false;
 	}
-
-	
 
 };
 
