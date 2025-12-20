@@ -38,7 +38,7 @@ public:
 
 protected:
 
-    Action calls[14] = {
+    Action calls[15] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -52,7 +52,8 @@ protected:
 		{"message", "Gets the message number"},
 		{"from", "Gets the from name string"},
 		{"remove", "Removes a given field"},
-		{"set", "Sets a given field"}
+		{"set", "Sets a given field"},
+		{"edge", "Tests edge cases"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -270,6 +271,16 @@ public:
 				json_message[ valueKey(0) ] = sizeof(final_payload) - 1;
 				json_message[ valueKey(1) ] = new_json_message.get_length();
 				return set_match;
+			}
+			break;
+				
+			case 14:
+			{
+				const char final_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+				if (!new_json_message.remove('m')) {	// The first key (no header ',' char)
+					return false;
+				}				
+				return new_json_message.compare_string(final_payload);
 			}
 			break;
 				
