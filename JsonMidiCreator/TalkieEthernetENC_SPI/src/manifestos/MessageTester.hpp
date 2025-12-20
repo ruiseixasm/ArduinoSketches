@@ -37,7 +37,7 @@ public:
 protected:
 
 
-    Action calls[8] = {
+    Action calls[9] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -45,7 +45,8 @@ protected:
 		{"has_not", "Test if DOESN't find the given char"},
 		{"length", "Test it has the right length"},
 		{"type", "Test the type of value"},
-		{"fields", "Validate message fields"}
+		{"fields", "Validate message fields"},
+		{"identity", "Get the message identity"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -177,6 +178,12 @@ public:
 			case 7:
 			{
 				return new_json_message.validate_fields();
+			}
+			break;
+				
+			case 8:
+			{
+				return new_json_message.get_identity() == 13825;
 			}
 			break;
 				

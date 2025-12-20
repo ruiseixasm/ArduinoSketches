@@ -23,6 +23,9 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
+using MessageKey = TalkieCodes::MessageKey;
+
+
 class JsonMessage {
 public:
 	
@@ -150,9 +153,16 @@ public:
 	}
 
 	uint16_t get_identity() const {
-		size_t position = key_position('i');
+		uint16_t identity = 0;
+		size_t char_i = key_position(MessageKey::IDENTITY) + 1;
+        for (; char_i < _json_length; ++char_i) {
+			while (!(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
+				identity *= 10;
+				identity += _json_payload[char_i] - '0';
+			}
 
-		return 0;
+		}
+		return identity;
 	}
 
 };

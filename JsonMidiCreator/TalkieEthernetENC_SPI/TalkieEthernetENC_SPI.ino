@@ -53,7 +53,7 @@ BlueManifesto blue_manifesto(2);
 JsonTalker t_sockless = JsonTalker(t_sockless_name, t_sockless_desc, &blue_manifesto);
 
 // Sockless Talker (JsonMessage tester)
-const char t_tester_name[] = "tester";
+const char t_tester_name[] = "test";
 const char t_tester_desc[] = "I test the JsonMessage class";
 MessageTester message_tester;
 JsonTalker t_tester = JsonTalker(t_tester_name, t_tester_desc, &message_tester);
