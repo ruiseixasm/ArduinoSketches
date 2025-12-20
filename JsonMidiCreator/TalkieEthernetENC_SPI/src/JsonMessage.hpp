@@ -78,10 +78,10 @@ public:
         return checksum;
     }
 
-	bool deserialize(const char* buffer, size_t length) {
+	bool deserialize(const char* in_string, size_t length) {
 		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t char_j = 0; char_j < length; ++char_j) {
-				_json_payload[char_j] = buffer[char_j];
+				_json_payload[char_j] = in_string[char_j];
 			}
 			_json_length = length;
 			return true;
@@ -89,27 +89,37 @@ public:
 		return false;
 	}
 
-	size_t serialize(char* buffer, size_t size) const {
+	size_t serialize(char* in_string, size_t size) const {
 		if (size >= _json_length) {
 			for (size_t json_i = 0; json_i < _json_length; ++json_i) {
-				buffer[json_i] = _json_payload[json_i];
+				in_string[json_i] = _json_payload[json_i];
 			}
 			return _json_length;
 		}
 		return 0;
 	}
 
-	bool compare(const char* buffer, size_t size) const {
+	bool compare(const char* in_string, size_t size) const {
 		if (size == _json_length) {
 			for (size_t char_j = 0; char_j < size; ++char_j) {
-				if (buffer[char_j] != _json_payload[char_j]) {
+				if (in_string[char_j] != _json_payload[char_j]) {
 					return false;
 				}
 			}
-		} else {
-			return false;
+			return true;
 		}
-		return true;
+		return false;
+	}
+
+	bool compare_string(const char* in_string) const {
+		size_t char_j = 0;
+		while (char_j < _json_length) {
+			if (in_string[char_j] != _json_payload[char_j]) {
+				return false;
+			}
+			char_j++;
+		}
+		return in_string[char_j] == '\0';
 	}
 
 	bool has_key(char key) const {
@@ -215,18 +225,18 @@ public:
 		return json_number;
 	}
 
-	bool extract_string(char key, char* out, size_t size) const {
+	bool extract_string(char key, char* out_string, size_t size) const {
 		size_t json_i = key_position(key);
-		if (json_i && _json_payload[json_i++] == '"' && out && size) {	// Safe code
+		if (json_i && _json_payload[json_i++] == '"' && out_string && size) {	// Safe code
 			size_t char_j = 0;
 			while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < size) {
-				out[char_j++] = _json_payload[json_i++];
+				out_string[char_j++] = _json_payload[json_i++];
 			}
 			if (char_j < size) {
-				out[char_j] = '\0';	// Makes sure the termination char is added
+				out_string[char_j] = '\0';	// Makes sure the termination char is added
 				return true;
 			}
-			out[0] = '\0';	// Clears all noisy fill if it fails
+			out_string[0] = '\0';	// Clears all noisy fill if it fails
 			return false;
 		}
 		return false;
