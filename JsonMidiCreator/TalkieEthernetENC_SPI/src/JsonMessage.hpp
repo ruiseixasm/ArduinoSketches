@@ -216,11 +216,11 @@ public:
 		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE && size > _json_length) {	// Safe code (must include the extra '\0')
 			if (json_i && _json_payload[json_i++] == '"') {
 				size_t out_i = 0;
-				while (_json_payload[json_i] != '"' && out_i < size && json_i < _json_length) {
+				while (_json_payload[json_i] != '"' && json_i < _json_length) {
 					out[out_i++] = _json_payload[json_i++];
 				}
 				out[out_i] = '\0';	// Makes sure the termination char is added
-				return true;
+				return json_i < _json_length;
 			}
 		}
 		return false;
