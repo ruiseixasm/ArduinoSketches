@@ -160,6 +160,7 @@ public:
 		return false;
 	}
 
+
 	size_t value_position(char key, size_t json_i = 4) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
 			for (; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
@@ -171,6 +172,7 @@ public:
 		return 0;
 	}
 
+
 	size_t key_position(char key, size_t json_i = 4) const {
 		json_i = value_position(key, json_i);
 		if (json_i) {			//   3210
@@ -179,7 +181,36 @@ public:
 		return 0;
 	}
 
-	ValueType value_type(char key, size_t json_i = 4) const {
+
+	size_t get_field_length(char key, size_t json_i = 4) const {
+		size_t field_length = 0;
+		json_i = value_position(key, json_i);
+		if (json_i) {
+			field_length = 4;	// All keys occupy 4 '"k":'
+			ValueType value_type = get_value_type(key, json_i - 1);
+			switch (value_type) {
+
+				case ValueType::STRING:
+					field_length += 2;	// Adds the two '"' associated to the string
+					for (json_i++; json_i < _json_length && _json_payload[json_i] != '"'; json_i++) {
+						field_length++;
+					}
+					break;
+				
+				case ValueType::INTEGER:
+					for (; json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0'); json_i++) {
+						field_length++;
+					}
+					break;
+				
+				default: break;
+			}
+		}
+		return field_length;
+	}
+
+
+	ValueType get_value_type(char key, size_t json_i = 4) const {
 		json_i = value_position(key, json_i);
 		if (json_i) {
 			if (_json_payload[json_i] == '"') {
@@ -208,11 +239,11 @@ public:
 		// Minimum length: '{"m":0,"i":0,"c":0,"f":"n"}' = 27
 		if (_json_length < 27) return false;
 		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
-		if (value_type('m') != INTEGER) return false;
+		if (get_value_type('m') != INTEGER) return false;
 		if (get_number('m') > 9) return false;
-		if (value_type('i') != INTEGER) return false;
-		if (value_type('c') != INTEGER) return false;
-		if (value_type('f') != STRING) return false;
+		if (get_value_type('i') != INTEGER) return false;
+		if (get_value_type('c') != INTEGER) return false;
+		if (get_value_type('f') != STRING) return false;
 		return true;
 	}
 
@@ -250,7 +281,7 @@ public:
 	// REMOVERS
 
 	void remove_field(char key, size_t json_i = 4) {
-		json_i = value_position(key, json_i);
+		json_i = key_position(key, json_i);
 		if (json_i) {
 			
 

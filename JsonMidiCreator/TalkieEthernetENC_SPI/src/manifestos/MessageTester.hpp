@@ -169,21 +169,21 @@ public:
 				
 			case 6:
 			{
-				if (new_json_message.value_type('c') != JsonMessage::INTEGER) {
+				if (new_json_message.get_value_type('c') != JsonMessage::INTEGER) {
 					json_message[ valueKey(0) ] = "c";
-					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.value_type('c'));
+					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('c'));
 					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.value_position('c'));
 					return false;
 				}
-				if (new_json_message.value_type('f') != JsonMessage::STRING) {
+				if (new_json_message.get_value_type('f') != JsonMessage::STRING) {
 					json_message[ valueKey(0) ] = "f";
-					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.value_type('f'));
+					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('f'));
 					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.value_position('f'));
 					return false;
 				}
-				if (new_json_message.value_type('e') != JsonMessage::VOID) {
+				if (new_json_message.get_value_type('e') != JsonMessage::VOID) {
 					json_message[ valueKey(0) ] = "e";
-					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.value_type('e'));
+					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('e'));
 					json_message[ valueKey(2) ] = static_cast<int>(new_json_message.value_position('e'));
 					return false;
 				}
