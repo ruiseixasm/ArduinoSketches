@@ -293,6 +293,7 @@ public:
 				const char new_single_key[] = "{\"i\":32423}";
 				if (!new_json_message.compare_string(new_single_key)) {
 					json_message[ valueKey(0) ] = "4th";
+					json_message[ valueKey(1) ] = new_json_message.get_length();
 					return false;
 				}
 				return true;
