@@ -37,10 +37,12 @@ public:
 protected:
 
 
-    Action calls[3] = {
+    Action calls[5] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
-		{"compare", "Test if it's the same"}
+		{"compare", "Test if it's the same"},
+		{"has", "Test if it finds the given char"},
+		{"has_not", "Test if DOESN't find the given char"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -59,6 +61,7 @@ public:
 		
 		const char* json_payload = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 		JsonMessage new_json_message;
+		new_json_message.deserialize(json_payload, sizeof(json_payload));
 
 		// Actual implementation would do something based on index
 		switch(index) {
@@ -75,20 +78,42 @@ public:
 			case 1:
 			{
 				if (!new_json_message.deserialize(json_payload, sizeof(json_payload))) return false;
-
 				return true;
 			}
 			break;
 
 			case 2:
 			{
-				if (!new_json_message.deserialize(json_payload, sizeof(json_payload))) return false;
 				if (!new_json_message.compare(json_payload, sizeof(json_payload))) return false;
+				return true;
+			}
+			break;
 
+			case 3:
+			{
+				if (!new_json_message.has_key('m')) return false;
+				if (!new_json_message.has_key('c')) return false;
+				if (!new_json_message.has_key('f')) return false;
+				if (!new_json_message.has_key('i')) return false;
+				if (!new_json_message.has_key('0')) return false;
+				if (!new_json_message.has_key('t')) return false;
 				return true;
 			}
 			break;
 				
+			case 4:
+			{
+				if (new_json_message.has_key('n')) return false;
+				if (new_json_message.has_key('d')) return false;
+				if (new_json_message.has_key('e')) return false;
+				if (new_json_message.has_key('j')) return false;
+				if (new_json_message.has_key('1')) return false;
+				if (new_json_message.has_key('u')) return false;
+				return true;
+			}
+			break;
+				
+
             default: return false;
 		}
 		return false;
