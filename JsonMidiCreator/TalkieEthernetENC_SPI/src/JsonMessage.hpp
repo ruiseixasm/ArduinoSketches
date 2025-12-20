@@ -176,44 +176,9 @@ public:
 		return true;
 	}
 
-	// EXTRACTORS
+	// GETTERS
 
-	MessageValue extract_message_value() const {
-		size_t json_i = key_position(MessageKey::MESSAGE);
-		if (json_i) {
-			char number_char = _json_payload[json_i];
-			if (number_char > '9' || number_char < '0') return MessageValue::NOISE;
-			if (_json_payload[json_i + 1] != ',' && _json_payload[json_i + 1] != '}') return MessageValue::NOISE;
-			return static_cast<MessageValue>(number_char - '0');
-		}
-		return MessageValue::NOISE;
-	}
-
-	uint16_t extract_identity() const {
-		uint16_t identity = 0;
-		size_t json_i = key_position(MessageKey::IDENTITY);
-		if (json_i) {
-			while (json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0')) {
-				identity *= 10;
-				identity += _json_payload[json_i++] - '0';
-			}
-		}
-		return identity;
-	}
-
-	uint16_t extract_checksum() const {
-		uint16_t checksum = 0;
-		size_t json_i = key_position(MessageKey::CHECKSUM);
-		if (json_i) {
-			while (json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0')) {
-				checksum *= 10;
-				checksum += _json_payload[json_i++] - '0';
-			}
-		}
-		return checksum;
-	}
-
-	uint32_t extract_number(char key) const {
+	uint32_t get_number(char key) const {
 		uint32_t json_number = 0;
 		size_t json_i = key_position(key);
 		if (json_i) {
@@ -242,7 +207,7 @@ public:
 		return false;
 	}
 
-	// REMOVES
+	// REMOVERS
 
 	void remove_field(char key) {
 		size_t json_i = key_position(key);
@@ -252,18 +217,9 @@ public:
 		}
 	}
 
-	// RESETS
+	// SETTERS
 
-	bool reset_field(char key) {
-
-		return false;
-	}
-
-	// INSERTERS
-
-	bool insert_message_value(MessageValue message_value) {
-		size_t json_i = key_position('m');
-		
+	bool set_field(char key) {
 
 		return false;
 	}

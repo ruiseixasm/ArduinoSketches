@@ -194,25 +194,26 @@ public:
 				
 			case 8:
 			{
-				json_message[ valueKey(0) ] = new_json_message.extract_identity();
+				json_message[ valueKey(0) ] = new_json_message.get_number('i');
 				json_message[ valueKey(1) ] = 13825;
-				return new_json_message.extract_identity() == 13825;
+				return new_json_message.get_number('i') == 13825;
 			}
 			break;
 				
 			case 9:
 			{
-				json_message[ valueKey(0) ] = new_json_message.extract_checksum();
+				json_message[ valueKey(0) ] = new_json_message.get_number('c');
 				json_message[ valueKey(1) ] = 29973;
-				return new_json_message.extract_checksum() == 29973;
+				return new_json_message.get_number('i') == 29973;
 			}
 			break;
 				
 			case 10:
 			{
-				json_message[ valueKey(0) ] = static_cast<int>(new_json_message.extract_message_value());
+				MessageValue message_value = static_cast<MessageValue>( new_json_message.get_number('m') );
+				json_message[ valueKey(0) ] = static_cast<int>(message_value);
 				json_message[ valueKey(1) ] = static_cast<int>(MessageValue::ECHO);
-				return new_json_message.extract_message_value() == MessageValue::ECHO;	// 6 is ECHO
+				return message_value == MessageValue::ECHO;	// 6 is ECHO
 			}
 			break;
 				
