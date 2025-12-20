@@ -161,36 +161,40 @@ public:
 		return in_string[char_j] == '\0';
 	}
 
-	bool has_key(char key, size_t json_i = 4) const {
-		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
+
+	size_t colon_position(char key, size_t json_i = 4) const {
+		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
 			for (; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
 				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
-					return true;
+					return json_i;
 				}
 			}
 		}
-		return false;
+		return 0;
 	}
 
 
 	size_t value_position(char key, size_t json_i = 4) const {
-		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
-			for (; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
-				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
-					return json_i + 1;	// Moves 1 after the ':' char (avoids extra thinking)
-				}
-			}
+		json_i = colon_position(key, json_i);
+		if (json_i) {			//     01
+			return json_i + 1;	// {"k":x}
 		}
 		return 0;
 	}
 
 
 	size_t key_position(char key, size_t json_i = 4) const {
-		json_i = value_position(key, json_i);
-		if (json_i) {			//   3210
-			return json_i - 3;	// {"k":x}
+		json_i = colon_position(key, json_i);
+		if (json_i) {			//   210
+			return json_i - 2;	// {"k":x}
 		}
 		return 0;
+	}
+
+
+	bool has_key(char key, size_t json_i = 4) const {
+		json_i = colon_position(key, json_i);
+		return json_i > 0;
 	}
 
 
@@ -293,7 +297,8 @@ public:
 	// REMOVERS
 
 	void remove_field(char key, size_t json_i = 4) {
-		json_i = key_position(key, json_i);
+		json_i = value_position(key, json_i);
+		size_t field_length = get_field_length(key, json_i - 1);
 		if (json_i) {
 			
 
