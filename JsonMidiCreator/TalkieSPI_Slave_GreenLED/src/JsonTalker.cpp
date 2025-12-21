@@ -38,6 +38,34 @@ bool JsonTalker::remoteSend(JsonObject& json_message) {
 	return false;
 }
 
+
+// PARALLEL DEVELOPMENT WITH ARDUINOJSON
+
+
+bool JsonTalker::remoteSend(JsonObject& json_message, JsonMessage& new_json_message) {
+	(void)new_json_message;
+    if (!_socket) return false;
+
+	#ifdef JSON_TALKER_DEBUG
+	Serial.print(F("\t"));
+	Serial.print(_name);
+	Serial.print(F(": "));
+	Serial.println(F("Sending a REMOTE message"));
+	#endif
+
+	// Tags the message as REMOTE sourced
+	json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::REMOTE);
+	if (prepareMessage(json_message)) {
+    	return _socket->remoteSend(json_message);
+	}
+	return false;
+}
+
+
+// PARALLEL DEVELOPMENT WITH ARDUINOJSON
+
+
+
 void JsonTalker::setSocket(BroadcastSocket* socket) {
 	_socket = socket;
 }
