@@ -206,14 +206,6 @@ public:
 		return message_checksum == checksum;
 	}
 
-	bool set_checksum() {
-		if (!set_number('c', 0)) return false;	// Resets 'c' to 0
-		const uint16_t checksum = calculate_checksum();
-		// Finally inserts the Checksum
-		return set_number('c', checksum);
-	}
-
-
 	bool deserialize(const char* buffer, size_t length) {
 		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t char_j = 0; char_j < length; ++char_j) {
@@ -320,32 +312,6 @@ public:
 		return json_number;
 	}
 
-	SourceValue get_source_value(size_t colon_position = 4) const {
-		SourceValue message_value = static_cast<SourceValue>(
-			get_number('c', colon_position)
-		);
-		return message_value;
-	}
-
-	MessageValue get_message_value(size_t colon_position = 4) const {
-		MessageValue message_value = static_cast<MessageValue>(
-			get_number('m', colon_position)
-		);
-		return message_value;
-	}
-
-	RogerValue get_roger_value(size_t colon_position = 4) const {
-		colon_position = get_colon_position('r', colon_position);
-		if (colon_position) {
-			RogerValue roger_value = static_cast<RogerValue>(
-				get_number('r', colon_position)
-			);
-			return roger_value;
-		}
-		return RogerValue::NIL;
-	}
-
-
 	bool get_string(char key, char* out_string, size_t size, size_t colon_position = 4) const {
 		size_t json_i = get_value_position(key, colon_position);
 		if (json_i && _json_payload[json_i++] == '"' && out_string && size) {	// Safe code
@@ -362,6 +328,40 @@ public:
 		}
 		return false;
 	}
+
+	uint16_t get_identity() {
+		return static_cast<uint16_t>(get_number('i'));
+	}
+
+	uint16_t get_timestamp() {
+		return get_identity();
+	}
+
+	SourceValue get_source_value() const {
+		SourceValue message_value = static_cast<SourceValue>(
+			get_number('c')
+		);
+		return message_value;
+	}
+
+	MessageValue get_message_value() const {
+		MessageValue message_value = static_cast<MessageValue>(
+			get_number('m')
+		);
+		return message_value;
+	}
+
+	RogerValue get_roger_value() const {
+		size_t colon_position = get_colon_position('r');
+		if (colon_position) {
+			RogerValue roger_value = static_cast<RogerValue>(
+				get_number('r', colon_position)
+			);
+			return roger_value;
+		}
+		return RogerValue::NIL;
+	}
+
 
 	// REMOVERS
 
@@ -386,6 +386,26 @@ public:
 	}
 
 	// SETTERS
+
+	bool set_checksum() {
+		if (!set_number('c', 0)) return false;	// Resets 'c' to 0
+		const uint16_t checksum = calculate_checksum();
+		// Finally inserts the Checksum
+		return set_number('c', checksum);
+	}
+
+	bool set_identity() {
+		uint16_t identity = (uint16_t)millis();
+		return set_number('i', identity);
+	}
+
+	bool set_timestamp() {
+		return set_identity();
+	}
+
+	bool set_source(SourceValue source_value) {
+		return set_number('i', static_cast<uint16_t>(source_value));
+	}
 
 	bool set_number(char key, uint32_t number, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, colon_position);
