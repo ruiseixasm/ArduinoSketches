@@ -20,10 +20,13 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
 
+
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 #endif
-
+#ifndef NAME_LEN
+#define NAME_LEN 16
+#endif
 
 // #define JSON_TALKER_DEBUG
 
@@ -138,7 +141,6 @@ public:
 	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
 	
 	bool prepareMessage(JsonObject& json_message, JsonMessage& new_json_message) {
-		(void)new_json_message;
 
 		if (json_message[ TalkieKey::FROM ].is<const char*>()) {
 			if (strcmp(json_message[ TalkieKey::FROM ].as<const char*>(), _name) != 0) {
@@ -150,11 +152,12 @@ public:
 			// FROM doesn't even exist (must have)
 			json_message[ TalkieKey::FROM ] = _name;
 		}
-		// PARALLEL DEVELOPMENT WITH ARDUINOJSON (IN PROGRESS)
+		// *************** PARALLEL DEVELOPMENT WITH ARDUINOJSON (IN PROGRESS) ***************
 		if (new_json_message.has_key( MessageKey::FROM )) {
-			// NEED A get_string METHOD FOR new_json_message
-			if (strcmp(json_message[ TalkieKey::FROM ].as<const char*>(), _name) != 0) {
-				// FROM is different from _name, must be swapped
+			char from_name[NAME_LEN] = {'\0'};
+			test_json_message.get_string('f', from_name, NAME_LEN);
+			if (strcmp(from_name, _name) != 0) {
+				// FROM is different from _name, must be swapped (replaces "f" with "t")
 				new_json_message.swap_key(MessageKey::FROM, MessageKey::TO);
 				new_json_message.set_string(MessageKey::FROM, _name);
 			}
