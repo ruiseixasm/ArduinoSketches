@@ -156,8 +156,8 @@ public:
 
 	JsonMessage(const JsonMessage& other) {
 		_json_length = other._json_length;
-		for (size_t i = 0; i < _json_length; ++i) {
-			_json_payload[i] = other._json_payload[i];
+		for (size_t json_i = 0; json_i < _json_length; ++json_i) {
+			_json_payload[json_i] = other._json_payload[json_i];
 		}
 	}
 
@@ -167,8 +167,8 @@ public:
 
 	bool operator==(const JsonMessage& other) const {
 		if (_json_length == other._json_length) {
-			for (size_t i = 0; i < _json_length; ++i) {
-				if (_json_payload[i] != other._json_payload[i]) {
+			for (size_t json_i = 0; json_i < _json_length; ++json_i) {
+				if (_json_payload[json_i] != other._json_payload[json_i]) {
 					return false;
 				}
 			}
