@@ -546,6 +546,9 @@ protected:
 				#endif
 
 				String target_name = json_message[ TalkieKey::TO ].as<String>();
+				uint8_t send_pin = 15;
+				bool found_it = _named_pins_table.get(json_message[ TalkieKey::TO ].as<const char*>(), send_pin);
+				(void)found_it;
 				if (target_name.length() > 0) {
 					as_reply = _named_pins[ target_name ].is<uint8_t>();	// Critical line
 				} else {
