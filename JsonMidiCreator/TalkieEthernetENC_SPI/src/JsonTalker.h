@@ -157,12 +157,12 @@ public:
 			new_json_message.get_string('f', from_name, NAME_LEN);
 			if (strcmp(from_name, _name) != 0) {
 				// FROM is different from _name, must be swapped (replaces "f" with "t")
-				new_json_message.swap_key(MessageKey::FROM, MessageKey::TO);
-				new_json_message.set_string(MessageKey::FROM, _name);
+				new_json_message.set_from_as_to();
+				new_json_message.set_from(_name);
 			}
 		} else {
 			// FROM doesn't even exist (must have)
-			new_json_message.set_string(MessageKey::FROM, _name);
+			new_json_message.set_from(_name);
 		}
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
