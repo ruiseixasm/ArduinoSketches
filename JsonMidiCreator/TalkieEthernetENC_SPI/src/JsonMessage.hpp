@@ -332,23 +332,24 @@ public:
 		return false;
 	}
 
-	bool deserialize_string(const char* in_string) {
-		size_t char_j = 0;
-		while (char_j < BROADCAST_SOCKET_BUFFER_SIZE && in_string[char_j] != '\0') {
-			_json_payload[char_j] = in_string[char_j];
-			char_j++;
+	bool deserialize_buffer(const char* buffer, size_t length) {
+		if (buffer && length) {
+			size_t char_j = 0;
+			for (; char_j < length && char_j < BROADCAST_SOCKET_BUFFER_SIZE; ++char_j) {
+				_json_payload[char_j] = buffer[char_j];
+			}
+			if (char_j < length) {
+				reset();
+				return false;
+			}
+			_json_length = length;
+			return true;
 		}
-		if (in_string[char_j] == '\0') {
-			_json_length = char_j;
-		} else {
-			reset();	// sets the length too
-			return false;
-		}
-		return true;
+		return false;
 	}
 
-	size_t serialize(char* buffer, size_t size) const {
-		if (size >= _json_length) {
+	size_t serialize_json(char* buffer, size_t length) const {
+		if (buffer && length >= _json_length) {
 			for (size_t json_i = 0; json_i < _json_length; ++json_i) {
 				buffer[json_i] = _json_payload[json_i];
 			}

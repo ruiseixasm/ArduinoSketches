@@ -290,7 +290,7 @@ public:
 					return false;
 				}
 				const char single_key[] = "{\"i\":13825}";
-				if (!test_json_message.deserialize_string(single_key)) {
+				if (!test_json_message.deserialize_buffer(single_key, sizeof(single_key) - 1)) {
 					json_message[ valueKey(0) ] = "2nd";
 					return false;
 				}
@@ -316,7 +316,7 @@ public:
 					return false;
 				}
 				const char different_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
-				copy_json_message.deserialize_string(different_payload);
+				copy_json_message.deserialize_buffer(different_payload, sizeof(different_payload) - 1);
 				if (copy_json_message == test_json_message) {
 					json_message[ valueKey(0) ] = "2nd";
 					return false;
