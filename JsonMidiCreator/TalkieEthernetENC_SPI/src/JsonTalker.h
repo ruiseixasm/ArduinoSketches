@@ -166,7 +166,7 @@ public:
 		}
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-		MessageValue message_data = new_json_message.get_message_value();
+		MessageValue message_data = new_json_message.get_message();
 		message_data = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
 		if (message_data < MessageValue::ECHO) {
 
@@ -286,6 +286,8 @@ public:
 
 		// Tags the message as LOCAL sourced
 		json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::SELF);
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		new_json_message.set_source(SourceValue::SELF);
 		// Despite being a SELF message it also needs to be prepared like any other
 		if (prepareMessage(json_message, new_json_message)) {
 			return processMessage(json_message, new_json_message);	// Calls my self processMessage method right away
@@ -312,9 +314,11 @@ public:
 		Serial.print(F(": "));
 		#endif
 
-		if (json_message[ TalkieKey::SOURCE ].is<int>()) {
-			SourceValue source_data = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
-			switch (source_data) {
+		if (json_message[ TalkieKey::SOURCE ].is<int>()) {	// OBSOLETE CHECK
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			SourceValue source_value = new_json_message.get_source();	// Already returns NOISE
+			source_value = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
+			switch (source_value) {
 
 				case SourceValue::LOCAL:
 					#ifdef JSON_TALKER_DEBUG

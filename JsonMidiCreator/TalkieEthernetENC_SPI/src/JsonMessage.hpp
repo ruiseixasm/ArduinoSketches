@@ -426,27 +426,35 @@ public:
 		return get_identity();
 	}
 
-	SourceValue get_source_value() const {
-		SourceValue message_value = static_cast<SourceValue>(
-			get_number('c')
-		);
-		return message_value;
+	SourceValue get_source() const {
+		size_t colon_position = get_colon_position('c');
+		if (colon_position) {
+			uint8_t source_number = get_number('c', colon_position);
+			if (source_number < static_cast<uint8_t>( SourceValue::NONE )) {
+				return static_cast<SourceValue>( source_number );
+			}
+		}
+		return SourceValue::NONE;
 	}
 
-	MessageValue get_message_value() const {
-		MessageValue message_value = static_cast<MessageValue>(
-			get_number('m')
-		);
-		return message_value;
+	MessageValue get_message() const {
+		size_t colon_position = get_colon_position('m');
+		if (colon_position) {
+			uint8_t message_number = get_number('m', colon_position);
+			if (message_number < static_cast<uint8_t>( MessageValue::NOISE )) {
+				return static_cast<MessageValue>( message_number );
+			}
+		}
+		return MessageValue::NOISE;
 	}
 
-	RogerValue get_roger_value() const {
+	RogerValue get_roger() const {
 		size_t colon_position = get_colon_position('r');
 		if (colon_position) {
-			RogerValue roger_value = static_cast<RogerValue>(
-				get_number('r', colon_position)
-			);
-			return roger_value;
+			uint8_t roger_number = get_number('r', colon_position);
+			if (roger_number < static_cast<uint8_t>( RogerValue::NIL )) {
+				return static_cast<RogerValue>( roger_number );
+			}
 		}
 		return RogerValue::NIL;
 	}
