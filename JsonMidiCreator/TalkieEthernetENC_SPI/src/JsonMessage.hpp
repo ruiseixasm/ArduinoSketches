@@ -196,14 +196,13 @@ protected:
 			reset();	// Something very wrong, needs to be reset
 			return false;
 		}
-		// Regardless being 0, it also has to be added
 		if (number) {
 			// To be added, it has to be from right to left
 			for (size_t json_i = new_length - 2; number; json_i--) {
 				_json_payload[json_i] = '0' + number % 10;
 				number /= 10; // Truncates the number (does a floor)
 			}
-		} else {
+		} else {	// Regardless being 0, it also has to be added
 			_json_payload[new_length - 2] = '0';
 		}
 		// Finally writes the last char '}'
