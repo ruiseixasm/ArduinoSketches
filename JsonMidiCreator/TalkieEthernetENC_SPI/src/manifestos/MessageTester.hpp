@@ -38,7 +38,7 @@ public:
 
 protected:
 
-    Action calls[16] = {
+    Action calls[17] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -54,7 +54,8 @@ protected:
 		{"remove", "Removes a given field"},
 		{"set", "Sets a given field"},
 		{"edge", "Tests edge cases"},
-		{"copy", "Tests the copy constructor"}
+		{"copy", "Tests the copy constructor"},
+		{"checksum", "Tests extracting and inserting the checksum"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -319,6 +320,31 @@ public:
 				copy_json_message.deserialize_buffer(different_payload, sizeof(different_payload) - 1);
 				if (copy_json_message == test_json_message) {
 					json_message[ valueKey(0) ] = "2nd";
+					return false;
+				}
+				return true;
+			}
+			break;
+				
+			case 16:
+			{
+				uint16_t message_checksum = test_json_message.extract_checksum();
+				uint16_t generated_checksum = test_json_message.generate_checksum();
+				if (message_checksum != generated_checksum) {
+					json_message[ valueKey(0) ] = "1st";
+					json_message[ valueKey(1) ] = message_checksum;
+					json_message[ valueKey(2) ] = generated_checksum;
+					return false;
+				}
+				const char different_payload[] = "{\"c\":0,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+				test_json_message.deserialize_buffer(different_payload, sizeof(different_payload) - 1);
+				generated_checksum = test_json_message.generate_checksum();
+				test_json_message.insert_checksum();
+				message_checksum = test_json_message.get_checksum();
+				if (message_checksum != generated_checksum) {
+					json_message[ valueKey(0) ] = "2nd";
+					json_message[ valueKey(1) ] = message_checksum;
+					json_message[ valueKey(2) ] = generated_checksum;
 					return false;
 				}
 				return true;

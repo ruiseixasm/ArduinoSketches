@@ -352,7 +352,7 @@ public:
         if (checksum > 0) { // Isn't already 0
 
             size_t num_digits = number_of_digits(checksum);
-            size_t data_i = _json_length - 1;
+            size_t char_j = _json_length - 1;
 			size_t new_length = _json_length + num_digits - 1;	// Discount the digit '0' already placed
             
             if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) return false;	// buffer overflow
@@ -513,6 +513,10 @@ public:
 			}
 		}
 		return MessageValue::NOISE;
+	}
+
+	uint16_t get_checksum() {
+		return static_cast<uint16_t>(get_number('c'));
 	}
 
 	uint16_t get_identity() {
