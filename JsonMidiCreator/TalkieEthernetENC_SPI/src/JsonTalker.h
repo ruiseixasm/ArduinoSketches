@@ -152,6 +152,7 @@ public:
 		}
 		// PARALLEL DEVELOPMENT WITH ARDUINOJSON (IN PROGRESS)
 		if (new_json_message.has_key( MessageKey::FROM )) {
+			// NEED A get_string METHOD FOR new_json_message
 			if (strcmp(json_message[ TalkieKey::FROM ].as<const char*>(), _name) != 0) {
 				// FROM is different from _name, must be swapped
 				new_json_message.swap_key(MessageKey::FROM, MessageKey::TO);
