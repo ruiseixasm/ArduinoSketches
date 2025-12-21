@@ -387,34 +387,6 @@ public:
 
 	// SETTERS
 
-	bool set_checksum() {
-		if (!set_number('c', 0)) return false;	// Resets 'c' to 0
-		const uint16_t checksum = calculate_checksum();
-		// Finally inserts the Checksum
-		return set_number('c', checksum);
-	}
-
-	bool set_identity(uint16_t identity) {
-		return set_number('i', identity);
-	}
-
-	bool set_identity() {
-		uint16_t identity = (uint16_t)millis();
-		return set_number('i', identity);
-	}
-
-	bool set_timestamp(uint16_t timestamp) {
-		return set_number('i', timestamp);
-	}
-
-	bool set_timestamp() {
-		return set_identity();
-	}
-
-	bool set_source(SourceValue source_value) {
-		return set_number('i', static_cast<uint16_t>(source_value));
-	}
-
 	bool set_number(char key, uint32_t number, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, colon_position);
 		if (colon_position) {
@@ -508,18 +480,8 @@ public:
 	}
 
 
-	bool set_source(SourceValue source_value, size_t colon_position = 4) {
-		size_t value_position = get_value_position('c', colon_position);
-		if (value_position) {
-			_json_payload[value_position] = static_cast<uint8_t>(source_value);
-			return true;
-		}
-		return false;
-	}
-
-
-	bool set_message(MessageValue message_value, size_t colon_position = 4) {
-		size_t value_position = get_value_position('m', colon_position);
+	bool set_message(MessageValue message_value) {
+		size_t value_position = get_value_position('m');
 		if (value_position) {
 			_json_payload[value_position] = static_cast<uint8_t>(message_value);
 			return true;
@@ -527,9 +489,56 @@ public:
 		return false;
 	}
 
+	bool set_identity(uint16_t identity) {
+		return set_number('i', identity);
+	}
 
-	bool swap_key(char old_key, char new_key, size_t colon_position = 4) {
-		size_t key_position = get_key_position(old_key, colon_position);
+	bool set_identity() {
+		uint16_t identity = (uint16_t)millis();
+		return set_number('i', identity);
+	}
+
+	bool set_timestamp(uint16_t timestamp) {
+		return set_number('i', timestamp);
+	}
+
+	bool set_timestamp() {
+		return set_identity();
+	}
+
+	bool set_checksum() {
+		if (!set_number('c', 0)) return false;	// Resets 'c' to 0
+		const uint16_t checksum = calculate_checksum();
+		// Finally inserts the Checksum
+		return set_number('c', checksum);
+	}
+
+	bool set_source(SourceValue source_value) {
+		size_t value_position = get_value_position('c');
+		if (value_position) {
+			_json_payload[value_position] = static_cast<uint8_t>(source_value);
+			return true;
+		}
+		return false;
+	}
+
+	bool set_nth_value_number(uint8_t nth, uint32_t number) {
+		if (nth < 10) {
+			return set_number('0' + nth, number);
+		}
+		return false;
+	}
+
+	bool set_nth_value_string(uint8_t nth, const char* in_string) {
+		if (nth < 10) {
+			return set_string('0' + nth, in_string);
+		}
+		return false;
+	}
+
+
+	bool swap_key(char old_key, char new_key) {
+		size_t key_position = get_key_position(old_key);
 		if (key_position) {
 			_json_payload[key_position] = new_key;
 			return true;
