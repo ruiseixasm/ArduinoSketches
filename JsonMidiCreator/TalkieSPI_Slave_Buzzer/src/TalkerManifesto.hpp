@@ -105,7 +105,7 @@ public:
     }
     
     // Action implementations - MUST be implemented by derived
-    virtual bool actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
+    virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) {
         (void)index;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
@@ -113,13 +113,13 @@ public:
 	}
 
 
-    virtual void echo(JsonObject& json_message, JsonTalker* talker) {
+    virtual void echo(JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) {
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
     }
 
 
-    virtual void error(JsonObject& json_message, JsonTalker* talker) {
+    virtual void error(JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) {
         (void)json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
     }

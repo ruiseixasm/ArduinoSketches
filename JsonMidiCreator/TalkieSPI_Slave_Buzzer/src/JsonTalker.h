@@ -135,397 +135,6 @@ public:
     }
 
 
-	bool prepareMessage(JsonObject& json_message) {
-		if (json_message[ TalkieKey::FROM ].is<const char*>()) {
-			if (strcmp(json_message[ TalkieKey::FROM ].as<const char*>(), _name) != 0) {
-				// FROM is different from _name, must be swapped
-				json_message[ TalkieKey::TO ] = json_message[ TalkieKey::FROM ];
-				json_message[ TalkieKey::FROM ] = _name;
-			}
-		} else {
-			// FROM doesn't even exist (must have)
-			json_message[ TalkieKey::FROM ] = _name;
-		}
-
-		MessageValue message_data = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
-		if (message_data < MessageValue::ECHO) {
-
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
-			serializeJson(json_message, Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-			// _muted_calls mutes CALL echoes only
-			if (_muted_calls && _received_message == MessageValue::CALL) {
-				_received_message = MessageValue::NOISE;	// Avoids false mutes for self generated messages (safe code)
-				return false;
-			} else {
-				_received_message = MessageValue::NOISE;	// Avoids false mutes for self generated messages (safe code)
-			}
-
-			uint16_t message_id = (uint16_t)millis();
-			json_message[ TalkieKey::IDENTITY ] = message_id;
-			if (message_data < MessageValue::ECHO) {
-				_original_message.identity = message_id;
-				_original_message.message_data = message_data;
-			}
-
-		} else if (!json_message[ TalkieKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
-
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("remoteSend1: Response message with a wrong or without an identifier, now being set (i): "));
-			serializeJson(json_message, Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-			json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
-			json_message[ valueKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
-			json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
-
-		} else {
-			
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
-			serializeJson(json_message, Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-		}
-		return true;
-	}
-
-	
-    virtual bool remoteSend(JsonObject& json_message);
-
-
-    virtual bool localSend(JsonObject& json_message) {
-
-		#ifdef JSON_TALKER_DEBUG
-		Serial.print(F("\t"));
-		Serial.print(_name);
-		Serial.print(F(": "));
-		Serial.println(F("Sending a LOCAL message"));
-		#endif
-
-		if (prepareMessage(json_message)) {
-
-			// Tags the message as LOCAL sourced
-			json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::LOCAL);
-			// Triggers all local Talkers to processes the json_message
-			bool sent_message = false;
-			bool pre_validated = false;
-			for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
-				if (_json_talkers[talker_i] != this) {  // Can't send to myself
-
-					// CREATE COPY for each talker
-					// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-					#if ARDUINOJSON_VERSION_MAJOR >= 7
-					JsonDocument doc_copy;
-					#else
-					StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
-					#endif
-					JsonObject json_copy = doc_copy.to<JsonObject>();
-					
-					// Copy all data from original
-					for (JsonPair kv : json_message) {
-						json_copy[kv.key()] = kv.value();
-					}
-				
-					pre_validated = _json_talkers[talker_i]->processMessage(json_copy);
-					sent_message = true;
-					if (!pre_validated) break;
-				}
-			}
-			return sent_message;
-		}
-		return false;
-    }
-
-
-    virtual bool selfSend(JsonObject& json_message) {
-
-		#ifdef JSON_TALKER_DEBUG
-		Serial.print(F("\t"));
-		Serial.print(_name);
-		Serial.print(F(": "));
-		Serial.println(F("Sending a SELF message"));
-		#endif
-
-		// Tags the message as LOCAL sourced
-		json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::SELF);
-		// Despite being a SELF message it also needs to be prepared like any other
-		if (prepareMessage(json_message)) {
-			return processMessage(json_message);	// Calls my self processMessage method right away
-		}
-		return false;
-    }
-
-
-	virtual bool noneSend(JsonObject& json_message) {
-        (void)json_message; // Silence unused parameter warning
-		// It's absolutely neutral, does nothing, NONE
-		return true;
-	}
-
-
-    virtual bool transmitMessage(JsonObject& json_message) {
-
-		#ifdef JSON_TALKER_DEBUG
-		Serial.print(F("\t"));
-		Serial.print(_name);
-		Serial.print(F(": "));
-		#endif
-
-		if (json_message[ TalkieKey::SOURCE ].is<int>()) {
-			SourceValue source_data = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
-			switch (source_data) {
-
-				case SourceValue::LOCAL:
-					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tTransmitted a LOCAL message"));
-					#endif
-					return localSend(json_message);
-				
-				case SourceValue::SELF:
-					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tTransmitted an SELF message"));
-					#endif
-					return selfSend(json_message);
-
-				case SourceValue::NONE:
-					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tTransmitted an SELF message"));
-					#endif
-					return noneSend(json_message);
-
-				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
-				default: break;
-			}
-		}
-		// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
-		#ifdef JSON_TALKER_DEBUG
-		Serial.println(F("\tTransmitted a REMOTE message"));
-		#endif
-		return remoteSend(json_message);
-    }
-
-    
-    virtual bool processMessage(JsonObject& json_message) {
-
-        #ifdef JSON_TALKER_DEBUG
-        Serial.println(F("\tProcessing JSON message..."));
-        #endif
-        
-        bool dont_interrupt = true;   // Doesn't interrupt next talkers process
-
-		if (!json_message[ TalkieKey::MESSAGE ].is<int>()) {
-			return false;
-		}
-
-		MessageValue message_data = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
-
-        // Is it for me?
-        if (json_message[ TalkieKey::TO ].is<uint8_t>()) {
-            if (json_message[ TalkieKey::TO ].as<uint8_t>() != _channel)
-                return true;    // It's still validated (just not for me as a target)
-        } else if (json_message[ TalkieKey::TO ].is<String>()) {
-            if (json_message[ TalkieKey::TO ] != _name) {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("\tMessage NOT for me!"));
-                #endif
-                return true;    // It's still validated (just not for me as a target)
-            } else {
-                dont_interrupt = false; // Found by name, interrupts next Talkers process
-            }
-        } else if (message_data > MessageValue::PING) {
-			// Only TALK, CHANNEL and PING can be broadcasted
-			return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
-		} else if (json_message[ valueKey(0) ].is<uint8_t>()) {
-			return false;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
-		}
-
-        #ifdef JSON_TALKER_DEBUG
-        Serial.print(F("\tProcess: "));
-        serializeJson(json_message, Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
-        #endif
-
-		// Doesn't apply to ECHO nor ERROR
-		if (message_data < MessageValue::ECHO) {
-			_received_message = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
-			json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ECHO);
-		}
-
-        switch (message_data) {
-
-			case MessageValue::CALL:
-				{
-					uint8_t index_found_i = 255;
-					if (json_message[ TalkieKey::ACTION ].is<uint8_t>()) {
-						index_found_i = _manifesto->actionIndex(json_message[ TalkieKey::ACTION ].as<uint8_t>());
-					} else if (json_message[ TalkieKey::ACTION ].is<const char *>()) {
-						index_found_i = _manifesto->actionIndex(json_message[ TalkieKey::ACTION ].as<const char *>());
-					}
-					if (index_found_i < 255) {
-
-						#ifdef JSON_TALKER_DEBUG
-						Serial.print(F("\tRUN found at "));
-						Serial.print(index_found_i);
-						Serial.println(F(", now being processed..."));
-						#endif
-
-						if (_manifesto->actionByIndex(index_found_i, json_message, this)) {
-							// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
-							// json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::ROGER);
-						} else {
-							json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::NEGATIVE);
-						}
-					} else {
-						json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::SAY_AGAIN);
-					}
-				}
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
-				break;
-			
-			case MessageValue::TALK:
-				json_message[ valueKey(0) ] = _desc;
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
-				break;
-			
-			case MessageValue::CHANNEL:
-				if (json_message[ valueKey(0) ].is<uint8_t>()) {
-
-					#ifdef JSON_TALKER_DEBUG
-					Serial.print(F("\tChannel B value is an <uint8_t>: "));
-					Serial.println(json_message[ valueKey(0) ].is<uint8_t>());
-					#endif
-
-					_channel = json_message[ valueKey(0) ].as<uint8_t>();
-				}
-				json_message[ valueKey(0) ] = _channel;
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
-				break;
-			
-			case MessageValue::PING:
-				// Talker name already set in FROM (ready to transmit)
-				transmitMessage(json_message);
-				break;
-			
-			case MessageValue::LIST:
-				{   // Because of action_index and action !!!
-
-					#ifdef JSON_TALKER_DEBUG
-					Serial.print("\t=== This object is: ");
-					Serial.println(class_name());
-					#endif
-
-					uint8_t action_index = 0;
-					const TalkerManifesto::Action* action;
-					_manifesto->iterateActionsReset();
-					while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
-						json_message[ valueKey(0) ] = action_index++;
-						json_message[ valueKey(1) ] = action->name;
-						json_message[ valueKey(2) ] = action->desc;
-						transmitMessage(json_message);	// One-to-Many
-					}
-					if (!action_index) {
-						json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::NIL);
-					}
-				}
-				break;
-			
-			case MessageValue::INFO:
-				if (json_message[ TalkieKey::INFO ].is<int>()) {
-
-					InfoValue system_code = static_cast<InfoValue>(json_message[ TalkieKey::INFO ].as<int>());
-
-					switch (system_code) {
-
-						case InfoValue::BOARD:
-							json_message[ valueKey(0) ] = board_description();
-							break;
-
-						case InfoValue::DROPS:
-							if (_socket) {
-								json_message[ valueKey(0) ] = get_drops();
-							}
-							break;
-
-						case InfoValue::DELAY:
-							if (_socket) {
-								json_message[ valueKey(0) ] = get_delay();
-							}
-							break;
-
-						case InfoValue::MUTE:
-							if (json_message[ valueKey(0) ].is<uint8_t>()) {
-								uint8_t mute = json_message[ valueKey(0) ].as<uint8_t>();
-								if (mute) {
-									_muted_calls = true;
-								} else {
-									_muted_calls = false;
-								}
-							} else {
-								if (_muted_calls) {
-									json_message[ valueKey(0) ] = 1;
-								} else {
-									json_message[ valueKey(0) ] = 0;
-								}
-							}
-							break;
-
-						case InfoValue::SOCKET:
-							json_message[ valueKey(0) ] = socket_class_name();
-							break;
-
-						case InfoValue::TALKER:
-							json_message[ valueKey(0) ] = class_name();
-							break;
-
-						case InfoValue::MANIFESTO:
-							if (_manifesto) {
-								json_message[ valueKey(0) ] = _manifesto->class_name();
-							} else {
-								json_message[ valueKey(0) ] = "none";
-							}
-							break;
-
-						default: break;
-					}
-
-					// In the end sends back the processed message (single message, one-to-one)
-					transmitMessage(json_message);
-				}
-				break;
-			
-			case MessageValue::ECHO:
-				if (_manifesto) {
-					// Makes sure it has the same id first (echo condition)
-					uint16_t message_id = json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
-					if (message_id == _original_message.identity) {
-						_manifesto->echo(json_message, this);
-					}
-				}
-				break;
-			
-			case MessageValue::ERROR:
-				if (_manifesto) {
-					_manifesto->error(json_message, this);
-				}
-				break;
-			
-			default:
-				break;
-        }
-        return dont_interrupt;
-    }
-
-
-
 	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
 	
 	bool prepareMessage(JsonObject& json_message, JsonMessage& new_json_message) {
@@ -604,7 +213,7 @@ public:
 		Serial.println(F("Sending a LOCAL message"));
 		#endif
 
-		if (prepareMessage(json_message)) {
+		if (prepareMessage(json_message, new_json_message)) {
 
 			// Tags the message as LOCAL sourced
 			json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::LOCAL);
@@ -628,7 +237,7 @@ public:
 						json_copy[kv.key()] = kv.value();
 					}
 				
-					pre_validated = _json_talkers[talker_i]->processMessage(json_copy);
+					pre_validated = _json_talkers[talker_i]->processMessage(json_copy, new_json_message);
 					sent_message = true;
 					if (!pre_validated) break;
 				}
@@ -652,8 +261,8 @@ public:
 		// Tags the message as LOCAL sourced
 		json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::SELF);
 		// Despite being a SELF message it also needs to be prepared like any other
-		if (prepareMessage(json_message)) {
-			return processMessage(json_message);	// Calls my self processMessage method right away
+		if (prepareMessage(json_message, new_json_message)) {
+			return processMessage(json_message, new_json_message);	// Calls my self processMessage method right away
 		}
 		return false;
     }
@@ -685,19 +294,19 @@ public:
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(F("\tTransmitted a LOCAL message"));
 					#endif
-					return localSend(json_message);
+					return localSend(json_message, new_json_message);
 				
 				case SourceValue::SELF:
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(F("\tTransmitted an SELF message"));
 					#endif
-					return selfSend(json_message);
+					return selfSend(json_message, new_json_message);
 
 				case SourceValue::NONE:
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(F("\tTransmitted an SELF message"));
 					#endif
-					return noneSend(json_message);
+					return noneSend(json_message, new_json_message);
 
 				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 				default: break;
@@ -707,7 +316,7 @@ public:
 		#ifdef JSON_TALKER_DEBUG
 		Serial.println(F("\tTransmitted a REMOTE message"));
 		#endif
-		return remoteSend(json_message);
+		return remoteSend(json_message, new_json_message);
     }
 
     
@@ -776,7 +385,7 @@ public:
 						Serial.println(F(", now being processed..."));
 						#endif
 
-						if (_manifesto->actionByIndex(index_found_i, json_message, this)) {
+						if (_manifesto->actionByIndex(index_found_i, *this, json_message, new_json_message)) {
 							// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
 							// json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::ROGER);
 						} else {
@@ -787,13 +396,13 @@ public:
 					}
 				}
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
+				transmitMessage(json_message, new_json_message);
 				break;
 			
 			case MessageValue::TALK:
 				json_message[ valueKey(0) ] = _desc;
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
+				transmitMessage(json_message, new_json_message);
 				break;
 			
 			case MessageValue::CHANNEL:
@@ -808,12 +417,12 @@ public:
 				}
 				json_message[ valueKey(0) ] = _channel;
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
+				transmitMessage(json_message, new_json_message);
 				break;
 			
 			case MessageValue::PING:
 				// Talker name already set in FROM (ready to transmit)
-				transmitMessage(json_message);
+				transmitMessage(json_message, new_json_message);
 				break;
 			
 			case MessageValue::LIST:
@@ -831,7 +440,7 @@ public:
 						json_message[ valueKey(0) ] = action_index++;
 						json_message[ valueKey(1) ] = action->name;
 						json_message[ valueKey(2) ] = action->desc;
-						transmitMessage(json_message);	// One-to-Many
+						transmitMessage(json_message, new_json_message);	// One-to-Many
 					}
 					if (!action_index) {
 						json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::NIL);
@@ -899,7 +508,7 @@ public:
 					}
 
 					// In the end sends back the processed message (single message, one-to-one)
-					transmitMessage(json_message);
+					transmitMessage(json_message, new_json_message);
 				}
 				break;
 			
@@ -908,14 +517,14 @@ public:
 					// Makes sure it has the same id first (echo condition)
 					uint16_t message_id = json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
 					if (message_id == _original_message.identity) {
-						_manifesto->echo(json_message, this);
+						_manifesto->echo(*this, json_message, new_json_message);
 					}
 				}
 				break;
 			
 			case MessageValue::ERROR:
 				if (_manifesto) {
-					_manifesto->error(json_message, this);
+					_manifesto->error(*this, json_message, new_json_message);
 				}
 				break;
 			

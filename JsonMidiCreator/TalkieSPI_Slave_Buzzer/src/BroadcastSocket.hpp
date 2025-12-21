@@ -171,7 +171,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool checkJsonMessage(const JsonObject& json_message) {
+	virtual bool checkJsonMessage(const JsonObject& json_message, JsonMessage& new_json_message) {
 		if (!json_message[ TalkieKey::FROM ].is<String>()) {
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("ERROR: From key 'f' is missing"));
@@ -270,7 +270,7 @@ protected:
 				JsonObject json_message = _message_doc.as<JsonObject>();
 				_new_json_message.deserialize(_receiving_buffer, _received_length);	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
 
-				if (!checkJsonMessage(json_message)) return 0;
+				if (!checkJsonMessage(json_message, _new_json_message)) return 0;
 
 				if (!json_message[ TalkieKey::IDENTITY ].is<uint16_t>()) {
 					#ifdef JSON_TALKER_DEBUG
@@ -283,7 +283,7 @@ protected:
 					// From one to many, starts to set the returning target in this single place only
 					json_message[ TalkieKey::TO ] = json_message[ TalkieKey::FROM ];
 
-					remoteSend(json_message);	// Includes reply swap
+					remoteSend(json_message, _new_json_message);	// Includes reply swap
 					return 0;
 				}
 				
@@ -315,7 +315,7 @@ protected:
 					#endif
 
 					// A non static method
-                    pre_validated = _json_talkers[talker_i]->processMessage(json_message);
+                    pre_validated = _json_talkers[talker_i]->processMessage(json_message, _new_json_message);
                     if (!pre_validated) return 0;
                 }
                 
@@ -371,7 +371,7 @@ protected:
 	}
 
 
-    virtual bool send(const JsonObject& json_message) {
+    virtual bool send(const JsonObject& json_message, JsonMessage& new_json_message) {
         (void)json_message; // Silence unused parameter warning
 
         if (_sending_length < 3*4 + 2) {
@@ -460,7 +460,7 @@ public:
     }
 
 
-    bool remoteSend(JsonObject& json_message) {
+    bool remoteSend(JsonObject& json_message, JsonMessage& new_json_message) {
 
 		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
 		json_message[ TalkieKey::CHECKSUM ] = 0;
@@ -487,7 +487,7 @@ public:
 			Serial.println(_sending_length);
 			#endif
 
-			return send(json_message);
+			return send(json_message, new_json_message);
 		}
 
 		return false;
