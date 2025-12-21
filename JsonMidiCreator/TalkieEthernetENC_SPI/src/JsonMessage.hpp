@@ -321,26 +321,10 @@ public:
 		return message_checksum == checksum;
 	}
 
-	bool deserialize(const char* buffer, size_t length) {
-		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+	bool deserialize_buffer(const char* buffer, size_t length) {
+		if (buffer && length && length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t char_j = 0; char_j < length; ++char_j) {
 				_json_payload[char_j] = buffer[char_j];
-			}
-			_json_length = length;
-			return true;
-		}
-		return false;
-	}
-
-	bool deserialize_buffer(const char* buffer, size_t length) {
-		if (buffer && length) {
-			size_t char_j = 0;
-			for (; char_j < length && char_j < BROADCAST_SOCKET_BUFFER_SIZE; ++char_j) {
-				_json_payload[char_j] = buffer[char_j];
-			}
-			if (char_j < length) {
-				reset();
-				return false;
 			}
 			_json_length = length;
 			return true;
@@ -358,6 +342,12 @@ public:
 		return 0;
 	}
 
+	bool write_to(Print& out) const {
+		if (_json_length) {
+			return out.write(reinterpret_cast<const uint8_t*>(_json_payload), _json_length) == _json_length;
+		}
+		return false;
+	}
 
 	bool for_me(const char* name, uint8_t channel) const {
 		size_t colon_position = get_colon_position('t');

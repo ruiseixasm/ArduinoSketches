@@ -25,6 +25,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG_NEW
 
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
@@ -196,7 +197,18 @@ protected:
         #endif
 
         if (_received_length > 3*4 + 2) {
+
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			_new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
+			_new_json_message.validate_checksum();	// Also sets checksum as 0 ('c') in message buffer
+
+			#ifdef BROADCASTSOCKET_DEBUG_NEW
+			Serial.print(F("\t\t\t\tnew_json_message1: "));
+			_new_json_message.write_to(Serial);
+			Serial.println();
+			#endif
             
+
             uint8_t message_code_int = 255;    // There is no 255 message code, meaning, it has none!
             uint16_t remote_time = 0;
             uint16_t received_checksum = extractChecksum(&message_code_int, &remote_time);
@@ -270,7 +282,9 @@ protected:
 					return 0;
 				}
 				JsonObject json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
-				_new_json_message.deserialize(_receiving_buffer, _received_length);
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				_received_length = _new_json_message.get_length();
+				_new_json_message.serialize_json(_receiving_buffer, _received_length);	// To safe keep on existent buffer
 
 				if (!checkJsonMessage(json_message, _new_json_message)) return 0;
 
@@ -284,7 +298,6 @@ protected:
 					json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
 					// From one to many, starts to set the returning target in this single place only
 					json_message[ TalkieKey::TO ] = json_message[ TalkieKey::FROM ];
-
 					remoteSend(json_message, _new_json_message);	// Includes reply swap
 					return 0;
 				}
@@ -307,9 +320,16 @@ protected:
 							return 0;
 						}
 						json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
+						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+						_new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
 					}
 					
-					_new_json_message.deserialize(_receiving_buffer, _received_length);
+					#ifdef BROADCASTSOCKET_DEBUG_NEW
+					Serial.print(F("\t\t\t\tnew_json_message2: "));
+					_new_json_message.write_to(Serial);
+					Serial.println();
+					#endif
+
                     
 					#ifdef BROADCASTSOCKET_DEBUG
 					Serial.print(F("triggerTalkers10: Triggering the talker: "));
