@@ -29,7 +29,54 @@ https://github.com/ruiseixasm/JsonTalkie
 #define send_delay_us 10
 #define receive_delay_us 10
 
-class NameTable;
+
+#define MAX_NAMES 8
+#define NAME_LEN  16   // includes '\0'
+
+
+struct NameEntry {
+    char name[NAME_LEN];
+    uint8_t value;
+};
+
+class NameTable {
+private:
+    NameEntry entries[MAX_NAMES];
+    uint8_t count = 0;
+
+public:
+    bool add(const char* name, uint8_t value) {
+        if (count >= MAX_NAMES)
+            return false;
+
+        // Reject too-long names
+        size_t len = strlen(name);
+        if (len >= NAME_LEN)
+            return false;
+
+        // Prevent duplicates
+        for (uint8_t i = 0; i < count; ++i) {
+            if (strcmp(entries[i].name, name) == 0)
+                return false;
+        }
+
+        strcpy(entries[count].name, name);
+        entries[count].value = value;
+        ++count;
+        return true;
+    }
+
+    bool get(const char* name, uint8_t& out) const {
+        for (uint8_t i = 0; i < count; ++i) {
+            if (strcmp(entries[i].name, name) == 0) {
+                out = entries[i].value;
+                return true;
+            }
+        }
+        return false;
+    }
+};
+
 
 class SPI_ESP_Arduino_Master : public BroadcastSocket {
 public:
@@ -70,6 +117,8 @@ protected:
     #endif
 
 	JsonObject _named_pins;	// Automatically "null", needs to be initiated though!
+
+	NameTable _named_pins_table;
 
 
     // Needed for the compiler, the base class is the one being called though
@@ -458,6 +507,8 @@ protected:
 			_named_pins = _named_pins_doc.as<JsonObject>();
 			_named_pins[from_name] = _actual_ss_pin;
 
+			_named_pins_table.add(json_message[ TalkieKey::FROM ].as<const char*>(), _actual_ss_pin);
+
 			#ifdef BROADCAST_SPI_DEBUG
 			if (_named_pins_doc.isNull()) {
 				Serial.println("\t\tERROR: The JsonDocument isn't initiated (still null)");
@@ -664,53 +715,6 @@ public:
     }
 };
 
-
-
-#define MAX_NAMES 8
-#define NAME_LEN  16   // includes '\0'
-
-struct NameEntry {
-    char name[NAME_LEN];
-    uint8_t value;
-};
-
-class NameTable {
-private:
-    NameEntry entries[MAX_NAMES];
-    uint8_t count = 0;
-
-public:
-    bool add(const char* name, uint8_t value) {
-        if (count >= MAX_NAMES)
-            return false;
-
-        // Reject too-long names
-        size_t len = strlen(name);
-        if (len >= NAME_LEN)
-            return false;
-
-        // Prevent duplicates
-        for (uint8_t i = 0; i < count; ++i) {
-            if (strcmp(entries[i].name, name) == 0)
-                return false;
-        }
-
-        strcpy(entries[count].name, name);
-        entries[count].value = value;
-        ++count;
-        return true;
-    }
-
-    bool get(const char* name, uint8_t& out) const {
-        for (uint8_t i = 0; i < count; ++i) {
-            if (strcmp(entries[i].name, name) == 0) {
-                out = entries[i].value;
-                return true;
-            }
-        }
-        return false;
-    }
-};
 
 
 #endif // SPI_ESP_ARDUINO_MASTER_VSPI_HPP
