@@ -17,6 +17,12 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "TalkieCodes.hpp"
 
+// Guaranteed memory safety, constrained / schema-driven JSON protocol
+// Advisable maximum sizes:
+// 		f (from / name) → 16 bytes (15 + '\0')
+// 		d (description) → 64 bytes (63 + '\0')
+
+
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 #endif
@@ -24,7 +30,9 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 using MessageKey = TalkieCodes::MessageKey;
+using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
+using RogerValue = TalkieCodes::RogerValue;
 
 
 class JsonMessage {
@@ -41,25 +49,30 @@ protected:
 	size_t _json_length = 0;
 
 
-public:
-
-    virtual const char* class_name() const { return "JsonMessage"; }
-
-	JsonMessage() {
-		// Does nothing
-	}
-
-	~JsonMessage() {
-		// Does nothing
+	static size_t number_of_digits(uint32_t number) {
+		size_t length = 0;
+		while (number > 0) {
+			number /= 10;
+			length++;
+		}
+		return length;
 	}
 
 
-	size_t get_length() const {
-		return _json_length;
+	void reset() {
+		// Only static guarantees it won't live on the stack!
+		static const char default_payload[] = "{\"m\":0,\"i\":0,\"c\":0,\"f\":\"\"}";
+		size_t default_length = sizeof(default_payload) - 1;
+		if (default_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			for (size_t char_j = 0; char_j < default_length; char_j++) {
+				_json_payload[char_j] = default_payload[char_j];
+			}
+			_json_length = default_length;
+		}
 	}
 
-    uint16_t getChecksum() {
-        // 16-bit word and XORing
+
+    uint16_t calculate_checksum() {	// 16-bit word and XORing
         uint16_t checksum = 0;
 		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t i = 0; i < _json_length; i += 2) {
@@ -73,10 +86,115 @@ public:
         return checksum;
     }
 
+	
+	size_t get_colon_position(char key, size_t colon_position = 4) const {
+		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
+			for (size_t json_i = colon_position; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
+				if (_json_payload[json_i] == ':' && _json_payload[json_i - 2] == key && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
+					return json_i;
+				}
+			}
+		}
+		return 0;
+	}
+
+
+	size_t get_value_position(char key, size_t colon_position = 4) const {
+		size_t json_i = get_colon_position(key, colon_position);
+		if (json_i) {			//     01
+			return json_i + 1;	// {"k":x}
+		}
+		return 0;
+	}
+
+
+	size_t get_key_position(char key, size_t colon_position = 4) const {
+		size_t json_i = get_colon_position(key, colon_position);
+		if (json_i) {			//   210
+			return json_i - 2;	// {"k":x}
+		}
+		return 0;
+	}
+
+
+	size_t get_field_length(char key, size_t colon_position = 4) const {
+		size_t field_length = 0;
+		size_t json_i = get_value_position(key, colon_position);
+		if (json_i) {
+			field_length = 4;	// All keys occupy 4 '"k":' chars
+			ValueType value_type = get_value_type(key, json_i - 1);
+			switch (value_type) {
+
+				case ValueType::STRING:
+					field_length += 2;	// Adds the two '"' associated to the string
+					for (json_i++; json_i < _json_length && _json_payload[json_i] != '"'; json_i++) {
+						field_length++;
+					}
+					break;
+				
+				case ValueType::INTEGER:
+					for (; json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0'); json_i++) {
+						field_length++;
+					}
+					break;
+				
+				default: break;
+			}
+		}
+		return field_length;
+	}
+
+
+
+public:
+
+    virtual const char* class_name() const { return "JsonMessage"; }
+
+	JsonMessage() {
+		reset();	// Initiate with the minimum
+	}
+
+	~JsonMessage() {
+		// Does nothing
+	}
+
+
+	size_t get_length() const {
+		return _json_length;
+	}
+
+
+	bool validate_fields() const {
+		// Minimum length: '{"m":0,"i":0,"c":0,"f":"n"}' = 27
+		if (_json_length < 27) return false;
+		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
+		if (get_value_type('m') != INTEGER) return false;
+		if (get_number('m') > 9) return false;
+		if (get_value_type('i') != INTEGER) return false;
+		if (get_value_type('c') != INTEGER) return false;
+		if (get_value_type('f') != STRING) return false;
+		return true;
+	}
+
+	bool validate_checksum() {
+		const uint16_t message_checksum = static_cast<uint16_t>(get_number('c'));
+		if (!set('c', 0)) return false;	// Resets 'c' to 0
+		const uint16_t checksum = calculate_checksum();
+		return message_checksum == checksum;
+	}
+
+	bool set_checksum() {
+		if (!set('c', 0)) return false;	// Resets 'c' to 0
+		const uint16_t checksum = calculate_checksum();
+		// Finally inserts the Checksum
+		return set('c', checksum);
+	}
+
+
 	bool deserialize(const char* buffer, size_t length) {
 		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t char_i = 0; char_i < length; ++char_i) {
-				_json_payload[char_i] = buffer[char_i];
+			for (size_t char_j = 0; char_j < length; ++char_j) {
+				_json_payload[char_j] = buffer[char_j];
 			}
 			_json_length = length;
 			return true;
@@ -84,62 +202,79 @@ public:
 		return false;
 	}
 
+	bool deserialize_string(const char* in_string) {
+		size_t char_j = 0;
+		while (char_j < BROADCAST_SOCKET_BUFFER_SIZE && in_string[char_j] != '\0') {
+			_json_payload[char_j] = in_string[char_j];
+			char_j++;
+		}
+		if (in_string[char_j] == '\0') {
+			_json_length = char_j;
+		} else {
+			reset();	// sets the length too
+			return false;
+		}
+		return true;
+	}
+
 	size_t serialize(char* buffer, size_t size) const {
-		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
-				buffer[char_i] = _json_payload[char_i];
+		if (size >= _json_length) {
+			for (size_t json_i = 0; json_i < _json_length; ++json_i) {
+				buffer[json_i] = _json_payload[json_i];
 			}
 			return _json_length;
 		}
 		return 0;
 	}
 
-	bool compare(const char* buffer, size_t size) const {
-		if (size <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t char_i = 0; char_i < _json_length; ++char_i) {
-				if (buffer[char_i] != _json_payload[char_i]) {
+
+	bool compare(const char* in_string, size_t size) const {
+		if (size == _json_length) {
+			for (size_t char_j = 0; char_j < size; ++char_j) {
+				if (in_string[char_j] != _json_payload[char_j]) {
 					return false;
 				}
 			}
-		}
-		return true;
-	}
-
-	bool has_key(char key) const {
-		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
-			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
-				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
-					return true;
-				}
-			}
+			return true;
 		}
 		return false;
 	}
 
-	size_t key_position(char key) const {
-		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum
-			for (size_t char_i = 4; char_i < _json_length; ++char_i) {	// 4 because it's the shortest position possible for ':'
-				if (_json_payload[char_i] == ':' && _json_payload[char_i - 2] == key && _json_payload[char_i - 3] == '"' && _json_payload[char_i - 1] == '"') {
-					return char_i + 1;	// Moves 1 after the ':' char (avoids extra thinking)
-				}
+	bool compare_string(const char* in_string) const {
+		size_t char_j = 0;
+		while (char_j < _json_length) {
+			if (in_string[char_j] != _json_payload[char_j]) {
+				return false;
 			}
+			char_j++;
 		}
-		return 0;
+		return in_string[char_j] == '\0';
 	}
 
-	ValueType value_type(char key) const {
-		size_t position = key_position(key);
-		if (position) {
-			if (_json_payload[position] == '"') {
+
+	bool has_key(char key, size_t colon_position = 4) const {
+		size_t json_i = get_colon_position(key, colon_position);
+		return json_i > 0;
+	}
+
+
+	ValueType get_value_type(char key, size_t colon_position = 4) const {
+		size_t json_i = get_value_position(key, colon_position);
+		if (json_i) {
+			if (_json_payload[json_i] == '"') {
+				for (json_i++; json_i < _json_length && _json_payload[json_i] != '"'; json_i++) {}
+				if (json_i == _json_length) {
+					return VOID;
+				}
 				return STRING;
 			} else {
-				while (_json_payload[position] != ',' && _json_payload[position] != '}') {
-					if (_json_payload[position] > '9' || _json_payload[position] < '0') {
+				while (json_i < _json_length && _json_payload[json_i] != ',' && _json_payload[json_i] != '}') {
+					if (_json_payload[json_i] > '9' || _json_payload[json_i] < '0') {
 						return OTHER;
 					}
-					position++;
+					json_i++;
 				}
-				if (_json_payload[position - 1] == ':') {
+				if (json_i == _json_length) {
 					return VOID;
 				}
 				return INTEGER;
@@ -148,46 +283,153 @@ public:
 		return VOID;
 	}
 
-	bool validate_fields() const {
-		// Minimum length: '{"m":0,"i":0,"c":0,"f":"n"}' = 27
-		if (_json_length < 27) return false;
-		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
-		if (value_type('m') != INTEGER) return false;
-		if (value_type('i') != INTEGER) return false;
-		if (value_type('c') != INTEGER) return false;
-		if (value_type('f') != STRING) return false;
+	// GETTERS
+
+	uint32_t get_number(char key, size_t colon_position = 4) const {
+		uint32_t json_number = 0;
+		size_t json_i = get_value_position(key, colon_position);
+		if (json_i) {
+			while (json_i < _json_length && !(_json_payload[json_i] > '9' || _json_payload[json_i] < '0')) {
+				json_number *= 10;
+				json_number += _json_payload[json_i++] - '0';
+			}
+		}
+		return json_number;
+	}
+
+	SourceValue get_source_value(size_t colon_position = 4) const {
+		SourceValue message_value = static_cast<SourceValue>(
+			get_number('c', colon_position)
+		);
+		return message_value;
+	}
+
+	MessageValue get_message_value(size_t colon_position = 4) const {
+		MessageValue message_value = static_cast<MessageValue>(
+			get_number('m', colon_position)
+		);
+		return message_value;
+	}
+
+	RogerValue get_roger_value(size_t colon_position = 4) const {
+		colon_position = get_colon_position('r', colon_position);
+		if (colon_position) {
+			RogerValue roger_value = static_cast<RogerValue>(
+				get_number('r', colon_position)
+			);
+			return roger_value;
+		}
+		return RogerValue::NIL;
+	}
+
+
+	bool get_string(char key, char* out_string, size_t size, size_t colon_position = 4) const {
+		size_t json_i = get_value_position(key, colon_position);
+		if (json_i && _json_payload[json_i++] == '"' && out_string && size) {	// Safe code
+			size_t char_j = 0;
+			while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < size) {
+				out_string[char_j++] = _json_payload[json_i++];
+			}
+			if (char_j < size) {
+				out_string[char_j] = '\0';	// Makes sure the termination char is added
+				return true;
+			}
+			out_string[0] = '\0';	// Clears all noisy fill if it fails
+			return false;
+		}
+		return false;
+	}
+
+	// REMOVERS
+
+	bool remove(char key, size_t colon_position = 4) {
+		colon_position = get_colon_position(key, colon_position);
+		if (colon_position) {
+			size_t field_position = colon_position - 3;	// All keys occupy 3 '"k":' chars to the left of the colon
+			size_t field_length = get_field_length(key, colon_position);	// Excludes possible heading ',' separation comma
+			if (_json_payload[field_position - 1] == ',') {	// the heading ',' has to be removed too
+				field_position--;
+				field_length++;
+			} else if (_json_payload[field_position + field_length] == ',') {
+				field_length++;	// Changes the length only, to pick up the tailing ','
+			}
+			for (size_t json_i = field_position; json_i < _json_length - field_length; json_i++) {
+                _json_payload[json_i] = _json_payload[json_i + field_length];
+            }
+			_json_length -= field_length;	// Finally updates the json_payload full length
+			return true;
+		}
+		return false;
+	}
+
+	// SETTERS
+
+	bool set(char key, uint32_t number, size_t colon_position = 4) {
+		colon_position = get_colon_position(key, colon_position);
+		if (colon_position) {
+			if (!remove(key, colon_position)) return false;
+		}
+		// At this time there is no field key for sure, so, one can just add it right before the '}'
+		size_t number_size = number_of_digits(number);
+		size_t new_length = _json_length + number_size + 4 + 1;	// the usual key 4 plus the + 1 due to the ',' needed to be added
+		// Sets the key json data
+		char json_key[] = ",\"k\":";
+		json_key[2] = key;
+		if (_json_length > 2) {
+			for (size_t char_j = 0; char_j < 5; char_j++) {
+				_json_payload[_json_length - 1 + char_j] = json_key[char_j];
+			}
+		} else if (_json_length == 2) {	// Edge case of '{}'
+			new_length--;	// Has to remove the extra ',' considered above
+			for (size_t char_j = 1; char_j < 5; char_j++) {
+				_json_payload[_json_length - 1 + char_j - 1] = json_key[char_j];
+			}
+		} else {
+			reset();	// Something very wrong, needs to be reset
+			return false;
+		}
+		if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+			return false;
+		}
+		// To be added, it has to be from right to left
+		for (size_t json_i = new_length - 2; number; json_i--) {
+			_json_payload[json_i] = '0' + number % 10;
+			number /= 10; // Truncates the number (does a floor)
+		}
+		// Finally writes the last char '}'
+		_json_payload[new_length - 1] = '}';
+		_json_length = new_length;
 		return true;
 	}
 
-	MessageValue message_value() const {
-		size_t position = key_position(MessageKey::MESSAGE);
-		if (position) {
-			char number_char = _json_payload[position];
-			if (number_char > '9' || number_char < '0') return MessageValue::NOISE;
-			if (_json_payload[position + 1] != ',' && _json_payload[position + 1] != '}') return MessageValue::NOISE;
-			return static_cast<MessageValue>(number_char - '0');
+
+	bool set(SourceValue source_value, size_t colon_position = 4) {
+		size_t value_position = get_value_position('c', colon_position);
+		if (value_position) {
+			_json_payload[value_position] = static_cast<uint8_t>(source_value);
+			return true;
 		}
-		return MessageValue::NOISE;
+		return false;
 	}
 
-	uint16_t extract_identity() const {
-		uint16_t identity = 0;
-		size_t char_i = key_position(MessageKey::IDENTITY);
-        while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
-			identity *= 10;
-			identity += _json_payload[char_i++] - '0';
+
+	bool set(MessageValue message_value, size_t colon_position = 4) {
+		size_t value_position = get_value_position('m', colon_position);
+		if (value_position) {
+			_json_payload[value_position] = static_cast<uint8_t>(message_value);
+			return true;
 		}
-		return identity;
+		return false;
 	}
 
-	uint16_t extract_checksum() const {
-		uint16_t checksum = 0;
-		size_t char_i = key_position(MessageKey::CHECKSUM);
-        while (char_i < _json_length && !(_json_payload[char_i] > '9' || _json_payload[char_i] < '0')) {
-			checksum *= 10;
-			checksum += _json_payload[char_i++] - '0';
+
+	bool swap_key(char old_key, char new_key, size_t colon_position = 4) {
+		size_t key_position = get_key_position(old_key, colon_position);
+		if (key_position) {
+			_json_payload[key_position] = new_key;
+			return true;
 		}
-		return checksum;
+		return false;
 	}
 
 };

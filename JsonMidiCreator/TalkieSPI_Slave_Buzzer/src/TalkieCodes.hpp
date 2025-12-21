@@ -34,6 +34,22 @@ struct TalkieCodes {
     };
 
 
+	// Add a char "enum" struct
+    struct MessageKey {
+        static constexpr const char SOURCE			= 'c';
+        static constexpr const char CHECKSUM		= 'c';
+        static constexpr const char TIMESTAMP		= 'i';
+        static constexpr const char IDENTITY 		= 'i';
+        static constexpr const char MESSAGE 		= 'm';
+        static constexpr const char FROM 			= 'f';
+        static constexpr const char TO 				= 't';
+        static constexpr const char INFO 			= 's';
+        static constexpr const char ACTION			= 'a';
+        static constexpr const char ROGER 			= 'r';
+    };
+
+
+
 	static const char* valueKey(size_t nth = 0) {
 		switch (nth) {
 			case 1: 	return "1";
@@ -50,28 +66,28 @@ struct TalkieCodes {
 	}
 
 
-	enum class SourceValue : int {
+	enum class SourceValue : uint8_t {
 		REMOTE, LOCAL, SELF, NONE
 	};
 
 
-	enum class MessageValue : int {
+	enum class MessageValue : uint8_t {
 		TALK, CHANNEL, PING, CALL, LIST, INFO, ECHO, ERROR, NOISE
 	};
 
 
-	enum class InfoValue : int {
+	enum class InfoValue : uint8_t {
 		BOARD, DROPS, DELAY, MUTE, SOCKET, TALKER, MANIFESTO
 	};
 
 
 	// Only applicable to CALL messages
-	enum class RogerValue : int {
+	enum class RogerValue : uint8_t {
 		ROGER, NEGATIVE, SAY_AGAIN, NIL
 	};
 
 
-	enum class ErrorValue : int {
+	enum class ErrorValue : uint8_t {
 		FROM, FIELD, CHECKSUM, MESSAGE, IDENTITY, DELAY, KEY, DATA
 	};
 
