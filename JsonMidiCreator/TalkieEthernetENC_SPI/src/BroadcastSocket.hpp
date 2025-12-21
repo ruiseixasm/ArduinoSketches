@@ -202,12 +202,14 @@ protected:
 			_new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
 			
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("\t\t\t\tnew_json_message1: "));
+			Serial.print(F("new_json_message1: "));
 			_new_json_message.write_to(Serial);
 			Serial.println();
 			#endif
             
-			bool new_validated = _new_json_message.validate_checksum();	// Also sets checksum as 0 ('c') in message buffer
+			int validations = 0;
+			validations += _new_json_message.validate_fields();
+			validations += _new_json_message.validate_checksum();	// Also sets checksum as 0 ('c') in message buffer
 
 
             uint8_t message_code_int = 255;    // There is no 255 message code, meaning, it has none!
@@ -326,10 +328,10 @@ protected:
 					}
 					
 					#ifdef BROADCASTSOCKET_DEBUG_NEW
-					Serial.print(F("\t\t\t\tnew_json_message2: "));
+					Serial.print(F("new_json_message2: "));
 					_new_json_message.write_to(Serial);
 					Serial.print(F(" | "));
-					Serial.println(new_validated);
+					Serial.println(validations);
 					#endif
 
                     
