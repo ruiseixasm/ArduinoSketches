@@ -54,7 +54,7 @@ protected:
     StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _message_doc;
     #endif
 
-	JsonMessage _new_json_message;	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
+	JsonMessage _new_json_message;	// PARALLEL DEVELOPMENT FOR ARDUINOJSON
 
 
     uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {
@@ -269,8 +269,8 @@ protected:
 					#endif
 					return 0;
 				}
-				JsonObject json_message = _message_doc.as<JsonObject>();
-				_new_json_message.deserialize(_receiving_buffer, _received_length);	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
+				JsonObject json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
+				_new_json_message.deserialize(_receiving_buffer, _received_length);
 
 				if (!checkJsonMessage(json_message, _new_json_message)) return 0;
 
@@ -306,10 +306,10 @@ protected:
 							#endif
 							return 0;
 						}
-						json_message = _message_doc.as<JsonObject>();
+						json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
 					}
 					
-					_new_json_message.deserialize(_receiving_buffer, _received_length);	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
+					_new_json_message.deserialize(_receiving_buffer, _received_length);
                     
 					#ifdef BROADCASTSOCKET_DEBUG
 					Serial.print(F("triggerTalkers10: Triggering the talker: "));
