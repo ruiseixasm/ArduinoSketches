@@ -29,6 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 // #define JSON_TALKER_DEBUG
+#define JSON_TALKER_DEBUG_NEW
 
 using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
@@ -365,6 +366,12 @@ public:
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 		MessageValue message_data = new_json_message.get_message();
+
+		#ifdef JSON_TALKER_DEBUG_NEW
+		Serial.print(F("\tprocessMessage1: "));
+		Serial.println(static_cast<int>( message_data ));
+		#endif
+
 		message_data = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
 
         // Is it for me?

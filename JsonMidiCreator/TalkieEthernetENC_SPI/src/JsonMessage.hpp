@@ -74,21 +74,6 @@ protected:
 		}
 	}
 
-
-    uint16_t calculate_checksum() {	// 16-bit word and XORing
-        uint16_t checksum = 0;
-		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
-			for (size_t i = 0; i < _json_length; i += 2) {
-				uint16_t chunk = _json_payload[i] << 8;
-				if (i + 1 < _json_length) {
-					chunk |= _json_payload[i + 1];
-				}
-				checksum ^= chunk;
-			}
-		}
-        return checksum;
-    }
-
 	
 	size_t get_colon_position(char key, size_t colon_position = 4) const {
 		if (_json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
@@ -318,10 +303,86 @@ public:
 		return true;
 	}
 
+    uint16_t generate_checksum() {	// 16-bit word and XORing
+        uint16_t checksum = 0;
+		if (_json_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			for (size_t i = 0; i < _json_length; i += 2) {
+				uint16_t chunk = _json_payload[i] << 8;
+				if (i + 1 < _json_length) {
+					chunk |= _json_payload[i + 1];
+				}
+				checksum ^= chunk;
+			}
+		}
+        return checksum;
+    }
+
+
+    uint16_t extract_checksum() {
+        uint16_t data_checksum = 0;
+        bool at_c = false;
+        size_t json_i = 4;	// Optimized {"c": ...
+        for (size_t char_j = json_i; char_j < _json_length; ++char_j) {
+            if (_json_payload[char_j] == ':') {
+                if (_json_payload[char_j - 2] == 'c' && _json_payload[char_j - 3] == '"' && _json_payload[char_j - 1] == '"') {
+                    at_c = true;
+                }
+            } else if (at_c) {
+				if (_json_payload[char_j] < '0' || _json_payload[char_j] > '9') {
+					at_c = false;
+				} else if (_json_payload[char_j - 1] == ':') { // First number in the row
+					data_checksum = _json_payload[char_j] - '0';
+					_json_payload[char_j] = '0';
+				} else {
+					data_checksum *= 10;
+					data_checksum += _json_payload[char_j] - '0';
+					continue;   // Avoids the copy of the char
+				}
+            }
+            _json_payload[json_i++] = _json_payload[char_j]; // Does a left offset
+        }
+        _json_length = json_i;
+        return data_checksum;
+    }
+
+
+    bool insert_checksum() {
+		if (!set_number('c', 0)) return false;
+        uint16_t checksum = generate_checksum();
+        if (checksum > 0) { // Isn't already 0
+
+            size_t num_digits = number_of_digits(checksum);
+            size_t data_i = _json_length - 1;
+			size_t new_length = _json_length + num_digits - 1;	// Discount the digit '0' already placed
+            
+            if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) return false;	// buffer overflow
+			_json_length = new_length;
+
+			bool at_c = false;
+            for (size_t json_i = new_length - 1; char_j > 4; json_i--) {
+                if (_json_payload[char_j - 2] == ':') {	// Must find it at 5 the least (> 4)
+                    if (_json_payload[char_j - 4] == 'c' && _json_payload[char_j - 5] == '"' && _json_payload[char_j - 3] == '"') {
+                        at_c = true;
+                    }
+                } else if (at_c) {
+                    if (checksum == 0) {
+                        return true;
+                    } else {
+                        _json_payload[json_i] = '0' + checksum % 10;
+                        checksum /= 10; // Truncates the number (does a floor)
+                        continue;       // Avoids the copy of the char
+                    }
+                }
+                _json_payload[json_i] = _json_payload[char_j--]; // Does an offset (NOTE the continue above)
+            }
+        }
+        return true;
+    }
+
+
 	bool validate_checksum() {
-		const uint16_t message_checksum = static_cast<uint16_t>(get_number('c'));
-		if (!set_number('c', 0)) return false;	// Resets 'c' to 0
-		const uint16_t checksum = calculate_checksum();
+		const uint16_t message_checksum = extract_checksum();
+		const uint16_t checksum = generate_checksum();
 		return message_checksum == checksum;
 	}
 
@@ -542,7 +603,7 @@ public:
 
 	bool set_checksum() {
 		if (!set_number('c', 0)) return false;	// Resets 'c' to 0
-		const uint16_t checksum = calculate_checksum();
+		const uint16_t checksum = generate_checksum();
 		// Finally inserts the Checksum
 		return set_number('c', checksum);
 	}

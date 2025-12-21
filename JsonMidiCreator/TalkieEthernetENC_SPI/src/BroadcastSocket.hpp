@@ -149,7 +149,7 @@ protected:
 			_sending_length = new_length;
 
             bool at_c = false;
-            for (uint8_t i = new_length - 1; data_i > 4; i--) {	// 'i = new_length - 1' because it's a binary processing, no '\0' to take into consideration
+            for (uint8_t i = new_length - 1; data_i > 4; i--) {
                 
                 if (_sending_buffer[data_i - 2] == ':') {	// Must find it at 5 the least (> 4)
                     if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
@@ -288,6 +288,7 @@ protected:
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 				_received_length = _new_json_message.get_length();
 				_new_json_message.serialize_json(_receiving_buffer, _received_length);	// To safe keep on existent buffer
+				uint16_t checksum = _new_json_message.generate_checksum();
 
 				if (!checkJsonMessage(json_message, _new_json_message)) return 0;
 
@@ -331,7 +332,9 @@ protected:
 					Serial.print(F("new_json_message2: "));
 					_new_json_message.write_to(Serial);
 					Serial.print(F(" | "));
-					Serial.println(validations);
+					Serial.print(validations);
+					Serial.print(" | ");
+					Serial.println(checksum);
 					#endif
 
                     
