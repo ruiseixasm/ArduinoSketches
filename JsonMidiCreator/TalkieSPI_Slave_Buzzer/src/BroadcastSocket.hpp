@@ -172,6 +172,8 @@ protected:
 
 	// Allows the overriding class to peek at the received JSON message
 	virtual bool checkJsonMessage(const JsonObject& json_message, JsonMessage& new_json_message) {
+        (void)new_json_message;	// Silence unused parameter warning
+
 		if (!json_message[ TalkieKey::FROM ].is<String>()) {
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("ERROR: From key 'f' is missing"));
@@ -371,9 +373,10 @@ protected:
 	}
 
 
-    virtual bool send(const JsonObject& json_message, JsonMessage& new_json_message) {
+    virtual bool send(const JsonObject& json_message, const JsonMessage& new_json_message) {
         (void)json_message; // Silence unused parameter warning
-
+        (void)new_json_message;	// Silence unused parameter warning
+		
         if (_sending_length < 3*4 + 2) {
 
             #ifdef BROADCASTSOCKET_DEBUG

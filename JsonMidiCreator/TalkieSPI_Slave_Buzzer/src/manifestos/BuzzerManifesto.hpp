@@ -63,9 +63,10 @@ public:
 
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
-        (void)json_message;	// Silence unused parameter warning
+    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) override {
         (void)talker;		// Silence unused parameter warning
+        (void)new_json_message;	// Silence unused parameter warning
+
 		if (index < actionsCount()) {
 			// Actual implementation would do something based on index
 			switch(index) {
@@ -108,8 +109,10 @@ public:
 	}
     
 
-    void echo(JsonObject& json_message, JsonTalker* talker) override {
+    void echo(JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) override {
         (void)talker;		// Silence unused parameter warning
+        (void)new_json_message;	// Silence unused parameter warning
+
         Serial.print(json_message[ TalkieKey::FROM ].as<String>());
         Serial.print(" - ");
         if (json_message[ valueKey(0) ].is<String>()) {
@@ -122,8 +125,10 @@ public:
     }
 
 
-    void error(JsonObject& json_message, JsonTalker* talker) override {
+    void error(JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) override {
         (void)talker;		// Silence unused parameter warning
+        (void)new_json_message;	// Silence unused parameter warning
+		
         Serial.print(json_message[ TalkieKey::FROM ].as<String>());
         Serial.print(" - ");
         if (json_message[ valueKey(0) ].is<String>()) {
