@@ -147,7 +147,7 @@ protected:
 		return field_length;
 	}
 
-	
+
 	bool get_string(char key, char* out_string, size_t colon_position = 4) const {
 		if (out_string) {
 			size_t length = 0;
@@ -391,27 +391,16 @@ public:
 	}
 
 
-	bool compare(const char* in_string, size_t size) const {
-		if (size == _json_length) {
-			for (size_t char_j = 0; char_j < size; ++char_j) {
-				if (in_string[char_j] != _json_payload[char_j]) {
+	bool compare_buffer(const char* buffer, size_t length) const {
+		if (length == _json_length) {
+			for (size_t char_j = 0; char_j < length; ++char_j) {
+				if (buffer[char_j] != _json_payload[char_j]) {
 					return false;
 				}
 			}
 			return true;
 		}
 		return false;
-	}
-
-	bool compare_string(const char* in_string) const {
-		size_t char_j = 0;
-		while (char_j < _json_length) {
-			if (in_string[char_j] != _json_payload[char_j]) {
-				return false;
-			}
-			char_j++;
-		}
-		return in_string[char_j] == '\0';
 	}
 
 
