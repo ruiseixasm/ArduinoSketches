@@ -53,8 +53,8 @@ protected:
     #else
     StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _message_doc;
     #endif
-
-	JsonMessage _new_json_message;	// PARALLEL DEVELOPMENT FOR ARDUINOJSON
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+	JsonMessage _new_json_message;
 
 
     uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {

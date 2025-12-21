@@ -138,8 +138,7 @@ public:
     }
 
 
-	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
-	
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 	bool prepareMessage(JsonObject& json_message, JsonMessage& new_json_message) {
 
 		if (json_message[ TalkieKey::FROM ].is<const char*>()) {
@@ -152,7 +151,7 @@ public:
 			// FROM doesn't even exist (must have)
 			json_message[ TalkieKey::FROM ] = _name;
 		}
-		// *************** PARALLEL DEVELOPMENT WITH ARDUINOJSON (IN PROGRESS) ***************
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 		if (new_json_message.has_key( MessageKey::FROM )) {
 			char from_name[NAME_LEN] = {'\0'};
 			test_json_message.get_string('f', from_name, NAME_LEN);
@@ -166,7 +165,9 @@ public:
 			new_json_message.set_string(MessageKey::FROM, _name);
 		}
 
-		MessageValue message_data = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		MessageValue message_data = new_json_message.get_message_value();
+		message_data = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
 		if (message_data < MessageValue::ECHO) {
 
 			#ifdef JSON_TALKER_DEBUG
@@ -549,9 +550,7 @@ public:
         return dont_interrupt;
     }
 
-	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
 
-	
 	static const char* board_description() {
 		
 		#ifdef __AVR__

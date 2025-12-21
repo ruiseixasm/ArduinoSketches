@@ -21,9 +21,7 @@ uint8_t JsonTalker::_talker_count = 0;
 
 
 
-// PARALLEL DEVELOPMENT WITH ARDUINOJSON
-
-
+// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 bool JsonTalker::remoteSend(JsonObject& json_message, JsonMessage& new_json_message) {
 	(void)new_json_message;
     if (!_socket) return false;
@@ -42,10 +40,6 @@ bool JsonTalker::remoteSend(JsonObject& json_message, JsonMessage& new_json_mess
 	}
 	return false;
 }
-
-
-// PARALLEL DEVELOPMENT WITH ARDUINOJSON
-
 
 
 void JsonTalker::setSocket(BroadcastSocket* socket) {
