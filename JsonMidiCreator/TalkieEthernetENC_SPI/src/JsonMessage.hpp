@@ -154,8 +154,31 @@ public:
 		reset();	// Initiate with the minimum
 	}
 
+	JsonMessage(const JsonMessage& other) {
+		_json_length = other._json_length;
+		for (size_t i = 0; i < _json_length; ++i) {
+			_json_payload[i] = other._json_payload[i];
+		}
+	}
+
 	~JsonMessage() {
 		// Does nothing
+	}
+
+	bool operator==(const JsonMessage& other) const {
+		if (_json_length == other._json_length) {
+			for (size_t i = 0; i < _json_length; ++i) {
+				if (_json_payload[i] != other._json_payload[i]) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	bool operator!=(const JsonMessage& other) const {
+		return !(*this == other);
 	}
 
 
