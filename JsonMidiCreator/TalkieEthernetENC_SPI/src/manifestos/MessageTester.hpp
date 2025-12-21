@@ -264,10 +264,18 @@ public:
 			case 13:
 			{
 				uint32_t big_number = 1234567;
-				const char final_payload[] = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567}";
-				if (!test_json_message.set_number('0', big_number) || !test_json_message.compare_string(final_payload)) {
+				const char final_payload1[] = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567}";
+				if (!test_json_message.set_number('0', big_number) || !test_json_message.compare_string(final_payload1)) {
 					json_message[ valueKey(0) ] = "1st";
-					json_message[ valueKey(1) ] = sizeof(final_payload) - 1;
+					json_message[ valueKey(1) ] = sizeof(final_payload1) - 1;
+					json_message[ valueKey(2) ] = test_json_message.get_length();
+					return false;
+				}
+				const char from_green[] = "green";
+				const char final_payload2[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567,\"f\":\"green\"}";
+				if (!test_json_message.set_string(MessageKey::FROM, from_green) || !test_json_message.compare_string(final_payload2)) {
+					json_message[ valueKey(0) ] = "2nd";
+					json_message[ valueKey(1) ] = sizeof(final_payload2) - 1;
 					json_message[ valueKey(2) ] = test_json_message.get_length();
 					return false;
 				}
