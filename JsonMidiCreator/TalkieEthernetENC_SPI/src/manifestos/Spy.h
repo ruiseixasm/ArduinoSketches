@@ -49,9 +49,9 @@ protected:
 public:
 
     // Action implementations - MUST be implemented by derived
-    bool actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override;
-    void echo(JsonObject& json_message, JsonTalker* talker) override;
-    void error(JsonObject& json_message, JsonTalker* talker) override;
+    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) override;
+    void echo(JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) override;
+    void error(JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) override;
 
 };
 

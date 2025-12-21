@@ -65,14 +65,14 @@ protected:
 public:
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) override {
+    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) override {
         (void)talker;		// Silence unused parameter warning
 		
 		if (index >= sizeof(calls)/sizeof(Action)) return false;
 		
 		const char json_payload[] = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
-		JsonMessage new_json_message;
-		new_json_message.deserialize(json_payload, sizeof(json_payload) - 1);	// Discount the '\0' of the literal
+		JsonMessage test_json_message;
+		test_json_message.deserialize(json_payload, sizeof(json_payload) - 1);	// Discount the '\0' of the literal
 
 		// Actual implementation would do something based on index
 		switch(index) {
@@ -83,7 +83,7 @@ public:
 				uint8_t value_i = 0;
 				bool no_errors = true;
 				for (uint8_t test_i = 1; test_i < actionsCount(); test_i++) {
-					if (!actionByIndex(test_i, json_message, talker)) {
+					if (!actionByIndex(test_i, talker, json_message, new_json_message)) {
 						failed_tests[value_i++] = test_i;
 						no_errors = false;
 					}
@@ -102,42 +102,42 @@ public:
 
 			case 1:
 			{
-				if (!new_json_message.deserialize(json_payload, sizeof(json_payload) - 1)) return false;
+				if (!test_json_message.deserialize(json_payload, sizeof(json_payload) - 1)) return false;
 				return true;
 			}
 			break;
 
 			case 2:
 			{
-				if (!new_json_message.compare(json_payload, sizeof(json_payload) - 1)) return false;
-				if (!new_json_message.compare_string(json_payload)) return false;
+				if (!test_json_message.compare(json_payload, sizeof(json_payload) - 1)) return false;
+				if (!test_json_message.compare_string(json_payload)) return false;
 				return true;
 			}
 			break;
 
 			case 3:
 			{
-				if (!new_json_message.has_key('m')) {
+				if (!test_json_message.has_key('m')) {
 					json_message[ valueKey(0) ] = "m";
 					return false;
 				}
-				if (!new_json_message.has_key('c')) {
+				if (!test_json_message.has_key('c')) {
 					json_message[ valueKey(0) ] = "c";
 					return false;
 				}
-				if (!new_json_message.has_key('f')) {
+				if (!test_json_message.has_key('f')) {
 					json_message[ valueKey(0) ] = "f";
 					return false;
 				}
-				if (!new_json_message.has_key('i')) {
+				if (!test_json_message.has_key('i')) {
 					json_message[ valueKey(0) ] = "i";
 					return false;
 				}
-				if (!new_json_message.has_key('0')) {
+				if (!test_json_message.has_key('0')) {
 					json_message[ valueKey(0) ] = "0";
 					return false;
 				}
-				if (!new_json_message.has_key('t')) {
+				if (!test_json_message.has_key('t')) {
 					json_message[ valueKey(0) ] = "t";
 					return false;
 				}
@@ -147,12 +147,12 @@ public:
 				
 			case 4:
 			{
-				if (new_json_message.has_key('n')) return false;
-				if (new_json_message.has_key('d')) return false;
-				if (new_json_message.has_key('e')) return false;
-				if (new_json_message.has_key('j')) return false;
-				if (new_json_message.has_key('1')) return false;
-				if (new_json_message.has_key('u')) return false;
+				if (test_json_message.has_key('n')) return false;
+				if (test_json_message.has_key('d')) return false;
+				if (test_json_message.has_key('e')) return false;
+				if (test_json_message.has_key('j')) return false;
+				if (test_json_message.has_key('1')) return false;
+				if (test_json_message.has_key('u')) return false;
 				return true;
 			}
 			break;
@@ -161,8 +161,8 @@ public:
 			{
 				size_t length = sizeof(json_payload) - 1;	// Discount the '\0' char at the end
 				json_message[ valueKey(0) ] = length;
-				json_message[ valueKey(1) ] = new_json_message.get_length();
-				if (new_json_message.get_length() != length) {
+				json_message[ valueKey(1) ] = test_json_message.get_length();
+				if (test_json_message.get_length() != length) {
 					return false;
 				}
 				return true;
@@ -171,19 +171,19 @@ public:
 				
 			case 6:
 			{
-				if (new_json_message.get_value_type('c') != JsonMessage::INTEGER) {
+				if (test_json_message.get_value_type('c') != JsonMessage::INTEGER) {
 					json_message[ valueKey(0) ] = "c";
-					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('c'));
+					json_message[ valueKey(1) ] = static_cast<int>(test_json_message.get_value_type('c'));
 					return false;
 				}
-				if (new_json_message.get_value_type('f') != JsonMessage::STRING) {
+				if (test_json_message.get_value_type('f') != JsonMessage::STRING) {
 					json_message[ valueKey(0) ] = "f";
-					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('f'));
+					json_message[ valueKey(1) ] = static_cast<int>(test_json_message.get_value_type('f'));
 					return false;
 				}
-				if (new_json_message.get_value_type('e') != JsonMessage::VOID) {
+				if (test_json_message.get_value_type('e') != JsonMessage::VOID) {
 					json_message[ valueKey(0) ] = "e";
-					json_message[ valueKey(1) ] = static_cast<int>(new_json_message.get_value_type('e'));
+					json_message[ valueKey(1) ] = static_cast<int>(test_json_message.get_value_type('e'));
 					return false;
 				}
 				return true;
@@ -192,29 +192,29 @@ public:
 				
 			case 7:
 			{
-				return new_json_message.validate_fields();
+				return test_json_message.validate_fields();
 			}
 			break;
 				
 			case 8:
 			{
-				json_message[ valueKey(0) ] = new_json_message.get_number('i');
+				json_message[ valueKey(0) ] = test_json_message.get_number('i');
 				json_message[ valueKey(1) ] = 13825;
-				return new_json_message.get_number('i') == 13825;
+				return test_json_message.get_number('i') == 13825;
 			}
 			break;
 				
 			case 9:
 			{
-				json_message[ valueKey(0) ] = new_json_message.get_number('c');
+				json_message[ valueKey(0) ] = test_json_message.get_number('c');
 				json_message[ valueKey(1) ] = 29973;
-				return new_json_message.get_number('c') == 29973;
+				return test_json_message.get_number('c') == 29973;
 			}
 			break;
 				
 			case 10:
 			{
-				MessageValue message_value = static_cast<MessageValue>( new_json_message.get_number('m') );
+				MessageValue message_value = static_cast<MessageValue>( test_json_message.get_number('m') );
 				json_message[ valueKey(0) ] = static_cast<int>(message_value);
 				json_message[ valueKey(1) ] = static_cast<int>(MessageValue::ECHO);
 				return message_value == MessageValue::ECHO;	// 6 is ECHO
@@ -226,7 +226,7 @@ public:
 				bool from_match = false;
 				char from_name[] = "buzzer";
 				char out_name[16] = {'\0'};	// Name chars 16 sized (scheme adopted)
-				if (new_json_message.get_string('f', out_name, 16)) {
+				if (test_json_message.get_string('f', out_name, 16)) {
 					if (strcmp(out_name, from_name) == 0) {
 						from_match = true;
 					}
@@ -241,14 +241,14 @@ public:
 			{
 				bool payloads_match = true;
 				const char final_payload1[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
-				new_json_message.remove('f');
-				if (!new_json_message.compare_string(final_payload1)) {
+				test_json_message.remove('f');
+				if (!test_json_message.compare_string(final_payload1)) {
 					json_message[ valueKey(0) ] = "Failed match 1";
 					payloads_match = false;
 				}
 				const char final_payload2[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"t\":\"Talker-7a\"}";
-				new_json_message.remove('0');
-				if (!new_json_message.compare_string(final_payload2)) {
+				test_json_message.remove('0');
+				if (!test_json_message.compare_string(final_payload2)) {
 					if (payloads_match) {
 						json_message[ valueKey(0) ] = "Failed match 2";
 					} else {
@@ -265,11 +265,11 @@ public:
 				bool set_match = false;
 				const char final_payload[] = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567}";
 				uint32_t big_number = 1234567;
-				if (new_json_message.set('0', big_number) && new_json_message.compare_string(final_payload)) {
+				if (test_json_message.set('0', big_number) && test_json_message.compare_string(final_payload)) {
 					set_match = true;
 				}
 				json_message[ valueKey(0) ] = sizeof(final_payload) - 1;
-				json_message[ valueKey(1) ] = new_json_message.get_length();
+				json_message[ valueKey(1) ] = test_json_message.get_length();
 				return set_match;
 			}
 			break;
@@ -277,23 +277,23 @@ public:
 			case 14:
 			{
 				const char final_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
-				if (!new_json_message.remove('m') || !new_json_message.compare_string(final_payload)) {	// The first key (no header ',' char)
+				if (!test_json_message.remove('m') || !test_json_message.compare_string(final_payload)) {	// The first key (no header ',' char)
 					json_message[ valueKey(0) ] = "1st";
 					return false;
 				}
 				const char single_key[] = "{\"i\":13825}";
-				if (!new_json_message.deserialize_string(single_key)) {
+				if (!test_json_message.deserialize_string(single_key)) {
 					json_message[ valueKey(0) ] = "2nd";
 					return false;
 				}
-				if (!new_json_message.set('i', 32423)) {
+				if (!test_json_message.set('i', 32423)) {
 					json_message[ valueKey(0) ] = "3rd";
 					return false;
 				}
 				const char new_single_key[] = "{\"i\":32423}";
-				if (!new_json_message.compare_string(new_single_key)) {
+				if (!test_json_message.compare_string(new_single_key)) {
 					json_message[ valueKey(0) ] = "4th";
-					json_message[ valueKey(1) ] = new_json_message.get_length();
+					json_message[ valueKey(1) ] = test_json_message.get_length();
 					return false;
 				}
 				return true;

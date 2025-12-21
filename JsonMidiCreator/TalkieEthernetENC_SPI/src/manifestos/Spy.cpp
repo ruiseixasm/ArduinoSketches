@@ -21,7 +21,7 @@ using InfoValue = TalkieCodes::InfoValue;
 
 
 // Index-based operations (simplified examples)
-bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* talker) {
+bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) {
 	
 	bool ping = false;
 
@@ -47,9 +47,9 @@ bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* tal
 					} else {	// Removes the original TO
 						json_message.remove( TalkieKey::TO );	// Without TO works as broadcast
 					}
-					json_message[ TalkieKey::FROM ] = talker->get_name();	// Avoids swapping
+					json_message[ TalkieKey::FROM ] = talker.get_name();	// Avoids swapping
 					// 3. Sends the message LOCALLY
-					talker->localSend(json_message);	// Dispatches it directly as LOCAL
+					talker.localSend(json_message, new_json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
 					json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
 				}
@@ -64,9 +64,9 @@ bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* tal
 					// 2. Repurpose it to be a SELF PING
 					json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
 					json_message.remove( TalkieKey::IDENTITY );	// Makes sure a new IDENTITY is set
-					json_message[ TalkieKey::FROM ] = talker->get_name();	// Avoids swapping
+					json_message[ TalkieKey::FROM ] = talker.get_name();	// Avoids swapping
 					// 3. Sends the message to myself
-					talker->selfSend(json_message);	// Dispatches it directly as LOCAL
+					talker.selfSend(json_message, new_json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
 					json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
 				}
@@ -78,9 +78,9 @@ bool Spy::actionByIndex(uint8_t index, JsonObject& json_message, JsonTalker* tal
 }
 
 
-void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
+void Spy::echo(JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) {
 	
-	Original original_message = talker->get_original();
+	Original original_message = talker.get_original();
 	switch (original_message.message_data) {
 
 		case MessageValue::PING:
@@ -93,12 +93,12 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 				json_message[ valueKey(1) ] = json_message[ TalkieKey::FROM ];	// Informs the Talker as reply
 				// Prepares headers for the original REMOTE sender
 				json_message[ TalkieKey::TO ] = _original_talker;
-				json_message[ TalkieKey::FROM ] = talker->get_name();	// Avoids swapping
+				json_message[ TalkieKey::FROM ] = talker.get_name();	// Avoids swapping
 				// Emulates the REMOTE original call
 				json_message[ TalkieKey::IDENTITY ] = _original_message.identity;
 				// It's already an ECHO message, it's because of that that entered here
 				// Finally answers to the REMOTE caller by repeating all other json fields
-				talker->remoteSend(json_message);
+				talker.remoteSend(json_message, new_json_message);
 			}
 			break;
 
@@ -107,8 +107,9 @@ void Spy::echo(JsonObject& json_message, JsonTalker* talker) {
 }
 
 
-void Spy::error(JsonObject& json_message, JsonTalker* talker) {
-	(void)talker;		// Silence unused parameter warning
+void Spy::error(JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) {
+	(void)talker;				// Silence unused parameter warning
+	(void)new_json_message;		// Silence unused parameter warning
 	Serial.print(json_message[ TalkieKey::FROM ].as<String>());
 	Serial.print(" - ");
 	if (json_message["r"].is<String>()) {

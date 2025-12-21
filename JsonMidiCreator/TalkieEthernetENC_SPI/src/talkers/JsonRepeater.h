@@ -28,11 +28,11 @@ public:
         : JsonTalker(name, desc, nullptr) {}
 
 
-    bool remoteSend(JsonObject& json_message) override;
-    bool localSend(JsonObject& json_message) override;
+    bool remoteSend(JsonObject& json_message, JsonMessage& new_json_message) override;
+    bool localSend(JsonObject& json_message, JsonMessage& new_json_message) override;
 
 	
-	bool processMessage(JsonObject& json_message) override {
+	bool processMessage(JsonObject& json_message, JsonMessage& new_json_message) override {
 
 		#ifdef JSON_REPEATER_DEBUG
 		Serial.print(F("\t"));
@@ -48,19 +48,19 @@ public:
 					#ifdef JSON_REPEATER_DEBUG
 					Serial.println(F("Repeated a REMOTE message LOCALLY"));
 					#endif
-					return localSend(json_message);	// Cross transmission
+					return localSend(json_message, new_json_message);	// Cross transmission
 				
 				case SourceValue::SELF:
 					#ifdef JSON_REPEATER_DEBUG
 					Serial.println(F("Repeated an SELF message to SELF"));
 					#endif
-					return selfSend(json_message);	// Straight transmission
+					return selfSend(json_message, new_json_message);	// Straight transmission
 				
 				case SourceValue::NONE:
 					#ifdef JSON_REPEATER_DEBUG
 					Serial.println(F("\tTransmitted an SELF message"));
 					#endif
-					return noneSend(json_message);	// Straight transmission
+					return noneSend(json_message, new_json_message);	// Straight transmission
 
 				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 				default: break;
@@ -70,7 +70,7 @@ public:
 		#ifdef JSON_REPEATER_DEBUG
 		Serial.println(F("Repeated a LOCAL message REMOTELY"));
 		#endif
-		return remoteSend(json_message);			// Cross transmission
+		return remoteSend(json_message, new_json_message);			// Cross transmission
 	}
 
 };

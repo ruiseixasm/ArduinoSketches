@@ -118,9 +118,9 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool checkJsonMessage(const JsonObject& json_message) override {
+	bool checkJsonMessage(const JsonObject& json_message, JsonMessage& new_json_message) override {
 
-		if (BroadcastSocket::checkJsonMessage(json_message)) {
+		if (BroadcastSocket::checkJsonMessage(json_message, new_json_message)) {
 			_from_name = json_message[ TalkieKey::FROM ].as<String>();
 			return true;
 		}
@@ -128,9 +128,9 @@ protected:
 	}
 
 
-    bool send(const JsonObject& json_message) override {
+    bool send(const JsonObject& json_message, JsonMessage& new_json_message) override {
 		
-        if (_udp && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
+        if (_udp && BroadcastSocket::send(json_message, new_json_message)) {	// Very important pre processing !!
 			
             IPAddress broadcastIP(255, 255, 255, 255);
 
