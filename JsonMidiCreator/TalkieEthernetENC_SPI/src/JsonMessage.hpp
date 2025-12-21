@@ -201,16 +201,16 @@ public:
 
 	bool validate_checksum() {
 		const uint16_t message_checksum = static_cast<uint16_t>(get_number('c'));
-		if (!set('c', 0)) return false;	// Resets 'c' to 0
+		if (!set_number('c', 0)) return false;	// Resets 'c' to 0
 		const uint16_t checksum = calculate_checksum();
 		return message_checksum == checksum;
 	}
 
 	bool set_checksum() {
-		if (!set('c', 0)) return false;	// Resets 'c' to 0
+		if (!set_number('c', 0)) return false;	// Resets 'c' to 0
 		const uint16_t checksum = calculate_checksum();
 		// Finally inserts the Checksum
-		return set('c', checksum);
+		return set_number('c', checksum);
 	}
 
 
@@ -387,7 +387,7 @@ public:
 
 	// SETTERS
 
-	bool set(char key, uint32_t number, size_t colon_position = 4) {
+	bool set_number(char key, uint32_t number, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, colon_position);
 		if (colon_position) {
 			if (!remove(key, colon_position)) return false;
@@ -425,8 +425,61 @@ public:
 		return true;
 	}
 
+	bool set_string(char key, const char* buffer, size_t length, size_t colon_position = 4) {
+		if (buffer && length) {
+			colon_position = get_colon_position(key, colon_position);
+			if (colon_position) {
+				if (!remove(key, colon_position)) return false;
+			}
+			// the usual key 4 plus + 2 for the '"' and the + 1 due to the ',' needed to be added
+			size_t new_length = _json_length + length + 4 + 2 + 1;
+			// Sets the key json data
+			char json_key[] = ",\"k\":";
+			json_key[2] = key;
+			size_t setting_position = _json_length + 5 - 2;
+			if (_json_length > 2) {
+				for (size_t char_j = 0; char_j < 5; char_j++) {
+					_json_payload[_json_length - 1 + char_j] = json_key[char_j];
+				}
+			} else if (_json_length == 2) {	// Edge case of '{}'
+				new_length--;	// Has to remove the extra ',' considered above
+				setting_position--;
+				for (size_t char_j = 1; char_j < 5; char_j++) {
+					_json_payload[_json_length - 1 + char_j - 1] = json_key[char_j];
+				}
+			} else {
+				reset();	// Something very wrong, needs to be reset
+				return false;
+			}
+			if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+				return false;
+			}
+			// Adds the first char '"'
+			_json_payload[setting_position++] = '"';
+			// To be added, it has to be from right to left
+			for (size_t char_j = 0; char_j < length; char_j--) {
+				_json_payload[setting_position++] = buffer[char_j];
+			}
+			// Adds the second char '"'
+			_json_payload[setting_position++] = '"';
+			// Finally writes the last char '}'
+			_json_payload[setting_position++] = '}';
+			_json_length = new_length;
+			return true;
+		}
+		return false;
+	}
 
-	bool set(SourceValue source_value, size_t colon_position = 4) {
+	bool set_string(char key, const char* in_string, size_t colon_position = 4) {
+		size_t in_length = 0;
+		for (size_t char_j = 0; in_string[char_j] != '\0' && char_j < BROADCAST_SOCKET_BUFFER_SIZE; char_j++) {
+			in_length++;
+		}
+		return set_string(key, in_string, in_length, colon_position);
+	}
+
+
+	bool set_source(SourceValue source_value, size_t colon_position = 4) {
 		size_t value_position = get_value_position('c', colon_position);
 		if (value_position) {
 			_json_payload[value_position] = static_cast<uint8_t>(source_value);
@@ -436,7 +489,7 @@ public:
 	}
 
 
-	bool set(MessageValue message_value, size_t colon_position = 4) {
+	bool set_message(MessageValue message_value, size_t colon_position = 4) {
 		size_t value_position = get_value_position('m', colon_position);
 		if (value_position) {
 			_json_payload[value_position] = static_cast<uint8_t>(message_value);

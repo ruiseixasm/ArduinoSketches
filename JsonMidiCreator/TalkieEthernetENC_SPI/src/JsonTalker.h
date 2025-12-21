@@ -150,6 +150,17 @@ public:
 			// FROM doesn't even exist (must have)
 			json_message[ TalkieKey::FROM ] = _name;
 		}
+		// PARALLEL DEVELOPMENT WITH ARDUINOJSON (IN PROGRESS)
+		if (new_json_message.has_key( MessageKey::FROM )) {
+			if (strcmp(json_message[ TalkieKey::FROM ].as<const char*>(), _name) != 0) {
+				// FROM is different from _name, must be swapped
+				new_json_message.swap_key(MessageKey::FROM, MessageKey::TO);
+				new_json_message.set_string(MessageKey::FROM, _name);
+			}
+		} else {
+			// FROM doesn't even exist (must have)
+			new_json_message.set_string(MessageKey::FROM, _name);
+		}
 
 		MessageValue message_data = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
 		if (message_data < MessageValue::ECHO) {
