@@ -337,7 +337,7 @@ public:
 	}
 
 
-	bool for_me(const char* name) const {
+	bool for_me(const char* name, uint8_t channel) const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position) {
 			ValueType value_type = get_value_type('t', colon_position);
@@ -347,12 +347,14 @@ public:
 					{
 						char message_to[NAME_LEN] = {'\0'};
 						get_string('t', message_to, colon_position);
+						return strcmp(message_to, name) == 0;
 					}
 				break;
 				
 				case INTEGER:
 					{
-						
+						uint32_t number = get_number('t', colon_position);
+						return number == channel;
 					}
 				break;
 				
@@ -457,6 +459,17 @@ public:
 		return false;
 	}
 
+	MessageValue get_message() const {
+		size_t colon_position = get_colon_position('m');
+		if (colon_position) {
+			uint8_t message_number = get_number('m', colon_position);
+			if (message_number < static_cast<uint8_t>( MessageValue::NOISE )) {
+				return static_cast<MessageValue>( message_number );
+			}
+		}
+		return MessageValue::NOISE;
+	}
+
 	uint16_t get_identity() {
 		return static_cast<uint16_t>(get_number('i'));
 	}
@@ -476,17 +489,6 @@ public:
 		return SourceValue::NONE;
 	}
 
-	MessageValue get_message() const {
-		size_t colon_position = get_colon_position('m');
-		if (colon_position) {
-			uint8_t message_number = get_number('m', colon_position);
-			if (message_number < static_cast<uint8_t>( MessageValue::NOISE )) {
-				return static_cast<MessageValue>( message_number );
-			}
-		}
-		return MessageValue::NOISE;
-	}
-
 	RogerValue get_roger() const {
 		size_t colon_position = get_colon_position('r');
 		if (colon_position) {
@@ -496,6 +498,10 @@ public:
 			}
 		}
 		return RogerValue::NIL;
+	}
+
+	bool get_from(char* out_string) const {
+		return get_string('f', out_string);
 	}
 
 
