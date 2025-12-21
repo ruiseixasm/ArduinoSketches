@@ -148,26 +148,21 @@ protected:
 	}
 
 
-	bool get_string(char key, char* out_string, size_t colon_position = 4) const {
-		if (out_string) {
-			size_t length = 0;
-			for (size_t char_j = 0; out_string[char_j] != '\0' && char_j < BROADCAST_SOCKET_BUFFER_SIZE; char_j++) {
-				length++;
-			}
-			if (length) {
-				size_t json_i = get_value_position(key, colon_position);
-				if (json_i && _json_payload[json_i++] == '"' && out_string && length) {	// Safe code
-					size_t char_j = 0;
-					while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < length) {
-						out_string[char_j++] = _json_payload[json_i++];
-					}
-					if (char_j < length) {
-						out_string[char_j] = '\0';	// Makes sure the termination char is added
-						return true;
-					}
-					out_string[0] = '\0';	// Clears all noisy fill if it fails
-					return false;
+	// When a function receives a buffer and its size, the size must include space for the '\0'
+	bool get_string(char key, char* buffer, size_t size, size_t colon_position = 4) const {
+		if (buffer && size) {
+			size_t json_i = get_value_position(key, colon_position);
+			if (json_i && _json_payload[json_i++] == '"' && buffer && size) {	// Safe code
+				size_t char_j = 0;
+				while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < size) {
+					buffer[char_j++] = _json_payload[json_i++];
 				}
+				if (char_j < size) {
+					buffer[char_j] = '\0';	// Makes sure the termination char is added
+					return true;
+				}
+				buffer[0] = '\0';	// Clears all noisy fill if it fails
+				return false;
 			}
 		}
 		return false;
@@ -490,8 +485,8 @@ public:
 		return RogerValue::NIL;
 	}
 
-	bool get_from(char* out_string) const {
-		return get_string('f', out_string);
+	bool get_from(char* buffer, size_t size) const {
+		return get_string('f', buffer, size);
 	}
 
 
