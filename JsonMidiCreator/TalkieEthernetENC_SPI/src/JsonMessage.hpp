@@ -53,8 +53,8 @@ protected:
 
 
 	static size_t number_of_digits(uint32_t number) {
-		size_t length = 0;
-		while (number > 0) {
+		size_t length = 1;	// 0 has 1 digit
+		while (number > 9) {
 			number /= 10;
 			length++;
 		}
@@ -196,10 +196,15 @@ protected:
 			reset();	// Something very wrong, needs to be reset
 			return false;
 		}
-		// To be added, it has to be from right to left
-		for (size_t json_i = new_length - 2; number; json_i--) {
-			_json_payload[json_i] = '0' + number % 10;
-			number /= 10; // Truncates the number (does a floor)
+		// Regardless being 0, it also has to be added
+		if (number) {
+			// To be added, it has to be from right to left
+			for (size_t json_i = new_length - 2; number; json_i--) {
+				_json_payload[json_i] = '0' + number % 10;
+				number /= 10; // Truncates the number (does a floor)
+			}
+		} else {
+			_json_payload[new_length - 2] = '0';
 		}
 		// Finally writes the last char '}'
 		_json_payload[new_length - 1] = '}';
