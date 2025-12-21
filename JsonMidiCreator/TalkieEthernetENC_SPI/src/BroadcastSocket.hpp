@@ -17,6 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>    // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "JsonTalker.h"
 #include "TalkieCodes.hpp"
+#include "JsonMessage.hpp"
 
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
@@ -52,6 +53,8 @@ protected:
     #else
     StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _message_doc;
     #endif
+
+	JsonMessage _new_json_message;	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
 
 
     uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {
@@ -265,6 +268,7 @@ protected:
 					return 0;
 				}
 				JsonObject json_message = _message_doc.as<JsonObject>();
+				_new_json_message.deserialize(_receiving_buffer, _received_length);	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
 
 				if (!checkJsonMessage(json_message)) return 0;
 
@@ -302,6 +306,8 @@ protected:
 						}
 						json_message = _message_doc.as<JsonObject>();
 					}
+					
+					_new_json_message.deserialize(_receiving_buffer, _received_length);	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
                     
 					#ifdef BROADCASTSOCKET_DEBUG
 					Serial.print(F("triggerTalkers10: Triggering the talker: "));
