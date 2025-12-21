@@ -147,6 +147,32 @@ protected:
 		return field_length;
 	}
 
+	
+	bool get_string(char key, char* out_string, size_t colon_position = 4) const {
+		if (out_string) {
+			size_t length = 0;
+			for (size_t char_j = 0; out_string[char_j] != '\0' && char_j < BROADCAST_SOCKET_BUFFER_SIZE; char_j++) {
+				length++;
+			}
+			if (length) {
+				size_t json_i = get_value_position(key, colon_position);
+				if (json_i && _json_payload[json_i++] == '"' && out_string && length) {	// Safe code
+					size_t char_j = 0;
+					while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < length) {
+						out_string[char_j++] = _json_payload[json_i++];
+					}
+					if (char_j < length) {
+						out_string[char_j] = '\0';	// Makes sure the termination char is added
+						return true;
+					}
+					out_string[0] = '\0';	// Clears all noisy fill if it fails
+					return false;
+				}
+			}
+		}
+		return false;
+	}
+
 
 	bool set_number(char key, uint32_t number, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, colon_position);
@@ -395,6 +421,8 @@ public:
 	}
 
 
+	// GETTERS
+
 	ValueType get_value_type(char key, size_t colon_position = 4) const {
 		size_t json_i = get_value_position(key, colon_position);
 		if (json_i) {
@@ -420,8 +448,6 @@ public:
 		return VOID;
 	}
 
-	// GETTERS
-
 	uint32_t get_number(char key, size_t colon_position = 4) const {
 		uint32_t json_number = 0;
 		size_t json_i = get_value_position(key, colon_position);
@@ -432,31 +458,6 @@ public:
 			}
 		}
 		return json_number;
-	}
-
-	bool get_string(char key, char* out_string, size_t colon_position = 4) const {
-		if (out_string) {
-			size_t length = 0;
-			for (size_t char_j = 0; out_string[char_j] != '\0' && char_j < BROADCAST_SOCKET_BUFFER_SIZE; char_j++) {
-				length++;
-			}
-			if (length) {
-				size_t json_i = get_value_position(key, colon_position);
-				if (json_i && _json_payload[json_i++] == '"' && out_string && length) {	// Safe code
-					size_t char_j = 0;
-					while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < length) {
-						out_string[char_j++] = _json_payload[json_i++];
-					}
-					if (char_j < length) {
-						out_string[char_j] = '\0';	// Makes sure the termination char is added
-						return true;
-					}
-					out_string[0] = '\0';	// Clears all noisy fill if it fails
-					return false;
-				}
-			}
-		}
-		return false;
 	}
 
 	MessageValue get_message() const {
