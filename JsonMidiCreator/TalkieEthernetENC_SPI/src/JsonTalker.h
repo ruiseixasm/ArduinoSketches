@@ -184,19 +184,14 @@ public:
 				_received_message = MessageValue::NOISE;	// Avoids false mutes for self generated messages (safe code)
 			}
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-			new_json_message.set_identity();
-			if (message_data < MessageValue::ECHO) {
-				_original_message.identity = new_json_message.get_identity();
-				_original_message.message_data = message_data;
-			}
-
 			uint16_t message_id = (uint16_t)millis();
 			json_message[ TalkieKey::IDENTITY ] = message_id;
 			if (message_data < MessageValue::ECHO) {
 				_original_message.identity = message_id;
 				_original_message.message_data = message_data;
 			}
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			new_json_message.set_identity(message_id);
 
 		} else if (!json_message[ TalkieKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
 

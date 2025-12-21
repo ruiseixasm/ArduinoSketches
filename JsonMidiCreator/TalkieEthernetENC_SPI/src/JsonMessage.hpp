@@ -394,9 +394,17 @@ public:
 		return set_number('c', checksum);
 	}
 
+	bool set_identity(uint16_t identity) {
+		return set_number('i', identity);
+	}
+
 	bool set_identity() {
 		uint16_t identity = (uint16_t)millis();
 		return set_number('i', identity);
+	}
+
+	bool set_timestamp(uint16_t timestamp) {
+		return set_number('i', timestamp);
 	}
 
 	bool set_timestamp() {
