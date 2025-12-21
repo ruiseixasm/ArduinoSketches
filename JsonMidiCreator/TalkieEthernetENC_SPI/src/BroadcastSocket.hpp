@@ -373,7 +373,7 @@ protected:
 	}
 
 
-    virtual bool send(const JsonObject& json_message, JsonMessage& new_json_message) {
+    virtual bool send(const JsonObject& json_message, const JsonMessage& new_json_message) {
         (void)json_message; // Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
 		

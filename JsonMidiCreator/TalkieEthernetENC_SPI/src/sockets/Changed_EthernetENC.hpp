@@ -128,7 +128,7 @@ protected:
 	}
 
 
-    bool send(const JsonObject& json_message, JsonMessage& new_json_message) override {
+    bool send(const JsonObject& json_message, const JsonMessage& new_json_message) override {
 		
         if (_udp && BroadcastSocket::send(json_message, new_json_message)) {	// Very important pre processing !!
 			
