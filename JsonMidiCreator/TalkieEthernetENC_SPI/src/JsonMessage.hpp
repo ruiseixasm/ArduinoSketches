@@ -395,6 +395,9 @@ public:
 		// At this time there is no field key for sure, so, one can just add it right before the '}'
 		size_t number_size = number_of_digits(number);
 		size_t new_length = _json_length + number_size + 4 + 1;	// the usual key 4 plus the + 1 due to the ',' needed to be added
+		if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+			return false;
+		}
 		// Sets the key json data
 		char json_key[] = ",\"k\":";
 		json_key[2] = key;
@@ -409,9 +412,6 @@ public:
 			}
 		} else {
 			reset();	// Something very wrong, needs to be reset
-			return false;
-		}
-		if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
 			return false;
 		}
 		// To be added, it has to be from right to left
@@ -431,8 +431,11 @@ public:
 			if (colon_position) {
 				if (!remove(key, colon_position)) return false;
 			}
-			// the usual key 4 plus + 2 for the '"' and the + 1 due to the ',' needed to be added
+			// the usual key + 4 plus + 2 for both '"' and the + 1 due to the heading ',' needed to be added
 			size_t new_length = _json_length + length + 4 + 2 + 1;
+			if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+				return false;
+			}
 			// Sets the key json data
 			char json_key[] = ",\"k\":";
 			json_key[2] = key;
@@ -452,13 +455,10 @@ public:
 				reset();	// Something very wrong, needs to be reset
 				return false;
 			}
-			if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
-				return false;
-			}
 			// Adds the first char '"'
 			_json_payload[setting_position++] = '"';
 			// To be added, it has to be from right to left
-			for (size_t char_j = 0; char_j < length; char_j--) {
+			for (size_t char_j = 0; char_j < length; char_j++) {
 				_json_payload[setting_position++] = buffer[char_j];
 			}
 			// Adds the second char '"'
