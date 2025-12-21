@@ -154,7 +154,7 @@ public:
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 		if (new_json_message.has_key( MessageKey::FROM )) {
 			char from_name[NAME_LEN] = {'\0'};
-			new_json_message.get_string('f', from_name, NAME_LEN);
+			new_json_message.get_string('f', from_name);
 			if (strcmp(from_name, _name) != 0) {
 				// FROM is different from _name, must be swapped (replaces "f" with "t")
 				new_json_message.set_from_as_to();

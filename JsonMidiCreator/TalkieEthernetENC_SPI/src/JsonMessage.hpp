@@ -26,6 +26,9 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 #endif
+#ifndef NAME_LEN
+#define NAME_LEN 16
+#endif
 
 
 
@@ -184,51 +187,53 @@ protected:
 	}
 
 	bool set_string(char key, const char* in_string, size_t colon_position = 4) {
-		size_t length = 0;
-		for (size_t char_j = 0; in_string[char_j] != '\0' && char_j < BROADCAST_SOCKET_BUFFER_SIZE; char_j++) {
-			length++;
-		}
-		if (in_string && length) {
-			colon_position = get_colon_position(key, colon_position);
-			if (colon_position) {
-				if (!remove(key, colon_position)) return false;
+		if (in_string) {
+			size_t length = 0;
+			for (size_t char_j = 0; in_string[char_j] != '\0' && char_j < BROADCAST_SOCKET_BUFFER_SIZE; char_j++) {
+				length++;
 			}
-			// the usual key + 4 plus + 2 for both '"' and the + 1 due to the heading ',' needed to be added
-			size_t new_length = _json_length + length + 4 + 2 + 1;
-			if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
-				return false;
-			}
-			// Sets the key json data
-			char json_key[] = ",\"k\":";
-			json_key[2] = key;
-			// length to position requires - 1 and + 5 for the key (at '}' position + 5)
-			size_t setting_position = _json_length - 1 + 5;
-			if (_json_length > 2) {
-				for (size_t char_j = 0; char_j < 5; char_j++) {
-					_json_payload[_json_length - 1 + char_j] = json_key[char_j];
+			if (length) {
+				colon_position = get_colon_position(key, colon_position);
+				if (colon_position) {
+					if (!remove(key, colon_position)) return false;
 				}
-			} else if (_json_length == 2) {	// Edge case of '{}'
-				new_length--;	// Has to remove the extra ',' considered above
-				setting_position--;
-				for (size_t char_j = 1; char_j < 5; char_j++) {
-					_json_payload[_json_length - 1 + char_j - 1] = json_key[char_j];
+				// the usual key + 4 plus + 2 for both '"' and the + 1 due to the heading ',' needed to be added
+				size_t new_length = _json_length + length + 4 + 2 + 1;
+				if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+					return false;
 				}
-			} else {
-				reset();	// Something very wrong, needs to be reset
-				return false;
+				// Sets the key json data
+				char json_key[] = ",\"k\":";
+				json_key[2] = key;
+				// length to position requires - 1 and + 5 for the key (at '}' position + 5)
+				size_t setting_position = _json_length - 1 + 5;
+				if (_json_length > 2) {
+					for (size_t char_j = 0; char_j < 5; char_j++) {
+						_json_payload[_json_length - 1 + char_j] = json_key[char_j];
+					}
+				} else if (_json_length == 2) {	// Edge case of '{}'
+					new_length--;	// Has to remove the extra ',' considered above
+					setting_position--;
+					for (size_t char_j = 1; char_j < 5; char_j++) {
+						_json_payload[_json_length - 1 + char_j - 1] = json_key[char_j];
+					}
+				} else {
+					reset();	// Something very wrong, needs to be reset
+					return false;
+				}
+				// Adds the first char '"'
+				_json_payload[setting_position++] = '"';
+				// To be added, it has to be from right to left
+				for (size_t char_j = 0; char_j < length; char_j++) {
+					_json_payload[setting_position++] = in_string[char_j];
+				}
+				// Adds the second char '"'
+				_json_payload[setting_position++] = '"';
+				// Finally writes the last char '}'
+				_json_payload[setting_position++] = '}';
+				_json_length = new_length;
+				return true;
 			}
-			// Adds the first char '"'
-			_json_payload[setting_position++] = '"';
-			// To be added, it has to be from right to left
-			for (size_t char_j = 0; char_j < length; char_j++) {
-				_json_payload[setting_position++] = in_string[char_j];
-			}
-			// Adds the second char '"'
-			_json_payload[setting_position++] = '"';
-			// Finally writes the last char '}'
-			_json_payload[setting_position++] = '}';
-			_json_length = new_length;
-			return true;
 		}
 		return false;
 	}
@@ -332,6 +337,32 @@ public:
 	}
 
 
+	bool for_me(const char* name) const {
+		size_t colon_position = get_colon_position('t');
+		if (colon_position) {
+			ValueType value_type = get_value_type('t', colon_position);
+			switch (value_type) {
+
+				case STRING:
+					{
+						char message_to[NAME_LEN] = {'\0'};
+						get_string('t', message_to, colon_position);
+					}
+				break;
+				
+				case INTEGER:
+					{
+						
+					}
+				break;
+				
+				default: break;
+			}
+		}
+		return false;
+	}
+
+
 	bool compare(const char* in_string, size_t size) const {
 		if (size == _json_length) {
 			for (size_t char_j = 0; char_j < size; ++char_j) {
@@ -401,19 +432,27 @@ public:
 		return json_number;
 	}
 
-	bool get_string(char key, char* out_string, size_t size, size_t colon_position = 4) const {
-		size_t json_i = get_value_position(key, colon_position);
-		if (json_i && _json_payload[json_i++] == '"' && out_string && size) {	// Safe code
-			size_t char_j = 0;
-			while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < size) {
-				out_string[char_j++] = _json_payload[json_i++];
+	bool get_string(char key, char* out_string, size_t colon_position = 4) const {
+		if (out_string) {
+			size_t length = 0;
+			for (size_t char_j = 0; out_string[char_j] != '\0' && char_j < BROADCAST_SOCKET_BUFFER_SIZE; char_j++) {
+				length++;
 			}
-			if (char_j < size) {
-				out_string[char_j] = '\0';	// Makes sure the termination char is added
-				return true;
+			if (length) {
+				size_t json_i = get_value_position(key, colon_position);
+				if (json_i && _json_payload[json_i++] == '"' && out_string && length) {	// Safe code
+					size_t char_j = 0;
+					while (_json_payload[json_i] != '"' && json_i < _json_length && char_j < length) {
+						out_string[char_j++] = _json_payload[json_i++];
+					}
+					if (char_j < length) {
+						out_string[char_j] = '\0';	// Makes sure the termination char is added
+						return true;
+					}
+					out_string[0] = '\0';	// Clears all noisy fill if it fails
+					return false;
+				}
 			}
-			out_string[0] = '\0';	// Clears all noisy fill if it fails
-			return false;
 		}
 		return false;
 	}
