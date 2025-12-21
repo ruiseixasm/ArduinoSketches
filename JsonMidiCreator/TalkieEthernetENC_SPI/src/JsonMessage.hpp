@@ -436,8 +436,8 @@ public:
 			// Sets the key json data
 			char json_key[] = ",\"k\":";
 			json_key[2] = key;
-			// length to position requires - 1 and '}' requires an extra - 1, then - 2 for both '"' and + 5 for the key
-			size_t setting_position = _json_length - 1 - 1 - 2 + 5;
+			// length to position requires - 1 and + 5 for the key (at '}' position + 5)
+			size_t setting_position = _json_length - 1 + 5;
 			if (_json_length > 2) {
 				for (size_t char_j = 0; char_j < 5; char_j++) {
 					_json_payload[_json_length - 1 + char_j] = json_key[char_j];
