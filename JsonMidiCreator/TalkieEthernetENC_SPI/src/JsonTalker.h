@@ -239,6 +239,8 @@ public:
 
 			// Tags the message as LOCAL sourced
 			json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::LOCAL);
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			new_json_message.set_source(SourceValue::LOCAL);
 			// Triggers all local Talkers to processes the json_message
 			bool sent_message = false;
 			bool pre_validated = false;
@@ -253,13 +255,15 @@ public:
 					StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
 					#endif
 					JsonObject json_copy = doc_copy.to<JsonObject>();
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+					JsonMessage new_json_message_copy(new_json_message);
 					
 					// Copy all data from original
 					for (JsonPair kv : json_message) {
 						json_copy[kv.key()] = kv.value();
 					}
 				
-					pre_validated = _json_talkers[talker_i]->processMessage(json_copy, new_json_message);
+					pre_validated = _json_talkers[talker_i]->processMessage(json_copy, new_json_message_copy);
 					sent_message = true;
 					if (!pre_validated) break;
 				}
