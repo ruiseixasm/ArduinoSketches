@@ -425,8 +425,12 @@ public:
 		return true;
 	}
 
-	bool set_string(char key, const char* buffer, size_t length, size_t colon_position = 4) {
-		if (buffer && length) {
+	bool set_string(char key, const char* in_string, size_t colon_position = 4) {
+		size_t length = 0;
+		for (size_t char_j = 0; in_string[char_j] != '\0' && char_j < BROADCAST_SOCKET_BUFFER_SIZE; char_j++) {
+			length++;
+		}
+		if (in_string && length) {
 			colon_position = get_colon_position(key, colon_position);
 			if (colon_position) {
 				if (!remove(key, colon_position)) return false;
@@ -459,7 +463,7 @@ public:
 			_json_payload[setting_position++] = '"';
 			// To be added, it has to be from right to left
 			for (size_t char_j = 0; char_j < length; char_j++) {
-				_json_payload[setting_position++] = buffer[char_j];
+				_json_payload[setting_position++] = in_string[char_j];
 			}
 			// Adds the second char '"'
 			_json_payload[setting_position++] = '"';
@@ -469,14 +473,6 @@ public:
 			return true;
 		}
 		return false;
-	}
-
-	bool set_string(char key, const char* in_string, size_t colon_position = 4) {
-		size_t in_length = 0;
-		for (size_t char_j = 0; in_string[char_j] != '\0' && char_j < BROADCAST_SOCKET_BUFFER_SIZE; char_j++) {
-			in_length++;
-		}
-		return set_string(key, in_string, in_length, colon_position);
 	}
 
 
