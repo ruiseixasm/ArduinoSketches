@@ -328,7 +328,7 @@ protected:
 					#ifdef BROADCASTSOCKET_DEBUG_NEW
 					Serial.print(F("\t\t\t\tnew_json_message2: "));
 					_new_json_message.write_to(Serial);
-					Serial.print(F("\n\t\t\t\tnew_json_message3: "));
+					Serial.print(F(" | "));
 					Serial.println(new_validated);
 					#endif
 
