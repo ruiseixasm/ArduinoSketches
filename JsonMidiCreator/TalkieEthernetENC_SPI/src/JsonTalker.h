@@ -202,8 +202,12 @@ public:
 			#endif
 
 			json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
-			json_message[ valueKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
 			json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
+			json_message[ valueKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			new_json_message.set_message(MessageValue::ERROR);
+			new_json_message.set_identity();
+			new_json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::IDENTITY));
 
 		} else {
 			

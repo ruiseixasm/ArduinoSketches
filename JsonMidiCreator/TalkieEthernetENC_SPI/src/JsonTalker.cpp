@@ -35,6 +35,8 @@ bool JsonTalker::remoteSend(JsonObject& json_message, JsonMessage& new_json_mess
 
 	// Tags the message as REMOTE sourced
 	json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::REMOTE);
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+	new_json_message.set_source(SourceValue::REMOTE);
 	if (prepareMessage(json_message, new_json_message)) {
     	return _socket->remoteSend(json_message, new_json_message);
 	}
