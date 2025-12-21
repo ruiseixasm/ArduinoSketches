@@ -506,7 +506,6 @@ protected:
 			// Refresh it each time (don't lose saved data because it is in _named_pins_doc)
 			_named_pins = _named_pins_doc.as<JsonObject>();
 			_named_pins[from_name] = _actual_ss_pin;
-
 			_named_pins_table.add(json_message[ TalkieKey::FROM ].as<const char*>(), _actual_ss_pin);
 
 			#ifdef BROADCAST_SPI_DEBUG
@@ -546,16 +545,16 @@ protected:
 				#endif
 
 				String target_name = json_message[ TalkieKey::TO ].as<String>();
-				uint8_t send_pin = 15;
-				bool found_it = _named_pins_table.get(json_message[ TalkieKey::TO ].as<const char*>(), send_pin);
-				(void)found_it;
+				bool found_it = _named_pins_table.get(json_message[ TalkieKey::TO ].as<const char*>(), _actual_ss_pin);
 				if (target_name.length() > 0) {
 					as_reply = _named_pins[ target_name ].is<uint8_t>();	// Critical line
 				} else {
 					as_reply = false;  // Empty string isn't a valid key
 				}
 				if (as_reply) {
-					_actual_ss_pin = _named_pins[ target_name ].as<uint8_t>();
+					if (!found_it) {
+						_actual_ss_pin = _named_pins[ target_name ].as<uint8_t>();
+					}
 				} else {
 					#ifdef BROADCAST_SPI_DEBUG
 					Serial.println(F("\t\tERROR: Failed to get the pin from name"));
