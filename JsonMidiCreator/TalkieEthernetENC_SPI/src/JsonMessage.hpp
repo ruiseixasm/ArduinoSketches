@@ -375,15 +375,13 @@ public:
 		// Sets the key json data
 		char json_key[] = ",\"k\":";
 		json_key[2] = key;
-		size_t char_j = 0;
 		if (_json_length > 2) {
-			for (; char_j < 5; char_j++) {
+			for (size_t char_j = 0; char_j < 5; char_j++) {
 				_json_payload[_json_length - 1 + char_j] = json_key[char_j];
 			}
 		} else if (_json_length == 2) {	// Edge case of '{}'
-			char_j = 1;
 			new_length--;	// Has to remove the extra ',' considered above
-			for (; char_j < 5; char_j++) {
+			for (size_t char_j = 1; char_j < 5; char_j++) {
 				_json_payload[_json_length - 1 + char_j - 1] = json_key[char_j];
 			}
 		} else {
