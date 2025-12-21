@@ -372,9 +372,6 @@ public:
 		// At this time there is no field key for sure, so, one can just add it right before the '}'
 		size_t number_size = number_of_digits(number);
 		size_t new_length = _json_length + number_size + 4 + 1;	// the usual key 4 plus the + 1 due to the ',' needed to be added
-		if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
-			return false;
-		}
 		// Sets the key json data
 		if (_json_length > 2) {
 			char json_key[] = ",\"k\":";
@@ -391,6 +388,9 @@ public:
 			}
 		} else {
 			reset();	// Something very wrong, needs to be reset
+			return false;
+		}
+		if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
 			return false;
 		}
 		// To be added, it has to be from right to left
