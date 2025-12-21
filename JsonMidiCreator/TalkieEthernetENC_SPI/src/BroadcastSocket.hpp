@@ -207,9 +207,9 @@ protected:
 			Serial.println();
 			#endif
             
-			_new_json_message.validate_checksum();	// Also sets checksum as 0 ('c') in message buffer
+			bool new_validated = _new_json_message.validate_checksum();	// Also sets checksum as 0 ('c') in message buffer
 
-			
+
             uint8_t message_code_int = 255;    // There is no 255 message code, meaning, it has none!
             uint16_t remote_time = 0;
             uint16_t received_checksum = extractChecksum(&message_code_int, &remote_time);
@@ -328,7 +328,8 @@ protected:
 					#ifdef BROADCASTSOCKET_DEBUG_NEW
 					Serial.print(F("\t\t\t\tnew_json_message2: "));
 					_new_json_message.write_to(Serial);
-					Serial.println();
+					Serial.print(F("\n\t\t\t\tnew_json_message3: "));
+					Serial.println(new_validated);
 					#endif
 
                     
