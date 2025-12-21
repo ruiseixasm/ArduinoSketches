@@ -38,7 +38,7 @@ public:
 
 protected:
 
-    Action calls[15] = {
+    Action calls[16] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -53,7 +53,8 @@ protected:
 		{"from", "Gets the from name string"},
 		{"remove", "Removes a given field"},
 		{"set", "Sets a given field"},
-		{"edge", "Tests edge cases"}
+		{"edge", "Tests edge cases"},
+		{"copy", "Tests the copy constructor"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -294,6 +295,23 @@ public:
 				if (!test_json_message.compare_string(new_single_key)) {
 					json_message[ valueKey(0) ] = "4th";
 					json_message[ valueKey(1) ] = test_json_message.get_length();
+					return false;
+				}
+				return true;
+			}
+			break;
+				
+			case 15:
+			{
+				JsonMessage copy_json_message(test_json_message);
+				if (copy_json_message != test_json_message) {
+					json_message[ valueKey(0) ] = "1st";
+					return false;
+				}
+				const char different_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+				copy_json_message.deserialize_string(different_payload);
+				if (copy_json_message == test_json_message) {
+					json_message[ valueKey(0) ] = "2nd";
 					return false;
 				}
 				return true;
