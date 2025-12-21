@@ -373,17 +373,19 @@ public:
 		size_t number_size = number_of_digits(number);
 		size_t new_length = _json_length + number_size + 4 + 1;	// the usual key 4 plus the + 1 due to the ',' needed to be added
 		// Sets the key json data
+		size_t key_len = 5;
 		if (_json_length > 2) {
 			char json_key[] = ",\"k\":";
 			json_key[2] = key;
-			for (size_t char_j = 0; char_j < 5; char_j++) {
+			for (size_t char_j = 0; char_j < key_len; char_j++) {
 				_json_payload[_json_length - 1 + char_j] = json_key[char_j];
 			}
 		} else if (_json_length == 2) {	// Edge case of '{}'
+			key_len--;
 			new_length--;	// Has to remove the extra ',' considered above
 			char json_key[] = "\"k\":";
 			json_key[1] = key;
-			for (size_t char_j = 0; char_j < 4; char_j++) {
+			for (size_t char_j = 0; char_j < key_len; char_j++) {
 				_json_payload[_json_length - 1 + char_j] = json_key[char_j];
 			}
 		} else {
