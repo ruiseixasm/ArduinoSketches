@@ -404,6 +404,10 @@ public:
 		return json_i > 0;
 	}
 
+	bool has_identity() const {
+		return get_colon_position('i') > 0;
+	}
+
 
 	// GETTERS
 

@@ -192,7 +192,7 @@ public:
 			}
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 			new_json_message.set_identity(message_id);
-
+			new_json_message.has_identity();	// Checks if it has identity
 		} else if (!json_message[ TalkieKey::IDENTITY ].is<uint16_t>()) { // Makes sure response messages have an "i" (identifier)
 
 			#ifdef JSON_TALKER_DEBUG
@@ -363,9 +363,12 @@ public:
 			return false;
 		}
 
-		MessageValue message_data = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		MessageValue message_data = new_json_message.get_message();
+		message_data = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
 
         // Is it for me?
+		new_json_message.for_me(_name, _channel);
         if (json_message[ TalkieKey::TO ].is<uint8_t>()) {
             if (json_message[ TalkieKey::TO ].as<uint8_t>() != _channel)
                 return true;    // It's still validated (just not for me as a target)
@@ -393,7 +396,9 @@ public:
 
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageValue::ECHO) {
-			_received_message = static_cast<MessageValue>( json_message[ TalkieKey::MESSAGE ].as<int>() );
+			_received_message = message_data;
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			new_json_message.set_message(MessageValue::ECHO);
 			json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ECHO);
 		}
 
