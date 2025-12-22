@@ -36,9 +36,9 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 protected:
 
+	JsonTalker** const _json_talkers;	// pointer is const, objects mutable
+	const uint8_t _talker_count;
 	const SourceValue _source_value;
-    JsonTalker** const _json_talkers;	// pointer is const, objects mutable
-    const uint8_t _talker_count;
 
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
