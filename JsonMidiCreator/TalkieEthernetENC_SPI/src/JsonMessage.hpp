@@ -472,7 +472,7 @@ public:
 
 	bool is_from(const char* name) const {
 		char message_from[NAME_LEN] = {'\0'};
-		if (!get_from(message_from, NAME_LEN)) {
+		if (!get_from(message_from)) {
 			return false;
 		}
 		return strcmp(message_from, name) == 0;
@@ -480,7 +480,7 @@ public:
 
 	bool is_to(const char* name) const {
 		char message_to[NAME_LEN] = {'\0'};
-		if (!get_to(message_to, NAME_LEN)) {
+		if (!get_to(message_to)) {
 			return false;
 		}
 		return strcmp(message_to, name) == 0;
@@ -571,12 +571,12 @@ public:
 		return RogerValue::NIL;
 	}
 
-	bool get_from(char* buffer, size_t size) const {
-		return get_string('f', buffer, size);
+	bool get_from(char* buffer) const {
+		return get_string('f', buffer, NAME_LEN);
 	}
 
-	bool get_to(char* buffer, size_t size) const {
-		return get_string('t', buffer, size);
+	bool get_to(char* buffer) const {
+		return get_string('t', buffer, NAME_LEN);
 	}
 
 

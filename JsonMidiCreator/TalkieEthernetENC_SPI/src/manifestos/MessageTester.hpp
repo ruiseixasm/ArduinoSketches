@@ -226,8 +226,8 @@ public:
 			{
 				bool from_match = false;
 				char from_name[] = "buzzer";
-				char out_name[16] = {'\0'};	// Name chars 16 sized (scheme adopted)
-				if (test_json_message.get_from(out_name, 16)) {
+				char out_name[NAME_LEN] = {'\0'};	// Name chars 16 sized (scheme adopted)
+				if (test_json_message.get_from(out_name)) {
 					if (strcmp(out_name, from_name) == 0) {
 						from_match = true;
 					}

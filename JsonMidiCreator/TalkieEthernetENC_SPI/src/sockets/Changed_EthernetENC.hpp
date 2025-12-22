@@ -124,7 +124,7 @@ protected:
 		if (BroadcastSocket::receivedJsonMessage(json_message, new_json_message)) {
 			_from_name = json_message[ TalkieKey::FROM ].as<String>();
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-			return new_json_message.get_from(_new_from_name, NAME_LEN);
+			return new_json_message.get_from(_new_from_name);
 		}
 		return false;
 	}
