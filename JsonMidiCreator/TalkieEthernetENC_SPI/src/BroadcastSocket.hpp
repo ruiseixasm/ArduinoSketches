@@ -28,7 +28,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCASTSOCKET_DEBUG
-#define BROADCASTSOCKET_DEBUG_NEW
+// #define BROADCASTSOCKET_DEBUG_NEW
 
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
@@ -75,8 +75,8 @@ protected:
 
 
 	size_t getColonPosition(char key) const {
-		if (_sending_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
-			for (size_t i = 4; i < _sending_length; ++i) {	// 4 because it's the shortest position possible for ':'
+		if (_received_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
+			for (size_t i = 4; i < _received_length; ++i) {	// 4 because it's the shortest position possible for ':'
 				if (_receiving_buffer[i] == ':' && _receiving_buffer[i - 2] == key && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
 					return i;
 				}
