@@ -41,6 +41,7 @@ protected:
     uint16_t _port = 5005;
     IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     EthernetUDP* _udp = nullptr;
+	char* _new_from_name[NAME_LEN] = {'\0'};
 	String _from_name = "";
 
     // ===== [SELF IP] cache our own IP =====
@@ -122,16 +123,8 @@ protected:
 
 		if (BroadcastSocket::receivedJsonMessage(json_message, new_json_message)) {
 			_from_name = json_message[ TalkieKey::FROM ].as<String>();
-			return true;
-		}
-		return false;
-	}
-
-	// Allows the overriding class to peek after processing of the JSON message
-	bool processedJsonMessage(JsonObject& json_message, JsonMessage& new_json_message) override {
-
-		if (BroadcastSocket::processedJsonMessage(json_message, new_json_message)) {
-			return true;
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			return new_json_message.get_from(_new_from_name, NAME_LEN);
 		}
 		return false;
 	}
