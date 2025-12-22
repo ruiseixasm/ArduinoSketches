@@ -523,7 +523,7 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(const JsonObject& json_message, const JsonMessage& new_json_message) override {
+    bool send(const JsonObject& json_message, JsonMessage& new_json_message) override {
 
 		if (_initiated && BroadcastSocket::send(json_message, new_json_message)) {	// Very important pre processing !!
 			
