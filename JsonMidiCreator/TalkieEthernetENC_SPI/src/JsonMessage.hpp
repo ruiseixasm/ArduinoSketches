@@ -90,18 +90,18 @@ protected:
 
 
 	size_t get_value_position(char key, size_t colon_position = 4) const {
-		size_t json_i = get_colon_position(key, colon_position);
-		if (json_i) {			//     01
-			return json_i + 1;	// {"k":x}
+		colon_position = get_colon_position(key, colon_position);
+		if (colon_position) {			//     01
+			return colon_position + 1;	// {"k":x}
 		}
 		return 0;
 	}
 
 
 	size_t get_key_position(char key, size_t colon_position = 4) const {
-		size_t json_i = get_colon_position(key, colon_position);
-		if (json_i) {			//   210
-			return json_i - 2;	// {"k":x}
+		colon_position = get_colon_position(key, colon_position);
+		if (colon_position) {			//   210
+			return colon_position - 2;	// {"k":x}
 		}
 		return 0;
 	}

@@ -28,7 +28,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCASTSOCKET_DEBUG
-// #define BROADCASTSOCKET_DEBUG_NEW
+#define BROADCASTSOCKET_DEBUG_NEW
 
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
@@ -72,6 +72,35 @@ protected:
         }
         return checksum;
     }
+
+
+	size_t getColonPosition(char key) const {
+		if (_sending_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
+			for (size_t i = 4; i < _sending_length; ++i) {	// 4 because it's the shortest position possible for ':'
+				if (_receiving_buffer[i] == ':' && _receiving_buffer[i - 2] == key && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
+					return i;
+				}
+			}
+		}
+		return 0;
+	}
+
+	size_t getValuePosition(char key) const {
+		size_t colon_position = getColonPosition(key);
+		if (colon_position) {			//     01
+			return colon_position + 1;	// {"k":x}
+		}
+		return 0;
+	}
+
+	bool setBufferSource() {
+		size_t value_position = getValuePosition('c');
+		if (value_position) {
+			_receiving_buffer[value_position] = '0' + static_cast<uint8_t>(_source_value);
+			return true;
+		}
+		return false;
+	}
 
 
     uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {
@@ -334,47 +363,48 @@ protected:
 				Serial.println(new_json_message.validate_fields());
 				#endif
 
-                // Triggers all Talkers to processes the received data
-                bool pre_validated = false;
-                for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
+				if (setBufferSource()) {	// Has to set the Socket Source Value first
+					bool pre_validated = false;
+					// Triggers all Talkers to processes the received data
+					for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
 
-                    #ifdef BROADCASTSOCKET_DEBUG
-                    Serial.print(F("triggerTalkers9: Creating new JsonObject for talker: "));
-                    Serial.println(_json_talkers[talker_i]->get_name());
-                    #endif
-
-					if (talker_i > 0) {
-						DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
-						if (error) {
-							#ifdef BROADCASTSOCKET_DEBUG
-							Serial.println(F("ERROR: Failed to deserialize received data"));
-							#endif
-							return 0;
-						}
-						json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
-						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-						new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
-						
-						#ifdef BROADCASTSOCKET_DEBUG_NEW
-						Serial.print(F("\tnew_json_message1.2: "));
-						new_json_message.write_to(Serial);
-						Serial.print(" | ");
-						Serial.println(new_json_message.validate_fields());
+						#ifdef BROADCASTSOCKET_DEBUG
+						Serial.print(F("triggerTalkers9: Creating new JsonObject for talker: "));
+						Serial.println(_json_talkers[talker_i]->get_name());
 						#endif
 
-					}
-					
-                    
-					#ifdef BROADCASTSOCKET_DEBUG
-					Serial.print(F("triggerTalkers10: Triggering the talker: "));
-					Serial.println(_json_talkers[talker_i]->get_name());
-					#endif
+						if (talker_i > 0) {
+							DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
+							if (error) {
+								#ifdef BROADCASTSOCKET_DEBUG
+								Serial.println(F("ERROR: Failed to deserialize received data"));
+								#endif
+								return 0;
+							}
+							json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
+							
+							#ifdef BROADCASTSOCKET_DEBUG_NEW
+							Serial.print(F("\tnew_json_message1.2: "));
+							new_json_message.write_to(Serial);
+							Serial.print(" | ");
+							Serial.println(new_json_message.validate_fields());
+							#endif
 
-					// A non static method
-                    pre_validated = _json_talkers[talker_i]->processMessage(json_message, new_json_message);
-                    if (!pre_validated) return 0;
-                }
-                
+						}
+						
+						
+						#ifdef BROADCASTSOCKET_DEBUG
+						Serial.print(F("triggerTalkers10: Triggering the talker: "));
+						Serial.println(_json_talkers[talker_i]->get_name());
+						#endif
+
+						// A non static method
+						pre_validated = _json_talkers[talker_i]->processMessage(json_message, new_json_message);
+						if (!pre_validated) return 0;
+					}
+				}
             } else {
                 #ifdef BROADCASTSOCKET_DEBUG
                 Serial.print(F("triggerTalkers9: Validation of Checksum FAILED: "));
@@ -502,7 +532,7 @@ public:
 		return _source_value;
 	}
 	
-	
+
     virtual void loop() {
         receive();
         for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
