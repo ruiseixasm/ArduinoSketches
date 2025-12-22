@@ -131,7 +131,6 @@ protected:
 	bool processedJsonMessage(JsonObject& json_message, JsonMessage& new_json_message) override {
 
 		if (BroadcastSocket::processedJsonMessage(json_message, new_json_message)) {
-			_from_name = json_message[ TalkieKey::FROM ].as<String>();
 			return true;
 		}
 		return false;
