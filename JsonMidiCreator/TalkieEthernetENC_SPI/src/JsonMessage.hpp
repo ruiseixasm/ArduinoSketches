@@ -330,7 +330,7 @@ public:
         size_t json_i = 4;	// Optimized {"c": ...
         for (size_t char_j = json_i; char_j < _json_length; ++char_j) {
             if (_json_payload[char_j] == ':') {
-                if (_json_payload[char_j - 2] == 'c' && _json_payload[char_j - 3] == '"' && _json_payload[char_j - 1] == '"') {
+                if (_json_payload[char_j - 2] == 'c' && _json_payload[char_j - 3] == '"') {
                     at_c = true;
                 }
             } else if (at_c) {
@@ -367,7 +367,7 @@ public:
 			bool at_c = false;
             for (size_t json_i = new_length - 1; char_j > 4; json_i--) {
                 if (_json_payload[char_j - 2] == ':') {	// Must find it at 5 the least (> 4)
-                    if (_json_payload[char_j - 4] == 'c' && _json_payload[char_j - 5] == '"' && _json_payload[char_j - 3] == '"') {
+                    if (_json_payload[char_j - 4] == 'c' && _json_payload[char_j - 5] == '"') {
                         at_c = true;
                     }
                 } else if (at_c) {
