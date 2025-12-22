@@ -91,6 +91,9 @@ void Spy::echo(JsonTalker& talker, JsonObject& json_message, JsonMessage& new_js
 				uint16_t time_delay = actual_time - message_time;
 				json_message[ valueKey(0) ] = time_delay;
 				json_message[ valueKey(1) ] = json_message[ TalkieKey::FROM ];	// Informs the Talker as reply
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				new_json_message.set_nth_value_number(0, time_delay);
+				new_json_message.set_nth_value_string(1, new_json_message.get_from_name());
 				// Prepares headers for the original REMOTE sender
 				json_message[ TalkieKey::TO ] = _original_talker;
 				json_message[ TalkieKey::FROM ] = talker.get_name();	// Avoids swapping

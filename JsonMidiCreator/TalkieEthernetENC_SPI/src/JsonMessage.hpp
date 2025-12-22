@@ -50,6 +50,7 @@ protected:
 
 	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 	size_t _json_length = 0;
+    mutable char _temp_name[NAME_LEN];  // mutable allows const methods to modify it
 
 
 	static size_t number_of_digits(uint32_t number) {
@@ -530,7 +531,7 @@ public:
 
 	bool is_to_name(const char* name) const {
 		char message_to[NAME_LEN] = {'\0'};
-		if (!get_to_name(message_to)) {
+		if (!get_to(message_to)) {
 			return false;
 		}
 		return strcmp(message_to, name) == 0;
@@ -632,7 +633,15 @@ public:
 		return get_string('f', buffer, NAME_LEN);
 	}
 
-	bool get_to_name(char* buffer) const {
+    // New method using internal temporary buffer (_temp_name)
+    const char* get_from_name() const {
+        if (get_string('f', _temp_name, NAME_LEN)) {
+            return _temp_name;  // safe C string
+        }
+        return nullptr;  // failed
+    }
+
+	bool get_to(char* buffer) const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
 			return get_string('t', buffer, NAME_LEN, colon_position);
@@ -640,6 +649,17 @@ public:
 		return false;
 	}
 
+    // New method using internal temporary buffer (_temp_name)
+    const char* get_to_name() const {
+		size_t colon_position = get_colon_position('t');
+		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
+			if (get_string('t', _temp_name, NAME_LEN, colon_position)) {
+				return _temp_name;
+			}
+		}
+        return nullptr;  // failed
+    }
+	
 	uint8_t get_to_channel() const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position && get_value_type('t', colon_position) == ValueType::INTEGER) {
