@@ -171,7 +171,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool checkJsonMessage(const JsonObject& json_message, JsonMessage& new_json_message) {
+	virtual bool receivedJsonMessage(const JsonObject& json_message, JsonMessage& new_json_message) {
         (void)new_json_message;	// Silence unused parameter warning
 
 		if (!json_message[ TalkieKey::FROM ].is<String>()) {
@@ -180,6 +180,15 @@ protected:
 			#endif
 			return false;
 		}
+		return true;
+	}
+
+	// Allows the overriding class to peek at the received JSON message
+	virtual bool processedJsonMessage(const JsonObject& json_message, JsonMessage& new_json_message) {
+        (void)json_message;	// Silence unused parameter warning
+        (void)new_json_message;	// Silence unused parameter warning
+
+
 		return true;
 	}
 
@@ -281,7 +290,7 @@ protected:
 				#endif
 
 
-				if (!checkJsonMessage(json_message, new_json_message)) return 0;
+				if (!receivedJsonMessage(json_message, new_json_message)) return 0;
 
 				if (!json_message[ TalkieKey::IDENTITY ].is<uint16_t>()) {
 					#ifdef JSON_TALKER_DEBUG
@@ -484,12 +493,17 @@ public:
 
 		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
 		json_message[ TalkieKey::CHECKSUM ] = 0;
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+        new_json_message.set_source(SourceValue::REMOTE);
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));
 		serializeJson(json_message, Serial);
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
+
+        // Lets subclasses have a saying before final sending
+        processedJsonMessage(json_message, new_json_message);
 
 		// Before writing on the _sending_buffer it needs the wait for its availability
 

@@ -491,9 +491,9 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool checkJsonMessage(const JsonObject& json_message, JsonMessage& new_json_message) override {
+	bool receivedJsonMessage(const JsonObject& json_message, JsonMessage& new_json_message) override {
 
-		if (BroadcastSocket::checkJsonMessage(json_message, new_json_message)) {
+		if (BroadcastSocket::receivedJsonMessage(json_message, new_json_message)) {
 			String from_name = json_message[ TalkieKey::FROM ].as<String>();
 
 			#ifdef BROADCAST_SPI_DEBUG
