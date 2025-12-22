@@ -181,7 +181,7 @@ protected:
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("ERROR: From key 'f' is missing"));
 			#endif
-			return false;
+			// return false;
 		}
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 		if (!new_json_message.validate_fields()) {
