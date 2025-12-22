@@ -395,10 +395,6 @@ public:
 	bool deserialize_buffer(const char* buffer, size_t length) {
 		if (buffer && length && length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t char_j = 0; char_j < length; ++char_j) {
-				if (buffer[char_j] == ' ') {	// No spaces allowed
-					_json_length = 0;
-					return false;
-				}
 				_json_payload[char_j] = buffer[char_j];
 			}
 			_json_length = length;
