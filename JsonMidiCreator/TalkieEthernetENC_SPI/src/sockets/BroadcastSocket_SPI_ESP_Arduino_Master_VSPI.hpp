@@ -64,7 +64,8 @@ public:
 protected:
 
 	bool _initiated = false;
-    int* _talkers_ss_pins;
+    int* _ss_pins;
+    uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = VSPI_SS;
 	String _from_name = "";
 
@@ -74,7 +75,8 @@ protected:
 		int* ss_pins, uint8_t ss_pins_count, JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
 	) : BroadcastSocket(json_talkers, talker_count, source_value) {
             
-        	_talkers_ss_pins = ss_pins;
+        	_ss_pins = ss_pins;
+			_ss_pins_count = ss_pins_count;
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
             // devices_ss_pins["initialized"] = true;
@@ -393,12 +395,12 @@ protected:
 				sendString(_actual_ss_pin);
 			} else {    // Broadcast mode
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-					sendString(_talkers_ss_pins[ss_pin_i]);
+					sendString(_ss_pins[ss_pin_i]);
 				}
 			}
 			#else
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-				sendString(_talkers_ss_pins[ss_pin_i]);
+				sendString(_ss_pins[ss_pin_i]);
 			}
 			#endif
 
@@ -419,14 +421,14 @@ protected:
 		// ================== CONFIGURE SS PINS ==================
 		// CRITICAL: Configure all SS pins as outputs and set HIGH
 		for (uint8_t i = 0; i < _talker_count; i++) {
-			pinMode(_talkers_ss_pins[i], OUTPUT);
-			digitalWrite(_talkers_ss_pins[i], HIGH);
+			pinMode(_ss_pins[i], OUTPUT);
+			digitalWrite(_ss_pins[i], HIGH);
 			delayMicroseconds(10); // Small delay between pins
 		}
 
 		_initiated = true;
 		for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-			if (!acknowledgeReady(_talkers_ss_pins[ss_pin_i])) {
+			if (!acknowledgeReady(_ss_pins[ss_pin_i])) {
 				_initiated = false;
 				break;
 			}
@@ -465,9 +467,9 @@ public:
 			uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _talker_count; ss_pin_i++) {
-				length = receiveString(_talkers_ss_pins[ss_pin_i]);
+				length = receiveString(_ss_pins[ss_pin_i]);
 				if (length > 0) {
-					_actual_ss_pin = _talkers_ss_pins[ss_pin_i];
+					_actual_ss_pin = _ss_pins[ss_pin_i];
 					_received_length = length;
 					triggerTalkers();
 				}
