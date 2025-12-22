@@ -71,10 +71,10 @@ protected:
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
     BroadcastSocket_SPI_ESP_Arduino_Master_VSPI(
-		int* talkers_ss_pins, uint8_t ss_pins_count, JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
+		int* ss_pins, uint8_t ss_pins_count, JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
 	) : BroadcastSocket(json_talkers, talker_count, source_value) {
             
-        	_talkers_ss_pins = talkers_ss_pins;
+        	_talkers_ss_pins = ss_pins;
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
             // devices_ss_pins["initialized"] = true;
@@ -445,8 +445,10 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_SPI_ESP_Arduino_Master_VSPI& instance(JsonTalker** json_talkers, int* talkers_ss_pins, uint8_t talker_count) {
-        static BroadcastSocket_SPI_ESP_Arduino_Master_VSPI instance(json_talkers, talkers_ss_pins, talker_count);
+    static BroadcastSocket_SPI_ESP_Arduino_Master_VSPI& instance(
+		int* ss_pins, uint8_t ss_pins_count, JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
+	) {
+        static BroadcastSocket_SPI_ESP_Arduino_Master_VSPI instance(ss_pins, ss_pins_count, json_talkers, talker_count, source_value);
 
         return instance;
     }
