@@ -17,6 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../JsonTalker.h"         // Includes the ArduinoJson Library
 
 // #define JSON_REPEATER_DEBUG
+#define JSON_REPEATER_DEBUG_NEW
 
 
 class JsonRepeater : public JsonTalker {
@@ -46,6 +47,13 @@ public:
 			source_value = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
 		}
 		// source_value = new_json_message.get_source();	// CRASHES ON CALLING THIS METHOD
+
+		#ifdef JSON_REPEATER_DEBUG_NEW
+		Serial.print(F("\t\t\t\tprocessMessage: "));
+		new_json_message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println(_name);
+		#endif
 
 		switch (source_value) {
 
