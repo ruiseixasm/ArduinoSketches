@@ -43,6 +43,7 @@ protected:
 	uint8_t _sending_length = 0;
 
     // Pointer PRESERVE the polymorphism while objects don't!
+	SourceValue _source_value = SourceValue::REMOTE;	// By default is a REMOTE socket
     JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
     uint8_t _talker_count = 0;
     uint8_t _max_delay_ms = 5;
@@ -57,6 +58,20 @@ protected:
     #else
     StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _message_doc;
     #endif
+
+
+    static uint16_t generateChecksum(const char* net_data, const size_t len) {
+        // 16-bit word and XORing
+        uint16_t checksum = 0;
+        for (size_t i = 0; i < len; i += 2) {
+            uint16_t chunk = net_data[i] << 8;
+            if (i + 1 < len) {
+                chunk |= net_data[i + 1];
+            }
+            checksum ^= chunk;
+        }
+        return checksum;
+    }
 
 
     uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {
@@ -479,21 +494,15 @@ public:
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
+	void setSourceValue(SourceValue source_value) {
+		_source_value = source_value;
+	}
 	
-    static uint16_t generateChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
-
+	SourceValue getSourceValue() const {
+		return _source_value;
+	}
+	
+	
     virtual void loop() {
         receive();
         for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
