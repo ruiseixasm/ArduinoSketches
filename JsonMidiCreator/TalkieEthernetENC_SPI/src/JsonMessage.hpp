@@ -258,6 +258,12 @@ public:
 		reset();	// Initiate with the minimum
 	}
 
+	JsonMessage(const char* buffer, size_t length) {
+		if (!deserialize_buffer(buffer, length)) {
+			reset();
+		}
+	}
+
 	JsonMessage(const JsonMessage& other) {
 		_json_length = other._json_length;
 		for (size_t json_i = 0; json_i < _json_length; ++json_i) {

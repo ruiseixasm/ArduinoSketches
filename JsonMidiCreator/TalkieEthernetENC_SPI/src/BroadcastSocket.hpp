@@ -54,8 +54,6 @@ protected:
     #else
     StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _message_doc;
     #endif
-	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-	JsonMessage _new_json_message;
 
 
     uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {
@@ -199,20 +197,6 @@ protected:
 
         if (_received_length > 3*4 + 2) {
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-			_new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
-			
-			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("new_json_message1: "));
-			_new_json_message.write_to(Serial);
-			Serial.println();
-			#endif
-            
-			int validations = 0;
-			validations += _new_json_message.validate_fields();
-			validations += _new_json_message.validate_checksum();	// Also sets checksum as 0 ('c') in message buffer
-
-
             uint8_t message_code_int = 255;    // There is no 255 message code, meaning, it has none!
             uint16_t remote_time = 0;
             uint16_t received_checksum = extractChecksum(&message_code_int, &remote_time);
@@ -285,13 +269,19 @@ protected:
 					#endif
 					return 0;
 				}
-				JsonObject json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
+				JsonObject json_message = _message_doc.as<JsonObject>();
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-				_received_length = _new_json_message.get_length();
-				_new_json_message.serialize_json(_receiving_buffer, _received_length);	// To safe keep on existent buffer
-				uint16_t checksum = _new_json_message.generate_checksum();
+				JsonMessage new_json_message(_receiving_buffer, _received_length);
 
-				if (!checkJsonMessage(json_message, _new_json_message)) return 0;
+				#ifdef BROADCASTSOCKET_DEBUG_NEW
+				Serial.print(F("new_json_message1.1: "));
+				new_json_message.write_to(Serial);
+				Serial.print(" | ");
+				Serial.println(new_json_message.validate_fields());
+				#endif
+
+
+				if (!checkJsonMessage(json_message, new_json_message)) return 0;
 
 				if (!json_message[ TalkieKey::IDENTITY ].is<uint16_t>()) {
 					#ifdef JSON_TALKER_DEBUG
@@ -303,7 +293,7 @@ protected:
 					json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
 					// From one to many, starts to set the returning target in this single place only
 					json_message[ TalkieKey::TO ] = json_message[ TalkieKey::FROM ];
-					remoteSend(json_message, _new_json_message);	// Includes reply swap
+					remoteSend(json_message, new_json_message);	// Includes reply swap
 					return 0;
 				}
 				
@@ -326,18 +316,17 @@ protected:
 						}
 						json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
 						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-						_new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
+						new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
+						
+						#ifdef BROADCASTSOCKET_DEBUG_NEW
+						Serial.print(F("new_json_message1.2: "));
+						new_json_message.write_to(Serial);
+						Serial.print(" | ");
+						Serial.println(new_json_message.validate_fields());
+						#endif
+
 					}
 					
-					#ifdef BROADCASTSOCKET_DEBUG_NEW
-					Serial.print(F("new_json_message2: "));
-					_new_json_message.write_to(Serial);
-					Serial.print(F(" | "));
-					Serial.print(validations);
-					Serial.print(" | ");
-					Serial.println(checksum);
-					#endif
-
                     
 					#ifdef BROADCASTSOCKET_DEBUG
 					Serial.print(F("triggerTalkers10: Triggering the talker: "));
@@ -345,7 +334,7 @@ protected:
 					#endif
 
 					// A non static method
-                    pre_validated = _json_talkers[talker_i]->processMessage(json_message, _new_json_message);
+                    pre_validated = _json_talkers[talker_i]->processMessage(json_message, new_json_message);
                     if (!pre_validated) return 0;
                 }
                 
