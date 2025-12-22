@@ -518,9 +518,10 @@ public:
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
 		if (processedJsonMessage(json_message, new_json_message) && availableSendingBuffer()) {
 
-			// This length excludes the '\0' char
 			// serializeJson() returns length without \0, but adds \0 to the buffer. Your SPI code should send until it finds \0.
 			_sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			_sending_length = new_json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
 			#ifdef BROADCASTSOCKET_DEBUG
 			Serial.print(F("remoteSend3: "));
@@ -530,7 +531,9 @@ public:
 			Serial.println(_sending_length);
 			#endif
 
-			return send(json_message, new_json_message);
+			if (_sending_length) {
+				return send(json_message, new_json_message);
+			}
 		}
 
 		return false;
