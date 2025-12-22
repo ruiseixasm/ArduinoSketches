@@ -445,6 +445,8 @@ public:
 			
 			case MessageValue::TALK:
 				json_message[ valueKey(0) ] = _desc;
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				new_json_message.set_nth_value_string(0, _desc);
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitMessage(json_message, new_json_message);
 				break;
