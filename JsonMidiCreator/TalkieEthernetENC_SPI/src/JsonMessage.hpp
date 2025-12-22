@@ -490,6 +490,36 @@ public:
 			&& get_value_type('t', colon_position) == ValueType::INTEGER;
 	}
 
+	bool has_nth_value(uint8_t nth) const {
+		if (nth < 10) {
+			return get_colon_position('0' + nth) > 0;
+		}
+		return false;
+	}
+
+	bool has_nth_value_string(uint8_t nth) const {
+		if (nth < 10) {
+			char value_key = '0' + nth;
+			size_t colon_position = get_colon_position(value_key);
+			if (colon_position) {
+				return get_value_type(value_key, colon_position) == ValueType::STRING;
+			}
+		}
+		return false;
+	}
+
+	bool has_nth_value_number(uint8_t nth) const {
+		if (nth < 10) {
+			char value_key = '0' + nth;
+			size_t colon_position = get_colon_position(value_key);
+			if (colon_position) {
+				return get_value_type(value_key, colon_position) == ValueType::INTEGER;
+			}
+		}
+		return false;
+	}
+
+
 	bool is_from(const char* name) const {
 		char message_from[NAME_LEN] = {'\0'};
 		if (!get_from(message_from)) {
@@ -616,6 +646,20 @@ public:
 			return (uint8_t)get_number('t', colon_position);
 		}
 		return 255;	// Means, no chanel
+	}
+
+	bool get_nth_value_string(uint8_t nth, char* buffer, size_t length) const {
+		if (nth < 10) {
+			return get_string('0' + nth, buffer, length);
+		}
+		return false;
+	}
+
+	uint32_t get_nth_value_number(uint8_t nth) const {
+		if (nth < 10) {
+			return get_number('0' + nth);
+		}
+		return false;
 	}
 
 

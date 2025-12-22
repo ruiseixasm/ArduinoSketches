@@ -452,6 +452,16 @@ public:
 				break;
 			
 			case MessageValue::CHANNEL:
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				if (new_json_message.has_nth_value_number(0)) {
+
+					#ifdef JSON_TALKER_DEBUG
+					Serial.print(F("\tChannel B value is an <uint8_t>: "));
+					Serial.println(json_message[ valueKey(0) ].is<uint8_t>());
+					#endif
+
+					_channel = new_json_message.get_nth_value_number(0);
+				}
 				if (json_message[ valueKey(0) ].is<uint8_t>()) {
 
 					#ifdef JSON_TALKER_DEBUG
@@ -461,6 +471,8 @@ public:
 
 					_channel = json_message[ valueKey(0) ].as<uint8_t>();
 				}
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				new_json_message.set_nth_value_number(0, _channel);
 				json_message[ valueKey(0) ] = _channel;
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitMessage(json_message, new_json_message);
