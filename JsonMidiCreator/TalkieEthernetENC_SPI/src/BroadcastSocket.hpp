@@ -69,11 +69,11 @@ protected:
         uint8_t data_i = 4;	// Optimized {"c": ...
         for (uint8_t i = data_i; i < _received_length; ++i) {
             if (_receiving_buffer[i] == ':') {
-                if (_receiving_buffer[i - 2] == 'c' && _receiving_buffer[i - 3] == '"') {
+                if (_receiving_buffer[i - 2] == 'c' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
                     at_c = true;
-                } else if (_receiving_buffer[i - 2] == 'i' && _receiving_buffer[i - 3] == '"') {
+                } else if (_receiving_buffer[i - 2] == 'i' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
                     at_i = true;
-                } else if (_receiving_buffer[i - 2] == 'm' && _receiving_buffer[i - 3] == '"') {
+                } else if (_receiving_buffer[i - 2] == 'm' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
                     at_m = true;
                 }
             } else {
@@ -154,7 +154,7 @@ protected:
             for (uint8_t i = new_length - 1; data_i > 4; i--) {
                 
                 if (_sending_buffer[data_i - 2] == ':') {	// Must find it at 5 the least (> 4)
-                    if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"') {
+                    if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
                         at_c = true;
                     }
                 } else if (at_c) {
