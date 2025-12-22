@@ -603,13 +603,18 @@ public:
 	}
 
 	bool get_to_name(char* buffer) const {
-		return get_string('t', buffer, NAME_LEN);
+		if (has_to_name()) {
+			return get_string('t', buffer, NAME_LEN);
+		}
+		return false;
 	}
 
 	uint8_t get_to_channel() const {
-		size_t colon_position = get_colon_position('t');
-		if (colon_position) {
-			return (uint8_t)get_number('t', colon_position);
+		if (has_to_channel()) {
+			size_t colon_position = get_colon_position('t');
+			if (colon_position) {
+				return (uint8_t)get_number('t', colon_position);
+			}
 		}
 		return 255;	// Means, no chanel
 	}
