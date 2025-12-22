@@ -31,14 +31,14 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // TALKERS 
 // Ethernet Socket Repeater
-const char t_ethernet_name[] = "t_ethernet";
-const char t_ethernet_desc[] = "I'm an Ethernet talker";
-JsonRepeater t_ethernet = JsonRepeater(t_ethernet_name, t_ethernet_desc);	// Just a REPEATER, doesn't need a Manifesto
+const char r_ethernet_name[] = "r_ethernet";
+const char r_ethernet_desc[] = "I'm an Ethernet talker";
+JsonRepeater r_ethernet = JsonRepeater(r_ethernet_name, r_ethernet_desc);	// Just a REPEATER, doesn't need a Manifesto
 
 // SPI Socket Repeater
-const char t_spi_name[] = "t_spi";
-const char t_spi_desc[] = "I'm a SPI talker";
-JsonRepeater t_spi = JsonRepeater(t_spi_name, t_spi_desc);	// A REPEATER
+const char r_spi_name[] = "r_spi";
+const char r_spi_desc[] = "I'm a SPI talker";
+JsonRepeater r_spi = JsonRepeater(r_spi_name, r_spi_desc);	// A REPEATER
 
 // Spy Talker (being sockless devoids it of answering direct remote calls, and that also works, but differently)
 const char t_spy_name[] = "spy";
@@ -60,18 +60,18 @@ JsonTalker t_tester = JsonTalker(t_tester_name, t_tester_desc, &message_tester);
 
 
 // LIST OF TALKERS FOR EACH SOCKET
-JsonTalker* t_ethernet_talkers[] = { &t_ethernet, &t_spy };   // It's an array of pointers
-JsonTalker* t_spi_talkers[] = { &t_spi };   // It's an array of pointers
-JsonTalker* all_talkers[] = { &t_ethernet, &t_spi, &t_spy, &t_sockless, &t_tester };	// It's an array of pointers
+JsonTalker* ethernet_talkers[] = { &r_ethernet, &t_spy };   // It's an array of pointers
+JsonTalker* spi_talkers[] = { &r_spi };   // It's an array of pointers
+JsonTalker* all_talkers[] = { &r_ethernet, &r_spi, &t_spy, &t_sockless, &t_tester };	// It's an array of pointers
 
 
 // SOCKETS
 
 // Singleton requires the & (to get a reference variable)
-auto& ethernet_socket = Changed_EthernetENC::instance(t_ethernet_talkers, sizeof(t_ethernet_talkers)/sizeof(JsonTalker*));
+auto& ethernet_socket = Changed_EthernetENC::instance(ethernet_talkers, sizeof(ethernet_talkers)/sizeof(JsonTalker*));
 int spi_pins[] = {4, 16};
 auto& spi_socket = SPI_ESP_Arduino_Master::instance(
-	t_spi_talkers, sizeof(t_spi_talkers)/sizeof(JsonTalker*), spi_pins, sizeof(spi_pins)/sizeof(int)
+	spi_talkers, sizeof(spi_talkers)/sizeof(JsonTalker*), spi_pins, sizeof(spi_pins)/sizeof(int)
 );
 
 
