@@ -48,10 +48,10 @@ protected:
     // ===== [SELF IP] cache our own IP =====
     IPAddress _local_ip;
 
-    // Needed for the compiler, the base class is the one being called though
-    // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    Changed_EthernetENC(JsonTalker** json_talkers, uint8_t talker_count)
-        : BroadcastSocket(json_talkers, talker_count) {}
+	
+    // Constructor
+    Changed_EthernetENC(JsonTalker* const* json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
+        : BroadcastSocket(json_talkers, talker_count, source_value) {}
 
 
 
@@ -229,8 +229,8 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static Changed_EthernetENC& instance(JsonTalker** json_talkers, uint8_t talker_count) {
-        static Changed_EthernetENC instance(json_talkers, talker_count);
+    static Changed_EthernetENC& instance(JsonTalker** json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE) {
+        static Changed_EthernetENC instance(json_talkers, talker_count, source_value);
         return instance;
     }
 

@@ -71,7 +71,7 @@ JsonTalker* all_talkers[] = { &r_ethernet, &r_spi, &t_spy, &t_sockless, &t_teste
 auto& ethernet_socket = Changed_EthernetENC::instance(ethernet_talkers, sizeof(ethernet_talkers)/sizeof(JsonTalker*));
 int spi_pins[] = {4, 16};
 auto& spi_socket = SPI_ESP_Arduino_Master::instance(
-	spi_talkers, sizeof(spi_talkers)/sizeof(JsonTalker*), spi_pins, sizeof(spi_pins)/sizeof(int)
+	spi_pins, sizeof(spi_pins)/sizeof(int), spi_talkers, sizeof(spi_talkers)/sizeof(JsonTalker*)
 );
 
 

@@ -36,6 +36,10 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 protected:
 
+	const SourceValue _source_value;
+    JsonTalker* const* _json_talkers;	// pointer is const, objects mutable
+    const uint8_t _talker_count;
+
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 	
@@ -43,9 +47,6 @@ protected:
 	uint8_t _sending_length = 0;
 
     // Pointer PRESERVE the polymorphism while objects don't!
-	SourceValue _source_value = SourceValue::REMOTE;	// By default is a REMOTE socket
-    JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
-    uint8_t _talker_count = 0;
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
     uint16_t _last_local_time = 0;
@@ -417,15 +418,17 @@ protected:
         return _received_length;
     }
 
-
-    BroadcastSocket(JsonTalker** json_talkers, uint8_t talker_count) {
-			_json_talkers = json_talkers;
-			_talker_count = talker_count;
-            // Each talker has its remote connections, ONLY local connections are static
-            for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                _json_talkers[talker_i]->setSocket(this);
-            }
-        }
+    // Constructor
+    BroadcastSocket(JsonTalker* const* json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
+        : _json_talkers(json_talkers),
+          _talker_count(talker_count),
+          _source_value(source_value)
+    {
+		// Each talker has its remote connections, ONLY local connections are static
+		for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+			_json_talkers[talker_i]->setSocket(this);
+		}
+	}
 
 
 	virtual bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
@@ -526,10 +529,6 @@ public:
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
-	void setSourceValue(SourceValue source_value) {
-		_source_value = source_value;
-	}
-	
 	SourceValue getSourceValue() const {
 		return _source_value;
 	}

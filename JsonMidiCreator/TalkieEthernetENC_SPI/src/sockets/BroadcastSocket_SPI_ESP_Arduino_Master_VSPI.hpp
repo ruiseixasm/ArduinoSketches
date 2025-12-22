@@ -70,7 +70,7 @@ protected:
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_SPI_ESP_Arduino_Master_VSPI(JsonTalker** json_talkers, int* talkers_ss_pins, uint8_t talker_count)
+    BroadcastSocket_SPI_ESP_Arduino_Master_VSPI(int* talkers_ss_pins, JsonTalker** json_talkers, uint8_t talker_count)
         : BroadcastSocket(json_talkers, talker_count) {
             
         	_talkers_ss_pins = talkers_ss_pins;
