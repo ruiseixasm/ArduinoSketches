@@ -502,6 +502,11 @@ public:
     }
 
 
+	bool deserialize_buffer(JsonMessage& new_json_message) const {
+		return new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
+	}
+
+
     bool remoteSend(JsonObject& json_message, JsonMessage& new_json_message) {
 
 		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
