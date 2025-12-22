@@ -360,7 +360,9 @@ protected:
 				Serial.print(F("\tnew_json_message1.1: "));
 				new_json_message.write_to(Serial);
 				Serial.print(" | ");
-				Serial.println(new_json_message.validate_fields());
+				Serial.print(new_json_message.validate_fields());
+				Serial.print(" | ");
+				Serial.println(setBufferSource());
 				#endif
 
 				if (setBufferSource()) {	// Has to set the Socket Source Value first
