@@ -18,6 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../JsonMessage.hpp"
 
 // #define MESSAGE_TESTER_DEBUG
+#define MESSAGE_TESTER_DEBUG_NEW
 
 
 using MessageValue = TalkieCodes::MessageValue;
@@ -92,12 +93,22 @@ public:
 				}
 				for (value_i = 0; value_i < 10; value_i++) {	// Removes all 10 possible values
 					json_message.remove( valueKey(value_i) );
+					new_json_message.remove_nth_value(value_i);
 				}
 				if (!no_errors) {
 					for (value_i = 0; failed_tests[value_i] && value_i < 10; value_i++) {
 						json_message[ valueKey(value_i) ] = failed_tests[value_i];
+						new_json_message.set_nth_value_number(value_i, failed_tests[value_i]);
 					}
 				}
+				
+				#ifdef MESSAGE_TESTER_DEBUG_NEW
+				Serial.print(F("\t\t\tactionByIndex1: "));
+				new_json_message.write_to(Serial);
+				Serial.print(" | ");
+				Serial.println(index);
+				#endif
+
 				return no_errors;
 			}
 			break;

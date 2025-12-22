@@ -641,6 +641,13 @@ public:
 		return false;
 	}
 
+	bool remove_nth_value(uint8_t nth) {
+		if (nth < 10) {
+			return remove('0' + nth);
+		}
+		return false;
+	}
+
 	// SETTERS
 
 
@@ -708,22 +715,16 @@ public:
 		return false;
 	}
 
-
-	bool set_from_as_to() {
-		size_t key_position = get_key_position('f');
-		if (key_position) {
-			_json_payload[key_position] = 't';
-			return true;
-		}
-		return false;
-	}
-
 	bool swap_from_with_to() {
 		size_t key_from_position = get_key_position('f');
 		size_t key_to_position = get_key_position('t');
-		if (key_from_position && key_to_position) {
-			_json_payload[key_from_position] = 't';
-			_json_payload[key_to_position] = 'f';
+		if (key_from_position) {
+			if (key_to_position) {
+				_json_payload[key_from_position] = 't';
+				_json_payload[key_to_position] = 'f';
+			} else {
+				_json_payload[key_from_position] = 't';
+			}
 			return true;
 		}
 		return false;
