@@ -37,7 +37,7 @@ class BroadcastSocket {
 protected:
 
 	const SourceValue _source_value;
-    JsonTalker* const* _json_talkers;	// pointer is const, objects mutable
+    JsonTalker** const _json_talkers;	// pointer is const, objects mutable
     const uint8_t _talker_count;
 
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
@@ -419,7 +419,7 @@ protected:
     }
 
     // Constructor
-    BroadcastSocket(JsonTalker* const* json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
+    BroadcastSocket(JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
         : _json_talkers(json_talkers),
           _talker_count(talker_count),
           _source_value(source_value)

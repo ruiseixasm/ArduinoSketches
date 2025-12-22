@@ -50,7 +50,7 @@ protected:
 
 	
     // Constructor
-    Changed_EthernetENC(JsonTalker* const* json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
+    Changed_EthernetENC(JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
         : BroadcastSocket(json_talkers, talker_count, source_value) {}
 
 

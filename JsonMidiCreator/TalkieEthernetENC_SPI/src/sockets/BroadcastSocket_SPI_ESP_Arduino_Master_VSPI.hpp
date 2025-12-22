@@ -70,8 +70,9 @@ protected:
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_SPI_ESP_Arduino_Master_VSPI(int* talkers_ss_pins, JsonTalker** json_talkers, uint8_t talker_count)
-        : BroadcastSocket(json_talkers, talker_count) {
+    BroadcastSocket_SPI_ESP_Arduino_Master_VSPI(
+		int* talkers_ss_pins, uint8_t ss_pins_count, JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
+	) : BroadcastSocket(json_talkers, talker_count, source_value) {
             
         	_talkers_ss_pins = talkers_ss_pins;
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
