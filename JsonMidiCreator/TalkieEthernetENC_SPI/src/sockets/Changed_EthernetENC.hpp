@@ -127,7 +127,7 @@ protected:
 		return false;
 	}
 
-	// Allows the overriding class to peek at the received JSON message
+	// Allows the overriding class to peek after processing of the JSON message
 	bool processedJsonMessage(JsonObject& json_message, JsonMessage& new_json_message) override {
 
 		if (BroadcastSocket::processedJsonMessage(json_message, new_json_message)) {

@@ -183,7 +183,7 @@ protected:
 		return true;
 	}
 
-	// Allows the overriding class to peek at the received JSON message
+	// Allows the overriding class to peek after processing of the JSON message
 	virtual bool processedJsonMessage(JsonObject& json_message, JsonMessage& new_json_message) {
         (void)json_message;	// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
@@ -502,12 +502,8 @@ public:
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
-        // Lets subclasses have a saying before final sending
-        processedJsonMessage(json_message, new_json_message);
-
-		// Before writing on the _sending_buffer it needs the wait for its availability
-
-		if (availableSendingBuffer()) {
+		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
+		if (processedJsonMessage(json_message, new_json_message) && availableSendingBuffer()) {
 
 			// This length excludes the '\0' char
 			// serializeJson() returns length without \0, but adds \0 to the buffer. Your SPI code should send until it finds \0.
