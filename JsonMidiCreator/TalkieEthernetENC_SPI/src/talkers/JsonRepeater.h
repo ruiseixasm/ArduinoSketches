@@ -45,7 +45,7 @@ public:
 		if (json_message[ TalkieKey::SOURCE ].is<int>()) {
 			source_value = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
 		}
-		// source_value = new_json_message.get_source();
+		// source_value = new_json_message.get_source();	// CRASHES ON CALLING THIS METHOD
 
 		switch (source_value) {
 

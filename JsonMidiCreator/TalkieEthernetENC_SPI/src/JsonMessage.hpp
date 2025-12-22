@@ -610,7 +610,7 @@ public:
 	SourceValue get_source() const {
 		size_t colon_position = get_colon_position('c');
 		if (colon_position) {
-			uint8_t source_number = get_number('c', colon_position);
+			uint8_t source_number = (uint8_t)get_number('c', colon_position);
 			if (source_number < static_cast<uint8_t>( SourceValue::NONE )) {
 				return static_cast<SourceValue>( source_number );
 			}
@@ -621,7 +621,7 @@ public:
 	RogerValue get_roger() const {
 		size_t colon_position = get_colon_position('r');
 		if (colon_position) {
-			uint8_t roger_number = get_number('r', colon_position);
+			uint8_t roger_number = (uint8_t)get_number('r', colon_position);
 			if (roger_number < static_cast<uint8_t>( RogerValue::NIL )) {
 				return static_cast<RogerValue>( roger_number );
 			}
