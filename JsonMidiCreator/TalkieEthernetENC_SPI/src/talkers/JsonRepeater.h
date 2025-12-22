@@ -40,31 +40,35 @@ public:
 		Serial.print(F(": "));
 		#endif
 
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		SourceValue source_value = SourceValue::NONE;
 		if (json_message[ TalkieKey::SOURCE ].is<int>()) {
-			SourceValue source_data = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
-			switch (source_data) {
+			source_value = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
+		}
+		// source_value = new_json_message.get_source();
 
-				case SourceValue::REMOTE:
-					#ifdef JSON_REPEATER_DEBUG
-					Serial.println(F("Repeated a REMOTE message LOCALLY"));
-					#endif
-					return localSend(json_message, new_json_message);	// Cross transmission
-				
-				case SourceValue::SELF:
-					#ifdef JSON_REPEATER_DEBUG
-					Serial.println(F("Repeated an SELF message to SELF"));
-					#endif
-					return selfSend(json_message, new_json_message);	// Straight transmission
-				
-				case SourceValue::NONE:
-					#ifdef JSON_REPEATER_DEBUG
-					Serial.println(F("\tTransmitted an SELF message"));
-					#endif
-					return noneSend(json_message, new_json_message);	// Straight transmission
+		switch (source_value) {
 
-				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
-				default: break;
-			}
+			case SourceValue::REMOTE:
+				#ifdef JSON_REPEATER_DEBUG
+				Serial.println(F("Repeated a REMOTE message LOCALLY"));
+				#endif
+				return localSend(json_message, new_json_message);	// Cross transmission
+			
+			case SourceValue::SELF:
+				#ifdef JSON_REPEATER_DEBUG
+				Serial.println(F("Repeated an SELF message to SELF"));
+				#endif
+				return selfSend(json_message, new_json_message);	// Straight transmission
+			
+			case SourceValue::NONE:
+				#ifdef JSON_REPEATER_DEBUG
+				Serial.println(F("\tTransmitted an SELF message"));
+				#endif
+				return noneSend(json_message, new_json_message);	// Straight transmission
+
+			// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
+			default: break;
 		}
 		// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 		#ifdef JSON_REPEATER_DEBUG

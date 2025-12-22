@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 // #define JSON_TALKER_DEBUG
-// #define JSON_TALKER_DEBUG_NEW
+#define JSON_TALKER_DEBUG_NEW
 
 using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
@@ -242,6 +242,13 @@ public:
 			json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::LOCAL);
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 			new_json_message.set_source(SourceValue::LOCAL);
+			
+			#ifdef JSON_TALKER_DEBUG_NEW
+			Serial.print(F("\t\t\t\tlocalSend1.1: "));
+			new_json_message.write_to(Serial);
+			Serial.println();
+			#endif
+
 			// Triggers all local Talkers to processes the json_message
 			bool sent_message = false;
 			bool pre_validated = false;
@@ -259,6 +266,13 @@ public:
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 					JsonMessage new_json_message_copy(new_json_message);
 					
+					#ifdef JSON_TALKER_DEBUG_NEW
+					Serial.print(F("\t\t\t\tlocalSend1.2: "));
+					new_json_message_copy.write_to(Serial);
+					Serial.print(" | ");
+					Serial.println(talker_i);
+					#endif
+
 					// Copy all data from original
 					for (JsonPair kv : json_message) {
 						json_copy[kv.key()] = kv.value();
