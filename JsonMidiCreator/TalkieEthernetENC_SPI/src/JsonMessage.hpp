@@ -470,6 +470,22 @@ public:
 		return get_colon_position('i') > 0;
 	}
 
+	bool is_from(const char* name) const {
+		char message_from[NAME_LEN] = {'\0'};
+		if (!get_from(message_from, NAME_LEN)) {
+			return false;
+		}
+		return strcmp(message_from, name) == 0;
+	}
+
+	bool is_to(const char* name) const {
+		char message_to[NAME_LEN] = {'\0'};
+		if (!get_to(message_to, NAME_LEN)) {
+			return false;
+		}
+		return strcmp(message_to, name) == 0;
+	}
+
 
 	// GETTERS
 
@@ -559,6 +575,10 @@ public:
 		return get_string('f', buffer, size);
 	}
 
+	bool get_to(char* buffer, size_t size) const {
+		return get_string('t', buffer, size);
+	}
+
 
 	// REMOVERS
 
@@ -629,6 +649,10 @@ public:
 
 	bool set_from(const char* name) {
 		return set_string('f', name);
+	}
+
+	bool set_to(const char* name) {
+		return set_string('t', name);
 	}
 
 	bool set_nth_value_number(uint8_t nth, uint32_t number) {

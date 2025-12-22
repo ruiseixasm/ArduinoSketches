@@ -41,7 +41,7 @@ protected:
     uint16_t _port = 5005;
     IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     EthernetUDP* _udp = nullptr;
-	char* _new_from_name[NAME_LEN] = {'\0'};
+	char _new_from_name[NAME_LEN] = {'\0'};
 	String _from_name = "";
 
     // ===== [SELF IP] cache our own IP =====
@@ -137,8 +137,15 @@ protected:
             IPAddress broadcastIP(255, 255, 255, 255);
 
             #ifdef ENABLE_DIRECT_ADDRESSING
-            
-			bool as_reply = (json_message[ TalkieKey::TO ].is<String>() && json_message[ TalkieKey::TO ].as<String>() == _from_name);
+
+			bool as_reply = false;
+
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			if (new_json_message.is_to(_new_from_name)) {
+				as_reply = true;
+			}
+			as_reply = (json_message[ TalkieKey::TO ].is<String>() && json_message[ TalkieKey::TO ].as<String>() == _from_name);
+
             if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("\tFailed to begin packet"));
