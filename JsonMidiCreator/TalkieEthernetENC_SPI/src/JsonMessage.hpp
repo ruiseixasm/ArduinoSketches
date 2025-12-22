@@ -50,7 +50,8 @@ protected:
 
 	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
 	size_t _json_length = 0;
-    mutable char _temp_name[NAME_LEN];  // mutable allows const methods to modify it
+	// If multiple messages may be read at once (or in ISR context, multi-core ESP32, etc.), keep it per-instance to avoid overwriting / race conditions.
+    mutable char _temp_name[NAME_LEN];  // mutable allows const methods to modify it (non static for the reasons above)
 
 
 	static size_t number_of_digits(uint32_t number) {
