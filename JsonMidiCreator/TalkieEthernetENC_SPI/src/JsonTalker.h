@@ -506,6 +506,8 @@ public:
 						transmitMessage(json_message, new_json_message);	// One-to-Many
 					}
 					if (!action_index) {
+						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+						new_json_message.set_roger(RogerValue::NIL);
 						json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::NIL);
 					}
 				}
@@ -520,21 +522,48 @@ public:
 
 						case InfoValue::BOARD:
 							json_message[ valueKey(0) ] = board_description();
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							new_json_message.set_nth_value_string(0, board_description());
 							break;
 
 						case InfoValue::DROPS:
 							if (_socket) {
 								json_message[ valueKey(0) ] = get_drops();
+								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+								new_json_message.set_nth_value_number(0, get_drops());
+							} else {
+								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+								new_json_message.set_roger(RogerValue::NIL);
 							}
 							break;
 
 						case InfoValue::DELAY:
 							if (_socket) {
 								json_message[ valueKey(0) ] = get_delay();
+								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+								new_json_message.set_nth_value_number(0, get_delay());
+							} else {
+								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+								new_json_message.set_roger(RogerValue::NIL);
 							}
 							break;
 
 						case InfoValue::MUTE:
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							if (new_json_message.has_nth_value_number(0)) {
+								uint8_t mute = (uint8_t)new_json_message.get_nth_value_number(0);
+								if (mute) {
+									_muted_calls = true;
+								} else {
+									_muted_calls = false;
+								}
+							} else {
+								if (_muted_calls) {
+									new_json_message.set_nth_value_number(0, 1);
+								} else {
+									new_json_message.set_nth_value_number(0, 0);
+								}
+							}
 							if (json_message[ valueKey(0) ].is<uint8_t>()) {
 								uint8_t mute = json_message[ valueKey(0) ].as<uint8_t>();
 								if (mute) {
@@ -552,14 +581,24 @@ public:
 							break;
 
 						case InfoValue::SOCKET:
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							new_json_message.set_nth_value_string(0, socket_class_name());
 							json_message[ valueKey(0) ] = socket_class_name();
 							break;
 
 						case InfoValue::TALKER:
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							new_json_message.set_nth_value_string(0, class_name());
 							json_message[ valueKey(0) ] = class_name();
 							break;
 
 						case InfoValue::MANIFESTO:
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							if (_manifesto) {
+								new_json_message.set_nth_value_string(0, _manifesto->class_name());
+							} else {
+								new_json_message.set_nth_value_string(0, "none");
+							}
 							if (_manifesto) {
 								json_message[ valueKey(0) ] = _manifesto->class_name();
 							} else {
@@ -578,7 +617,9 @@ public:
 			case MessageValue::ECHO:
 				if (_manifesto) {
 					// Makes sure it has the same id first (echo condition)
-					uint16_t message_id = json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+					uint16_t message_id = new_json_message.get_identity();
+					message_id = json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
 					if (message_id == _original_message.identity) {
 						_manifesto->echo(*this, json_message, new_json_message);
 					}
