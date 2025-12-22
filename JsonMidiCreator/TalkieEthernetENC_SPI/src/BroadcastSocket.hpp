@@ -291,13 +291,6 @@ protected:
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 				JsonMessage new_json_message(_receiving_buffer, _received_length);
 
-				#ifdef BROADCASTSOCKET_DEBUG_NEW
-				Serial.print(F("\tnew_json_message1.1: "));
-				new_json_message.write_to(Serial);
-				Serial.print(" | ");
-				Serial.println(new_json_message.validate_fields());
-				#endif
-
 				if (!receivedJsonMessage(json_message, new_json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
@@ -319,6 +312,13 @@ protected:
 					return 0;
 				}
 				
+				#ifdef BROADCASTSOCKET_DEBUG_NEW
+				Serial.print(F("\tnew_json_message1.1: "));
+				new_json_message.write_to(Serial);
+				Serial.print(" | ");
+				Serial.println(new_json_message.validate_fields());
+				#endif
+
                 // Triggers all Talkers to processes the received data
                 bool pre_validated = false;
                 for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe

@@ -647,7 +647,7 @@ public:
 	bool set_message(MessageValue message_value) {
 		size_t value_position = get_value_position('m');
 		if (value_position) {
-			_json_payload[value_position] = static_cast<uint8_t>(message_value);
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(message_value);
 			return true;
 		}
 		return false;
@@ -680,7 +680,7 @@ public:
 	bool set_source(SourceValue source_value) {
 		size_t value_position = get_value_position('c');
 		if (value_position) {
-			_json_payload[value_position] = static_cast<uint8_t>(source_value);
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(source_value);
 			return true;
 		}
 		return false;

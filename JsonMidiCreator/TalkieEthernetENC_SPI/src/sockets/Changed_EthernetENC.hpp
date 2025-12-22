@@ -126,6 +126,14 @@ protected:
 			_from_name = json_message[ TalkieKey::FROM ].as<String>();
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 			return new_json_message.get_from(_new_from_name);
+			
+			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
+			Serial.print(F("receivedJsonMessage1: "));
+			new_json_message.write_to(Serial);
+			Serial.print(" | ");
+			Serial.println(_new_from_name);
+			#endif
+
 		}
 		return false;
 	}
@@ -144,7 +152,7 @@ protected:
 			as_reply = (json_message[ TalkieKey::TO ].is<String>() && json_message[ TalkieKey::TO ].as<String>() == _from_name);
 
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
-			Serial.print(F("send1: "));
+			Serial.print(F("\t\t\t\t\tsend1: "));
 			new_json_message.write_to(Serial);
 			Serial.print(" | ");
 			Serial.println(as_reply);

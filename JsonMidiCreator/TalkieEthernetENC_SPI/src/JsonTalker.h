@@ -368,7 +368,9 @@ public:
 		MessageValue message_data = new_json_message.get_message();
 
 		#ifdef JSON_TALKER_DEBUG_NEW
-		Serial.print(F("\tprocessMessage1: "));
+		Serial.print(F("\t\tprocessMessage1: "));
+		new_json_message.write_to(Serial);
+		Serial.print(" | ");
 		Serial.println(static_cast<int>( message_data ));
 		#endif
 
