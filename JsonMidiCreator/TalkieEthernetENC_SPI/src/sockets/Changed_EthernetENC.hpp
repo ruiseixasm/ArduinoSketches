@@ -139,7 +139,7 @@ protected:
             #ifdef ENABLE_DIRECT_ADDRESSING
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-			bool as_reply = new_json_message.is_to(_new_from_name);
+			bool as_reply = new_json_message.is_to_name(_new_from_name);
 			as_reply = (json_message[ TalkieKey::TO ].is<String>() && json_message[ TalkieKey::TO ].as<String>() == _from_name);
 
             if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {

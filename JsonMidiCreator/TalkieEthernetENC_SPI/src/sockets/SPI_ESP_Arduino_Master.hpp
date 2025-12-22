@@ -510,9 +510,9 @@ protected:
 			_named_pins[from_name] = _actual_ss_pin;
 			_named_pins_table.add(json_message[ TalkieKey::FROM ].as<const char*>(), _actual_ss_pin);
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-			char from_name[NAME_LEN] = {'\0'};
-			if (new_json_message.get_from(from_name)) {
-				_new_named_pins_table.add(from_name, _actual_ss_pin);
+			char new_from_name[NAME_LEN] = {'\0'};
+			if (new_json_message.get_from(new_from_name)) {
+				_new_named_pins_table.add(new_from_name, _actual_ss_pin);
 			}
 
 			#ifdef BROADCAST_SPI_DEBUG
@@ -544,7 +544,9 @@ protected:
 			
 			#ifdef ENABLE_DIRECT_ADDRESSING
 
-			bool as_reply = json_message[ TalkieKey::TO ].is<String>();
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			bool as_reply = new_json_message.has_to_name();
+			as_reply = json_message[ TalkieKey::TO ].is<String>();
 			if (as_reply) {
 
 				#ifdef BROADCAST_SPI_DEBUG

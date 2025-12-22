@@ -470,6 +470,26 @@ public:
 		return get_colon_position('i') > 0;
 	}
 
+	bool has_from() const {
+		return get_colon_position('f') > 0;
+	}
+
+	bool has_to() const {
+		return get_colon_position('t') > 0;
+	}
+
+	bool has_to_name() const {
+		size_t colon_position = get_colon_position('t');
+		return colon_position 
+			&& get_value_type('t', colon_position) == ValueType::STRING;
+	}
+
+	bool has_to_channel() const {
+		size_t colon_position = get_colon_position('t');
+		return colon_position 
+			&& get_value_type('t', colon_position) == ValueType::INTEGER;
+	}
+
 	bool is_from(const char* name) const {
 		char message_from[NAME_LEN] = {'\0'};
 		if (!get_from(message_from)) {
@@ -478,12 +498,19 @@ public:
 		return strcmp(message_from, name) == 0;
 	}
 
-	bool is_to(const char* name) const {
+	bool is_to_name(const char* name) const {
 		char message_to[NAME_LEN] = {'\0'};
 		if (!get_to(message_to)) {
 			return false;
 		}
 		return strcmp(message_to, name) == 0;
+	}
+
+	bool is_to_channel(uint8_t channel) const {
+		size_t colon_position = get_colon_position('t');
+		return colon_position 
+			&& get_value_type('t', colon_position) == ValueType::INTEGER
+			&& get_number('t', colon_position) == channel;
 	}
 
 
