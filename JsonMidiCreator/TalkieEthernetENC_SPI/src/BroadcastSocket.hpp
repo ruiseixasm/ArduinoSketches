@@ -129,9 +129,10 @@ protected:
 			#endif
 
             // First, find how many digits
+
             uint16_t temp = checksum;
-            uint8_t num_digits = 0;
-            while (temp > 0) {
+            uint8_t num_digits = 1;	// 0 has 1 digit
+            while (temp > 9) {
                 temp /= 10;
                 num_digits++;
             }
