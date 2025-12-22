@@ -49,7 +49,10 @@ public:
 		// source_value = new_json_message.get_source();	// CRASHES ON CALLING THIS METHOD
 
 		#ifdef JSON_REPEATER_DEBUG_NEW
-		Serial.print(F("\t\t\t\tprocessMessage: "));
+		Serial.print(F("\t\t\t\tprocessMessage1.1: "));
+		serializeJson(json_message, Serial);
+		Serial.println();
+		Serial.print(F("\t\t\t\tprocessMessage1.2: "));
 		new_json_message.write_to(Serial);
 		Serial.print(" | ");
 		Serial.println(_name);

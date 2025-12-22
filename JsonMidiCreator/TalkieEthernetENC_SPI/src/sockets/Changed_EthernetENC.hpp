@@ -154,6 +154,9 @@ protected:
 			as_reply = (json_message[ TalkieKey::TO ].is<String>() && json_message[ TalkieKey::TO ].as<String>() == _from_name);
 
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
+			Serial.print(F("\t\t\t\t\tsend orgn: "));
+			serializeJson(json_message, Serial);
+			Serial.println();
 			Serial.print(F("\t\t\t\t\tsend json: "));
 			new_json_message.write_to(Serial);
 			Serial.print(" | ");
