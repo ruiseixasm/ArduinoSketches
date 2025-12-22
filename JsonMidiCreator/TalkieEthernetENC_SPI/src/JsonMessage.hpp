@@ -500,7 +500,7 @@ public:
 
 	bool is_to_name(const char* name) const {
 		char message_to[NAME_LEN] = {'\0'};
-		if (!get_to(message_to)) {
+		if (!get_to_name(message_to)) {
 			return false;
 		}
 		return strcmp(message_to, name) == 0;
@@ -602,8 +602,16 @@ public:
 		return get_string('f', buffer, NAME_LEN);
 	}
 
-	bool get_to(char* buffer) const {
+	bool get_to_name(char* buffer) const {
 		return get_string('t', buffer, NAME_LEN);
+	}
+
+	uint8_t get_to_channel() const {
+		size_t colon_position = get_colon_position('t');
+		if (colon_position) {
+			return (uint8_t)get_number('t', colon_position);
+		}
+		return 255;	// Means, no chanel
 	}
 
 
