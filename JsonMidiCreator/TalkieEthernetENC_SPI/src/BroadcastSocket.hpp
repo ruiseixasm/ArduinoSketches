@@ -180,6 +180,13 @@ protected:
 			#endif
 			return false;
 		}
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		if (!new_json_message.validate_fields()) {
+			#ifdef JSON_TALKER_DEBUG_NEW
+			Serial.println(F("ERROR: Missing fields or wrongly set"));
+			#endif
+			// return false;	// FOR NOW, HAS TO BE CHANGES
+		}
 		return true;
 	}
 
@@ -187,7 +194,6 @@ protected:
 	virtual bool processedJsonMessage(JsonObject& json_message, JsonMessage& new_json_message) {
         (void)json_message;	// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
-
 
 		return true;
 	}
@@ -289,10 +295,7 @@ protected:
 				Serial.println(new_json_message.validate_fields());
 				#endif
 
-
-				if (!receivedJsonMessage(json_message, new_json_message)) return 0;
-
-				if (!json_message[ TalkieKey::IDENTITY ].is<uint16_t>()) {
+				if (!receivedJsonMessage(json_message, new_json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
@@ -302,7 +305,14 @@ protected:
 					json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
 					// From one to many, starts to set the returning target in this single place only
 					json_message[ TalkieKey::TO ] = json_message[ TalkieKey::FROM ];
-					remoteSend(json_message, new_json_message);	// Includes reply swap
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+					if (new_json_message.swap_from_with_to()) {
+						new_json_message.set_message(MessageValue::ERROR);
+						if (!new_json_message.has_identity()) {
+							new_json_message.set_identity();
+						}
+						remoteSend(json_message, new_json_message);	// Includes reply swap
+					}
 					return 0;
 				}
 				

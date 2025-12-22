@@ -655,6 +655,17 @@ public:
 		return false;
 	}
 
+	bool swap_from_with_to() {
+		size_t key_from_position = get_key_position('f');
+		size_t key_to_position = get_key_position('t');
+		if (key_from_position && key_to_position) {
+			_json_payload[key_from_position] = 't';
+			_json_payload[key_to_position] = 'f';
+			return true;
+		}
+		return false;
+	}
+
 };
 
 
