@@ -119,6 +119,8 @@ protected:
 	JsonObject _named_pins;	// Automatically "null", needs to be initiated though!
 
 	NameTable _named_pins_table;
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+	NameTable _new_named_pins_table;
 
 
     // Needed for the compiler, the base class is the one being called though
@@ -507,6 +509,11 @@ protected:
 			_named_pins = _named_pins_doc.as<JsonObject>();
 			_named_pins[from_name] = _actual_ss_pin;
 			_named_pins_table.add(json_message[ TalkieKey::FROM ].as<const char*>(), _actual_ss_pin);
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			char from_name[NAME_LEN] = {'\0'};
+			if (new_json_message.get_from(from_name)) {
+				_new_named_pins_table.add(from_name, _actual_ss_pin);
+			}
 
 			#ifdef BROADCAST_SPI_DEBUG
 			if (_named_pins_doc.isNull()) {
