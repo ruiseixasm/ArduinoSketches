@@ -754,7 +754,6 @@ public:
 		return set_number('r', static_cast<uint8_t>(roger_value));
 	}
 
-
 	bool set_nth_value_number(uint8_t nth, uint32_t number) {
 		if (nth < 10) {
 			return set_number('0' + nth, number);

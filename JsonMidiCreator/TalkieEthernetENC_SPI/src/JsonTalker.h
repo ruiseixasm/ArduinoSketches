@@ -496,9 +496,13 @@ public:
 					const TalkerManifesto::Action* action;
 					_manifesto->iterateActionsReset();
 					while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
-						json_message[ valueKey(0) ] = action_index++;
+						json_message[ valueKey(0) ] = action_index;
 						json_message[ valueKey(1) ] = action->name;
 						json_message[ valueKey(2) ] = action->desc;
+						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+						new_json_message.set_nth_value_number(0, action_index++);
+						new_json_message.set_nth_value_string(1, action->name);
+						new_json_message.set_nth_value_string(2, action->desc);
 						transmitMessage(json_message, new_json_message);	// One-to-Many
 					}
 					if (!action_index) {
