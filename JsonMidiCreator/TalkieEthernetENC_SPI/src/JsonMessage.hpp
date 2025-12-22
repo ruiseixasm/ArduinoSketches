@@ -629,8 +629,8 @@ public:
 		return RogerValue::NIL;
 	}
 
-	bool get_from(char* buffer) const {
-		return get_string('f', buffer, NAME_LEN);
+	bool get_from(char* name) const {
+		return get_string('f', name, NAME_LEN);
 	}
 
     // New method using internal temporary buffer (_temp_name)
@@ -641,10 +641,10 @@ public:
         return nullptr;  // failed
     }
 
-	bool get_to(char* buffer) const {
+	bool get_to(char* name) const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
-			return get_string('t', buffer, NAME_LEN, colon_position);
+			return get_string('t', name, NAME_LEN, colon_position);
 		}
 		return false;
 	}
