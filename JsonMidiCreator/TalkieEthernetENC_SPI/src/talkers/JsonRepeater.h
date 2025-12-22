@@ -46,7 +46,7 @@ public:
 		if (json_message[ TalkieKey::SOURCE ].is<int>()) {
 			source_value = static_cast<SourceValue>( json_message[ TalkieKey::SOURCE ].as<int>() );
 		}
-		// source_value = new_json_message.get_source();	// CRASHES ON CALLING THIS METHOD
+		source_value = new_json_message.get_source();
 
 		#ifdef JSON_REPEATER_DEBUG_NEW
 		Serial.print(F("\t\t\t\tprocessMessage1.1: "));

@@ -42,6 +42,8 @@ bool JsonRepeater::localSend(JsonObject& json_message, JsonMessage& new_json_mes
 
 	// DOESN'T CALL prepareMessage METHOD !!
 
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+	new_json_message.set_source(SourceValue::LOCAL);
 	json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::LOCAL);
 	// Triggers all local Talkers to processes the json_message
 	bool sent_message = false;
