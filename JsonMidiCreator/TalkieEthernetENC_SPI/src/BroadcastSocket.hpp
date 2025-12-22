@@ -292,7 +292,7 @@ protected:
 				JsonMessage new_json_message(_receiving_buffer, _received_length);
 
 				#ifdef BROADCASTSOCKET_DEBUG_NEW
-				Serial.print(F("new_json_message1.1: "));
+				Serial.print(F("\tnew_json_message1.1: "));
 				new_json_message.write_to(Serial);
 				Serial.print(" | ");
 				Serial.println(new_json_message.validate_fields());
@@ -341,7 +341,7 @@ protected:
 						new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
 						
 						#ifdef BROADCASTSOCKET_DEBUG_NEW
-						Serial.print(F("new_json_message1.2: "));
+						Serial.print(F("\tnew_json_message1.2: "));
 						new_json_message.write_to(Serial);
 						Serial.print(" | ");
 						Serial.println(new_json_message.validate_fields());

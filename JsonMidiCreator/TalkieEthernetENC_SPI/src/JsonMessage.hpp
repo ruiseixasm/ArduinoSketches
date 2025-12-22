@@ -603,18 +603,17 @@ public:
 	}
 
 	bool get_to_name(char* buffer) const {
-		if (has_to_name()) {
-			return get_string('t', buffer, NAME_LEN);
+		size_t colon_position = get_colon_position('t');
+		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
+			return get_string('t', buffer, NAME_LEN, colon_position);
 		}
 		return false;
 	}
 
 	uint8_t get_to_channel() const {
-		if (has_to_channel()) {
-			size_t colon_position = get_colon_position('t');
-			if (colon_position) {
-				return (uint8_t)get_number('t', colon_position);
-			}
+		size_t colon_position = get_colon_position('t');
+		if (colon_position && get_value_type('t', colon_position) == ValueType::INTEGER) {
+			return (uint8_t)get_number('t', colon_position);
 		}
 		return 255;	// Means, no chanel
 	}

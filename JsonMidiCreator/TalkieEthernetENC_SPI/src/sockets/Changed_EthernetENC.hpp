@@ -31,6 +31,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCAST_ETHERNETENC_DEBUG
+#define BROADCAST_ETHERNETENC_DEBUG_NEW
 
 #define ENABLE_DIRECT_ADDRESSING
 
@@ -141,6 +142,13 @@ protected:
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 			bool as_reply = new_json_message.is_to_name(_new_from_name);
 			as_reply = (json_message[ TalkieKey::TO ].is<String>() && json_message[ TalkieKey::TO ].as<String>() == _from_name);
+
+			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
+			Serial.print(F("send1: "));
+			new_json_message.write_to(Serial);
+			Serial.print(" | ");
+			Serial.println(as_reply);
+			#endif
 
             if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
