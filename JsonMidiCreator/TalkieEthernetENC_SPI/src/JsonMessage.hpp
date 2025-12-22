@@ -728,15 +728,6 @@ public:
 		return set_number('c', checksum);
 	}
 
-	bool set_source(SourceValue source_value) {
-		size_t value_position = get_value_position('c');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(source_value);
-			return true;
-		}
-		return false;
-	}
-
 	bool set_from(const char* name) {
 		return set_string('f', name);
 	}
@@ -744,6 +735,25 @@ public:
 	bool set_to(const char* name) {
 		return set_string('t', name);
 	}
+
+	bool set_source(SourceValue source_value) {
+		size_t value_position = get_value_position('c');
+		if (value_position) {
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(source_value);
+			return true;
+		}
+		return set_number('c', static_cast<uint8_t>(source_value));
+	}
+
+	bool set_roger(RogerValue roger_value) {
+		size_t value_position = get_value_position('r');
+		if (value_position) {
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(roger_value);
+			return true;
+		}
+		return set_number('r', static_cast<uint8_t>(roger_value));
+	}
+
 
 	bool set_nth_value_number(uint8_t nth, uint32_t number) {
 		if (nth < 10) {

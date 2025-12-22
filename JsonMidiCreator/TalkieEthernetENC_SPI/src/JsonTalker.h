@@ -29,7 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 // #define JSON_TALKER_DEBUG
-#define JSON_TALKER_DEBUG_NEW
+// #define JSON_TALKER_DEBUG_NEW
 
 using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
@@ -431,11 +431,12 @@ public:
 
 						if (_manifesto->actionByIndex(index_found_i, *this, json_message, new_json_message)) {
 							// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
-							// json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::ROGER);
 						} else {
 							json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::NEGATIVE);
 						}
 					} else {
+						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+						new_json_message.set_roger(RogerValue::SAY_AGAIN);
 						json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::SAY_AGAIN);
 					}
 				}
