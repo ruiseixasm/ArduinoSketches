@@ -123,8 +123,7 @@ protected:
 	bool receivedJsonMessage(JsonMessage& new_json_message) override {
 
 		if (BroadcastSocket::receivedJsonMessage(new_json_message)) {
-			_from_name = old_json_message[ TalkieKey::FROM ].as<String>();
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			strcpy(_new_from_name, new_json_message.get_from());
 			
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
@@ -148,9 +147,8 @@ protected:
 
             #ifdef ENABLE_DIRECT_ADDRESSING
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			bool as_reply = new_json_message.is_to_name(_new_from_name);
-			as_reply = (old_json_message[ TalkieKey::TO ].is<String>() && old_json_message[ TalkieKey::TO ].as<String>() == _from_name);
 
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
 			Serial.print(F("\t\t\t\t\tsend orgn: "));

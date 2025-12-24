@@ -42,9 +42,8 @@ bool JsonRepeater::localSend(JsonMessage& new_json_message) {
 
 	// DOESN'T CALL prepareMessage METHOD !!
 
-	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	new_json_message.set_source(SourceValue::LOCAL);
-	old_json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::LOCAL);
 	// Triggers all local Talkers to processes the old_json_message
 	bool sent_message = false;
 	bool pre_validated = false;
@@ -52,14 +51,7 @@ bool JsonRepeater::localSend(JsonMessage& new_json_message) {
 		if (_json_talkers[talker_i] != this && !_json_talkers[talker_i]->inSameSocket(_socket)) {  // Can't send to myself
 
 			// CREATE COPY for each talker
-			// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-			#if ARDUINOJSON_VERSION_MAJOR >= 7
-			JsonDocument doc_copy;
-			#else
-			StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
-			#endif
-			JsonObject json_copy = doc_copy.to<JsonObject>();
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			JsonMessage new_json_message_copy(new_json_message);
 			
 			// Copy all data from original

@@ -549,9 +549,8 @@ public:
 			case MessageValue::ECHO:
 				if (_manifesto) {
 					// Makes sure it has the same id first (echo condition)
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					uint16_t message_id = new_json_message.get_identity();
-					message_id = old_json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
 					if (message_id == _original_message.identity) {
 						_manifesto->echo(*this, new_json_message);
 					}

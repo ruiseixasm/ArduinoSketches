@@ -120,8 +120,7 @@ protected:
 
 	JsonObject _named_pins;	// Automatically "null", needs to be initiated though!
 
-	NameTable _named_pins_table;
-	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	NameTable _new_named_pins_table;
 
 
@@ -510,8 +509,7 @@ protected:
 			// Refresh it each time (don't lose saved data because it is in _named_pins_doc)
 			_named_pins = _named_pins_doc.as<JsonObject>();
 			_named_pins[from_name] = _actual_ss_pin;
-			_named_pins_table.add(old_json_message[ TalkieKey::FROM ].as<const char*>(), _actual_ss_pin);
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			_new_named_pins_table.add(new_json_message.get_from(), _actual_ss_pin);
 
 			#ifdef BROADCAST_SPI_DEBUG
@@ -543,9 +541,8 @@ protected:
 			
 			#ifdef ENABLE_DIRECT_ADDRESSING
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			bool as_reply = new_json_message.has_to_name();
-			as_reply = old_json_message[ TalkieKey::TO ].is<String>();
 			if (as_reply) {
 
 				#ifdef BROADCAST_SPI_DEBUG

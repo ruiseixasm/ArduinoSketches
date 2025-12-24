@@ -41,12 +41,8 @@ public:
 		Serial.print(F(": "));
 		#endif
 
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-		SourceValue source_value = SourceValue::NONE;
-		if (old_json_message[ TalkieKey::SOURCE ].is<int>()) {
-			source_value = static_cast<SourceValue>( old_json_message[ TalkieKey::SOURCE ].as<int>() );
-		}
-		source_value = new_json_message.get_source();
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+		SourceValue source_value = new_json_message.get_source();
 
 		#ifdef JSON_REPEATER_DEBUG_NEW
 		Serial.print(F("\t\t\t\tprocessMessage1.1: "));
