@@ -456,19 +456,15 @@ public:
 					const TalkerManifesto::Action* action;
 					_manifesto->iterateActionsReset();
 					while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
-						old_json_message[ valueKey(0) ] = action_index;
-						old_json_message[ valueKey(1) ] = action->name;
-						old_json_message[ valueKey(2) ] = action->desc;
-						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 						new_json_message.set_nth_value_number(0, action_index++);
 						new_json_message.set_nth_value_string(1, action->name);
 						new_json_message.set_nth_value_string(2, action->desc);
 						transmitMessage(new_json_message);	// One-to-Many
 					}
 					if (!action_index) {
-						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 						new_json_message.set_roger(RogerValue::NIL);
-						old_json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::NIL);
 					}
 				}
 				break;
@@ -481,35 +477,32 @@ public:
 					switch (system_code) {
 
 						case InfoValue::BOARD:
-							old_json_message[ valueKey(0) ] = board_description();
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							new_json_message.set_nth_value_string(0, board_description());
 							break;
 
 						case InfoValue::DROPS:
 							if (_socket) {
-								old_json_message[ valueKey(0) ] = get_drops();
-								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 								new_json_message.set_nth_value_number(0, get_drops());
 							} else {
-								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 								new_json_message.set_roger(RogerValue::NIL);
 							}
 							break;
 
 						case InfoValue::DELAY:
 							if (_socket) {
-								old_json_message[ valueKey(0) ] = get_delay();
-								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 								new_json_message.set_nth_value_number(0, get_delay());
 							} else {
-								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 								new_json_message.set_roger(RogerValue::NIL);
 							}
 							break;
 
 						case InfoValue::MUTE:
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							if (new_json_message.has_nth_value_number(0)) {
 								uint8_t mute = (uint8_t)new_json_message.get_nth_value_number(0);
 								if (mute) {
@@ -524,45 +517,24 @@ public:
 									new_json_message.set_nth_value_number(0, 0);
 								}
 							}
-							if (old_json_message[ valueKey(0) ].is<uint8_t>()) {
-								uint8_t mute = old_json_message[ valueKey(0) ].as<uint8_t>();
-								if (mute) {
-									_muted_calls = true;
-								} else {
-									_muted_calls = false;
-								}
-							} else {
-								if (_muted_calls) {
-									old_json_message[ valueKey(0) ] = 1;
-								} else {
-									old_json_message[ valueKey(0) ] = 0;
-								}
-							}
 							break;
 
 						case InfoValue::SOCKET:
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							new_json_message.set_nth_value_string(0, socket_class_name());
-							old_json_message[ valueKey(0) ] = socket_class_name();
 							break;
 
 						case InfoValue::TALKER:
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							new_json_message.set_nth_value_string(0, class_name());
-							old_json_message[ valueKey(0) ] = class_name();
 							break;
 
 						case InfoValue::MANIFESTO:
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							if (_manifesto) {
 								new_json_message.set_nth_value_string(0, _manifesto->class_name());
 							} else {
 								new_json_message.set_nth_value_string(0, "none");
-							}
-							if (_manifesto) {
-								old_json_message[ valueKey(0) ] = _manifesto->class_name();
-							} else {
-								old_json_message[ valueKey(0) ] = "none";
 							}
 							break;
 
