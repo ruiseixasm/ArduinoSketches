@@ -381,7 +381,7 @@ public:
 					uint8_t index_found_i = 255;
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					ValueType value_type = new_json_message.get_value_type(TalkieKey::ACTION);
-					switch (expression) {
+					switch (value_type) {
 
 						case ValueType::STRING:
 							index_found_i = _manifesto->actionIndex(new_json_message.get_action_string());

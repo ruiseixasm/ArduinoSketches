@@ -109,16 +109,23 @@ void Spy::echo(JsonTalker& talker, JsonMessage& new_json_message) {
 
 
 void Spy::error(JsonTalker& talker, JsonMessage& new_json_message) {
-	(void)talker;				// Silence unused parameter warning
-	(void)new_json_message;		// Silence unused parameter warning
-	Serial.print(old_json_message[ TalkieKey::FROM ].as<String>());
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+	Serial.print(new_json_message.get_from());
 	Serial.print(" - ");
-	if (old_json_message["r"].is<String>()) {
-		Serial.println(old_json_message["r"].as<String>());
-	} else if (old_json_message[ valueKey(0) ].is<String>()) {
-		Serial.println(old_json_message[ valueKey(0) ].as<String>());
-	} else {
-		Serial.println(F("Empty error received!"));
+	ValueType value_type = new_json_message.get_nth_value_type(0);
+	switch (value_type) {
+
+		case ValueType::STRING:
+			Serial.println(new_json_message.get_nth_value_string(0));
+			break;
+		
+		case ValueType::NUMBER:
+			Serial.println(new_json_message.get_nth_value_number(0));
+			break;
+		
+		default:
+			Serial.println(F("Empty error received!"));
+			break;
 	}
 }
 
