@@ -641,6 +641,10 @@ public:
         return nullptr;  // failed
     }
 
+	ValueType get_to_type(char* name) const {
+		return get_value_type('t');
+	}
+
 	bool get_to(char* name) const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
