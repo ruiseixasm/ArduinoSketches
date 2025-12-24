@@ -64,8 +64,8 @@ protected:
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    SPI_ESP_Arduino_Slave(JsonTalker** json_talkers, uint8_t talker_count)
-        : BroadcastSocket(json_talkers, talker_count) {
+    SPI_ESP_Arduino_Slave(JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
+        : BroadcastSocket(json_talkers, talker_count, source_value) {
             
 			// Initialize SPI
 			SPI.begin();
@@ -174,9 +174,9 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static SPI_ESP_Arduino_Slave& instance(JsonTalker** json_talkers, uint8_t talker_count) {
+    static SPI_ESP_Arduino_Slave& instance(JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE) {
 
-        static SPI_ESP_Arduino_Slave instance(json_talkers, talker_count);
+        static SPI_ESP_Arduino_Slave instance(json_talkers, talker_count, source_value);
         return instance;
     }
 
