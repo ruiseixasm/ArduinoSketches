@@ -29,24 +29,24 @@ public:
 
 
 	// Works as a router to LOCAL_C send
-    bool processData(JsonObject& json_message, bool pre_validated = false) override {
+    bool processData(JsonObject& old_json_message, bool pre_validated = false) override {
         (void)pre_validated;	// Silence unused parameter warning
 
 		#ifdef REPEATER_TALKER_DEBUG
 		Serial.print(_name);
 		Serial.print(F(": "));
 		#endif
-        uint16_t c = json_message[ TalkieKey::CHECKSUM ].as<uint16_t>();
+        uint16_t c = old_json_message[ TalkieKey::CHECKSUM ].as<uint16_t>();
 		if (c == LOCAL_C) {
 			#ifdef REPEATER_TALKER_DEBUG
 			Serial.println(F("Received a LOCAL message"));
 			#endif
-			return remoteSend(json_message);
+			return remoteSend(old_json_message);
 		}
 		#ifdef REPEATER_TALKER_DEBUG
 		Serial.println(F("Received a REMOTE message"));
 		#endif
-		return localSend(json_message);
+		return localSend(old_json_message);
 	}
 };
 
