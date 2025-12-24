@@ -634,7 +634,7 @@ public:
 	}
 
     // New method using internal temporary buffer (_temp_string)
-    const char* get_from() const {
+    char* get_from() const {
         if (get_string('f', _temp_string, MAX_LEN)) {
             return _temp_string;  // safe C string
         }
@@ -654,7 +654,7 @@ public:
 	}
 
     // New method using internal temporary buffer (_temp_string)
-    const char* get_to_name() const {
+    char* get_to_name() const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
 			if (get_string('t', _temp_string, MAX_LEN, colon_position)) {
@@ -680,7 +680,7 @@ public:
 		return ValueType::VOID;
 	}
 
-	const char* get_nth_value_string(uint8_t nth) const {
+	char* get_nth_value_string(uint8_t nth) const {
 		if (nth < 10 && get_string('0' + nth, _temp_string, MAX_LEN)) {
 			return _temp_string;  // safe C string
 		}
