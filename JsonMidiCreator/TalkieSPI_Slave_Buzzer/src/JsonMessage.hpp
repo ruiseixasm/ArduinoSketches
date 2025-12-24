@@ -641,7 +641,7 @@ public:
         return nullptr;  // failed
     }
 
-	ValueType get_to_type(char* name) const {
+	ValueType get_to_type() const {
 		return get_value_type('t');
 	}
 
