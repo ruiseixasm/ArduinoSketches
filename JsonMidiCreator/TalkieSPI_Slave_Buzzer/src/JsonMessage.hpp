@@ -526,11 +526,11 @@ public:
 
 
 	bool is_from(const char* name) const {
-		char message_from[MAX_LEN] = {'\0'};
-		if (!get_from(message_from)) {
-			return false;
+		const char* from_name = get_from_name();
+		if (from_name) {
+			return strcmp(name, from_name) == 0;
 		}
-		return strcmp(message_from, name) == 0;
+		return false;
 	}
 
 	bool is_to_name(const char* name) const {
@@ -631,10 +631,6 @@ public:
 			}
 		}
 		return RogerValue::NIL;
-	}
-
-	bool get_from(char* name) const {
-		return get_string('f', name, MAX_LEN);
 	}
 
     // New method using internal temporary buffer (_temp_string)
