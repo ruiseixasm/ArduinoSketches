@@ -26,8 +26,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 #endif
-#ifndef MAX_LEN
-#define MAX_LEN 16
+#ifndef NAME_LEN
+#define NAME_LEN 16
 #endif
 #ifndef MAX_LEN
 #define MAX_LEN 64
@@ -433,7 +433,7 @@ public:
 
 				case STRING:
 					{
-						char message_to[MAX_LEN] = {'\0'};
+						char message_to[NAME_LEN] = {'\0'};
 						get_string('t', message_to, colon_position);
 						return strcmp(message_to, name) == 0;
 					}
@@ -534,7 +534,7 @@ public:
 	}
 
 	bool is_to_name(const char* name) const {
-		char message_to[MAX_LEN] = {'\0'};
+		char message_to[NAME_LEN] = {'\0'};
 		if (!get_to(message_to)) {
 			return false;
 		}
@@ -635,7 +635,7 @@ public:
 
     // New method using internal temporary buffer (_temp_string)
     char* get_from() const {
-        if (get_string('f', _temp_string, MAX_LEN)) {
+        if (get_string('f', _temp_string, NAME_LEN)) {
             return _temp_string;  // safe C string
         }
         return nullptr;  // failed
@@ -648,7 +648,7 @@ public:
 	bool get_to(char* name) const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
-			return get_string('t', name, MAX_LEN, colon_position);
+			return get_string('t', name, NAME_LEN, colon_position);
 		}
 		return false;
 	}
@@ -657,7 +657,7 @@ public:
     char* get_to_name() const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
-			if (get_string('t', _temp_string, MAX_LEN, colon_position)) {
+			if (get_string('t', _temp_string, NAME_LEN, colon_position)) {
 				return _temp_string;
 			}
 		}
@@ -695,7 +695,7 @@ public:
 	}
 
 	char* get_action_string() const {
-		if (get_string('a', _temp_string, MAX_LEN)) {
+		if (get_string('a', _temp_string, NAME_LEN)) {
 			return _temp_string;  // safe C string
 		}
 		return nullptr;  // failed
