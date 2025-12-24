@@ -158,6 +158,24 @@ public:
         } else {
             Serial.println(F("Empty error received!"));
         }
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		Serial.print( new_json_message.get_from() );
+        Serial.print(" - ");
+		ValueType value_type = new_json_message.get_nth_value_type(0);
+		switch (value_type) {
+
+			case ValueType::STRING:
+				Serial.println(new_json_message.get_nth_value_string(0));
+			break;
+			
+			case ValueType::INTEGER:
+				Serial.println(new_json_message.get_nth_value_number(0));
+			break;
+			
+			default:
+            	Serial.println(F("Empty echo received!"));
+			break;
+		}
     }
 
 };
