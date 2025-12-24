@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"    // MUST include the full definition!
 
 
-bool JsonRepeater::remoteSend(JsonObject& json_message, JsonMessage& new_json_message) {
+bool JsonRepeater::remoteSend(JsonObject& old_json_message, JsonMessage& new_json_message) {
     if (!_socket) return false;	// Ignores if it's muted or not
 
 	#ifdef JSON_REPEATER_DEBUG
@@ -27,11 +27,11 @@ bool JsonRepeater::remoteSend(JsonObject& json_message, JsonMessage& new_json_me
 
 	// DOESN'T SET IDENTITY, IT'S ONLY A REPEATER !!
 	
-    return _socket->remoteSend(json_message, new_json_message);
+    return _socket->remoteSend(old_json_message, new_json_message);
 }
 
 
-bool JsonRepeater::localSend(JsonObject& json_message, JsonMessage& new_json_message) {
+bool JsonRepeater::localSend(JsonObject& old_json_message, JsonMessage& new_json_message) {
 
 	#ifdef JSON_TALKER_DEBUG
 	Serial.print(F("\t"));
@@ -44,8 +44,8 @@ bool JsonRepeater::localSend(JsonObject& json_message, JsonMessage& new_json_mes
 
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 	new_json_message.set_source(SourceValue::LOCAL);
-	json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::LOCAL);
-	// Triggers all local Talkers to processes the json_message
+	old_json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::LOCAL);
+	// Triggers all local Talkers to processes the old_json_message
 	bool sent_message = false;
 	bool pre_validated = false;
 	for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
@@ -63,7 +63,7 @@ bool JsonRepeater::localSend(JsonObject& json_message, JsonMessage& new_json_mes
 			JsonMessage new_json_message_copy(new_json_message);
 			
 			// Copy all data from original
-			for (JsonPair kv : json_message) {
+			for (JsonPair kv : old_json_message) {
 				json_copy[kv.key()] = kv.value();
 			}
 		

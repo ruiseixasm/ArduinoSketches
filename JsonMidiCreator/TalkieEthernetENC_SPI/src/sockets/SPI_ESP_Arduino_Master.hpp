@@ -495,10 +495,10 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(JsonObject& json_message, JsonMessage& new_json_message) override {
+	bool receivedJsonMessage(JsonObject& old_json_message, JsonMessage& new_json_message) override {
 
-		if (BroadcastSocket::receivedJsonMessage(json_message, new_json_message)) {
-			String from_name = json_message[ TalkieKey::FROM ].as<String>();
+		if (BroadcastSocket::receivedJsonMessage(old_json_message, new_json_message)) {
+			String from_name = old_json_message[ TalkieKey::FROM ].as<String>();
 
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
@@ -510,7 +510,7 @@ protected:
 			// Refresh it each time (don't lose saved data because it is in _named_pins_doc)
 			_named_pins = _named_pins_doc.as<JsonObject>();
 			_named_pins[from_name] = _actual_ss_pin;
-			_named_pins_table.add(json_message[ TalkieKey::FROM ].as<const char*>(), _actual_ss_pin);
+			_named_pins_table.add(old_json_message[ TalkieKey::FROM ].as<const char*>(), _actual_ss_pin);
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 			char new_from_name[NAME_LEN] = {'\0'};
 			if (new_json_message.get_from(new_from_name)) {
@@ -532,9 +532,9 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(const JsonObject& json_message, const JsonMessage& new_json_message) override {
+    bool send(const JsonObject& old_json_message, const JsonMessage& new_json_message) override {
 
-		if (_initiated && BroadcastSocket::send(json_message, new_json_message)) {	// Very important pre processing !!
+		if (_initiated && BroadcastSocket::send(old_json_message, new_json_message)) {	// Very important pre processing !!
 			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tsend1: Sent message: "));
@@ -548,15 +548,15 @@ protected:
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 			bool as_reply = new_json_message.has_to_name();
-			as_reply = json_message[ TalkieKey::TO ].is<String>();
+			as_reply = old_json_message[ TalkieKey::TO ].is<String>();
 			if (as_reply) {
 
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend3: json_message TO is a String"));
+				Serial.println(F("\tsend3: old_json_message TO is a String"));
 				#endif
 
-				String target_name = json_message[ TalkieKey::TO ].as<String>();
-				bool found_it = _named_pins_table.get(json_message[ TalkieKey::TO ].as<const char*>(), _actual_ss_pin);
+				String target_name = old_json_message[ TalkieKey::TO ].as<String>();
+				bool found_it = _named_pins_table.get(old_json_message[ TalkieKey::TO ].as<const char*>(), _actual_ss_pin);
 				if (target_name.length() > 0) {
 					as_reply = _named_pins[ target_name ].is<uint8_t>();	// Critical line
 				} else {
@@ -576,7 +576,7 @@ protected:
 				}
 			} else {
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend3: json_message TO is NOT a String or doesn't exist"));
+				Serial.println(F("\tsend3: old_json_message TO is NOT a String or doesn't exist"));
 				#endif
 			}
 

@@ -219,10 +219,10 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool receivedJsonMessage(JsonObject& json_message, JsonMessage& new_json_message) {
+	virtual bool receivedJsonMessage(JsonObject& old_json_message, JsonMessage& new_json_message) {
         (void)new_json_message;	// Silence unused parameter warning
 
-		if (!json_message[ TalkieKey::FROM ].is<String>()) {
+		if (!old_json_message[ TalkieKey::FROM ].is<String>()) {
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("ERROR: From key 'f' is missing"));
 			#endif
@@ -239,8 +239,8 @@ protected:
 	}
 
 	// Allows the overriding class to peek after processing of the JSON message
-	virtual bool processedJsonMessage(JsonObject& json_message, JsonMessage& new_json_message) {
-        (void)json_message;	// Silence unused parameter warning
+	virtual bool processedJsonMessage(JsonObject& old_json_message, JsonMessage& new_json_message) {
+        (void)old_json_message;	// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
 
 		return true;
@@ -332,27 +332,27 @@ protected:
 					#endif
 					return 0;
 				}
-				JsonObject json_message = _message_doc.as<JsonObject>();
+				JsonObject old_json_message = _message_doc.as<JsonObject>();
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 				JsonMessage new_json_message(_receiving_buffer, _received_length);
 
-				if (!receivedJsonMessage(json_message, new_json_message)) {
+				if (!receivedJsonMessage(old_json_message, new_json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
-					json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
-					json_message[ TalkieCodes::valueKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
+					old_json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
+					old_json_message[ TalkieCodes::valueKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
 					// Wrong type of identifier or no identifier, so, it has to insert new identifier
-					json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
+					old_json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
 					// From one to many, starts to set the returning target in this single place only
-					json_message[ TalkieKey::TO ] = json_message[ TalkieKey::FROM ];
+					old_json_message[ TalkieKey::TO ] = old_json_message[ TalkieKey::FROM ];
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 					if (new_json_message.swap_from_with_to()) {
 						new_json_message.set_message(MessageValue::ERROR);
 						if (!new_json_message.has_identity()) {
 							new_json_message.set_identity();
 						}
-						remoteSend(json_message, new_json_message);	// Includes reply swap
+						remoteSend(old_json_message, new_json_message);	// Includes reply swap
 					}
 					return 0;
 				}
@@ -384,7 +384,7 @@ protected:
 								#endif
 								return 0;
 							}
-							json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
+							old_json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
 							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 							new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
 							
@@ -404,7 +404,7 @@ protected:
 						#endif
 
 						// A non static method
-						pre_validated = _json_talkers[talker_i]->processMessage(json_message, new_json_message);
+						pre_validated = _json_talkers[talker_i]->processMessage(old_json_message, new_json_message);
 						if (!pre_validated) return 0;
 					}
 				}
@@ -462,8 +462,8 @@ protected:
 	}
 
 
-    virtual bool send(const JsonObject& json_message, const JsonMessage& new_json_message) {
-        (void)json_message; // Silence unused parameter warning
+    virtual bool send(const JsonObject& old_json_message, const JsonMessage& new_json_message) {
+        (void)old_json_message; // Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
 		
         if (_sending_length < 3*4 + 2) {
@@ -547,24 +547,24 @@ public:
 	}
 
 
-    bool remoteSend(JsonObject& json_message, JsonMessage& new_json_message) {
+    bool remoteSend(JsonObject& old_json_message, JsonMessage& new_json_message) {
 
 		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
-		json_message[ TalkieKey::CHECKSUM ] = 0;
+		old_json_message[ TalkieKey::CHECKSUM ] = 0;
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
         new_json_message.set_source(SourceValue::REMOTE);
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));
-		serializeJson(json_message, Serial);
+		serializeJson(old_json_message, Serial);
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (processedJsonMessage(json_message, new_json_message) && availableSendingBuffer()) {
+		if (processedJsonMessage(old_json_message, new_json_message) && availableSendingBuffer()) {
 
 			// serializeJson() returns length without \0, but adds \0 to the buffer. Your SPI code should send until it finds \0.
-			_sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			_sending_length = serializeJson(old_json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 			_sending_length = new_json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
@@ -577,7 +577,7 @@ public:
 			#endif
 
 			if (_sending_length) {
-				return send(json_message, new_json_message);
+				return send(old_json_message, new_json_message);
 			}
 		}
 

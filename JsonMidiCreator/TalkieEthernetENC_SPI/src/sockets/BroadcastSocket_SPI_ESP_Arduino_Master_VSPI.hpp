@@ -373,10 +373,10 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(JsonObject& json_message, JsonMessage& new_json_message) override {
+	bool receivedJsonMessage(JsonObject& old_json_message, JsonMessage& new_json_message) override {
 
-		if (BroadcastSocket::receivedJsonMessage(json_message, new_json_message)) {
-			_from_name = json_message[ TalkieKey::FROM ].as<String>();
+		if (BroadcastSocket::receivedJsonMessage(old_json_message, new_json_message)) {
+			_from_name = old_json_message[ TalkieKey::FROM ].as<String>();
 			return true;
 		}
 		return false;
@@ -384,11 +384,11 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(const JsonObject& json_message, const JsonMessage& new_json_message) override {
+    bool send(const JsonObject& old_json_message, const JsonMessage& new_json_message) override {
 
-		if (_initiated && BroadcastSocket::send(json_message, new_json_message)) {	// Very important pre processing !!
+		if (_initiated && BroadcastSocket::send(old_json_message, new_json_message)) {	// Very important pre processing !!
 
-			bool as_reply = (json_message[ TalkieKey::TO ].is<String>() && json_message[ TalkieKey::TO ].as<String>() == _from_name);
+			bool as_reply = (old_json_message[ TalkieKey::TO ].is<String>() && old_json_message[ TalkieKey::TO ].as<String>() == _from_name);
 
 			#ifdef ENABLE_DIRECT_ADDRESSING
 			if (as_reply) {

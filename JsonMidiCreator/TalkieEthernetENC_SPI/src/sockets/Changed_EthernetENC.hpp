@@ -120,10 +120,10 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(JsonObject& json_message, JsonMessage& new_json_message) override {
+	bool receivedJsonMessage(JsonObject& old_json_message, JsonMessage& new_json_message) override {
 
-		if (BroadcastSocket::receivedJsonMessage(json_message, new_json_message)) {
-			_from_name = json_message[ TalkieKey::FROM ].as<String>();
+		if (BroadcastSocket::receivedJsonMessage(old_json_message, new_json_message)) {
+			_from_name = old_json_message[ TalkieKey::FROM ].as<String>();
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 			bool got_from = new_json_message.get_from(_new_from_name);
 			
@@ -141,9 +141,9 @@ protected:
 	}
 
 
-    bool send(const JsonObject& json_message, const JsonMessage& new_json_message) override {
+    bool send(const JsonObject& old_json_message, const JsonMessage& new_json_message) override {
 		
-        if (_udp && BroadcastSocket::send(json_message, new_json_message)) {	// Very important pre processing !!
+        if (_udp && BroadcastSocket::send(old_json_message, new_json_message)) {	// Very important pre processing !!
 			
             IPAddress broadcastIP(255, 255, 255, 255);
 
@@ -151,11 +151,11 @@ protected:
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 			bool as_reply = new_json_message.is_to_name(_new_from_name);
-			as_reply = (json_message[ TalkieKey::TO ].is<String>() && json_message[ TalkieKey::TO ].as<String>() == _from_name);
+			as_reply = (old_json_message[ TalkieKey::TO ].is<String>() && old_json_message[ TalkieKey::TO ].as<String>() == _from_name);
 
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
 			Serial.print(F("\t\t\t\t\tsend orgn: "));
-			serializeJson(json_message, Serial);
+			serializeJson(old_json_message, Serial);
 			Serial.println();
 			Serial.print(F("\t\t\t\t\tsend json: "));
 			new_json_message.write_to(Serial);
