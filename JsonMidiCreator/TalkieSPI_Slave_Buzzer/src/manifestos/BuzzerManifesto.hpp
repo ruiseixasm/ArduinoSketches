@@ -98,6 +98,8 @@ public:
 
 				case 1:
 					_buzz_duration_ms = old_json_message[ valueKey(0) ].as<uint16_t>();
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+					_buzz_duration_ms = (uint16_t)new_json_message.get_nth_value_number(0);
 					return true;
 				break;
 
@@ -122,6 +124,18 @@ public:
         } else {
             Serial.println(F("Empty echo received!"));
         }
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		Serial.print( new_json_message.get_from_name() );
+        Serial.print(" - ");
+		JsonMessage::ValueType value_type = new_json_message.get_nth_value_type(0);
+        if (old_json_message[ valueKey(0) ].is<String>()) {
+            Serial.println(old_json_message[ valueKey(0) ].as<String>());
+        } else if (old_json_message[ valueKey(0) ].is<String>()) {
+            Serial.println(old_json_message[ valueKey(0) ].as<String>());
+        } else {
+            Serial.println(F("Empty echo received!"));
+        }
+
     }
 
 

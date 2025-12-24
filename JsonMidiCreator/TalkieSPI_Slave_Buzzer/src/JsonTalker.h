@@ -38,6 +38,7 @@ using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
 using TalkieKey = TalkieCodes::TalkieKey;
 using Original = TalkerManifesto::Original;
+using ValueType = JsonMessage::ValueType;
 
 
 class BroadcastSocket;
