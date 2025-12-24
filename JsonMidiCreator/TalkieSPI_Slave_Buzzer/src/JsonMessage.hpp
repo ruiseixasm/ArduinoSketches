@@ -526,7 +526,7 @@ public:
 
 
 	bool is_from(const char* name) const {
-		const char* from_name = get_from_name();
+		const char* from_name = get_from();
 		if (from_name) {
 			return strcmp(name, from_name) == 0;
 		}
@@ -634,7 +634,7 @@ public:
 	}
 
     // New method using internal temporary buffer (_temp_string)
-    const char* get_from_name() const {
+    const char* get_from() const {
         if (get_string('f', _temp_string, MAX_LEN)) {
             return _temp_string;  // safe C string
         }

@@ -125,7 +125,7 @@ public:
             Serial.println(F("Empty echo received!"));
         }
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-		Serial.print( new_json_message.get_from_name() );
+		Serial.print( new_json_message.get_from() );
         Serial.print(" - ");
 		ValueType value_type = new_json_message.get_nth_value_type(0);
 		switch (value_type) {
