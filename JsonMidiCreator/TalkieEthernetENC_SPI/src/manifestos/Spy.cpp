@@ -83,22 +83,20 @@ void Spy::echo(JsonTalker& talker, JsonMessage& new_json_message) {
 	Original original_message = talker.get_original();
 	switch (original_message.message_data) {
 
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		case MessageValue::PING:
 			{
 				// In condition to calculate the delay right away, no need to extra messages
 				uint16_t actual_time = static_cast<uint16_t>(millis());
-				uint16_t message_time = old_json_message[ TalkieKey::TIMESTAMP ].as<uint16_t>();	// must have
+				uint16_t message_time = new_json_message.get_timestamp();	// must have
 				uint16_t time_delay = actual_time - message_time;
-				old_json_message[ valueKey(0) ] = time_delay;
-				old_json_message[ valueKey(1) ] = old_json_message[ TalkieKey::FROM ];	// Informs the Talker as reply
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 				new_json_message.set_nth_value_number(0, time_delay);
 				new_json_message.set_nth_value_string(1, new_json_message.get_from());
 				// Prepares headers for the original REMOTE sender
-				old_json_message[ TalkieKey::TO ] = _original_talker;
-				old_json_message[ TalkieKey::FROM ] = talker.get_name();	// Avoids swapping
+				new_json_message.set_to(_original_talker);
+				new_json_message.set_from(talker.get_name());
 				// Emulates the REMOTE original call
-				old_json_message[ TalkieKey::IDENTITY ] = _original_message.identity;
+				new_json_message.set_identity(_original_message.identity);
 				// It's already an ECHO message, it's because of that that entered here
 				// Finally answers to the REMOTE caller by repeating all other json fields
 				talker.remoteSend(new_json_message);
