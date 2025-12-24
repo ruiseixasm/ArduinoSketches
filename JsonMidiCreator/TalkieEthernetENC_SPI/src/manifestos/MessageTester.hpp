@@ -331,16 +331,16 @@ public:
 				
 			case 15:
 			{
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				JsonMessage copy_json_message(test_json_message);
 				if (copy_json_message != test_json_message) {
-					old_json_message[ valueKey(0) ] = "1st";
+					new_json_message.set_nth_value_string(0, "1st");
 					return false;
 				}
 				const char different_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 				copy_json_message.deserialize_buffer(different_payload, sizeof(different_payload) - 1);
 				if (copy_json_message == test_json_message) {
-					old_json_message[ valueKey(0) ] = "2nd";
+					new_json_message.set_nth_value_string(0, "2nd");
 					return false;
 				}
 				return true;
@@ -349,13 +349,13 @@ public:
 				
 			case 16:
 			{
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				uint16_t message_checksum = test_json_message.extract_checksum();
 				uint16_t generated_checksum = test_json_message.generate_checksum();
 				if (message_checksum != generated_checksum) {
-					old_json_message[ valueKey(0) ] = "1st";
-					old_json_message[ valueKey(1) ] = message_checksum;
-					old_json_message[ valueKey(2) ] = generated_checksum;
+					new_json_message.set_nth_value_string(0, "1st");
+					new_json_message.set_nth_value_number(1, message_checksum);
+					new_json_message.set_nth_value_number(2, generated_checksum);
 					return false;
 				}
 				const char different_payload[] = "{\"c\":0,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
@@ -364,9 +364,9 @@ public:
 				test_json_message.insert_checksum();
 				message_checksum = test_json_message.get_checksum();
 				if (message_checksum != generated_checksum) {
-					old_json_message[ valueKey(0) ] = "2nd";
-					old_json_message[ valueKey(1) ] = message_checksum;
-					old_json_message[ valueKey(2) ] = generated_checksum;
+					new_json_message.set_nth_value_string(0, "2nd");
+					new_json_message.set_nth_value_number(1, message_checksum);
+					new_json_message.set_nth_value_number(2, generated_checksum);
 					return false;
 				}
 				return true;
