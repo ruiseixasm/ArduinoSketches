@@ -155,9 +155,7 @@ public:
 		}
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 		if (new_json_message.has_from()) {
-			char from_name[NAME_LEN] = {'\0'};
-			new_json_message.get_from(from_name);
-			if (strcmp(from_name, _name) != 0) {
+			if (strcmp(new_json_message.get_from(), _name) != 0) {
 				// FROM is different from _name, must be swapped (replaces "f" with "t")
 				new_json_message.swap_from_with_to();
 				new_json_message.set_from(_name);
