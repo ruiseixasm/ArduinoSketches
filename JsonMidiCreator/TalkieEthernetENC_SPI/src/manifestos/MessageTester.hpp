@@ -238,10 +238,8 @@ public:
 				bool from_match = false;
 				char from_name[] = "buzzer";
 				char out_name[NAME_LEN] = {'\0'};	// Name chars 16 sized (scheme adopted)
-				if (test_json_message.get_from(out_name)) {
-					if (strcmp(out_name, from_name) == 0) {
-						from_match = true;
-					}
+				if (strcmp(test_json_message.get_from(), from_name) == 0) {
+					from_match = true;
 				}
 				old_json_message[ valueKey(0) ] = static_cast<char*>(from_name);
 				old_json_message[ valueKey(1) ] = static_cast<char*>(out_name);

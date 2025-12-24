@@ -125,7 +125,7 @@ protected:
 		if (BroadcastSocket::receivedJsonMessage(old_json_message, new_json_message)) {
 			_from_name = old_json_message[ TalkieKey::FROM ].as<String>();
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-			bool got_from = new_json_message.get_from(_new_from_name);
+			strcpy(_new_from_name, new_json_message.get_from());
 			
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
 			Serial.print(F("receivedJsonMessage1: "));
@@ -134,8 +134,7 @@ protected:
 			Serial.println(_new_from_name);
 			#endif
 
-			return got_from;
-
+			return true;
 		}
 		return false;
 	}

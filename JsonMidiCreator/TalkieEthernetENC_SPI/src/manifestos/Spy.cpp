@@ -93,7 +93,7 @@ void Spy::echo(JsonTalker& talker, JsonObject& old_json_message, JsonMessage& ne
 				old_json_message[ valueKey(1) ] = old_json_message[ TalkieKey::FROM ];	// Informs the Talker as reply
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 				new_json_message.set_nth_value_number(0, time_delay);
-				new_json_message.set_nth_value_string(1, new_json_message.get_from_name());
+				new_json_message.set_nth_value_string(1, new_json_message.get_from());
 				// Prepares headers for the original REMOTE sender
 				old_json_message[ TalkieKey::TO ] = _original_talker;
 				old_json_message[ TalkieKey::FROM ] = talker.get_name();	// Avoids swapping
