@@ -220,7 +220,7 @@ protected:
 
 	// Allows the overriding class to peek at the received JSON message
 	virtual bool receivedJsonMessage(JsonMessage& new_json_message) {
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		if (!new_json_message.validate_fields()) {
 			#ifdef JSON_TALKER_DEBUG_NEW
 			Serial.println(F("ERROR: Missing fields or wrongly set"));
@@ -316,14 +316,14 @@ protected:
                 }
 
 				// Gives a chance to show it one time
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				JsonMessage new_json_message(_receiving_buffer, _received_length);
 
 				if (!receivedJsonMessage(new_json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					if (new_json_message.swap_from_with_to()) {
 						new_json_message.set_message(MessageValue::ERROR);
 						if (!new_json_message.has_identity()) {
@@ -354,7 +354,7 @@ protected:
 						#endif
 
 						if (talker_i > 0) {
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
 							
 							#ifdef BROADCASTSOCKET_DEBUG_NEW
@@ -517,7 +517,7 @@ public:
 
     bool remoteSend(JsonMessage& new_json_message) {
 
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
         new_json_message.set_source(SourceValue::REMOTE);
 
 		#ifdef BROADCASTSOCKET_DEBUG
@@ -529,7 +529,7 @@ public:
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
 		if (processedJsonMessage(new_json_message) && availableSendingBuffer()) {
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			_sending_length = new_json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
 			#ifdef BROADCASTSOCKET_DEBUG

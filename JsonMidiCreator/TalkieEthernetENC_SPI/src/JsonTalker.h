@@ -140,10 +140,10 @@ public:
     }
 
 
-	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	bool prepareMessage(JsonMessage& new_json_message) {
 
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		if (new_json_message.has_from()) {
 			if (strcmp(new_json_message.get_from(), _name) != 0) {
 				// FROM is different from _name, must be swapped (replaces "f" with "t")
@@ -155,7 +155,7 @@ public:
 			new_json_message.set_from(_name);
 		}
 
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		MessageValue message_data = new_json_message.get_message();
 		if (message_data < MessageValue::ECHO) {
 
@@ -173,7 +173,7 @@ public:
 				_received_message = MessageValue::NOISE;	// Avoids false mutes for self generated messages (safe code)
 			}
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			new_json_message.set_identity(message_id);
 			new_json_message.has_identity();	// Checks if it has identity
 		} else if (!new_json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
@@ -184,7 +184,7 @@ public:
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			new_json_message.set_message(MessageValue::ERROR);
 			new_json_message.set_identity();
 			new_json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::IDENTITY));
@@ -218,7 +218,7 @@ public:
 		if (prepareMessage(new_json_message)) {
 
 			// Tags the message as LOCAL sourced
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			new_json_message.set_source(SourceValue::LOCAL);
 			
 			#ifdef JSON_TALKER_DEBUG_NEW
@@ -273,7 +273,7 @@ public:
 		#endif
 
 		// Tags the message as LOCAL sourced
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		new_json_message.set_source(SourceValue::SELF);
 		// Despite being a SELF message it also needs to be prepared like any other
 		if (prepareMessage(new_json_message)) {
@@ -300,7 +300,7 @@ public:
 		Serial.print(F(": "));
 		#endif
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			SourceValue source_value = new_json_message.get_source();	// Already returns NOISE
 			switch (source_value) {
 
@@ -344,7 +344,7 @@ public:
         
         bool dont_interrupt = true;   // Doesn't interrupt next talkers process
 
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		MessageValue message_data = new_json_message.get_message();
 
 		#ifdef JSON_TALKER_DEBUG_NEW
@@ -377,7 +377,7 @@ public:
 		// Doesn't apply to ECHO nor ERROR
 		if (message_data < MessageValue::ECHO) {
 			_received_message = message_data;
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			new_json_message.set_message(MessageValue::ECHO);
 		}
 
@@ -407,7 +407,6 @@ public:
 					} else {
 						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 						new_json_message.set_roger(RogerValue::SAY_AGAIN);
-						old_json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::SAY_AGAIN);
 					}
 				}
 				// In the end sends back the processed message (single message, one-to-one)
