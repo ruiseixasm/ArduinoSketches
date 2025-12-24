@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.hpp"    // MUST include the full definition!
 
 
-JsonTalker** JsonTalker::_json_talkers = nullptr;
+JsonTalker* const* JsonTalker::_json_talkers = nullptr;
 uint8_t JsonTalker::_talker_count = 0;
 
 

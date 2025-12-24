@@ -36,7 +36,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 protected:
 
-	JsonTalker** const _json_talkers;	// pointer is const, objects mutable
+	JsonTalker* const* const _json_talkers;	// list of pointers and pointers are const, objects mutable
 	const uint8_t _talker_count;
 	const SourceValue _source_value;
 
@@ -419,7 +419,7 @@ protected:
     }
 
     // Constructor
-    BroadcastSocket(JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
+    BroadcastSocket(JsonTalker* const* const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
         : _json_talkers(json_talkers),
           _talker_count(talker_count),
           _source_value(source_value)

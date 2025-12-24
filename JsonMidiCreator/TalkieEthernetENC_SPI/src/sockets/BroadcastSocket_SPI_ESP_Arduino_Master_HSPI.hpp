@@ -34,7 +34,7 @@ protected:
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
     BroadcastSocket_SPI_ESP_Arduino_Master_HSPI(
-		int* ss_pins, uint8_t ss_pins_count, JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
+		int* ss_pins, uint8_t ss_pins_count, JsonTalker* const* const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
 	)
         : BroadcastSocket_SPI_ESP_Arduino_Master_VSPI(ss_pins, ss_pins_count, json_talkers, talker_count, source_value) {
 
@@ -45,7 +45,7 @@ public:
 
     // Move ONLY the singleton instance method to subclass
     static BroadcastSocket_SPI_ESP_Arduino_Master_HSPI& instance(
-		int* ss_pins, uint8_t ss_pins_count, JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
+		int* ss_pins, uint8_t ss_pins_count, JsonTalker* const* const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
 	) {
         static BroadcastSocket_SPI_ESP_Arduino_Master_HSPI instance(ss_pins, ss_pins_count, json_talkers, talker_count, source_value);
 

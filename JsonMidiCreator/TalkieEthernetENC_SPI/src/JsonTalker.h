@@ -50,7 +50,7 @@ protected:
     // The socket can't be static becaus different talkers may use different sockets (remote)
     BroadcastSocket* _socket = nullptr;
     // Pointer PRESERVE the polymorphism while objects don't!
-    static JsonTalker** _json_talkers;  // It's capable of communicate with other talkers (local)
+    static JsonTalker* const* _json_talkers;  // It's capable of communicate with other talkers (local)
     static uint8_t _talker_count;
 
     const char* _name;      // Name of the Talker
@@ -134,7 +134,7 @@ public:
     }
 
 
-    static void connectTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
+    static void connectTalkers(JsonTalker* const* json_talkers, uint8_t talker_count) {
         _json_talkers = json_talkers;
         _talker_count = talker_count;
     }
