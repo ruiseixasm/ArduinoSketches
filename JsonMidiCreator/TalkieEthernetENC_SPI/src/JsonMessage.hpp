@@ -669,6 +669,14 @@ public:
 		return 255;	// Means, no chanel
 	}
 
+
+	ValueType get_nth_value_type(uint8_t nth) {
+		if (nth < 10) {
+			return get_value_type('0' + nth);
+		}
+		return ValueType::VOID;
+	}
+
 	bool get_nth_value_string(uint8_t nth, char* buffer, size_t length) const {
 		if (nth < 10) {
 			return get_string('0' + nth, buffer, length);
