@@ -449,7 +449,7 @@ public:
 				default: break;
 			}
 		}
-		return false;
+		return true;	// Non target messages, without to(t), are considered broadcasted messages an for everyone
 	}
 
 

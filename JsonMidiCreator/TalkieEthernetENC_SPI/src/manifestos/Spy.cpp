@@ -21,7 +21,7 @@ using InfoValue = TalkieCodes::InfoValue;
 
 
 // Index-based operations (simplified examples)
-bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) {
+bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json_message) {
 	
 	bool ping = false;
 
@@ -49,7 +49,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& old_json_
 					}
 					old_json_message[ TalkieKey::FROM ] = talker.get_name();	// Avoids swapping
 					// 3. Sends the message LOCALLY
-					talker.localSend(old_json_message, new_json_message);	// Dispatches it directly as LOCAL
+					talker.localSend(new_json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
 					old_json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
 				}
@@ -66,7 +66,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& old_json_
 					old_json_message.remove( TalkieKey::IDENTITY );	// Makes sure a new IDENTITY is set
 					old_json_message[ TalkieKey::FROM ] = talker.get_name();	// Avoids swapping
 					// 3. Sends the message to myself
-					talker.selfSend(old_json_message, new_json_message);	// Dispatches it directly as LOCAL
+					talker.selfSend(new_json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
 					old_json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
 				}
@@ -78,7 +78,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& old_json_
 }
 
 
-void Spy::echo(JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) {
+void Spy::echo(JsonTalker& talker, JsonMessage& new_json_message) {
 	
 	Original original_message = talker.get_original();
 	switch (original_message.message_data) {
@@ -101,7 +101,7 @@ void Spy::echo(JsonTalker& talker, JsonObject& old_json_message, JsonMessage& ne
 				old_json_message[ TalkieKey::IDENTITY ] = _original_message.identity;
 				// It's already an ECHO message, it's because of that that entered here
 				// Finally answers to the REMOTE caller by repeating all other json fields
-				talker.remoteSend(old_json_message, new_json_message);
+				talker.remoteSend(new_json_message);
 			}
 			break;
 
@@ -110,7 +110,7 @@ void Spy::echo(JsonTalker& talker, JsonObject& old_json_message, JsonMessage& ne
 }
 
 
-void Spy::error(JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) {
+void Spy::error(JsonTalker& talker, JsonMessage& new_json_message) {
 	(void)talker;				// Silence unused parameter warning
 	(void)new_json_message;		// Silence unused parameter warning
 	Serial.print(old_json_message[ TalkieKey::FROM ].as<String>());

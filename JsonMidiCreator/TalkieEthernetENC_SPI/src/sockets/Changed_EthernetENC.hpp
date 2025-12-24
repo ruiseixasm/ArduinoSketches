@@ -120,9 +120,9 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(JsonObject& old_json_message, JsonMessage& new_json_message) override {
+	bool receivedJsonMessage(JsonMessage& new_json_message) override {
 
-		if (BroadcastSocket::receivedJsonMessage(old_json_message, new_json_message)) {
+		if (BroadcastSocket::receivedJsonMessage(new_json_message)) {
 			_from_name = old_json_message[ TalkieKey::FROM ].as<String>();
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 			strcpy(_new_from_name, new_json_message.get_from());
@@ -140,9 +140,9 @@ protected:
 	}
 
 
-    bool send(const JsonObject& old_json_message, const JsonMessage& new_json_message) override {
+    bool send(const JsonMessage& new_json_message) override {
 		
-        if (_udp && BroadcastSocket::send(old_json_message, new_json_message)) {	// Very important pre processing !!
+        if (_udp && BroadcastSocket::send(new_json_message)) {	// Very important pre processing !!
 			
             IPAddress broadcastIP(255, 255, 255, 255);
 
@@ -154,7 +154,7 @@ protected:
 
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
 			Serial.print(F("\t\t\t\t\tsend orgn: "));
-			serializeJson(old_json_message, Serial);
+			new_json_message.write_to(Serial);
 			Serial.println();
 			Serial.print(F("\t\t\t\t\tsend json: "));
 			new_json_message.write_to(Serial);

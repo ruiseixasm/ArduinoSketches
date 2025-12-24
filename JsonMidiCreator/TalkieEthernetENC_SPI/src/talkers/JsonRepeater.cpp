@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"    // MUST include the full definition!
 
 
-bool JsonRepeater::remoteSend(JsonObject& old_json_message, JsonMessage& new_json_message) {
+bool JsonRepeater::remoteSend(JsonMessage& new_json_message) {
     if (!_socket) return false;	// Ignores if it's muted or not
 
 	#ifdef JSON_REPEATER_DEBUG
@@ -27,11 +27,11 @@ bool JsonRepeater::remoteSend(JsonObject& old_json_message, JsonMessage& new_jso
 
 	// DOESN'T SET IDENTITY, IT'S ONLY A REPEATER !!
 	
-    return _socket->remoteSend(old_json_message, new_json_message);
+    return _socket->remoteSend(new_json_message);
 }
 
 
-bool JsonRepeater::localSend(JsonObject& old_json_message, JsonMessage& new_json_message) {
+bool JsonRepeater::localSend(JsonMessage& new_json_message) {
 
 	#ifdef JSON_TALKER_DEBUG
 	Serial.print(F("\t"));
