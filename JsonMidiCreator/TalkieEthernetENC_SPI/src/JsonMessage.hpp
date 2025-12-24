@@ -694,6 +694,17 @@ public:
 		return false;
 	}
 
+	char* get_action_string() const {
+		if (get_string('a', _temp_string, MAX_LEN)) {
+			return _temp_string;  // safe C string
+		}
+		return nullptr;  // failed
+	}
+
+	uint32_t get_action_number() const {
+		return get_number('a');
+	}
+
 
 	// REMOVERS
 

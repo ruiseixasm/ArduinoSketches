@@ -234,14 +234,7 @@ public:
 				if (_json_talkers[talker_i] != this) {  // Can't send to myself
 
 					// CREATE COPY for each talker
-					// JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-					#if ARDUINOJSON_VERSION_MAJOR >= 7
-					JsonDocument doc_copy;
-					#else
-					StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> doc_copy;
-					#endif
-					JsonObject json_copy = doc_copy.to<JsonObject>();
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					JsonMessage new_json_message_copy(new_json_message);
 					
 					#ifdef JSON_TALKER_DEBUG_NEW
@@ -251,7 +244,7 @@ public:
 					Serial.println(talker_i);
 					#endif
 
-					pre_validated = _json_talkers[talker_i]->processMessage(json_copy, new_json_message_copy);
+					pre_validated = _json_talkers[talker_i]->processMessage(new_json_message_copy);
 					sent_message = true;
 					if (!pre_validated) break;
 				}
@@ -386,11 +379,21 @@ public:
 			case MessageValue::CALL:
 				{
 					uint8_t index_found_i = 255;
-					if (old_json_message[ TalkieKey::ACTION ].is<uint8_t>()) {
-						index_found_i = _manifesto->actionIndex(old_json_message[ TalkieKey::ACTION ].as<uint8_t>());
-					} else if (old_json_message[ TalkieKey::ACTION ].is<const char *>()) {
-						index_found_i = _manifesto->actionIndex(old_json_message[ TalkieKey::ACTION ].as<const char *>());
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+					ValueType value_type = new_json_message.get_value_type(TalkieKey::ACTION);
+					switch (expression) {
+
+						case ValueType::STRING:
+							index_found_i = _manifesto->actionIndex(new_json_message.get_action_string());
+							break;
+						
+						case ValueType::NUMBER:
+							index_found_i = _manifesto->actionIndex(new_json_message.get_action_number());
+							break;
+						
+						default: break;
 					}
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					if (index_found_i < 255) {
 
 						#ifdef JSON_TALKER_DEBUG
@@ -399,13 +402,12 @@ public:
 						Serial.println(F(", now being processed..."));
 						#endif
 
-						if (_manifesto->actionByIndex(index_found_i, *this, new_json_message)) {
-							// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
-						} else {
-							old_json_message[ TalkieKey::ROGER ] = static_cast<int>(RogerValue::NEGATIVE);
+						// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
+						if (!_manifesto->actionByIndex(index_found_i, *this, new_json_message)) {
+							new_json_message.set_roger(RogerValue::NEGATIVE);
 						}
 					} else {
-						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 						new_json_message.set_roger(RogerValue::SAY_AGAIN);
 					}
 				}
@@ -414,15 +416,14 @@ public:
 				break;
 			
 			case MessageValue::TALK:
-				old_json_message[ valueKey(0) ] = _desc;
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				new_json_message.set_nth_value_string(0, _desc);
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitMessage(new_json_message);
 				break;
 			
 			case MessageValue::CHANNEL:
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				if (new_json_message.has_nth_value_number(0)) {
 
 					#ifdef JSON_TALKER_DEBUG
@@ -432,18 +433,8 @@ public:
 
 					_channel = new_json_message.get_nth_value_number(0);
 				}
-				if (old_json_message[ valueKey(0) ].is<uint8_t>()) {
-
-					#ifdef JSON_TALKER_DEBUG
-					Serial.print(F("\tChannel B value is an <uint8_t>: "));
-					Serial.println(old_json_message[ valueKey(0) ].is<uint8_t>());
-					#endif
-
-					_channel = old_json_message[ valueKey(0) ].as<uint8_t>();
-				}
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				new_json_message.set_nth_value_number(0, _channel);
-				old_json_message[ valueKey(0) ] = _channel;
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitMessage(new_json_message);
 				break;

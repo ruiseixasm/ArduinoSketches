@@ -67,7 +67,7 @@ bool JsonRepeater::localSend(JsonMessage& new_json_message) {
 				json_copy[kv.key()] = kv.value();
 			}
 		
-			pre_validated = _json_talkers[talker_i]->processMessage(json_copy, new_json_message_copy);
+			pre_validated = _json_talkers[talker_i]->processMessage(new_json_message_copy);
 			sent_message = true;
 			if (!pre_validated) break;
 		}
