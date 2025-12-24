@@ -22,15 +22,23 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 #endif
+#ifndef NAME_LEN
+#define NAME_LEN 16
+#endif
 
 
 // #define BROADCASTSOCKET_DEBUG
+// #define BROADCASTSOCKET_DEBUG_NEW
 
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
 class BroadcastSocket {
 protected:
+
+	JsonTalker** const _json_talkers;	// pointer is const, objects mutable
+	const uint8_t _talker_count;
+	const SourceValue _source_value;
 
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
@@ -39,8 +47,6 @@ protected:
 	uint8_t _sending_length = 0;
 
     // Pointer PRESERVE the polymorphism while objects don't!
-    JsonTalker** _json_talkers = nullptr;   // It's a singleton, so, no need to be static
-    uint8_t _talker_count = 0;
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
     uint16_t _last_local_time = 0;
@@ -54,7 +60,48 @@ protected:
     StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _message_doc;
     #endif
 
-	JsonMessage _new_json_message;	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
+
+    static uint16_t generateChecksum(const char* net_data, const size_t len) {
+        // 16-bit word and XORing
+        uint16_t checksum = 0;
+        for (size_t i = 0; i < len; i += 2) {
+            uint16_t chunk = net_data[i] << 8;
+            if (i + 1 < len) {
+                chunk |= net_data[i + 1];
+            }
+            checksum ^= chunk;
+        }
+        return checksum;
+    }
+
+
+	size_t getColonPosition(char key) const {
+		if (_received_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
+			for (size_t i = 4; i < _received_length; ++i) {	// 4 because it's the shortest position possible for ':'
+				if (_receiving_buffer[i] == ':' && _receiving_buffer[i - 2] == key && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
+					return i;
+				}
+			}
+		}
+		return 0;
+	}
+
+	size_t getValuePosition(char key) const {
+		size_t colon_position = getColonPosition(key);
+		if (colon_position) {			//     01
+			return colon_position + 1;	// {"k":x}
+		}
+		return 0;
+	}
+
+	bool setBufferSource() {
+		size_t value_position = getValuePosition('c');
+		if (value_position) {
+			_receiving_buffer[value_position] = '0' + static_cast<uint8_t>(_source_value);
+			return true;
+		}
+		return false;
+	}
 
 
     uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {
@@ -128,9 +175,10 @@ protected:
 			#endif
 
             // First, find how many digits
+
             uint16_t temp = checksum;
-            uint8_t num_digits = 0;
-            while (temp > 0) {
+            uint8_t num_digits = 1;	// 0 has 1 digit
+            while (temp > 9) {
                 temp /= 10;
                 num_digits++;
             }
@@ -148,7 +196,7 @@ protected:
 			_sending_length = new_length;
 
             bool at_c = false;
-            for (uint8_t i = new_length - 1; data_i > 4; i--) {	// 'i = new_length - 1' because it's a binary processing, no '\0' to take into consideration
+            for (uint8_t i = new_length - 1; data_i > 4; i--) {
                 
                 if (_sending_buffer[data_i - 2] == ':') {	// Must find it at 5 the least (> 4)
                     if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
@@ -171,15 +219,30 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool checkJsonMessage(const JsonObject& json_message, JsonMessage& new_json_message) {
+	virtual bool receivedJsonMessage(JsonObject& old_json_message, JsonMessage& new_json_message) {
         (void)new_json_message;	// Silence unused parameter warning
 
-		if (!json_message[ TalkieKey::FROM ].is<String>()) {
+		if (!old_json_message[ TalkieKey::FROM ].is<String>()) {
 			#ifdef JSON_TALKER_DEBUG
 			Serial.println(F("ERROR: From key 'f' is missing"));
 			#endif
-			return false;
+			// return false;
 		}
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		if (!new_json_message.validate_fields()) {
+			#ifdef JSON_TALKER_DEBUG_NEW
+			Serial.println(F("ERROR: Missing fields or wrongly set"));
+			#endif
+			// return false;	// FOR NOW, HAS TO BE CHANGES
+		}
+		return true;
+	}
+
+	// Allows the overriding class to peek after processing of the JSON message
+	virtual bool processedJsonMessage(JsonObject& old_json_message, JsonMessage& new_json_message) {
+        (void)old_json_message;	// Silence unused parameter warning
+        (void)new_json_message;	// Silence unused parameter warning
+
 		return true;
 	}
 
@@ -196,7 +259,7 @@ protected:
         #endif
 
         if (_received_length > 3*4 + 2) {
-            
+
             uint8_t message_code_int = 255;    // There is no 255 message code, meaning, it has none!
             uint16_t remote_time = 0;
             uint16_t received_checksum = extractChecksum(&message_code_int, &remote_time);
@@ -269,58 +332,82 @@ protected:
 					#endif
 					return 0;
 				}
-				JsonObject json_message = _message_doc.as<JsonObject>();
-				_new_json_message.deserialize(_receiving_buffer, _received_length);	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
+				JsonObject old_json_message = _message_doc.as<JsonObject>();
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				JsonMessage new_json_message(_receiving_buffer, _received_length);
 
-				if (!checkJsonMessage(json_message, _new_json_message)) return 0;
-
-				if (!json_message[ TalkieKey::IDENTITY ].is<uint16_t>()) {
+				if (!receivedJsonMessage(old_json_message, new_json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
-					json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
-					json_message[ TalkieCodes::valueKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
+					old_json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
+					old_json_message[ TalkieCodes::valueKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
 					// Wrong type of identifier or no identifier, so, it has to insert new identifier
-					json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
+					old_json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
 					// From one to many, starts to set the returning target in this single place only
-					json_message[ TalkieKey::TO ] = json_message[ TalkieKey::FROM ];
-
-					remoteSend(json_message, _new_json_message);	// Includes reply swap
+					old_json_message[ TalkieKey::TO ] = old_json_message[ TalkieKey::FROM ];
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+					if (new_json_message.swap_from_with_to()) {
+						new_json_message.set_message(MessageValue::ERROR);
+						if (!new_json_message.has_identity()) {
+							new_json_message.set_identity();
+						}
+						remoteSend(old_json_message, new_json_message);	// Includes reply swap
+					}
 					return 0;
 				}
 				
-                // Triggers all Talkers to processes the received data
-                bool pre_validated = false;
-                for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
+				#ifdef BROADCASTSOCKET_DEBUG_NEW
+				Serial.print(F("\tnew_json_message1.1: "));
+				new_json_message.write_to(Serial);
+				Serial.print(" | ");
+				Serial.print(new_json_message.validate_fields());
+				Serial.print(" | ");
+				Serial.println(setBufferSource());
+				#endif
 
-                    #ifdef BROADCASTSOCKET_DEBUG
-                    Serial.print(F("triggerTalkers9: Creating new JsonObject for talker: "));
-                    Serial.println(_json_talkers[talker_i]->get_name());
-                    #endif
+				if (setBufferSource()) {	// Has to set the Socket Source Value first
+					bool pre_validated = false;
+					// Triggers all Talkers to processes the received data
+					for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
 
-					if (talker_i > 0) {
-						DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
-						if (error) {
-							#ifdef BROADCASTSOCKET_DEBUG
-							Serial.println(F("ERROR: Failed to deserialize received data"));
+						#ifdef BROADCASTSOCKET_DEBUG
+						Serial.print(F("triggerTalkers9: Creating new JsonObject for talker: "));
+						Serial.println(_json_talkers[talker_i]->get_name());
+						#endif
+
+						if (talker_i > 0) {
+							DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
+							if (error) {
+								#ifdef BROADCASTSOCKET_DEBUG
+								Serial.println(F("ERROR: Failed to deserialize received data"));
+								#endif
+								return 0;
+							}
+							old_json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
+							
+							#ifdef BROADCASTSOCKET_DEBUG_NEW
+							Serial.print(F("\tnew_json_message1.2: "));
+							new_json_message.write_to(Serial);
+							Serial.print(" | ");
+							Serial.println(new_json_message.validate_fields());
 							#endif
-							return 0;
-						}
-						json_message = _message_doc.as<JsonObject>();
-					}
-					
-					_new_json_message.deserialize(_receiving_buffer, _received_length);	// PARALLEL DEVELOPMENT WITH ARDUINOJSON
-                    
-					#ifdef BROADCASTSOCKET_DEBUG
-					Serial.print(F("triggerTalkers10: Triggering the talker: "));
-					Serial.println(_json_talkers[talker_i]->get_name());
-					#endif
 
-					// A non static method
-                    pre_validated = _json_talkers[talker_i]->processMessage(json_message, _new_json_message);
-                    if (!pre_validated) return 0;
-                }
-                
+						}
+						
+						
+						#ifdef BROADCASTSOCKET_DEBUG
+						Serial.print(F("triggerTalkers10: Triggering the talker: "));
+						Serial.println(_json_talkers[talker_i]->get_name());
+						#endif
+
+						// A non static method
+						pre_validated = _json_talkers[talker_i]->processMessage(old_json_message, new_json_message);
+						if (!pre_validated) return 0;
+					}
+				}
             } else {
                 #ifdef BROADCASTSOCKET_DEBUG
                 Serial.print(F("triggerTalkers9: Validation of Checksum FAILED: "));
@@ -331,15 +418,17 @@ protected:
         return _received_length;
     }
 
-
-    BroadcastSocket(JsonTalker** json_talkers, uint8_t talker_count) {
-			_json_talkers = json_talkers;
-			_talker_count = talker_count;
-            // Each talker has its remote connections, ONLY local connections are static
-            for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                _json_talkers[talker_i]->setSocket(this);
-            }
-        }
+    // Constructor
+    BroadcastSocket(JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
+        : _json_talkers(json_talkers),
+          _talker_count(talker_count),
+          _source_value(source_value)
+    {
+		// Each talker has its remote connections, ONLY local connections are static
+		for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+			_json_talkers[talker_i]->setSocket(this);
+		}
+	}
 
 
 	virtual bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
@@ -373,8 +462,8 @@ protected:
 	}
 
 
-    virtual bool send(const JsonObject& json_message, const JsonMessage& new_json_message) {
-        (void)json_message; // Silence unused parameter warning
+    virtual bool send(const JsonObject& old_json_message, const JsonMessage& new_json_message) {
+        (void)old_json_message; // Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
 		
         if (_sending_length < 3*4 + 2) {
@@ -440,20 +529,10 @@ public:
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
+	SourceValue getSourceValue() const {
+		return _source_value;
+	}
 	
-    static uint16_t generateChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
 
     virtual void loop() {
         receive();
@@ -463,24 +542,31 @@ public:
     }
 
 
-    bool remoteSend(JsonObject& json_message, JsonMessage& new_json_message) {
+	bool deserialize_buffer(JsonMessage& new_json_message) const {
+		return new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
+	}
+
+
+    bool remoteSend(JsonObject& old_json_message, JsonMessage& new_json_message) {
 
 		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
-		json_message[ TalkieKey::CHECKSUM ] = 0;
+		old_json_message[ TalkieKey::CHECKSUM ] = 0;
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+        new_json_message.set_source(SourceValue::REMOTE);
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));
-		serializeJson(json_message, Serial);
+		serializeJson(old_json_message, Serial);
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
-		// Before writing on the _sending_buffer it needs the wait for its availability
+		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
+		if (processedJsonMessage(old_json_message, new_json_message) && availableSendingBuffer()) {
 
-		if (availableSendingBuffer()) {
-
-			// This length excludes the '\0' char
 			// serializeJson() returns length without \0, but adds \0 to the buffer. Your SPI code should send until it finds \0.
-			_sending_length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			_sending_length = serializeJson(old_json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			_sending_length = new_json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
 			#ifdef BROADCASTSOCKET_DEBUG
 			Serial.print(F("remoteSend3: "));
@@ -490,7 +576,9 @@ public:
 			Serial.println(_sending_length);
 			#endif
 
-			return send(json_message, new_json_message);
+			if (_sending_length) {
+				return send(old_json_message, new_json_message);
+			}
 		}
 
 		return false;
