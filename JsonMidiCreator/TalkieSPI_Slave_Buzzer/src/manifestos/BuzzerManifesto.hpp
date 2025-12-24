@@ -127,15 +127,21 @@ public:
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 		Serial.print( new_json_message.get_from_name() );
         Serial.print(" - ");
-		JsonMessage::ValueType value_type = new_json_message.get_nth_value_type(0);
-        if (old_json_message[ valueKey(0) ].is<String>()) {
-            Serial.println(old_json_message[ valueKey(0) ].as<String>());
-        } else if (old_json_message[ valueKey(0) ].is<String>()) {
-            Serial.println(old_json_message[ valueKey(0) ].as<String>());
-        } else {
-            Serial.println(F("Empty echo received!"));
-        }
+		ValueType value_type = new_json_message.get_nth_value_type(0);
+		switch (value_type) {
 
+			case ValueType::STRING:
+				Serial.println(new_json_message.get_nth_value_string(0));
+			break;
+			
+			case ValueType::INTEGER:
+				Serial.println(new_json_message.get_nth_value_number(0));
+			break;
+			
+			default:
+            	Serial.println(F("Empty echo received!"));
+			break;
+		}
     }
 
 

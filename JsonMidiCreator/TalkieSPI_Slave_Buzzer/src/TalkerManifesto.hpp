@@ -20,6 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonMessage.hpp"
 
 using MessageValue = TalkieCodes::MessageValue;
+using ValueType = JsonMessage::ValueType;
 
 class JsonTalker;
 

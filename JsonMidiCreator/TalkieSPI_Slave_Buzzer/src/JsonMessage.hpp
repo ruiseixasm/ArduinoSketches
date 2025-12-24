@@ -26,8 +26,11 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 #endif
-#ifndef NAME_LEN
-#define NAME_LEN 16
+#ifndef MAX_LEN
+#define MAX_LEN 16
+#endif
+#ifndef MAX_LEN
+#define MAX_LEN 64
 #endif
 
 
@@ -48,10 +51,10 @@ public:
 
 protected:
 
-	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE];	// Length already managed, no need to zero it
 	size_t _json_length = 0;
 	// If multiple messages may be read at once (or in ISR context, multi-core ESP32, etc.), keep it per-instance to avoid overwriting / race conditions.
-    mutable char _temp_name[NAME_LEN];  // mutable allows const methods to modify it (non static for the reasons above)
+    mutable char _temp_string[MAX_LEN];  // mutable allows const methods to modify it (non static for the reasons above)
 
 
 	static size_t number_of_digits(uint32_t number) {
@@ -430,7 +433,7 @@ public:
 
 				case STRING:
 					{
-						char message_to[NAME_LEN] = {'\0'};
+						char message_to[MAX_LEN] = {'\0'};
 						get_string('t', message_to, colon_position);
 						return strcmp(message_to, name) == 0;
 					}
@@ -523,7 +526,7 @@ public:
 
 
 	bool is_from(const char* name) const {
-		char message_from[NAME_LEN] = {'\0'};
+		char message_from[MAX_LEN] = {'\0'};
 		if (!get_from(message_from)) {
 			return false;
 		}
@@ -531,7 +534,7 @@ public:
 	}
 
 	bool is_to_name(const char* name) const {
-		char message_to[NAME_LEN] = {'\0'};
+		char message_to[MAX_LEN] = {'\0'};
 		if (!get_to(message_to)) {
 			return false;
 		}
@@ -631,13 +634,13 @@ public:
 	}
 
 	bool get_from(char* name) const {
-		return get_string('f', name, NAME_LEN);
+		return get_string('f', name, MAX_LEN);
 	}
 
-    // New method using internal temporary buffer (_temp_name)
+    // New method using internal temporary buffer (_temp_string)
     const char* get_from_name() const {
-        if (get_string('f', _temp_name, NAME_LEN)) {
-            return _temp_name;  // safe C string
+        if (get_string('f', _temp_string, MAX_LEN)) {
+            return _temp_string;  // safe C string
         }
         return nullptr;  // failed
     }
@@ -645,17 +648,17 @@ public:
 	bool get_to(char* name) const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
-			return get_string('t', name, NAME_LEN, colon_position);
+			return get_string('t', name, MAX_LEN, colon_position);
 		}
 		return false;
 	}
 
-    // New method using internal temporary buffer (_temp_name)
+    // New method using internal temporary buffer (_temp_string)
     const char* get_to_name() const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
-			if (get_string('t', _temp_name, NAME_LEN, colon_position)) {
-				return _temp_name;
+			if (get_string('t', _temp_string, MAX_LEN, colon_position)) {
+				return _temp_string;
 			}
 		}
         return nullptr;  // failed
@@ -677,11 +680,11 @@ public:
 		return ValueType::VOID;
 	}
 
-	bool get_nth_value_string(uint8_t nth, char* buffer, size_t length) const {
-		if (nth < 10) {
-			return get_string('0' + nth, buffer, length);
+	const char* get_nth_value_string(uint8_t nth) const {
+		if (nth < 10 && get_string('0' + nth, _temp_string, MAX_LEN)) {
+			return _temp_string;  // safe C string
 		}
-		return false;
+		return nullptr;  // failed
 	}
 
 	uint32_t get_nth_value_number(uint8_t nth) const {
