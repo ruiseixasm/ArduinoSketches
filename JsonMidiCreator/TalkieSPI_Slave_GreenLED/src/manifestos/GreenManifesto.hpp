@@ -50,7 +50,7 @@ protected:
 public:
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& json_message, JsonMessage& new_json_message) override {
+    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) override {
         (void)talker;		// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
 		
@@ -81,7 +81,7 @@ public:
 					_total_calls++;
 					return true;
 				} else {
-					json_message[ valueKey(0) ] = "Already On!";
+					old_json_message[ valueKey(0) ] = "Already On!";
 					return false;
 				}
 			}
@@ -100,7 +100,7 @@ public:
 					_is_led_on = false;
 					_total_calls++;
 				} else {
-					json_message[ valueKey(0) ] = "Already Off!";
+					old_json_message[ valueKey(0) ] = "Already Off!";
 					return false;
 				}
 				return true;
@@ -108,7 +108,7 @@ public:
 			break;
 			
             case 2:
-                _bpm_10 = json_message[ valueKey(0) ].as<uint16_t>();
+                _bpm_10 = old_json_message[ valueKey(0) ].as<uint16_t>();
                 return true;
                 break;
 				
