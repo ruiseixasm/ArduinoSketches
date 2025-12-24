@@ -85,6 +85,7 @@ public:
 				uint8_t failed_tests[10] = {0};
 				uint8_t value_i = 0;
 				bool no_errors = true;
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				for (uint8_t test_i = 1; test_i < actionsCount(); test_i++) {
 					if (!actionByIndex(test_i, talker, new_json_message)) {
 						failed_tests[value_i++] = test_i;
@@ -92,12 +93,10 @@ public:
 					}
 				}
 				for (value_i = 0; value_i < 10; value_i++) {	// Removes all 10 possible values
-					old_json_message.remove( valueKey(value_i) );
 					new_json_message.remove_nth_value(value_i);
 				}
 				if (!no_errors) {
 					for (value_i = 0; failed_tests[value_i] && value_i < 10; value_i++) {
-						old_json_message[ valueKey(value_i) ] = failed_tests[value_i];
 						new_json_message.set_nth_value_number(value_i, failed_tests[value_i]);
 					}
 				}
@@ -129,28 +128,29 @@ public:
 
 			case 3:
 			{
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				if (!test_json_message.has_key('m')) {
-					old_json_message[ valueKey(0) ] = "m";
+					new_json_message.set_nth_value_string(0, "m");
 					return false;
 				}
 				if (!test_json_message.has_key('c')) {
-					old_json_message[ valueKey(0) ] = "c";
+					new_json_message.set_nth_value_string(0, "c");
 					return false;
 				}
 				if (!test_json_message.has_key('f')) {
-					old_json_message[ valueKey(0) ] = "f";
+					new_json_message.set_nth_value_string(0, "f");
 					return false;
 				}
 				if (!test_json_message.has_key('i')) {
-					old_json_message[ valueKey(0) ] = "i";
+					new_json_message.set_nth_value_string(0, "i");
 					return false;
 				}
 				if (!test_json_message.has_key('0')) {
-					old_json_message[ valueKey(0) ] = "0";
+					new_json_message.set_nth_value_string(0, "0");
 					return false;
 				}
 				if (!test_json_message.has_key('t')) {
-					old_json_message[ valueKey(0) ] = "t";
+					new_json_message.set_nth_value_string(0, "t");
 					return false;
 				}
 				return true;
@@ -171,9 +171,10 @@ public:
 				
 			case 5:
 			{
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				size_t length = sizeof(json_payload) - 1;	// Discount the '\0' char at the end
-				old_json_message[ valueKey(0) ] = length;
-				old_json_message[ valueKey(1) ] = test_json_message.get_length();
+				new_json_message.set_nth_value_number(0, length);
+				new_json_message.set_nth_value_number(1, test_json_message.get_length());
 				if (test_json_message.get_length() != length) {
 					return false;
 				}
@@ -183,19 +184,20 @@ public:
 				
 			case 6:
 			{
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				if (test_json_message.get_value_type('c') != JsonMessage::INTEGER) {
-					old_json_message[ valueKey(0) ] = "c";
-					old_json_message[ valueKey(1) ] = static_cast<int>(test_json_message.get_value_type('c'));
+					new_json_message.set_nth_value_string(0, "c");
+					new_json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_value_type('c')));
 					return false;
 				}
 				if (test_json_message.get_value_type('f') != JsonMessage::STRING) {
-					old_json_message[ valueKey(0) ] = "f";
-					old_json_message[ valueKey(1) ] = static_cast<int>(test_json_message.get_value_type('f'));
+					new_json_message.set_nth_value_string(0, "f");
+					new_json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_value_type('f')));
 					return false;
 				}
 				if (test_json_message.get_value_type('e') != JsonMessage::VOID) {
-					old_json_message[ valueKey(0) ] = "e";
-					old_json_message[ valueKey(1) ] = static_cast<int>(test_json_message.get_value_type('e'));
+					new_json_message.set_nth_value_string(0, "e");
+					new_json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_value_type('e')));
 					return false;
 				}
 				return true;
@@ -210,25 +212,30 @@ public:
 				
 			case 8:
 			{
-				old_json_message[ valueKey(0) ] = test_json_message.get_number('i');
-				old_json_message[ valueKey(1) ] = 13825;
+				
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+				new_json_message.set_nth_value_number(0, test_json_message.get_number('i'));
+				new_json_message.set_nth_value_number(1, 13825);
 				return test_json_message.get_number('i') == 13825;
 			}
 			break;
 				
 			case 9:
 			{
-				old_json_message[ valueKey(0) ] = test_json_message.get_number('c');
-				old_json_message[ valueKey(1) ] = 29973;
+				
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+				new_json_message.set_nth_value_number(0, test_json_message.get_number('c'));
+				new_json_message.set_nth_value_number(1, 29973);
 				return test_json_message.get_number('c') == 29973;
 			}
 			break;
 				
 			case 10:
 			{
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				MessageValue message_value = static_cast<MessageValue>( test_json_message.get_number('m') );
-				old_json_message[ valueKey(0) ] = static_cast<int>(message_value);
-				old_json_message[ valueKey(1) ] = static_cast<int>(MessageValue::ECHO);
+				new_json_message.set_nth_value_number(0, static_cast<int>(message_value));
+				new_json_message.set_nth_value_number(1, static_cast<int>(MessageValue::ECHO));
 				return message_value == MessageValue::ECHO;	// 6 is ECHO
 			}
 			break;
@@ -237,12 +244,12 @@ public:
 			{
 				bool from_match = false;
 				char from_name[] = "buzzer";
-				char out_name[NAME_LEN] = {'\0'};	// Name chars 16 sized (scheme adopted)
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				if (strcmp(test_json_message.get_from(), from_name) == 0) {
 					from_match = true;
 				}
-				old_json_message[ valueKey(0) ] = static_cast<char*>(from_name);
-				old_json_message[ valueKey(1) ] = static_cast<char*>(out_name);
+				new_json_message.set_nth_value_string(0, from_name);
+				new_json_message.set_nth_value_string(1, test_json_message.get_from());
 				return from_match;
 			}
 			break;
@@ -252,17 +259,18 @@ public:
 				bool payloads_match = true;
 				const char final_payload1[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 				test_json_message.remove('f');
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				if (!test_json_message.compare_buffer(final_payload1, sizeof(final_payload1) - 1)) {
-					old_json_message[ valueKey(0) ] = "Failed match 1";
+					new_json_message.set_nth_value_string(0, "Failed match 1");
 					payloads_match = false;
 				}
 				const char final_payload2[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"t\":\"Talker-7a\"}";
 				test_json_message.remove('0');
 				if (!test_json_message.compare_buffer(final_payload2, sizeof(final_payload2) - 1)) {
-					if (payloads_match) {
-						old_json_message[ valueKey(0) ] = "Failed match 2";
+					if (payloads_match) {	// has to be at 0
+						new_json_message.set_nth_value_string(0, "Failed match 2");
 					} else {
-						old_json_message[ valueKey(1) ] = "Failed match 2";
+						new_json_message.set_nth_value_string(1, "Failed match 2");
 					}
 					payloads_match = false;
 				}
@@ -275,6 +283,7 @@ public:
 				uint32_t big_number = 1234567;
 				const char final_payload1[] = "{\"m\":6,\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567}";
 				if (!test_json_message.set_nth_value_number(0, big_number) || !test_json_message.compare_buffer(final_payload1, sizeof(final_payload1) - 1)) {
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
 					old_json_message[ valueKey(0) ] = "1st";
 					old_json_message[ valueKey(1) ] = sizeof(final_payload1) - 1;
 					old_json_message[ valueKey(2) ] = test_json_message.get_length();
@@ -283,6 +292,7 @@ public:
 				const char from_green[] = "green";
 				const char final_payload2[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567,\"f\":\"green\"}";
 				if (!test_json_message.set_from(from_green) || !test_json_message.compare_buffer(final_payload2, sizeof(final_payload2) - 1)) {
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
 					old_json_message[ valueKey(0) ] = "2nd";
 					old_json_message[ valueKey(1) ] = sizeof(final_payload2) - 1;
 					old_json_message[ valueKey(2) ] = test_json_message.get_length();
@@ -294,6 +304,7 @@ public:
 				
 			case 14:
 			{
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
 				const char final_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 				if (!test_json_message.remove('m') || !test_json_message.compare_buffer(final_payload, sizeof(final_payload) - 1)) {	// The first key (no header ',' char)
 					old_json_message[ valueKey(0) ] = "1st";
@@ -320,6 +331,7 @@ public:
 				
 			case 15:
 			{
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
 				JsonMessage copy_json_message(test_json_message);
 				if (copy_json_message != test_json_message) {
 					old_json_message[ valueKey(0) ] = "1st";
@@ -337,6 +349,7 @@ public:
 				
 			case 16:
 			{
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
 				uint16_t message_checksum = test_json_message.extract_checksum();
 				uint16_t generated_checksum = test_json_message.generate_checksum();
 				if (message_checksum != generated_checksum) {
