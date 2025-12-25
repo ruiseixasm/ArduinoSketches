@@ -542,9 +542,8 @@ public:
 		size_t colon_position = get_colon_position('t');
 		if (colon_position) {
 			ValueType value_type = get_value_type('t', colon_position);
-			if (value_type == ValueType::STRING) {
-				const char* message_to = get_string('t', _temp_string, NAME_LEN, colon_position);
-				return strcmp(message_to, name) == 0;
+			if (value_type == ValueType::STRING && get_string('t', _temp_string, NAME_LEN, colon_position)) {
+				return strcmp(_temp_string, name) == 0;
 			}
 		}
 		return false;

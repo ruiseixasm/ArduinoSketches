@@ -173,8 +173,12 @@ public:
 			}
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+			uint16_t message_id = (uint16_t)millis();
+			if (message_data < MessageValue::ECHO) {
+				_original_message.identity = message_id;
+				_original_message.message_data = message_data;
+			}
 			new_json_message.set_identity(message_id);
-			new_json_message.has_identity();	// Checks if it has identity
 		} else if (!new_json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
 
 			#ifdef JSON_TALKER_DEBUG
