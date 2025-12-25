@@ -36,7 +36,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket {
 protected:
 
-	JsonTalker** const _json_talkers;	// pointer is const, objects mutable
+	JsonTalker* const* const _json_talkers;	// list of pointers and pointers are const, objects mutable
 	const uint8_t _talker_count;
 	const SourceValue _source_value;
 
@@ -219,16 +219,8 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool receivedJsonMessage(JsonObject& old_json_message, JsonMessage& new_json_message) {
-        (void)new_json_message;	// Silence unused parameter warning
-
-		if (!old_json_message[ TalkieKey::FROM ].is<String>()) {
-			#ifdef JSON_TALKER_DEBUG
-			Serial.println(F("ERROR: From key 'f' is missing"));
-			#endif
-			// return false;
-		}
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+	virtual bool receivedJsonMessage(JsonMessage& new_json_message) {
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		if (!new_json_message.validate_fields()) {
 			#ifdef JSON_TALKER_DEBUG_NEW
 			Serial.println(F("ERROR: Missing fields or wrongly set"));
@@ -239,8 +231,7 @@ protected:
 	}
 
 	// Allows the overriding class to peek after processing of the JSON message
-	virtual bool processedJsonMessage(JsonObject& old_json_message, JsonMessage& new_json_message) {
-        (void)old_json_message;	// Silence unused parameter warning
+	virtual bool processedJsonMessage(JsonMessage& new_json_message) {
         (void)new_json_message;	// Silence unused parameter warning
 
 		return true;
@@ -325,34 +316,20 @@ protected:
                 }
 
 				// Gives a chance to show it one time
-				DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
-				if (error) {
-					#ifdef BROADCASTSOCKET_DEBUG
-					Serial.println(F("ERROR: Failed to deserialize received data"));
-					#endif
-					return 0;
-				}
-				JsonObject old_json_message = _message_doc.as<JsonObject>();
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				JsonMessage new_json_message(_receiving_buffer, _received_length);
 
-				if (!receivedJsonMessage(old_json_message, new_json_message)) {
+				if (!receivedJsonMessage(new_json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
-					old_json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::ERROR);
-					old_json_message[ TalkieCodes::valueKey(0) ] = static_cast<int>(ErrorValue::IDENTITY);
-					// Wrong type of identifier or no identifier, so, it has to insert new identifier
-					old_json_message[ TalkieKey::IDENTITY ] = (uint16_t)millis();
-					// From one to many, starts to set the returning target in this single place only
-					old_json_message[ TalkieKey::TO ] = old_json_message[ TalkieKey::FROM ];
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					if (new_json_message.swap_from_with_to()) {
 						new_json_message.set_message(MessageValue::ERROR);
 						if (!new_json_message.has_identity()) {
 							new_json_message.set_identity();
 						}
-						remoteSend(old_json_message, new_json_message);	// Includes reply swap
+						remoteSend(new_json_message);	// Includes reply swap
 					}
 					return 0;
 				}
@@ -377,15 +354,7 @@ protected:
 						#endif
 
 						if (talker_i > 0) {
-							DeserializationError error = deserializeJson(_message_doc, _receiving_buffer, _received_length);
-							if (error) {
-								#ifdef BROADCASTSOCKET_DEBUG
-								Serial.println(F("ERROR: Failed to deserialize received data"));
-								#endif
-								return 0;
-							}
-							old_json_message = _message_doc.as<JsonObject>();	// WITH PARALLEL JSONMESSAGE
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
 							
 							#ifdef BROADCASTSOCKET_DEBUG_NEW
@@ -404,7 +373,7 @@ protected:
 						#endif
 
 						// A non static method
-						pre_validated = _json_talkers[talker_i]->processMessage(old_json_message, new_json_message);
+						pre_validated = _json_talkers[talker_i]->processMessage(new_json_message);
 						if (!pre_validated) return 0;
 					}
 				}
@@ -419,7 +388,7 @@ protected:
     }
 
     // Constructor
-    BroadcastSocket(JsonTalker** const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
+    BroadcastSocket(JsonTalker* const* const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
         : _json_talkers(json_talkers),
           _talker_count(talker_count),
           _source_value(source_value)
@@ -462,8 +431,7 @@ protected:
 	}
 
 
-    virtual bool send(const JsonObject& old_json_message, const JsonMessage& new_json_message) {
-        (void)old_json_message; // Silence unused parameter warning
+    virtual bool send(const JsonMessage& new_json_message) {
         (void)new_json_message;	// Silence unused parameter warning
 		
         if (_sending_length < 3*4 + 2) {
@@ -547,25 +515,21 @@ public:
 	}
 
 
-    bool remoteSend(JsonObject& old_json_message, JsonMessage& new_json_message) {
+    bool remoteSend(JsonMessage& new_json_message) {
 
-		// Makes sure 'c' is correctly set as 0, BroadcastSocket responsibility
-		old_json_message[ TalkieKey::CHECKSUM ] = 0;
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-        new_json_message.set_source(SourceValue::REMOTE);
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+        new_json_message.set_source_value(SourceValue::REMOTE);
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));
-		serializeJson(old_json_message, Serial);
+		new_json_message.write_to(Serial);
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (processedJsonMessage(old_json_message, new_json_message) && availableSendingBuffer()) {
+		if (processedJsonMessage(new_json_message) && availableSendingBuffer()) {
 
-			// serializeJson() returns length without \0, but adds \0 to the buffer. Your SPI code should send until it finds \0.
-			_sending_length = serializeJson(old_json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			_sending_length = new_json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
 			#ifdef BROADCASTSOCKET_DEBUG
@@ -577,7 +541,7 @@ public:
 			#endif
 
 			if (_sending_length) {
-				return send(old_json_message, new_json_message);
+				return send(new_json_message);
 			}
 		}
 

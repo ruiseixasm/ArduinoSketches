@@ -46,7 +46,7 @@ public:
 
 	struct Original {
 		uint16_t identity;
-		MessageValue message_data;
+		MessageValue message_value;
 	};
 
 	static const char* valueKey(size_t nth = 0) {
@@ -106,24 +106,21 @@ public:
     }
     
     // Action implementations - MUST be implemented by derived
-    virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) {
+    virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json_message) {
         (void)index;		// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
-        (void)old_json_message;	// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
         return false;
 	}
 
 
-    virtual void echo(JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) {
-        (void)old_json_message;	// Silence unused parameter warning
+    virtual void echo(JsonTalker& talker, JsonMessage& new_json_message) {
         (void)talker;		// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
     }
 
 
-    virtual void error(JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) {
-        (void)old_json_message;	// Silence unused parameter warning
+    virtual void error(JsonTalker& talker, JsonMessage& new_json_message) {
         (void)talker;		// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
     }
