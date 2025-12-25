@@ -77,7 +77,7 @@ struct TalkieCodes {
 
 
 	enum class InfoValue : uint8_t {
-		BOARD, DROPS, DELAY, MUTE, SOCKET, TALKER, MANIFESTO
+		BOARD, DROPS, DELAY, MUTE, SOCKET, TALKER, MANIFESTO, UNDEFINED
 	};
 
 

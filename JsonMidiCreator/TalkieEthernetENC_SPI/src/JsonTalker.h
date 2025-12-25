@@ -353,6 +353,7 @@ public:
 				return false;
 			}
 		} else {
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
 			if (message_data > MessageValue::PING) {
 				// Only TALK, CHANNEL and PING can be broadcasted
 				return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
@@ -428,7 +429,7 @@ public:
 
 					#ifdef JSON_TALKER_DEBUG
 					Serial.print(F("\tChannel B value is an <uint8_t>: "));
-					Serial.println(old_json_message[ valueKey(0) ].is<uint8_t>());
+					Serial.println(new_json_message.get_nth_value_number(0));
 					#endif
 
 					_channel = new_json_message.get_nth_value_number(0);
@@ -470,7 +471,8 @@ public:
 				break;
 			
 			case MessageValue::INFO:
-				if (old_json_message[ TalkieKey::INFO ].is<int>()) {
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
+				if (new_json_message.has_info()) {
 
 					InfoValue system_code = static_cast<InfoValue>(old_json_message[ TalkieKey::INFO ].as<int>());
 

@@ -39,6 +39,7 @@ using MessageKey = TalkieCodes::MessageKey;
 using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
 using RogerValue = TalkieCodes::RogerValue;
+using InfoValue = TalkieCodes::InfoValue;
 
 
 class JsonMessage {
@@ -495,6 +496,10 @@ public:
 			&& get_value_type('t', colon_position) == ValueType::INTEGER;
 	}
 
+	bool has_info() const {
+		return get_colon_position('s') > 0;
+	}
+
 	bool has_nth_value(uint8_t nth) const {
 		if (nth < 10) {
 			return get_colon_position('0' + nth) > 0;
@@ -631,6 +636,17 @@ public:
 			}
 		}
 		return RogerValue::NIL;
+	}
+
+	InfoValue get_info() const {
+		size_t colon_position = get_colon_position('s');
+		if (colon_position) {
+			uint8_t info_number = (uint8_t)get_number('s', colon_position);
+			if (info_number < static_cast<uint8_t>( InfoValue::UNDEFINED )) {
+				return static_cast<InfoValue>( info_number );
+			}
+		}
+		return InfoValue::UNDEFINED;
 	}
 
     // New method using internal temporary buffer (_temp_string)
@@ -795,6 +811,15 @@ public:
 			return true;
 		}
 		return set_number('r', static_cast<uint8_t>(roger_value));
+	}
+
+	bool set_info(InfoValue info_value) {
+		size_t value_position = get_value_position('r');
+		if (value_position) {
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(info_value);
+			return true;
+		}
+		return set_number('s', static_cast<uint8_t>(info_value));
 	}
 
 	bool set_nth_value_number(uint8_t nth, uint32_t number) {
