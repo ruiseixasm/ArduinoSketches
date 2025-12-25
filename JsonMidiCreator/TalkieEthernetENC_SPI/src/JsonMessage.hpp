@@ -744,6 +744,10 @@ public:
 		return false;
 	}
 
+	bool remove_message() {
+		return remove('m');
+	}
+
 	bool remove_from() {
 		return remove('f');
 	}

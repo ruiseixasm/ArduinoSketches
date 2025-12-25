@@ -258,14 +258,14 @@ public:
 			{
 				bool payloads_match = true;
 				const char final_payload1[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
-				test_json_message.remove('f');
+				test_json_message.remove_from();
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				if (!test_json_message.compare_buffer(final_payload1, sizeof(final_payload1) - 1)) {
 					new_json_message.set_nth_value_string(0, "Failed match 1");
 					payloads_match = false;
 				}
 				const char final_payload2[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"t\":\"Talker-7a\"}";
-				test_json_message.remove('0');
+				test_json_message.remove_nth_value(0);
 				if (!test_json_message.compare_buffer(final_payload2, sizeof(final_payload2) - 1)) {
 					if (payloads_match) {	// has to be at 0
 						new_json_message.set_nth_value_string(0, "Failed match 2");
@@ -306,7 +306,7 @@ public:
 			{
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				const char final_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
-				if (!test_json_message.remove('m') || !test_json_message.compare_buffer(final_payload, sizeof(final_payload) - 1)) {	// The first key (no header ',' char)
+				if (!test_json_message.remove_message() || !test_json_message.compare_buffer(final_payload, sizeof(final_payload) - 1)) {	// The first key (no header ',' char)
 					new_json_message.set_nth_value_string(0, "1st");
 					return false;
 				}
