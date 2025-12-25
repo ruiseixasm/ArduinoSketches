@@ -21,8 +21,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define BUZZ_PIN 2	// External BUZZER pin
 
 
-using TalkieKey = TalkieCodes::TalkieKey;
-
 class BuzzerManifesto : public TalkerManifesto {
 public:
 
@@ -114,7 +112,7 @@ public:
         (void)talker;		// Silence unused parameter warning
 		
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		Serial.print( new_json_message.get_from() );
+		Serial.print( new_json_message.get_from_name() );
         Serial.print(" - ");
 		ValueType value_type = new_json_message.get_nth_value_type(0);
 		switch (value_type) {
@@ -138,7 +136,7 @@ public:
         (void)talker;		// Silence unused parameter warning
 		
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		Serial.print( new_json_message.get_from() );
+		Serial.print( new_json_message.get_from_name() );
         Serial.print(" - ");
 		ValueType value_type = new_json_message.get_nth_value_type(0);
 		switch (value_type) {
