@@ -63,7 +63,7 @@ public:
 
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) override {
+    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json_message) override {
         (void)talker;		// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
 
@@ -97,7 +97,6 @@ public:
 				break;
 
 				case 1:
-					_buzz_duration_ms = old_json_message[ valueKey(0) ].as<uint16_t>();
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
 					_buzz_duration_ms = (uint16_t)new_json_message.get_nth_value_number(0);
 					return true;
@@ -111,20 +110,10 @@ public:
 	}
     
 
-    void echo(JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) override {
+    void echo(JsonTalker& talker, JsonMessage& new_json_message) override {
         (void)talker;		// Silence unused parameter warning
-        (void)new_json_message;	// Silence unused parameter warning
-
-        Serial.print(old_json_message[ TalkieKey::FROM ].as<String>());
-        Serial.print(" - ");
-        if (old_json_message[ valueKey(0) ].is<String>()) {
-            Serial.println(old_json_message[ valueKey(0) ].as<String>());
-        } else if (old_json_message[ valueKey(0) ].is<String>()) {
-            Serial.println(old_json_message[ valueKey(0) ].as<String>());
-        } else {
-            Serial.println(F("Empty echo received!"));
-        }
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		Serial.print( new_json_message.get_from() );
         Serial.print(" - ");
 		ValueType value_type = new_json_message.get_nth_value_type(0);
@@ -145,20 +134,10 @@ public:
     }
 
 
-    void error(JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) override {
+    void error(JsonTalker& talker, JsonMessage& new_json_message) override {
         (void)talker;		// Silence unused parameter warning
-        (void)new_json_message;	// Silence unused parameter warning
 		
-        Serial.print(old_json_message[ TalkieKey::FROM ].as<String>());
-        Serial.print(" - ");
-        if (old_json_message[ valueKey(0) ].is<String>()) {
-            Serial.println(old_json_message[ valueKey(0) ].as<String>());
-        } else if (old_json_message[ valueKey(0) ].is<String>()) {
-            Serial.println(old_json_message[ valueKey(0) ].as<String>());
-        } else {
-            Serial.println(F("Empty error received!"));
-        }
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		Serial.print( new_json_message.get_from() );
         Serial.print(" - ");
 		ValueType value_type = new_json_message.get_nth_value_type(0);

@@ -16,13 +16,13 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.hpp"    // MUST include the full definition!
 
 
-JsonTalker** JsonTalker::_json_talkers = nullptr;
+JsonTalker* const* JsonTalker::_json_talkers = nullptr;
 uint8_t JsonTalker::_talker_count = 0;
 
 
 
-// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-bool JsonTalker::remoteSend(JsonObject& old_json_message, JsonMessage& new_json_message) {
+// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+bool JsonTalker::remoteSend(JsonMessage& new_json_message) {
 	(void)new_json_message;
     if (!_socket) return false;
 
@@ -34,11 +34,10 @@ bool JsonTalker::remoteSend(JsonObject& old_json_message, JsonMessage& new_json_
 	#endif
 
 	// Tags the message as REMOTE sourced
-	old_json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::REMOTE);
-	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-	new_json_message.set_source(SourceValue::REMOTE);
-	if (prepareMessage(old_json_message, new_json_message)) {
-    	return _socket->remoteSend(old_json_message, new_json_message);
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+	new_json_message.set_source_value(SourceValue::REMOTE);
+	if (prepareMessage(new_json_message)) {
+    	return _socket->remoteSend(new_json_message);
 	}
 	return false;
 }

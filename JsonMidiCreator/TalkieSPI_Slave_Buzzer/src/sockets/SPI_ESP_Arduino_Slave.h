@@ -125,7 +125,7 @@ protected:
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(const JsonObject& old_json_message, const JsonMessage& new_json_message) override {
+    bool send(const JsonMessage& new_json_message) override {
 
 		if (BroadcastSocket::send(old_json_message, new_json_message)) {	// Very important pre processing !!
             

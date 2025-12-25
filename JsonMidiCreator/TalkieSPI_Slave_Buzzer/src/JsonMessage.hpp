@@ -26,8 +26,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 #endif
-#ifndef MAX_LEN
-#define MAX_LEN 16
+#ifndef NAME_LEN
+#define NAME_LEN 16
 #endif
 #ifndef MAX_LEN
 #define MAX_LEN 64
@@ -39,6 +39,7 @@ using MessageKey = TalkieCodes::MessageKey;
 using SourceValue = TalkieCodes::SourceValue;
 using MessageValue = TalkieCodes::MessageValue;
 using RogerValue = TalkieCodes::RogerValue;
+using InfoValue = TalkieCodes::InfoValue;
 
 
 class JsonMessage {
@@ -433,7 +434,7 @@ public:
 
 				case STRING:
 					{
-						char message_to[MAX_LEN] = {'\0'};
+						char message_to[NAME_LEN] = {'\0'};
 						get_string('t', message_to, colon_position);
 						return strcmp(message_to, name) == 0;
 					}
@@ -449,7 +450,7 @@ public:
 				default: break;
 			}
 		}
-		return false;
+		return true;	// Non target messages, without to(t), are considered broadcasted messages an for everyone
 	}
 
 
@@ -495,6 +496,10 @@ public:
 			&& get_value_type('t', colon_position) == ValueType::INTEGER;
 	}
 
+	bool has_info() const {
+		return get_colon_position('s') > 0;
+	}
+
 	bool has_nth_value(uint8_t nth) const {
 		if (nth < 10) {
 			return get_colon_position('0' + nth) > 0;
@@ -526,7 +531,7 @@ public:
 
 
 	bool is_from(const char* name) const {
-		const char* from_name = get_from();
+		const char* from_name = get_from_name();
 		if (from_name) {
 			return strcmp(name, from_name) == 0;
 		}
@@ -534,11 +539,14 @@ public:
 	}
 
 	bool is_to_name(const char* name) const {
-		char message_to[MAX_LEN] = {'\0'};
-		if (!get_to(message_to)) {
-			return false;
+		size_t colon_position = get_colon_position('t');
+		if (colon_position) {
+			ValueType value_type = get_value_type('t', colon_position);
+			if (value_type == ValueType::STRING && get_string('t', _temp_string, NAME_LEN, colon_position)) {
+				return strcmp(_temp_string, name) == 0;
+			}
 		}
-		return strcmp(message_to, name) == 0;
+		return false;
 	}
 
 	bool is_to_channel(uint8_t channel) const {
@@ -588,7 +596,7 @@ public:
 		return json_number;
 	}
 
-	MessageValue get_message() const {
+	MessageValue get_message_value() const {
 		size_t colon_position = get_colon_position('m');
 		if (colon_position) {
 			uint8_t message_number = get_number('m', colon_position);
@@ -611,7 +619,7 @@ public:
 		return get_identity();
 	}
 
-	SourceValue get_source() const {
+	SourceValue get_source_value() const {
 		size_t colon_position = get_colon_position('c');
 		if (colon_position) {
 			uint8_t source_number = (uint8_t)get_number('c', colon_position);
@@ -622,7 +630,7 @@ public:
 		return SourceValue::NONE;
 	}
 
-	RogerValue get_roger() const {
+	RogerValue get_roger_value() const {
 		size_t colon_position = get_colon_position('r');
 		if (colon_position) {
 			uint8_t roger_number = (uint8_t)get_number('r', colon_position);
@@ -633,9 +641,20 @@ public:
 		return RogerValue::NIL;
 	}
 
+	InfoValue get_info_value() const {
+		size_t colon_position = get_colon_position('s');
+		if (colon_position) {
+			uint8_t info_number = (uint8_t)get_number('s', colon_position);
+			if (info_number < static_cast<uint8_t>( InfoValue::UNDEFINED )) {
+				return static_cast<InfoValue>( info_number );
+			}
+		}
+		return InfoValue::UNDEFINED;
+	}
+
     // New method using internal temporary buffer (_temp_string)
-    char* get_from() const {
-        if (get_string('f', _temp_string, MAX_LEN)) {
+    char* get_from_name() const {
+        if (get_string('f', _temp_string, NAME_LEN)) {
             return _temp_string;  // safe C string
         }
         return nullptr;  // failed
@@ -645,19 +664,11 @@ public:
 		return get_value_type('t');
 	}
 
-	bool get_to(char* name) const {
-		size_t colon_position = get_colon_position('t');
-		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
-			return get_string('t', name, MAX_LEN, colon_position);
-		}
-		return false;
-	}
-
     // New method using internal temporary buffer (_temp_string)
     char* get_to_name() const {
 		size_t colon_position = get_colon_position('t');
 		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
-			if (get_string('t', _temp_string, MAX_LEN, colon_position)) {
+			if (get_string('t', _temp_string, NAME_LEN, colon_position)) {
 				return _temp_string;
 			}
 		}
@@ -694,6 +705,17 @@ public:
 		return false;
 	}
 
+	char* get_action_string() const {
+		if (get_string('a', _temp_string, NAME_LEN)) {
+			return _temp_string;  // safe C string
+		}
+		return nullptr;  // failed
+	}
+
+	uint32_t get_action_number() const {
+		return get_number('a');
+	}
+
 
 	// REMOVERS
 
@@ -715,6 +737,42 @@ public:
 			return true;
 		}
 		return false;
+	}
+
+	bool remove_message() {
+		return remove('m');
+	}
+
+	bool remove_from() {
+		return remove('f');
+	}
+
+	bool remove_to() {
+		return remove('t');
+	}
+
+	bool remove_identity() {
+		return remove('i');
+	}
+
+	bool remove_timestamp() {
+		return remove('i');
+	}
+
+	bool remove_checksum() {
+		return remove('c');
+	}
+
+	bool remove_source_value() {
+		return remove('c');
+	}
+
+	bool remove_roger_value() {
+		return remove('r');
+	}
+
+	bool remove_info_value() {
+		return remove('s');
 	}
 
 	bool remove_nth_value(uint8_t nth) {
@@ -760,15 +818,15 @@ public:
 		return set_number('c', checksum);
 	}
 
-	bool set_from(const char* name) {
+	bool set_from_name(const char* name) {
 		return set_string('f', name);
 	}
 
-	bool set_to(const char* name) {
+	bool set_to_name(const char* name) {
 		return set_string('t', name);
 	}
 
-	bool set_source(SourceValue source_value) {
+	bool set_source_value(SourceValue source_value) {
 		size_t value_position = get_value_position('c');
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(source_value);
@@ -777,13 +835,22 @@ public:
 		return set_number('c', static_cast<uint8_t>(source_value));
 	}
 
-	bool set_roger(RogerValue roger_value) {
+	bool set_roger_value(RogerValue roger_value) {
 		size_t value_position = get_value_position('r');
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(roger_value);
 			return true;
 		}
 		return set_number('r', static_cast<uint8_t>(roger_value));
+	}
+
+	bool set_info_value(InfoValue info_value) {
+		size_t value_position = get_value_position('s');
+		if (value_position) {
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(info_value);
+			return true;
+		}
+		return set_number('s', static_cast<uint8_t>(info_value));
 	}
 
 	bool set_nth_value_number(uint8_t nth, uint32_t number) {
