@@ -534,7 +534,7 @@ protected:
 				Serial.println(F("\tsend3: json_message TO is a String"));
 				#endif
 
-				as_reply = _named_pins_table.get_pin(new_json_message.get_to_name(), &_actual_ss_pin);
+				as_reply = _named_pins_table.get_pin(new_json_message.get_to_name(), _actual_ss_pin);
 			} else {
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("\tsend3: json_message TO is NOT a String or doesn't exist"));
@@ -640,11 +640,6 @@ protected:
 					break;
 				}
 			}
-			// _initiated is true at this point
-			// deserializeJson() - loads from buffer (makes it an object)
-			// to<JsonObject>() - creates empty object
-			// to<JsonArray>() - creates empty array
-			_named_pins = _named_pins_doc.to<JsonObject>();	// Convert null → empty object
 		}
 
 		#ifdef BROADCAST_SPI_DEBUG

@@ -94,7 +94,7 @@ void Spy::echo(JsonTalker& talker, JsonMessage& new_json_message) {
 				new_json_message.set_nth_value_number(0, time_delay);
 				new_json_message.set_nth_value_string(1, new_json_message.get_from_name());
 				// Prepares headers for the original REMOTE sender
-				new_json_message.set_to_name(_original_talker);
+				new_json_message.set_to_name(_original_talker.c_str());
 				new_json_message.set_from_name(talker.get_name());
 				// Emulates the REMOTE original call
 				new_json_message.set_identity(_original_message.identity);
