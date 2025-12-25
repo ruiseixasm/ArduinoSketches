@@ -471,10 +471,10 @@ public:
 				break;
 			
 			case MessageValue::INFO:
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				if (new_json_message.has_info()) {
 
-					InfoValue system_code = static_cast<InfoValue>(old_json_message[ TalkieKey::INFO ].as<int>());
+					InfoValue system_code = new_json_message.get_info();
 
 					switch (system_code) {
 
