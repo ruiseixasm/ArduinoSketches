@@ -744,11 +744,8 @@ public:
 		return false;
 	}
 
-	bool remove_nth_value(uint8_t nth) {
-		if (nth < 10) {
-			return remove('0' + nth);
-		}
-		return false;
+	bool remove_from() {
+		return remove('f');
 	}
 
 	bool remove_to() {
@@ -757,6 +754,33 @@ public:
 
 	bool remove_identity() {
 		return remove('i');
+	}
+
+	bool remove_timestamp() {
+		return remove('i');
+	}
+
+	bool remove_checksum() {
+		return remove('c');
+	}
+
+	bool remove_source() {
+		return remove('c');
+	}
+
+	bool remove_roger() {
+		return remove('r');
+	}
+
+	bool remove_info() {
+		return remove('s');
+	}
+
+	bool remove_nth_value(uint8_t nth) {
+		if (nth < 10) {
+			return remove('0' + nth);
+		}
+		return false;
 	}
 
 	// SETTERS
@@ -822,7 +846,7 @@ public:
 	}
 
 	bool set_info(InfoValue info_value) {
-		size_t value_position = get_value_position('r');
+		size_t value_position = get_value_position('s');
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(info_value);
 			return true;
