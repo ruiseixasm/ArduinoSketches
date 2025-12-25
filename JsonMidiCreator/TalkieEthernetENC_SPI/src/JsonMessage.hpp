@@ -531,7 +531,7 @@ public:
 
 
 	bool is_from(const char* name) const {
-		const char* from_name = get_from();
+		const char* from_name = get_from_name();
 		if (from_name) {
 			return strcmp(name, from_name) == 0;
 		}
@@ -539,11 +539,15 @@ public:
 	}
 
 	bool is_to_name(const char* name) const {
-		char message_to[NAME_LEN] = {'\0'};
-		if (!get_to(message_to)) {
-			return false;
+		size_t colon_position = get_colon_position('t')
+		if (colon_position) {
+			ValueType value_type = get_value_type('t', colon_position);
+			if (value_type == ValueType::STRING) {
+				const char* message_to = get_string('t', _temp_string, NAME_LEN, colon_position);
+				return strcmp(message_to, name) == 0;
+			}
 		}
-		return strcmp(message_to, name) == 0;
+		return false;
 	}
 
 	bool is_to_channel(uint8_t channel) const {
@@ -593,7 +597,7 @@ public:
 		return json_number;
 	}
 
-	MessageValue get_message() const {
+	MessageValue get_message_value() const {
 		size_t colon_position = get_colon_position('m');
 		if (colon_position) {
 			uint8_t message_number = get_number('m', colon_position);
@@ -616,7 +620,7 @@ public:
 		return get_identity();
 	}
 
-	SourceValue get_source() const {
+	SourceValue get_source_value() const {
 		size_t colon_position = get_colon_position('c');
 		if (colon_position) {
 			uint8_t source_number = (uint8_t)get_number('c', colon_position);
@@ -627,7 +631,7 @@ public:
 		return SourceValue::NONE;
 	}
 
-	RogerValue get_roger() const {
+	RogerValue get_roger_value() const {
 		size_t colon_position = get_colon_position('r');
 		if (colon_position) {
 			uint8_t roger_number = (uint8_t)get_number('r', colon_position);
@@ -638,7 +642,7 @@ public:
 		return RogerValue::NIL;
 	}
 
-	InfoValue get_info() const {
+	InfoValue get_info_value() const {
 		size_t colon_position = get_colon_position('s');
 		if (colon_position) {
 			uint8_t info_number = (uint8_t)get_number('s', colon_position);
@@ -650,7 +654,7 @@ public:
 	}
 
     // New method using internal temporary buffer (_temp_string)
-    char* get_from() const {
+    char* get_from_name() const {
         if (get_string('f', _temp_string, NAME_LEN)) {
             return _temp_string;  // safe C string
         }

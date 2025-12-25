@@ -145,7 +145,7 @@ public:
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		if (new_json_message.has_from()) {
-			if (strcmp(new_json_message.get_from(), _name) != 0) {
+			if (strcmp(new_json_message.get_from_name(), _name) != 0) {
 				// FROM is different from _name, must be swapped (replaces "f" with "t")
 				new_json_message.swap_from_with_to();
 				new_json_message.set_from(_name);
@@ -156,8 +156,8 @@ public:
 		}
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		MessageValue message_data = new_json_message.get_message();
-		if (message_data < MessageValue::ECHO) {
+		MessageValue message_value = new_json_message.get_message_value();
+		if (message_value < MessageValue::ECHO) {
 
 			#ifdef JSON_TALKER_DEBUG
 			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
@@ -294,7 +294,7 @@ public:
 		#endif
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			SourceValue source_value = new_json_message.get_source();	// Already returns NOISE
+			SourceValue source_value = new_json_message.get_source_value();	// Already returns NOISE
 			switch (source_value) {
 
 				case SourceValue::LOCAL:
@@ -338,13 +338,13 @@ public:
         bool dont_interrupt = true;   // Doesn't interrupt next talkers process
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		MessageValue message_data = new_json_message.get_message();
+		MessageValue message_value = new_json_message.get_message_value();
 
 		#ifdef JSON_TALKER_DEBUG_NEW
 		Serial.print(F("\t\tprocessMessage1: "));
 		new_json_message.write_to(Serial);
 		Serial.print(" | ");
-		Serial.println(static_cast<int>( message_data ));
+		Serial.println(static_cast<int>( message_value ));
 		#endif
 
         // Is it for me?
@@ -354,7 +354,7 @@ public:
 			}
 		} else {
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			if (message_data > MessageValue::PING) {
+			if (message_value > MessageValue::PING) {
 				// Only TALK, CHANNEL and PING can be broadcasted
 				return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
 			} else if (new_json_message.has_nth_value_number(0)) {
@@ -369,13 +369,13 @@ public:
         #endif
 
 		// Doesn't apply to ECHO nor ERROR
-		if (message_data < MessageValue::ECHO) {
-			_received_message = message_data;
+		if (message_value < MessageValue::ECHO) {
+			_received_message = message_value;
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			new_json_message.set_message(MessageValue::ECHO);
 		}
 
-        switch (message_data) {
+        switch (message_value) {
 
 			case MessageValue::CALL:
 				{
@@ -474,7 +474,7 @@ public:
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				if (new_json_message.has_info()) {
 
-					InfoValue system_code = new_json_message.get_info();
+					InfoValue system_code = new_json_message.get_info_value();
 
 					switch (system_code) {
 

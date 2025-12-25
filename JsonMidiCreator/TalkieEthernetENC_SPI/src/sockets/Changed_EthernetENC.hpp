@@ -124,7 +124,7 @@ protected:
 
 		if (BroadcastSocket::receivedJsonMessage(new_json_message)) {
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			strcpy(_new_from_name, new_json_message.get_from());
+			strcpy(_new_from_name, new_json_message.get_from_name());
 			
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
 			Serial.print(F("receivedJsonMessage1: "));

@@ -510,7 +510,7 @@ protected:
 			_named_pins = _named_pins_doc.as<JsonObject>();
 			_named_pins[from_name] = _actual_ss_pin;
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			_new_named_pins_table.add(new_json_message.get_from(), _actual_ss_pin);
+			_new_named_pins_table.add(new_json_message.get_from_name(), _actual_ss_pin);
 
 			#ifdef BROADCAST_SPI_DEBUG
 			if (_named_pins_doc.isNull()) {

@@ -27,7 +27,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	// As a spy it only answers to REMOTE calls
-	SourceValue source_data = new_json_message.get_source();;
+	SourceValue source_data = new_json_message.get_source_value();;
 	if (source_data == SourceValue::REMOTE) {
 
 		if (index < actionsCount()) {
@@ -37,7 +37,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 				{
 					ping = true;
 					// 1. Start by collecting info from message
-					_original_talker = new_json_message.get_from();
+					_original_talker = new_json_message.get_from_name();
 					_original_message.identity = new_json_message.get_identity();
 					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a LOCAL PING
@@ -59,7 +59,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 				{
 					ping = true;
 					// 1. Start by collecting info from message
-					_original_talker = new_json_message.get_from();	// Explicit conversion
+					_original_talker = new_json_message.get_from_name();	// Explicit conversion
 					_original_message.identity = new_json_message.get_identity();
 					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a SELF PING
@@ -92,7 +92,7 @@ void Spy::echo(JsonTalker& talker, JsonMessage& new_json_message) {
 				uint16_t message_time = new_json_message.get_timestamp();	// must have
 				uint16_t time_delay = actual_time - message_time;
 				new_json_message.set_nth_value_number(0, time_delay);
-				new_json_message.set_nth_value_string(1, new_json_message.get_from());
+				new_json_message.set_nth_value_string(1, new_json_message.get_from_name());
 				// Prepares headers for the original REMOTE sender
 				new_json_message.set_to(_original_talker);
 				new_json_message.set_from(talker.get_name());
@@ -111,7 +111,7 @@ void Spy::echo(JsonTalker& talker, JsonMessage& new_json_message) {
 
 void Spy::error(JsonTalker& talker, JsonMessage& new_json_message) {
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-	Serial.print(new_json_message.get_from());
+	Serial.print(new_json_message.get_from_name());
 	Serial.print(" - ");
 	ValueType value_type = new_json_message.get_nth_value_type(0);
 	switch (value_type) {

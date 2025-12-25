@@ -42,7 +42,7 @@ public:
 		#endif
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		SourceValue source_value = new_json_message.get_source();
+		SourceValue source_value = new_json_message.get_source_value();
 
 		#ifdef JSON_REPEATER_DEBUG_NEW
 		Serial.print(F("\t\t\t\tprocessMessage1.1: "));

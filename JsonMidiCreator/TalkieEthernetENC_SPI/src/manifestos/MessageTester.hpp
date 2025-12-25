@@ -245,11 +245,11 @@ public:
 				bool from_match = false;
 				char from_name[] = "buzzer";
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				if (strcmp(test_json_message.get_from(), from_name) == 0) {
+				if (strcmp(test_json_message.get_from_name(), from_name) == 0) {
 					from_match = true;
 				}
 				new_json_message.set_nth_value_string(0, from_name);
-				new_json_message.set_nth_value_string(1, test_json_message.get_from());
+				new_json_message.set_nth_value_string(1, test_json_message.get_from_name());
 				return from_match;
 			}
 			break;
