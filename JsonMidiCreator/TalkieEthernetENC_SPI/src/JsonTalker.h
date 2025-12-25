@@ -174,9 +174,9 @@ public:
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			uint16_t message_id = (uint16_t)millis();
-			if (message_data < MessageValue::ECHO) {
+			if (message_value < MessageValue::ECHO) {
 				_original_message.identity = message_id;
-				_original_message.message_data = message_data;
+				_original_message.message_value = message_value;
 			}
 			new_json_message.set_identity(message_id);
 		} else if (!new_json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
@@ -348,7 +348,7 @@ public:
 		#endif
 
         // Is it for me?
-		if (new_json_message.has_to) {
+		if (new_json_message.has_to()) {
 			if (!new_json_message.for_me(_name, _channel)) {
 				return false;
 			}
@@ -388,7 +388,7 @@ public:
 							index_found_i = _manifesto->actionIndex(new_json_message.get_action_string());
 							break;
 						
-						case ValueType::NUMBER:
+						case ValueType::INTEGER:
 							index_found_i = _manifesto->actionIndex(new_json_message.get_action_number());
 							break;
 						

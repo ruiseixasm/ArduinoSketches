@@ -46,7 +46,7 @@ public:
 
 	struct Original {
 		uint16_t identity;
-		MessageValue message_data;
+		MessageValue message_value;
 	};
 
 	static const char* valueKey(size_t nth = 0) {

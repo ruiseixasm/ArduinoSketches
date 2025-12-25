@@ -39,7 +39,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 					// 1. Start by collecting info from message
 					_original_talker = new_json_message.get_from_name();
 					_original_message.identity = new_json_message.get_identity();
-					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
+					_original_message.message_value = MessageValue::PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a LOCAL PING
 					new_json_message.set_message(MessageValue::PING);
 					new_json_message.remove_identity();
@@ -61,7 +61,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 					// 1. Start by collecting info from message
 					_original_talker = new_json_message.get_from_name();	// Explicit conversion
 					_original_message.identity = new_json_message.get_identity();
-					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
+					_original_message.message_value = MessageValue::PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a SELF PING
 					new_json_message.set_message(MessageValue::PING);
 					new_json_message.remove_identity();	// Makes sure a new IDENTITY is set
@@ -82,7 +82,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 void Spy::echo(JsonTalker& talker, JsonMessage& new_json_message) {
 	
 	Original original_message = talker.get_original();
-	switch (original_message.message_data) {
+	switch (original_message.message_value) {
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		case MessageValue::PING:
@@ -120,7 +120,7 @@ void Spy::error(JsonTalker& talker, JsonMessage& new_json_message) {
 			Serial.println(new_json_message.get_nth_value_string(0));
 			break;
 		
-		case ValueType::NUMBER:
+		case ValueType::INTEGER:
 			Serial.println(new_json_message.get_nth_value_number(0));
 			break;
 		

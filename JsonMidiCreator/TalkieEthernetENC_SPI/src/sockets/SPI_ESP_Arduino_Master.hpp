@@ -110,22 +110,10 @@ protected:
     int* _ss_pins;
     uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
-
-	
-    // JsonDocument intended to be reused
-    #if ARDUINOJSON_VERSION_MAJOR >= 7
-    JsonDocument _named_pins_doc;
-    #else
-    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _named_pins_doc;
-    #endif
-
-	JsonObject _named_pins;	// Automatically "null", needs to be initiated though!
-
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-	NameTable _new_named_pins_table;
+	NameTable _named_pins_table;
 
 
-	
     // Constructor
     SPI_ESP_Arduino_Master(
 		int* ss_pins, uint8_t ss_pins_count, JsonTalker* const* const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
@@ -507,7 +495,7 @@ protected:
 			#endif
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			_new_named_pins_table.add(new_json_message.get_from_name(), _actual_ss_pin);
+			_named_pins_table.add(new_json_message.get_from_name(), _actual_ss_pin);
 
 			#ifdef BROADCAST_SPI_DEBUG
 			if (_named_pins_doc.isNull()) {
