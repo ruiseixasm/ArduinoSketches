@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../JsonTalker.h"         // Includes the ArduinoJson Library
 
 // #define JSON_REPEATER_DEBUG
-// #define JSON_REPEATER_DEBUG_NEW
+#define JSON_REPEATER_DEBUG_NEW
 
 
 class JsonRepeater : public JsonTalker {

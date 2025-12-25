@@ -48,6 +48,16 @@ bool JsonRepeater::localSend(JsonMessage& json_message) {
 	bool sent_message = false;
 	bool pre_validated = false;
 	for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+
+		#ifdef JSON_REPEATER_DEBUG_NEW
+		Serial.print(F("\t\t\t\tlocalSend1.1: "));
+		json_message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.print(talker_i);
+		Serial.print(" | ");
+		Serial.println(talker_i->get_name());
+		#endif
+
 		if (_json_talkers[talker_i] != this && !_json_talkers[talker_i]->inSameSocket(_socket)) {  // Can't send to myself
 
 			// CREATE COPY for each talker
