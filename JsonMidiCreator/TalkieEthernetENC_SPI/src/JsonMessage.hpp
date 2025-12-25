@@ -310,7 +310,7 @@ public:
 		if (get_value_type('m') != INTEGER) return false;
 		if (get_number('m') > 9) return false;
 		if (get_value_type('i') != INTEGER) return false;
-		if (get_value_type('c') != INTEGER) return false;
+		if (get_value_type('b') != INTEGER) return false;
 		if (get_value_type('f') != STRING) return false;
 		return true;
 	}
@@ -763,8 +763,8 @@ public:
 		return remove('c');
 	}
 
-	bool remove_source_value() {
-		return remove('c');
+	bool remove_broadcast_value() {
+		return remove('b');
 	}
 
 	bool remove_roger_value() {
@@ -826,13 +826,13 @@ public:
 		return set_string('t', name);
 	}
 
-	bool set_source_value(BroadcastValue broadcast_value) {
-		size_t value_position = get_value_position('c');
+	bool set_broadcast_value(BroadcastValue broadcast_value) {
+		size_t value_position = get_value_position('b');
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(broadcast_value);
 			return true;
 		}
-		return set_number('c', static_cast<uint8_t>(broadcast_value));
+		return set_number('b', static_cast<uint8_t>(broadcast_value));
 	}
 
 	bool set_roger_value(RogerValue roger_value) {
