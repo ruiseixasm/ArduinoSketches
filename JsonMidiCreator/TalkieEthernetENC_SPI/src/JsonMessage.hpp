@@ -665,14 +665,6 @@ public:
 		return get_value_type('t');
 	}
 
-	bool get_to(char* name) const {
-		size_t colon_position = get_colon_position('t');
-		if (colon_position && get_value_type('t', colon_position) == ValueType::STRING) {
-			return get_string('t', name, NAME_LEN, colon_position);
-		}
-		return false;
-	}
-
     // New method using internal temporary buffer (_temp_string)
     char* get_to_name() const {
 		size_t colon_position = get_colon_position('t');
