@@ -69,7 +69,6 @@ public:
     
     // Index-based operations (simplified examples)
     bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json_message) override {
-        (void)talker;		// Silence unused parameter warning
 		
 		if (index >= sizeof(calls)/sizeof(Action)) return false;
 		
