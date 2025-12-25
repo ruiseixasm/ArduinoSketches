@@ -115,8 +115,8 @@ protected:
 
     // Constructor
     SPI_ESP_Arduino_Master(
-		int* ss_pins, uint8_t ss_pins_count, JsonTalker* const* const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
-	) : BroadcastSocket(json_talkers, talker_count, source_value) {
+		int* ss_pins, uint8_t ss_pins_count, JsonTalker* const* const json_talkers, uint8_t talker_count, BroadcastValue broadcast_value = BroadcastValue::REMOTE
+	) : BroadcastSocket(json_talkers, talker_count, broadcast_value) {
             
         	_ss_pins = ss_pins;
         	_ss_pins_count = ss_pins_count;
@@ -668,9 +668,9 @@ public:
 
     // Move ONLY the singleton instance method to subclass
     static SPI_ESP_Arduino_Master& instance(
-		int* ss_pins, uint8_t ss_pins_count, JsonTalker* const* const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE
+		int* ss_pins, uint8_t ss_pins_count, JsonTalker* const* const json_talkers, uint8_t talker_count, BroadcastValue broadcast_value = BroadcastValue::REMOTE
 	) {
-        static SPI_ESP_Arduino_Master instance(ss_pins, ss_pins_count, json_talkers, talker_count, source_value);
+        static SPI_ESP_Arduino_Master instance(ss_pins, ss_pins_count, json_talkers, talker_count, broadcast_value);
 
         return instance;
     }

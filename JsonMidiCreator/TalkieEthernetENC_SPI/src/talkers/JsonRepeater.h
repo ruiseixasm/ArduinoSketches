@@ -42,7 +42,7 @@ public:
 		#endif
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		SourceValue source_value = json_message.get_source_value();
+		BroadcastValue broadcast_value = json_message.get_source_value();
 
 		#ifdef JSON_REPEATER_DEBUG_NEW
 		Serial.print(F("\t\t\t\tprocessMessage1.1: "));
@@ -54,23 +54,23 @@ public:
 		Serial.println(_name);
 		#endif
 
-		switch (source_value) {
+		switch (broadcast_value) {
 
-			case SourceValue::REMOTE:
+			case BroadcastValue::REMOTE:
 				#ifdef JSON_REPEATER_DEBUG
 				Serial.println(F("Repeated a REMOTE message LOCALLY"));
 				#endif
 				localSend(json_message);	// Cross transmission
 				return TalkerMatch::NONE;
 			
-			case SourceValue::SELF:
+			case BroadcastValue::SELF:
 				#ifdef JSON_REPEATER_DEBUG
 				Serial.println(F("Repeated an SELF message to SELF"));
 				#endif
 				selfSend(json_message);	// Straight transmission
 				return TalkerMatch::NONE;
 			
-			case SourceValue::NONE:
+			case BroadcastValue::NONE:
 				#ifdef JSON_REPEATER_DEBUG
 				Serial.println(F("\tTransmitted an SELF message"));
 				#endif

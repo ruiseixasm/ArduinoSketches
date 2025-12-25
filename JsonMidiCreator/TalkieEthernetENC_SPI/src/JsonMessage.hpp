@@ -36,7 +36,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 using MessageKey = TalkieCodes::MessageKey;
-using SourceValue = TalkieCodes::SourceValue;
+using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using RogerValue = TalkieCodes::RogerValue;
 using InfoValue = TalkieCodes::InfoValue;
@@ -619,15 +619,15 @@ public:
 		return get_identity();
 	}
 
-	SourceValue get_source_value() const {
+	BroadcastValue get_source_value() const {
 		size_t colon_position = get_colon_position('c');
 		if (colon_position) {
 			uint8_t source_number = (uint8_t)get_number('c', colon_position);
-			if (source_number < static_cast<uint8_t>( SourceValue::NONE )) {
-				return static_cast<SourceValue>( source_number );
+			if (source_number < static_cast<uint8_t>( BroadcastValue::NONE )) {
+				return static_cast<BroadcastValue>( source_number );
 			}
 		}
-		return SourceValue::NONE;
+		return BroadcastValue::NONE;
 	}
 
 	RogerValue get_roger_value() const {
@@ -826,13 +826,13 @@ public:
 		return set_string('t', name);
 	}
 
-	bool set_source_value(SourceValue source_value) {
+	bool set_source_value(BroadcastValue broadcast_value) {
 		size_t value_position = get_value_position('c');
 		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(source_value);
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(broadcast_value);
 			return true;
 		}
-		return set_number('c', static_cast<uint8_t>(source_value));
+		return set_number('c', static_cast<uint8_t>(broadcast_value));
 	}
 
 	bool set_roger_value(RogerValue roger_value) {

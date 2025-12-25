@@ -27,8 +27,8 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	// As a spy it only answers to REMOTE calls
-	SourceValue source_data = json_message.get_source_value();
-	if (source_data == SourceValue::REMOTE) {
+	BroadcastValue source_data = json_message.get_source_value();
+	if (source_data == BroadcastValue::REMOTE) {
 
 		if (index < actionsCount()) {
 			// Actual implementation would do something based on index
@@ -52,7 +52,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					// 3. Sends the message LOCALLY
 					talker.localSend(json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
-					json_message.set_source_value(SourceValue::NONE);
+					json_message.set_source_value(BroadcastValue::NONE);
 				}
 				break;
 				case 1:
@@ -69,7 +69,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					// 3. Sends the message to myself
 					talker.selfSend(json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
-					json_message.set_source_value(SourceValue::NONE);
+					json_message.set_source_value(BroadcastValue::NONE);
 				}
 				break;
 			}

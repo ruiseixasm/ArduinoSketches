@@ -30,7 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define JSON_TALKER_DEBUG
 // #define JSON_TALKER_DEBUG_NEW
 
-using SourceValue = TalkieCodes::SourceValue;
+using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using InfoValue = TalkieCodes::InfoValue;
 using RogerValue = TalkieCodes::RogerValue;
@@ -227,7 +227,7 @@ public:
 
 			// Tags the message as LOCAL sourced
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			json_message.set_source_value(SourceValue::LOCAL);
+			json_message.set_source_value(BroadcastValue::LOCAL);
 			
 			#ifdef JSON_TALKER_DEBUG_NEW
 			Serial.print(F("\t\t\t\tlocalSend1.1: "));
@@ -273,7 +273,7 @@ public:
 
 		// Tags the message as LOCAL sourced
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		json_message.set_source_value(SourceValue::SELF);
+		json_message.set_source_value(BroadcastValue::SELF);
 		// Despite being a SELF message it also needs to be prepared like any other
 		if (prepareMessage(json_message)) {
 			processMessage(json_message);	// Calls my self processMessage method right away
@@ -300,22 +300,22 @@ public:
 		#endif
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		SourceValue source_value = json_message.get_source_value();	// Already returns NOISE
-		switch (source_value) {
+		BroadcastValue broadcast_value = json_message.get_source_value();	// Already returns NOISE
+		switch (broadcast_value) {
 
-			case SourceValue::LOCAL:
+			case BroadcastValue::LOCAL:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted a LOCAL message"));
 				#endif
 				return localSend(json_message);
 			
-			case SourceValue::SELF:
+			case BroadcastValue::SELF:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted an SELF message"));
 				#endif
 				return selfSend(json_message);
 
-			case SourceValue::NONE:
+			case BroadcastValue::NONE:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted an SELF message"));
 				#endif

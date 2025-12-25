@@ -40,7 +40,7 @@ protected:
 
 	JsonTalker* const* const _json_talkers;	// list of pointers and pointers are const, objects mutable
 	const uint8_t _talker_count;
-	const SourceValue _source_value;
+	const BroadcastValue _source_value;
 
     char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
@@ -380,10 +380,10 @@ protected:
     }
 
     // Constructor
-    BroadcastSocket(JsonTalker* const* const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
+    BroadcastSocket(JsonTalker* const* const json_talkers, uint8_t talker_count, BroadcastValue broadcast_value = BroadcastValue::REMOTE)
         : _json_talkers(json_talkers),
           _talker_count(talker_count),
-          _source_value(source_value)
+          _source_value(broadcast_value)
     {
 		// Each talker has its remote connections, ONLY local connections are static
 		for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
@@ -489,7 +489,7 @@ public:
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
-	SourceValue getSourceValue() const {
+	BroadcastValue getSourceValue() const {
 		return _source_value;
 	}
 	
@@ -510,7 +510,7 @@ public:
     bool remoteSend(JsonMessage& json_message) {
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-        json_message.set_source_value(SourceValue::REMOTE);
+        json_message.set_source_value(BroadcastValue::REMOTE);
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));

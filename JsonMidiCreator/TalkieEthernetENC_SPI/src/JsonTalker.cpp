@@ -34,7 +34,7 @@ bool JsonTalker::remoteSend(JsonMessage& json_message) {
 
 	// Tags the message as REMOTE sourced
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-	json_message.set_source_value(SourceValue::REMOTE);
+	json_message.set_source_value(BroadcastValue::REMOTE);
 	if (prepareMessage(json_message)) {
     	return _socket->remoteSend(json_message);
 	}

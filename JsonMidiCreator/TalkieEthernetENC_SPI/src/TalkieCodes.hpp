@@ -51,7 +51,7 @@ struct TalkieCodes {
 	}
 
 
-	enum class SourceValue : uint8_t {
+	enum class BroadcastValue : uint8_t {
 		REMOTE, LOCAL, SELF, NONE
 	};
 

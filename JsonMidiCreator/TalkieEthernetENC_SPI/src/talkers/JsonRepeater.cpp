@@ -43,7 +43,7 @@ bool JsonRepeater::localSend(JsonMessage& json_message) {
 	// DOESN'T CALL prepareMessage METHOD !!
 
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-	json_message.set_source_value(SourceValue::LOCAL);
+	json_message.set_source_value(BroadcastValue::LOCAL);
 	// Triggers all local Talkers to processes the json_message
 	bool sent_message = false;
 	TalkerMatch talker_match = TalkerMatch::NONE;
