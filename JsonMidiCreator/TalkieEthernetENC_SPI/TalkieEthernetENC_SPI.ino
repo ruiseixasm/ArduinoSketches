@@ -47,10 +47,10 @@ Spy spy_manifesto;
 JsonTalker t_spy = JsonTalker(t_spy_name, t_spy_desc, &spy_manifesto);
 
 // Sockless Talker (blue led)
-const char t_sockless_name[] = "blue";
-const char t_sockless_desc[] = "I have no Socket, but I turn led Blue on and off";
+const char l_blue_name[] = "blue";
+const char l_blue_desc[] = "I have no Socket, but I turn led Blue on and off";
 BlueManifesto blue_manifesto(2);
-JsonTalker t_sockless = JsonTalker(t_sockless_name, t_sockless_desc, &blue_manifesto);
+JsonTalker l_blue = JsonTalker(l_blue_name, l_blue_desc, &blue_manifesto);
 
 // Sockless Talker (JsonMessage tester)
 const char t_tester_name[] = "test";
@@ -62,7 +62,7 @@ JsonTalker t_tester = JsonTalker(t_tester_name, t_tester_desc, &message_tester);
 // LIST OF TALKERS FOR EACH SOCKET
 JsonTalker* ethernet_talkers[] = { &r_ethernet, &t_spy };   // It's an array of pointers
 JsonTalker* spi_talkers[] = { &r_spi };   // It's an array of pointers
-JsonTalker* all_talkers[] = { &r_ethernet, &r_spi, &t_spy, &t_sockless, &t_tester };	// It's an array of pointers
+JsonTalker* all_talkers[] = { &r_ethernet, &r_spi, &t_spy, &t_tester, &l_blue };	// It's an array of pointers
 
 
 // SOCKETS
