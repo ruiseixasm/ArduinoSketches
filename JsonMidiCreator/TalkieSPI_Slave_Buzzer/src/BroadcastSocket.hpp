@@ -33,16 +33,17 @@ https://github.com/ruiseixasm/JsonTalkie
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
+using TalkerMatch = JsonTalker::TalkerMatch;
+
 class BroadcastSocket {
 protected:
 
 	JsonTalker* const* const _json_talkers;	// list of pointers and pointers are const, objects mutable
 	const uint8_t _talker_count;
-	const SourceValue _source_value;
+	const BroadcastValue _source_value;
 
-    char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-    char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-	
+    char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 	uint8_t _received_length = 0;
 	uint8_t _sending_length = 0;
 
@@ -52,13 +53,6 @@ protected:
     uint16_t _last_local_time = 0;
     uint16_t _last_remote_time = 0;
     uint16_t _drops_count = 0;
-
-    // JsonDocument intended to be reused
-    #if ARDUINOJSON_VERSION_MAJOR >= 7
-    JsonDocument _message_doc;
-    #else
-    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> _message_doc;
-    #endif
 
 
     static uint16_t generateChecksum(const char* net_data, const size_t len) {
@@ -344,9 +338,9 @@ protected:
 				#endif
 
 				if (setBufferSource()) {	// Has to set the Socket Source Value first
-					bool pre_validated = false;
+					TalkerMatch talker_match = TalkerMatch::NONE;
 					// Triggers all Talkers to processes the received data
-					for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
+					for (uint8_t talker_i = 0; talker_i < _talker_count && talker_match > TalkerMatch::BY_NAME; ++talker_i) {	// _talker_count makes the code safe
 
 						#ifdef BROADCASTSOCKET_DEBUG
 						Serial.print(F("triggerTalkers9: Creating new JsonObject for talker: "));
@@ -366,15 +360,13 @@ protected:
 
 						}
 						
-						
 						#ifdef BROADCASTSOCKET_DEBUG
 						Serial.print(F("triggerTalkers10: Triggering the talker: "));
 						Serial.println(_json_talkers[talker_i]->get_name());
 						#endif
 
 						// A non static method
-						pre_validated = _json_talkers[talker_i]->processMessage(json_message);
-						if (!pre_validated) return 0;
+						talker_match = _json_talkers[talker_i]->processMessage(json_message);
 					}
 				}
             } else {
@@ -388,10 +380,10 @@ protected:
     }
 
     // Constructor
-    BroadcastSocket(JsonTalker* const* const json_talkers, uint8_t talker_count, SourceValue source_value = SourceValue::REMOTE)
+    BroadcastSocket(JsonTalker* const* const json_talkers, uint8_t talker_count, BroadcastValue broadcast_value = BroadcastValue::REMOTE)
         : _json_talkers(json_talkers),
           _talker_count(talker_count),
-          _source_value(source_value)
+          _source_value(broadcast_value)
     {
 		// Each talker has its remote connections, ONLY local connections are static
 		for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
@@ -497,7 +489,7 @@ public:
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
-	SourceValue getSourceValue() const {
+	BroadcastValue getSourceValue() const {
 		return _source_value;
 	}
 	
@@ -518,7 +510,7 @@ public:
     bool remoteSend(JsonMessage& json_message) {
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-        json_message.set_source_value(SourceValue::REMOTE);
+        json_message.set_broadcast_value(BroadcastValue::REMOTE);
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));

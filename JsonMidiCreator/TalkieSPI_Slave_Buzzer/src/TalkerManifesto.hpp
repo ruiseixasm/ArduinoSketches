@@ -15,7 +15,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define I_MANIFESTO_HPP
 
 #include <Arduino.h>
-#include <ArduinoJson.h>    // Include ArduinoJson Library
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
 
@@ -48,10 +47,6 @@ public:
 		uint16_t identity;
 		MessageValue message_value;
 	};
-
-	static const char* valueKey(size_t nth = 0) {
-		return TalkieCodes::valueKey(nth);
-	}
 
 
 protected:

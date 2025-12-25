@@ -36,7 +36,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 using MessageKey = TalkieCodes::MessageKey;
-using SourceValue = TalkieCodes::SourceValue;
+using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using RogerValue = TalkieCodes::RogerValue;
 using InfoValue = TalkieCodes::InfoValue;
@@ -310,7 +310,7 @@ public:
 		if (get_value_type('m') != INTEGER) return false;
 		if (get_number('m') > 9) return false;
 		if (get_value_type('i') != INTEGER) return false;
-		if (get_value_type('c') != INTEGER) return false;
+		if (get_value_type('b') != INTEGER) return false;
 		if (get_value_type('f') != STRING) return false;
 		return true;
 	}
@@ -619,15 +619,15 @@ public:
 		return get_identity();
 	}
 
-	SourceValue get_source_value() const {
-		size_t colon_position = get_colon_position('c');
+	BroadcastValue get_broadcast_value() const {
+		size_t colon_position = get_colon_position('b');
 		if (colon_position) {
-			uint8_t source_number = (uint8_t)get_number('c', colon_position);
-			if (source_number < static_cast<uint8_t>( SourceValue::NONE )) {
-				return static_cast<SourceValue>( source_number );
+			BroadcastValue broadcast_value = static_cast<BroadcastValue>( get_number('b', colon_position) );
+			if (broadcast_value < BroadcastValue::NONE) {
+				return broadcast_value;
 			}
 		}
-		return SourceValue::NONE;
+		return BroadcastValue::NONE;
 	}
 
 	RogerValue get_roger_value() const {
@@ -763,8 +763,8 @@ public:
 		return remove('c');
 	}
 
-	bool remove_source_value() {
-		return remove('c');
+	bool remove_broadcast_value() {
+		return remove('b');
 	}
 
 	bool remove_roger_value() {
@@ -826,13 +826,13 @@ public:
 		return set_string('t', name);
 	}
 
-	bool set_source_value(SourceValue source_value) {
-		size_t value_position = get_value_position('c');
+	bool set_broadcast_value(BroadcastValue broadcast_value) {
+		size_t value_position = get_value_position('b');
 		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(source_value);
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(broadcast_value);
 			return true;
 		}
-		return set_number('c', static_cast<uint8_t>(source_value));
+		return set_number('b', static_cast<uint8_t>(broadcast_value));
 	}
 
 	bool set_roger_value(RogerValue roger_value) {

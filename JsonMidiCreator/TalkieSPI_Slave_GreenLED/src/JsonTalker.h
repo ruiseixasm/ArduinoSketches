@@ -15,7 +15,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define JSON_TALKER_H
 
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
-#include <ArduinoJson.h>    // Include ArduinoJson Library
 #include "TalkerManifesto.hpp"
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
@@ -31,7 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define JSON_TALKER_DEBUG
 // #define JSON_TALKER_DEBUG_NEW
 
-using SourceValue = TalkieCodes::SourceValue;
+using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using InfoValue = TalkieCodes::InfoValue;
 using RogerValue = TalkieCodes::RogerValue;
@@ -44,6 +43,13 @@ class BroadcastSocket;
 
 
 class JsonTalker {
+public:
+
+	enum class TalkerMatch : uint8_t {
+		FAIL, BY_NAME, BY_CHANNEL, NONE
+	};
+
+
 protected:
     
     // The socket can't be static becaus different talkers may use different sockets (remote)
@@ -80,10 +86,6 @@ public:
 		}
     }
 
-
-	static const char* valueKey(size_t nth = 0) {
-		return TalkieCodes::valueKey(nth);
-	}
 
 	bool inSameSocket(const BroadcastSocket* socket) const {
 		if (_socket) {	// Being in nullptr is NOT in a socket
@@ -221,7 +223,7 @@ public:
 
 			// Tags the message as LOCAL sourced
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			json_message.set_source_value(SourceValue::LOCAL);
+			json_message.set_broadcast_value(BroadcastValue::LOCAL);
 			
 			#ifdef JSON_TALKER_DEBUG_NEW
 			Serial.print(F("\t\t\t\tlocalSend1.1: "));
@@ -231,8 +233,8 @@ public:
 
 			// Triggers all local Talkers to processes the json_message
 			bool sent_message = false;
-			bool pre_validated = false;
-			for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
+			TalkerMatch talker_match = TalkerMatch::NONE;
+			for (uint8_t talker_i = 0; talker_i < _talker_count && talker_match > TalkerMatch::BY_NAME; ++talker_i) {	// _talker_count makes the code safe
 				if (_json_talkers[talker_i] != this) {  // Can't send to myself
 
 					// CREATE COPY for each talker
@@ -246,9 +248,8 @@ public:
 					Serial.println(talker_i);
 					#endif
 
-					pre_validated = _json_talkers[talker_i]->processMessage(json_message_copy);
+					talker_match = _json_talkers[talker_i]->processMessage(json_message_copy);
 					sent_message = true;
-					if (!pre_validated) break;
 				}
 			}
 			return sent_message;
@@ -268,10 +269,11 @@ public:
 
 		// Tags the message as LOCAL sourced
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		json_message.set_source_value(SourceValue::SELF);
+		json_message.set_broadcast_value(BroadcastValue::SELF);
 		// Despite being a SELF message it also needs to be prepared like any other
 		if (prepareMessage(json_message)) {
-			return processMessage(json_message);	// Calls my self processMessage method right away
+			processMessage(json_message);	// Calls my self processMessage method right away
+			return true;
 		}
 		return false;
     }
@@ -294,22 +296,22 @@ public:
 		#endif
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		SourceValue source_value = json_message.get_source_value();	// Already returns NOISE
-		switch (source_value) {
+		BroadcastValue broadcast_value = json_message.get_broadcast_value();	// Already returns NOISE
+		switch (broadcast_value) {
 
-			case SourceValue::LOCAL:
+			case BroadcastValue::LOCAL:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted a LOCAL message"));
 				#endif
 				return localSend(json_message);
 			
-			case SourceValue::SELF:
+			case BroadcastValue::SELF:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted an SELF message"));
 				#endif
 				return selfSend(json_message);
 
-			case SourceValue::NONE:
+			case BroadcastValue::NONE:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted an SELF message"));
 				#endif
@@ -327,13 +329,13 @@ public:
     }
 
     
-    virtual bool processMessage(JsonMessage& json_message) {
+    virtual TalkerMatch processMessage(JsonMessage& json_message) {
 
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("\tProcessing JSON message..."));
         #endif
         
-        bool dont_interrupt = true;   // Doesn't interrupt next talkers process
+        TalkerMatch talker_match = TalkerMatch::NONE;
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		MessageValue message_value = json_message.get_message_value();
@@ -346,17 +348,27 @@ public:
 		#endif
 
         // Is it for me?
-		if (json_message.has_to()) {
-			if (!json_message.for_me(_name, _channel)) {
-				return false;
+		if (json_message.has_to_name()) {
+			if (json_message.is_to_name(_name)) {
+				talker_match = TalkerMatch::BY_NAME;
+			} else {
+				return talker_match;
+			}
+		} else if (json_message.has_to_channel()) {
+			if (json_message.is_to_channel(_channel)) {
+				talker_match = TalkerMatch::BY_CHANNEL;
+			} else {
+				return talker_match;
 			}
 		} else {
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			if (message_value > MessageValue::PING) {
 				// Only TALK, CHANNEL and PING can be broadcasted
-				return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
+				return TalkerMatch::FAIL;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
 			} else if (json_message.has_nth_value_number(0)) {
-				return false;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
+				return TalkerMatch::FAIL;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
+			} else {
+				talker_match = TalkerMatch::BY_CHANNEL;
 			}
 		}
 
@@ -401,7 +413,7 @@ public:
 						Serial.println(F(", now being processed..."));
 						#endif
 
-						// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
+						// ROGER should be implicit for CALL to spare json string size for more data index value nth
 						if (!_manifesto->actionByIndex(index_found_i, *this, json_message)) {
 							json_message.set_roger_value(RogerValue::NEGATIVE);
 						}
@@ -566,7 +578,7 @@ public:
 			default:
 				break;
         }
-        return dont_interrupt;
+        return talker_match;
     }
 
 
