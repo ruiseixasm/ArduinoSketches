@@ -373,11 +373,11 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(JsonMessage& new_json_message) override {
+	bool receivedJsonMessage(JsonMessage& json_message) override {
 
-		if (BroadcastSocket::receivedJsonMessage(new_json_message)) {
+		if (BroadcastSocket::receivedJsonMessage(json_message)) {
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			_from_name = new_json_message.get_from_name();
+			_from_name = json_message.get_from_name();
 			return true;
 		}
 		return false;
@@ -385,12 +385,12 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(const JsonMessage& new_json_message) override {
+    bool send(const JsonMessage& json_message) override {
 
-		if (_initiated && BroadcastSocket::send(new_json_message)) {	// Very important pre processing !!
+		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			bool as_reply = new_json_message.is_to_name(_from_name);
+			bool as_reply = json_message.is_to_name(_from_name);
 
 			#ifdef ENABLE_DIRECT_ADDRESSING
 			if (as_reply) {

@@ -29,11 +29,11 @@ public:
         : JsonTalker(name, desc, nullptr) {}
 
 
-    bool remoteSend(JsonMessage& new_json_message) override;
-    bool localSend(JsonMessage& new_json_message) override;
+    bool remoteSend(JsonMessage& json_message) override;
+    bool localSend(JsonMessage& json_message) override;
 
 	
-	bool processMessage(JsonMessage& new_json_message) override {
+	bool processMessage(JsonMessage& json_message) override {
 
 		#ifdef JSON_REPEATER_DEBUG
 		Serial.print(F("\t"));
@@ -42,14 +42,14 @@ public:
 		#endif
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		SourceValue source_value = new_json_message.get_source_value();
+		SourceValue source_value = json_message.get_source_value();
 
 		#ifdef JSON_REPEATER_DEBUG_NEW
 		Serial.print(F("\t\t\t\tprocessMessage1.1: "));
-		new_json_message.write_to(Serial);
+		json_message.write_to(Serial);
 		Serial.println();
 		Serial.print(F("\t\t\t\tprocessMessage1.2: "));
-		new_json_message.write_to(Serial);
+		json_message.write_to(Serial);
 		Serial.print(" | ");
 		Serial.println(_name);
 		#endif
@@ -60,19 +60,19 @@ public:
 				#ifdef JSON_REPEATER_DEBUG
 				Serial.println(F("Repeated a REMOTE message LOCALLY"));
 				#endif
-				return localSend(new_json_message);	// Cross transmission
+				return localSend(json_message);	// Cross transmission
 			
 			case SourceValue::SELF:
 				#ifdef JSON_REPEATER_DEBUG
 				Serial.println(F("Repeated an SELF message to SELF"));
 				#endif
-				return selfSend(new_json_message);	// Straight transmission
+				return selfSend(json_message);	// Straight transmission
 			
 			case SourceValue::NONE:
 				#ifdef JSON_REPEATER_DEBUG
 				Serial.println(F("\tTransmitted an SELF message"));
 				#endif
-				return noneSend(new_json_message);	// Straight transmission
+				return noneSend(json_message);	// Straight transmission
 
 			// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 			default: break;
@@ -81,7 +81,7 @@ public:
 		#ifdef JSON_REPEATER_DEBUG
 		Serial.println(F("Repeated a LOCAL message REMOTELY"));
 		#endif
-		return remoteSend(new_json_message);			// Cross transmission
+		return remoteSend(json_message);			// Cross transmission
 	}
 
 };

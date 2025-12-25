@@ -219,9 +219,9 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool receivedJsonMessage(JsonMessage& new_json_message) {
+	virtual bool receivedJsonMessage(JsonMessage& json_message) {
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		if (!new_json_message.validate_fields()) {
+		if (!json_message.validate_fields()) {
 			#ifdef JSON_TALKER_DEBUG_NEW
 			Serial.println(F("ERROR: Missing fields or wrongly set"));
 			#endif
@@ -231,8 +231,8 @@ protected:
 	}
 
 	// Allows the overriding class to peek after processing of the JSON message
-	virtual bool processedJsonMessage(JsonMessage& new_json_message) {
-        (void)new_json_message;	// Silence unused parameter warning
+	virtual bool processedJsonMessage(JsonMessage& json_message) {
+        (void)json_message;	// Silence unused parameter warning
 
 		return true;
 	}
@@ -317,28 +317,28 @@ protected:
 
 				// Gives a chance to show it one time
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				JsonMessage new_json_message(_receiving_buffer, _received_length);
+				JsonMessage json_message(_receiving_buffer, _received_length);
 
-				if (!receivedJsonMessage(new_json_message)) {
+				if (!receivedJsonMessage(json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-					if (new_json_message.swap_from_with_to()) {
-						new_json_message.set_message(MessageValue::ERROR);
-						if (!new_json_message.has_identity()) {
-							new_json_message.set_identity();
+					if (json_message.swap_from_with_to()) {
+						json_message.set_message(MessageValue::ERROR);
+						if (!json_message.has_identity()) {
+							json_message.set_identity();
 						}
-						remoteSend(new_json_message);	// Includes reply swap
+						remoteSend(json_message);	// Includes reply swap
 					}
 					return 0;
 				}
 				
 				#ifdef BROADCASTSOCKET_DEBUG_NEW
-				Serial.print(F("\tnew_json_message1.1: "));
-				new_json_message.write_to(Serial);
+				Serial.print(F("\tjson_message1.1: "));
+				json_message.write_to(Serial);
 				Serial.print(" | ");
-				Serial.print(new_json_message.validate_fields());
+				Serial.print(json_message.validate_fields());
 				Serial.print(" | ");
 				Serial.println(setBufferSource());
 				#endif
@@ -355,13 +355,13 @@ protected:
 
 						if (talker_i > 0) {
 							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-							new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
+							json_message.deserialize_buffer(_receiving_buffer, _received_length);
 							
 							#ifdef BROADCASTSOCKET_DEBUG_NEW
-							Serial.print(F("\tnew_json_message1.2: "));
-							new_json_message.write_to(Serial);
+							Serial.print(F("\tjson_message1.2: "));
+							json_message.write_to(Serial);
 							Serial.print(" | ");
-							Serial.println(new_json_message.validate_fields());
+							Serial.println(json_message.validate_fields());
 							#endif
 
 						}
@@ -373,7 +373,7 @@ protected:
 						#endif
 
 						// A non static method
-						pre_validated = _json_talkers[talker_i]->processMessage(new_json_message);
+						pre_validated = _json_talkers[talker_i]->processMessage(json_message);
 						if (!pre_validated) return 0;
 					}
 				}
@@ -431,8 +431,8 @@ protected:
 	}
 
 
-    virtual bool send(const JsonMessage& new_json_message) {
-        (void)new_json_message;	// Silence unused parameter warning
+    virtual bool send(const JsonMessage& json_message) {
+        (void)json_message;	// Silence unused parameter warning
 		
         if (_sending_length < 3*4 + 2) {
 
@@ -510,27 +510,27 @@ public:
     }
 
 
-	bool deserialize_buffer(JsonMessage& new_json_message) const {
-		return new_json_message.deserialize_buffer(_receiving_buffer, _received_length);
+	bool deserialize_buffer(JsonMessage& json_message) const {
+		return json_message.deserialize_buffer(_receiving_buffer, _received_length);
 	}
 
 
-    bool remoteSend(JsonMessage& new_json_message) {
+    bool remoteSend(JsonMessage& json_message) {
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-        new_json_message.set_source_value(SourceValue::REMOTE);
+        json_message.set_source_value(SourceValue::REMOTE);
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));
-		new_json_message.write_to(Serial);
+		json_message.write_to(Serial);
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (processedJsonMessage(new_json_message) && availableSendingBuffer()) {
+		if (processedJsonMessage(json_message) && availableSendingBuffer()) {
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			_sending_length = new_json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			_sending_length = json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 
 			#ifdef BROADCASTSOCKET_DEBUG
 			Serial.print(F("remoteSend3: "));
@@ -541,7 +541,7 @@ public:
 			#endif
 
 			if (_sending_length) {
-				return send(new_json_message);
+				return send(json_message);
 			}
 		}
 

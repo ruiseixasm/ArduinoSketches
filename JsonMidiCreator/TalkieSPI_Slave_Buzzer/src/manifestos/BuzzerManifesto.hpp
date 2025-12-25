@@ -61,9 +61,9 @@ public:
 
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json_message) override {
+    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message) override {
         (void)talker;		// Silence unused parameter warning
-        (void)new_json_message;	// Silence unused parameter warning
+        (void)json_message;	// Silence unused parameter warning
 
 		if (index < actionsCount()) {
 			// Actual implementation would do something based on index
@@ -96,7 +96,7 @@ public:
 
 				case 1:
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-					_buzz_duration_ms = (uint16_t)new_json_message.get_nth_value_number(0);
+					_buzz_duration_ms = (uint16_t)json_message.get_nth_value_number(0);
 					return true;
 				break;
 
@@ -108,21 +108,21 @@ public:
 	}
     
 
-    void echo(JsonTalker& talker, JsonMessage& new_json_message) override {
+    void echo(JsonTalker& talker, JsonMessage& json_message) override {
         (void)talker;		// Silence unused parameter warning
 		
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		Serial.print( new_json_message.get_from_name() );
+		Serial.print( json_message.get_from_name() );
         Serial.print(" - ");
-		ValueType value_type = new_json_message.get_nth_value_type(0);
+		ValueType value_type = json_message.get_nth_value_type(0);
 		switch (value_type) {
 
 			case ValueType::STRING:
-				Serial.println(new_json_message.get_nth_value_string(0));
+				Serial.println(json_message.get_nth_value_string(0));
 			break;
 			
 			case ValueType::INTEGER:
-				Serial.println(new_json_message.get_nth_value_number(0));
+				Serial.println(json_message.get_nth_value_number(0));
 			break;
 			
 			default:
@@ -132,21 +132,21 @@ public:
     }
 
 
-    void error(JsonTalker& talker, JsonMessage& new_json_message) override {
+    void error(JsonTalker& talker, JsonMessage& json_message) override {
         (void)talker;		// Silence unused parameter warning
 		
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		Serial.print( new_json_message.get_from_name() );
+		Serial.print( json_message.get_from_name() );
         Serial.print(" - ");
-		ValueType value_type = new_json_message.get_nth_value_type(0);
+		ValueType value_type = json_message.get_nth_value_type(0);
 		switch (value_type) {
 
 			case ValueType::STRING:
-				Serial.println(new_json_message.get_nth_value_string(0));
+				Serial.println(json_message.get_nth_value_string(0));
 			break;
 			
 			case ValueType::INTEGER:
-				Serial.println(new_json_message.get_nth_value_number(0));
+				Serial.println(json_message.get_nth_value_number(0));
 			break;
 			
 			default:

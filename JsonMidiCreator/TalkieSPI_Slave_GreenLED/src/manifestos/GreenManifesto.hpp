@@ -50,7 +50,7 @@ protected:
 public:
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json_message) override {
+    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message) override {
         (void)talker;		// Silence unused parameter warning
 		
 		if (index >= sizeof(calls)/sizeof(Action)) return false;
@@ -81,7 +81,7 @@ public:
 					return true;
 				} else {
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-					new_json_message.set_nth_value_string(0, "Already On!");
+					json_message.set_nth_value_string(0, "Already On!");
 					return false;
 				}
 			}
@@ -101,7 +101,7 @@ public:
 					_total_calls++;
 				} else {
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-					new_json_message.set_nth_value_string(0, "Already Off!");
+					json_message.set_nth_value_string(0, "Already Off!");
 					return false;
 				}
 				return true;
@@ -110,7 +110,7 @@ public:
 			
             case 2:
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-                _bpm_10 = new_json_message.get_nth_value_number(0);
+                _bpm_10 = json_message.get_nth_value_number(0);
                 return true;
                 break;
 				

@@ -120,15 +120,15 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(JsonMessage& new_json_message) override {
+	bool receivedJsonMessage(JsonMessage& json_message) override {
 
-		if (BroadcastSocket::receivedJsonMessage(new_json_message)) {
+		if (BroadcastSocket::receivedJsonMessage(json_message)) {
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			strcpy(_new_from_name, new_json_message.get_from_name());
+			strcpy(_new_from_name, json_message.get_from_name());
 			
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
 			Serial.print(F("receivedJsonMessage1: "));
-			new_json_message.write_to(Serial);
+			json_message.write_to(Serial);
 			Serial.print(" | ");
 			Serial.println(_new_from_name);
 			#endif
@@ -139,23 +139,23 @@ protected:
 	}
 
 
-    bool send(const JsonMessage& new_json_message) override {
+    bool send(const JsonMessage& json_message) override {
 		
-        if (_udp && BroadcastSocket::send(new_json_message)) {	// Very important pre processing !!
+        if (_udp && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 			
             IPAddress broadcastIP(255, 255, 255, 255);
 
             #ifdef ENABLE_DIRECT_ADDRESSING
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			bool as_reply = new_json_message.is_to_name(_new_from_name);
+			bool as_reply = json_message.is_to_name(_new_from_name);
 
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
 			Serial.print(F("\t\t\t\t\tsend orgn: "));
-			new_json_message.write_to(Serial);
+			json_message.write_to(Serial);
 			Serial.println();
 			Serial.print(F("\t\t\t\t\tsend json: "));
-			new_json_message.write_to(Serial);
+			json_message.write_to(Serial);
 			Serial.print(" | ");
 			Serial.println(as_reply);
 			Serial.print(F("\t\t\t\t\tsend buff: "));

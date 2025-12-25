@@ -140,27 +140,27 @@ public:
 
 
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-	bool prepareMessage(JsonMessage& new_json_message) {
+	bool prepareMessage(JsonMessage& json_message) {
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		if (new_json_message.has_from()) {
-			if (strcmp(new_json_message.get_from_name(), _name) != 0) {
+		if (json_message.has_from()) {
+			if (strcmp(json_message.get_from_name(), _name) != 0) {
 				// FROM is different from _name, must be swapped (replaces "f" with "t")
-				new_json_message.swap_from_with_to();
-				new_json_message.set_from_name(_name);
+				json_message.swap_from_with_to();
+				json_message.set_from_name(_name);
 			}
 		} else {
 			// FROM doesn't even exist (must have)
-			new_json_message.set_from_name(_name);
+			json_message.set_from_name(_name);
 		}
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		MessageValue message_value = new_json_message.get_message_value();
+		MessageValue message_value = json_message.get_message_value();
 		if (message_value < MessageValue::ECHO) {
 
 			#ifdef JSON_TALKER_DEBUG
 			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
-			new_json_message.write_to(Serial);
+			json_message.write_to(Serial);
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
@@ -178,25 +178,25 @@ public:
 				_original_message.identity = message_id;
 				_original_message.message_value = message_value;
 			}
-			new_json_message.set_identity(message_id);
-		} else if (!new_json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
+			json_message.set_identity(message_id);
+		} else if (!json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
 
 			#ifdef JSON_TALKER_DEBUG
 			Serial.print(F("remoteSend1: Response message with a wrong or without an identifier, now being set (i): "));
-			new_json_message.write_to(Serial);
+			json_message.write_to(Serial);
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			new_json_message.set_message(MessageValue::ERROR);
-			new_json_message.set_identity();
-			new_json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::IDENTITY));
+			json_message.set_message(MessageValue::ERROR);
+			json_message.set_identity();
+			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::IDENTITY));
 
 		} else {
 			
 			#ifdef JSON_TALKER_DEBUG
 			Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
-			new_json_message.write_to(Serial);
+			json_message.write_to(Serial);
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
@@ -205,11 +205,11 @@ public:
 	}
 
 	
-    virtual bool remoteSend(JsonMessage& new_json_message);
+    virtual bool remoteSend(JsonMessage& json_message);
 
 
-    virtual bool localSend(JsonMessage& new_json_message) {
-		(void)new_json_message;
+    virtual bool localSend(JsonMessage& json_message) {
+		(void)json_message;
 
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("\t"));
@@ -218,15 +218,15 @@ public:
 		Serial.println(F("Sending a LOCAL message"));
 		#endif
 
-		if (prepareMessage(new_json_message)) {
+		if (prepareMessage(json_message)) {
 
 			// Tags the message as LOCAL sourced
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			new_json_message.set_source_value(SourceValue::LOCAL);
+			json_message.set_source_value(SourceValue::LOCAL);
 			
 			#ifdef JSON_TALKER_DEBUG_NEW
 			Serial.print(F("\t\t\t\tlocalSend1.1: "));
-			new_json_message.write_to(Serial);
+			json_message.write_to(Serial);
 			Serial.println();
 			#endif
 
@@ -238,16 +238,16 @@ public:
 
 					// CREATE COPY for each talker
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-					JsonMessage new_json_message_copy(new_json_message);
+					JsonMessage json_message_copy(json_message);
 					
 					#ifdef JSON_TALKER_DEBUG_NEW
 					Serial.print(F("\t\t\t\tlocalSend1.2: "));
-					new_json_message_copy.write_to(Serial);
+					json_message_copy.write_to(Serial);
 					Serial.print(" | ");
 					Serial.println(talker_i);
 					#endif
 
-					pre_validated = _json_talkers[talker_i]->processMessage(new_json_message_copy);
+					pre_validated = _json_talkers[talker_i]->processMessage(json_message_copy);
 					sent_message = true;
 					if (!pre_validated) break;
 				}
@@ -258,8 +258,8 @@ public:
     }
 
 
-    virtual bool selfSend(JsonMessage& new_json_message) {
-		(void)new_json_message;
+    virtual bool selfSend(JsonMessage& json_message) {
+		(void)json_message;
 
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("\t"));
@@ -270,24 +270,24 @@ public:
 
 		// Tags the message as LOCAL sourced
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		new_json_message.set_source_value(SourceValue::SELF);
+		json_message.set_source_value(SourceValue::SELF);
 		// Despite being a SELF message it also needs to be prepared like any other
-		if (prepareMessage(new_json_message)) {
-			return processMessage(new_json_message);	// Calls my self processMessage method right away
+		if (prepareMessage(json_message)) {
+			return processMessage(json_message);	// Calls my self processMessage method right away
 		}
 		return false;
     }
 
 
-	virtual bool noneSend(JsonMessage& new_json_message) {
-		(void)new_json_message;
+	virtual bool noneSend(JsonMessage& json_message) {
+		(void)json_message;
 
 		// It's absolutely neutral, does nothing, NONE
 		return true;
 	}
 
 
-    virtual bool transmitMessage(JsonMessage& new_json_message) {
+    virtual bool transmitMessage(JsonMessage& json_message) {
 
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("\t"));
@@ -296,26 +296,26 @@ public:
 		#endif
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		SourceValue source_value = new_json_message.get_source_value();	// Already returns NOISE
+		SourceValue source_value = json_message.get_source_value();	// Already returns NOISE
 		switch (source_value) {
 
 			case SourceValue::LOCAL:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted a LOCAL message"));
 				#endif
-				return localSend(new_json_message);
+				return localSend(json_message);
 			
 			case SourceValue::SELF:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted an SELF message"));
 				#endif
-				return selfSend(new_json_message);
+				return selfSend(json_message);
 
 			case SourceValue::NONE:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted an SELF message"));
 				#endif
-				return noneSend(new_json_message);
+				return noneSend(json_message);
 
 			// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 			default:
@@ -323,13 +323,13 @@ public:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted a REMOTE message"));
 				#endif
-				return remoteSend(new_json_message);
+				return remoteSend(json_message);
 			break;
 		}
     }
 
     
-    virtual bool processMessage(JsonMessage& new_json_message) {
+    virtual bool processMessage(JsonMessage& json_message) {
 
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("\tProcessing JSON message..."));
@@ -338,18 +338,18 @@ public:
         bool dont_interrupt = true;   // Doesn't interrupt next talkers process
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		MessageValue message_value = new_json_message.get_message_value();
+		MessageValue message_value = json_message.get_message_value();
 
 		#ifdef JSON_TALKER_DEBUG_NEW
 		Serial.print(F("\t\tprocessMessage1: "));
-		new_json_message.write_to(Serial);
+		json_message.write_to(Serial);
 		Serial.print(" | ");
 		Serial.println(static_cast<int>( message_value ));
 		#endif
 
         // Is it for me?
-		if (new_json_message.has_to()) {
-			if (!new_json_message.for_me(_name, _channel)) {
+		if (json_message.has_to()) {
+			if (!json_message.for_me(_name, _channel)) {
 				return false;
 			}
 		} else {
@@ -357,14 +357,14 @@ public:
 			if (message_value > MessageValue::PING) {
 				// Only TALK, CHANNEL and PING can be broadcasted
 				return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
-			} else if (new_json_message.has_nth_value_number(0)) {
+			} else if (json_message.has_nth_value_number(0)) {
 				return false;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
 			}
 		}
 
         #ifdef JSON_TALKER_DEBUG
         Serial.print(F("\tProcess: "));
-        new_json_message.write_to(Serial);
+        json_message.write_to(Serial);
         Serial.println();  // optional: just to add a newline after the JSON
         #endif
 
@@ -372,7 +372,7 @@ public:
 		if (message_value < MessageValue::ECHO) {
 			_received_message = message_value;
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			new_json_message.set_message(MessageValue::ECHO);
+			json_message.set_message(MessageValue::ECHO);
 		}
 
         switch (message_value) {
@@ -381,15 +381,15 @@ public:
 				{
 					uint8_t index_found_i = 255;
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-					ValueType value_type = new_json_message.get_value_type(MessageKey::ACTION);
+					ValueType value_type = json_message.get_value_type(MessageKey::ACTION);
 					switch (value_type) {
 
 						case ValueType::STRING:
-							index_found_i = _manifesto->actionIndex(new_json_message.get_action_string());
+							index_found_i = _manifesto->actionIndex(json_message.get_action_string());
 							break;
 						
 						case ValueType::INTEGER:
-							index_found_i = _manifesto->actionIndex(new_json_message.get_action_number());
+							index_found_i = _manifesto->actionIndex(json_message.get_action_number());
 							break;
 						
 						default: break;
@@ -404,45 +404,45 @@ public:
 						#endif
 
 						// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
-						if (!_manifesto->actionByIndex(index_found_i, *this, new_json_message)) {
-							new_json_message.set_roger_value(RogerValue::NEGATIVE);
+						if (!_manifesto->actionByIndex(index_found_i, *this, json_message)) {
+							json_message.set_roger_value(RogerValue::NEGATIVE);
 						}
 					} else {
 						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-						new_json_message.set_roger_value(RogerValue::SAY_AGAIN);
+						json_message.set_roger_value(RogerValue::SAY_AGAIN);
 					}
 				}
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(new_json_message);
+				transmitMessage(json_message);
 				break;
 			
 			case MessageValue::TALK:
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				new_json_message.set_nth_value_string(0, _desc);
+				json_message.set_nth_value_string(0, _desc);
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(new_json_message);
+				transmitMessage(json_message);
 				break;
 			
 			case MessageValue::CHANNEL:
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				if (new_json_message.has_nth_value_number(0)) {
+				if (json_message.has_nth_value_number(0)) {
 
 					#ifdef JSON_TALKER_DEBUG
 					Serial.print(F("\tChannel B value is an <uint8_t>: "));
-					Serial.println(new_json_message.get_nth_value_number(0));
+					Serial.println(json_message.get_nth_value_number(0));
 					#endif
 
-					_channel = new_json_message.get_nth_value_number(0);
+					_channel = json_message.get_nth_value_number(0);
 				}
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				new_json_message.set_nth_value_number(0, _channel);
+				json_message.set_nth_value_number(0, _channel);
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(new_json_message);
+				transmitMessage(json_message);
 				break;
 			
 			case MessageValue::PING:
 				// Talker name already set in FROM (ready to transmit)
-				transmitMessage(new_json_message);
+				transmitMessage(json_message);
 				break;
 			
 			case MessageValue::LIST:
@@ -458,55 +458,55 @@ public:
 					_manifesto->iterateActionsReset();
 					while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
 						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-						new_json_message.set_nth_value_number(0, action_index++);
-						new_json_message.set_nth_value_string(1, action->name);
-						new_json_message.set_nth_value_string(2, action->desc);
-						transmitMessage(new_json_message);	// One-to-Many
+						json_message.set_nth_value_number(0, action_index++);
+						json_message.set_nth_value_string(1, action->name);
+						json_message.set_nth_value_string(2, action->desc);
+						transmitMessage(json_message);	// One-to-Many
 					}
 					if (!action_index) {
 						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-						new_json_message.set_roger_value(RogerValue::NIL);
+						json_message.set_roger_value(RogerValue::NIL);
 					}
 				}
 				break;
 			
 			case MessageValue::INFO:
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				if (new_json_message.has_info()) {
+				if (json_message.has_info()) {
 
-					InfoValue system_code = new_json_message.get_info_value();
+					InfoValue system_code = json_message.get_info_value();
 
 					switch (system_code) {
 
 						case InfoValue::BOARD:
 							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-							new_json_message.set_nth_value_string(0, board_description());
+							json_message.set_nth_value_string(0, board_description());
 							break;
 
 						case InfoValue::DROPS:
 							if (_socket) {
 								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-								new_json_message.set_nth_value_number(0, get_drops());
+								json_message.set_nth_value_number(0, get_drops());
 							} else {
 								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-								new_json_message.set_roger_value(RogerValue::NIL);
+								json_message.set_roger_value(RogerValue::NIL);
 							}
 							break;
 
 						case InfoValue::DELAY:
 							if (_socket) {
 								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-								new_json_message.set_nth_value_number(0, get_delay());
+								json_message.set_nth_value_number(0, get_delay());
 							} else {
 								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-								new_json_message.set_roger_value(RogerValue::NIL);
+								json_message.set_roger_value(RogerValue::NIL);
 							}
 							break;
 
 						case InfoValue::MUTE:
 							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-							if (new_json_message.has_nth_value_number(0)) {
-								uint8_t mute = (uint8_t)new_json_message.get_nth_value_number(0);
+							if (json_message.has_nth_value_number(0)) {
+								uint8_t mute = (uint8_t)json_message.get_nth_value_number(0);
 								if (mute) {
 									_muted_calls = true;
 								} else {
@@ -514,29 +514,29 @@ public:
 								}
 							} else {
 								if (_muted_calls) {
-									new_json_message.set_nth_value_number(0, 1);
+									json_message.set_nth_value_number(0, 1);
 								} else {
-									new_json_message.set_nth_value_number(0, 0);
+									json_message.set_nth_value_number(0, 0);
 								}
 							}
 							break;
 
 						case InfoValue::SOCKET:
 							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-							new_json_message.set_nth_value_string(0, socket_class_name());
+							json_message.set_nth_value_string(0, socket_class_name());
 							break;
 
 						case InfoValue::TALKER:
 							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-							new_json_message.set_nth_value_string(0, class_name());
+							json_message.set_nth_value_string(0, class_name());
 							break;
 
 						case InfoValue::MANIFESTO:
 							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							if (_manifesto) {
-								new_json_message.set_nth_value_string(0, _manifesto->class_name());
+								json_message.set_nth_value_string(0, _manifesto->class_name());
 							} else {
-								new_json_message.set_nth_value_string(0, "none");
+								json_message.set_nth_value_string(0, "none");
 							}
 							break;
 
@@ -544,7 +544,7 @@ public:
 					}
 
 					// In the end sends back the processed message (single message, one-to-one)
-					transmitMessage(new_json_message);
+					transmitMessage(json_message);
 				}
 				break;
 			
@@ -552,16 +552,16 @@ public:
 				if (_manifesto) {
 					// Makes sure it has the same id first (echo condition)
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-					uint16_t message_id = new_json_message.get_identity();
+					uint16_t message_id = json_message.get_identity();
 					if (message_id == _original_message.identity) {
-						_manifesto->echo(*this, new_json_message);
+						_manifesto->echo(*this, json_message);
 					}
 				}
 				break;
 			
 			case MessageValue::ERROR:
 				if (_manifesto) {
-					_manifesto->error(*this, new_json_message);
+					_manifesto->error(*this, json_message);
 				}
 				break;
 			

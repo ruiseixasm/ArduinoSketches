@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"    // MUST include the full definition!
 
 
-bool JsonRepeater::remoteSend(JsonMessage& new_json_message) {
+bool JsonRepeater::remoteSend(JsonMessage& json_message) {
     if (!_socket) return false;	// Ignores if it's muted or not
 
 	#ifdef JSON_REPEATER_DEBUG
@@ -27,11 +27,11 @@ bool JsonRepeater::remoteSend(JsonMessage& new_json_message) {
 
 	// DOESN'T SET IDENTITY, IT'S ONLY A REPEATER !!
 	
-    return _socket->remoteSend(new_json_message);
+    return _socket->remoteSend(json_message);
 }
 
 
-bool JsonRepeater::localSend(JsonMessage& new_json_message) {
+bool JsonRepeater::localSend(JsonMessage& json_message) {
 
 	#ifdef JSON_TALKER_DEBUG
 	Serial.print(F("\t"));
@@ -43,7 +43,7 @@ bool JsonRepeater::localSend(JsonMessage& new_json_message) {
 	// DOESN'T CALL prepareMessage METHOD !!
 
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-	new_json_message.set_source_value(SourceValue::LOCAL);
+	json_message.set_source_value(SourceValue::LOCAL);
 	// Triggers all local Talkers to processes the json_message
 	bool sent_message = false;
 	bool pre_validated = false;
@@ -52,9 +52,9 @@ bool JsonRepeater::localSend(JsonMessage& new_json_message) {
 
 			// CREATE COPY for each talker
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			JsonMessage new_json_message_copy(new_json_message);
+			JsonMessage json_message_copy(json_message);
 			
-			pre_validated = _json_talkers[talker_i]->processMessage(new_json_message_copy);
+			pre_validated = _json_talkers[talker_i]->processMessage(json_message_copy);
 			sent_message = true;
 			if (!pre_validated) break;
 		}

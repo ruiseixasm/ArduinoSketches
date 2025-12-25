@@ -483,19 +483,19 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(JsonMessage& new_json_message) override {
+	bool receivedJsonMessage(JsonMessage& json_message) override {
 
-		if (BroadcastSocket::receivedJsonMessage(new_json_message)) {
+		if (BroadcastSocket::receivedJsonMessage(json_message)) {
 
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
-			Serial.println(new_json_message.get_from_name());
+			Serial.println(json_message.get_from_name());
 			Serial.print(F("\tcheckJsonMessage2: Saved actual named pin: "));
 			Serial.println(_actual_ss_pin);
 			#endif
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			_named_pins_table.add(new_json_message.get_from_name(), _actual_ss_pin);
+			_named_pins_table.add(json_message.get_from_name(), _actual_ss_pin);
 
 			#ifdef BROADCAST_SPI_DEBUG
 			if (_named_pins_doc.isNull()) {
@@ -512,9 +512,9 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(const JsonMessage& new_json_message) override {
+    bool send(const JsonMessage& json_message) override {
 
-		if (_initiated && BroadcastSocket::send(new_json_message)) {	// Very important pre processing !!
+		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tsend1: Sent message: "));
@@ -527,14 +527,14 @@ protected:
 			#ifdef ENABLE_DIRECT_ADDRESSING
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			bool as_reply = new_json_message.has_to_name();
+			bool as_reply = json_message.has_to_name();
 			if (as_reply) {
 
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("\tsend3: json_message TO is a String"));
 				#endif
 
-				as_reply = _named_pins_table.get_pin(new_json_message.get_to_name(), _actual_ss_pin);
+				as_reply = _named_pins_table.get_pin(json_message.get_to_name(), _actual_ss_pin);
 			} else {
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("\tsend3: json_message TO is NOT a String or doesn't exist"));

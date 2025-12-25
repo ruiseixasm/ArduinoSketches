@@ -106,23 +106,23 @@ public:
     }
     
     // Action implementations - MUST be implemented by derived
-    virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json_message) {
+    virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message) {
         (void)index;		// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
-        (void)new_json_message;	// Silence unused parameter warning
+        (void)json_message;	// Silence unused parameter warning
         return false;
 	}
 
 
-    virtual void echo(JsonTalker& talker, JsonMessage& new_json_message) {
+    virtual void echo(JsonTalker& talker, JsonMessage& json_message) {
         (void)talker;		// Silence unused parameter warning
-        (void)new_json_message;	// Silence unused parameter warning
+        (void)json_message;	// Silence unused parameter warning
     }
 
 
-    virtual void error(JsonTalker& talker, JsonMessage& new_json_message) {
+    virtual void error(JsonTalker& talker, JsonMessage& json_message) {
         (void)talker;		// Silence unused parameter warning
-        (void)new_json_message;	// Silence unused parameter warning
+        (void)json_message;	// Silence unused parameter warning
     }
 
 };

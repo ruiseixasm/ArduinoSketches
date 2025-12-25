@@ -22,8 +22,8 @@ uint8_t JsonTalker::_talker_count = 0;
 
 
 // *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-bool JsonTalker::remoteSend(JsonMessage& new_json_message) {
-	(void)new_json_message;
+bool JsonTalker::remoteSend(JsonMessage& json_message) {
+	(void)json_message;
     if (!_socket) return false;
 
 	#ifdef JSON_TALKER_DEBUG
@@ -35,9 +35,9 @@ bool JsonTalker::remoteSend(JsonMessage& new_json_message) {
 
 	// Tags the message as REMOTE sourced
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-	new_json_message.set_source_value(SourceValue::REMOTE);
-	if (prepareMessage(new_json_message)) {
-    	return _socket->remoteSend(new_json_message);
+	json_message.set_source_value(SourceValue::REMOTE);
+	if (prepareMessage(json_message)) {
+    	return _socket->remoteSend(json_message);
 	}
 	return false;
 }
