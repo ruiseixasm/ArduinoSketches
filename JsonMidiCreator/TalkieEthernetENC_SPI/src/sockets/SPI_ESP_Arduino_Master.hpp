@@ -16,7 +16,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #include <SPI.h>
-#include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
 #include "../BroadcastSocket.hpp"
 
 // #define BROADCAST_SPI_DEBUG

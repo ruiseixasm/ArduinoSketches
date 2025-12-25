@@ -15,7 +15,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define I_MANIFESTO_HPP
 
 #include <Arduino.h>
-#include <ArduinoJson.h>    // Include ArduinoJson Library
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
 
