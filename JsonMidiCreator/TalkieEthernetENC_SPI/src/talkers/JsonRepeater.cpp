@@ -55,7 +55,7 @@ bool JsonRepeater::localSend(JsonMessage& json_message) {
 		Serial.print(" | ");
 		Serial.print(talker_i);
 		Serial.print(" | ");
-		Serial.println(talker_i->get_name());
+		Serial.println(_json_talkers[talker_i]->get_name());
 		#endif
 
 		if (_json_talkers[talker_i] != this && !_json_talkers[talker_i]->inSameSocket(_socket)) {  // Can't send to myself
