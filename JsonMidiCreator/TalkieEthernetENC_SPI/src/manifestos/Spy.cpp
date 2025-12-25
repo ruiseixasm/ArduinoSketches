@@ -27,7 +27,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	// As a spy it only answers to REMOTE calls
-	BroadcastValue source_data = json_message.get_source_value();
+	BroadcastValue source_data = json_message.get_broadcast_value();
 	if (source_data == BroadcastValue::REMOTE) {
 
 		if (index < actionsCount()) {

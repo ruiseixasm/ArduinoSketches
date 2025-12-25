@@ -619,12 +619,12 @@ public:
 		return get_identity();
 	}
 
-	BroadcastValue get_source_value() const {
-		size_t colon_position = get_colon_position('c');
+	BroadcastValue get_broadcast_value() const {
+		size_t colon_position = get_colon_position('b');
 		if (colon_position) {
-			uint8_t source_number = (uint8_t)get_number('c', colon_position);
-			if (source_number < static_cast<uint8_t>( BroadcastValue::NONE )) {
-				return static_cast<BroadcastValue>( source_number );
+			BroadcastValue broadcast_value = static_cast<BroadcastValue>( get_number('b', colon_position) );
+			if (broadcast_value < BroadcastValue::NONE) {
+				return broadcast_value;
 			}
 		}
 		return BroadcastValue::NONE;

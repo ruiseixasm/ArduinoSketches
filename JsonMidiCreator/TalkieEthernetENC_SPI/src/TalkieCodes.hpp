@@ -21,7 +21,7 @@ struct TalkieCodes {
 
 	// Add a char "enum" struct
     struct MessageKey {
-        static constexpr const char SOURCE			= 'c';
+        static constexpr const char BROADCAST		= 'b';
         static constexpr const char CHECKSUM		= 'c';
         static constexpr const char TIMESTAMP		= 'i';
         static constexpr const char IDENTITY 		= 'i';
@@ -32,23 +32,6 @@ struct TalkieCodes {
         static constexpr const char ACTION			= 'a';
         static constexpr const char ROGER 			= 'r';
     };
-
-
-
-	static const char* valueKey(size_t nth = 0) {
-		switch (nth) {
-			case 1: 	return "1";
-			case 2: 	return "2";
-			case 3: 	return "3";
-			case 4: 	return "4";
-			case 5: 	return "5";
-			case 6: 	return "6";
-			case 7: 	return "7";
-			case 8: 	return "8";
-			case 9: 	return "9";
-			default: 	return "0";
-		}
-	}
 
 
 	enum class BroadcastValue : uint8_t {

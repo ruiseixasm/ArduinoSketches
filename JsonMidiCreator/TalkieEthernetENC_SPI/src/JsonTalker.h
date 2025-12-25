@@ -87,10 +87,6 @@ public:
     }
 
 
-	static const char* valueKey(size_t nth = 0) {
-		return TalkieCodes::valueKey(nth);
-	}
-
 	bool inSameSocket(const BroadcastSocket* socket) const {
 		if (_socket) {	// Being in nullptr is NOT in a socket
 			return socket == _socket;
@@ -300,7 +296,7 @@ public:
 		#endif
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		BroadcastValue broadcast_value = json_message.get_source_value();	// Already returns NOISE
+		BroadcastValue broadcast_value = json_message.get_broadcast_value();	// Already returns NOISE
 		switch (broadcast_value) {
 
 			case BroadcastValue::LOCAL:
@@ -417,7 +413,7 @@ public:
 						Serial.println(F(", now being processed..."));
 						#endif
 
-						// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
+						// ROGER should be implicit for CALL to spare json string size for more data index value nth
 						if (!_manifesto->actionByIndex(index_found_i, *this, json_message)) {
 							json_message.set_roger_value(RogerValue::NEGATIVE);
 						}
