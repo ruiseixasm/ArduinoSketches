@@ -518,7 +518,7 @@ public:
     bool remoteSend(JsonMessage& new_json_message) {
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-        new_json_message.set_source(SourceValue::REMOTE);
+        new_json_message.set_source_value(SourceValue::REMOTE);
 
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));

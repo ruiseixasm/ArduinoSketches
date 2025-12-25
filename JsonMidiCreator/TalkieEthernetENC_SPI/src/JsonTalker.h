@@ -148,11 +148,11 @@ public:
 			if (strcmp(new_json_message.get_from_name(), _name) != 0) {
 				// FROM is different from _name, must be swapped (replaces "f" with "t")
 				new_json_message.swap_from_with_to();
-				new_json_message.set_from(_name);
+				new_json_message.set_from_name(_name);
 			}
 		} else {
 			// FROM doesn't even exist (must have)
-			new_json_message.set_from(_name);
+			new_json_message.set_from_name(_name);
 		}
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
@@ -219,7 +219,7 @@ public:
 
 			// Tags the message as LOCAL sourced
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			new_json_message.set_source(SourceValue::LOCAL);
+			new_json_message.set_source_value(SourceValue::LOCAL);
 			
 			#ifdef JSON_TALKER_DEBUG_NEW
 			Serial.print(F("\t\t\t\tlocalSend1.1: "));
@@ -267,7 +267,7 @@ public:
 
 		// Tags the message as LOCAL sourced
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		new_json_message.set_source(SourceValue::SELF);
+		new_json_message.set_source_value(SourceValue::SELF);
 		// Despite being a SELF message it also needs to be prepared like any other
 		if (prepareMessage(new_json_message)) {
 			return processMessage(new_json_message);	// Calls my self processMessage method right away
@@ -405,11 +405,11 @@ public:
 
 						// ROGER should be implicit for CALL to spare json string size for more data (for valueKey(n))
 						if (!_manifesto->actionByIndex(index_found_i, *this, new_json_message)) {
-							new_json_message.set_roger(RogerValue::NEGATIVE);
+							new_json_message.set_roger_value(RogerValue::NEGATIVE);
 						}
 					} else {
 						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-						new_json_message.set_roger(RogerValue::SAY_AGAIN);
+						new_json_message.set_roger_value(RogerValue::SAY_AGAIN);
 					}
 				}
 				// In the end sends back the processed message (single message, one-to-one)
@@ -465,7 +465,7 @@ public:
 					}
 					if (!action_index) {
 						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-						new_json_message.set_roger(RogerValue::NIL);
+						new_json_message.set_roger_value(RogerValue::NIL);
 					}
 				}
 				break;
@@ -489,7 +489,7 @@ public:
 								new_json_message.set_nth_value_number(0, get_drops());
 							} else {
 								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-								new_json_message.set_roger(RogerValue::NIL);
+								new_json_message.set_roger_value(RogerValue::NIL);
 							}
 							break;
 
@@ -499,7 +499,7 @@ public:
 								new_json_message.set_nth_value_number(0, get_delay());
 							} else {
 								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-								new_json_message.set_roger(RogerValue::NIL);
+								new_json_message.set_roger_value(RogerValue::NIL);
 							}
 							break;
 

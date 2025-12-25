@@ -764,15 +764,15 @@ public:
 		return remove('c');
 	}
 
-	bool remove_source() {
+	bool remove_source_value() {
 		return remove('c');
 	}
 
-	bool remove_roger() {
+	bool remove_roger_value() {
 		return remove('r');
 	}
 
-	bool remove_info() {
+	bool remove_info_value() {
 		return remove('s');
 	}
 
@@ -819,15 +819,15 @@ public:
 		return set_number('c', checksum);
 	}
 
-	bool set_from(const char* name) {
+	bool set_from_name(const char* name) {
 		return set_string('f', name);
 	}
 
-	bool set_to(const char* name) {
+	bool set_to_name(const char* name) {
 		return set_string('t', name);
 	}
 
-	bool set_source(SourceValue source_value) {
+	bool set_source_value(SourceValue source_value) {
 		size_t value_position = get_value_position('c');
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(source_value);
@@ -836,7 +836,7 @@ public:
 		return set_number('c', static_cast<uint8_t>(source_value));
 	}
 
-	bool set_roger(RogerValue roger_value) {
+	bool set_roger_value(RogerValue roger_value) {
 		size_t value_position = get_value_position('r');
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(roger_value);
@@ -845,7 +845,7 @@ public:
 		return set_number('r', static_cast<uint8_t>(roger_value));
 	}
 
-	bool set_info(InfoValue info_value) {
+	bool set_info_value(InfoValue info_value) {
 		size_t value_position = get_value_position('s');
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(info_value);

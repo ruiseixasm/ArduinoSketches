@@ -291,7 +291,7 @@ public:
 				}
 				const char from_green[] = "green";
 				const char final_payload2[] = "{\"m\":6,\"c\":29973,\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567,\"f\":\"green\"}";
-				if (!test_json_message.set_from(from_green) || !test_json_message.compare_buffer(final_payload2, sizeof(final_payload2) - 1)) {
+				if (!test_json_message.set_from_name(from_green) || !test_json_message.compare_buffer(final_payload2, sizeof(final_payload2) - 1)) {
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					new_json_message.set_nth_value_string(0, "2nd");
 					new_json_message.set_nth_value_number(1, sizeof(final_payload2) - 1);

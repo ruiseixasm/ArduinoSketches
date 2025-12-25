@@ -44,15 +44,15 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 					new_json_message.set_message(MessageValue::PING);
 					new_json_message.remove_identity();
 					if (new_json_message.get_nth_value_type(0) == ValueType::STRING) {
-						new_json_message.set_to(new_json_message.get_nth_value_string(0));
+						new_json_message.set_to_name(new_json_message.get_nth_value_string(0));
 					} else {	// Removes the original TO
 						new_json_message.remove_to();	// Without TO works as broadcast
 					}
-					new_json_message.set_from(talker.get_name());	// Avoids the swapping
+					new_json_message.set_from_name(talker.get_name());	// Avoids the swapping
 					// 3. Sends the message LOCALLY
 					talker.localSend(new_json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
-					new_json_message.set_source(SourceValue::NONE);
+					new_json_message.set_source_value(SourceValue::NONE);
 				}
 				break;
 				case 1:
@@ -65,11 +65,11 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 					// 2. Repurpose it to be a SELF PING
 					new_json_message.set_message(MessageValue::PING);
 					new_json_message.remove_identity();	// Makes sure a new IDENTITY is set
-					new_json_message.set_from(talker.get_name());	// Avoids swapping
+					new_json_message.set_from_name(talker.get_name());	// Avoids swapping
 					// 3. Sends the message to myself
 					talker.selfSend(new_json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
-					new_json_message.set_source(SourceValue::NONE);
+					new_json_message.set_source_value(SourceValue::NONE);
 				}
 				break;
 			}
@@ -94,8 +94,8 @@ void Spy::echo(JsonTalker& talker, JsonMessage& new_json_message) {
 				new_json_message.set_nth_value_number(0, time_delay);
 				new_json_message.set_nth_value_string(1, new_json_message.get_from_name());
 				// Prepares headers for the original REMOTE sender
-				new_json_message.set_to(_original_talker);
-				new_json_message.set_from(talker.get_name());
+				new_json_message.set_to_name(_original_talker);
+				new_json_message.set_from_name(talker.get_name());
 				// Emulates the REMOTE original call
 				new_json_message.set_identity(_original_message.identity);
 				// It's already an ECHO message, it's because of that that entered here
