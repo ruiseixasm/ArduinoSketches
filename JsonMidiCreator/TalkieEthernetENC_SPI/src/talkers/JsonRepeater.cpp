@@ -44,7 +44,7 @@ bool JsonRepeater::localSend(JsonMessage& new_json_message) {
 
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	new_json_message.set_source_value(SourceValue::LOCAL);
-	// Triggers all local Talkers to processes the old_json_message
+	// Triggers all local Talkers to processes the json_message
 	bool sent_message = false;
 	bool pre_validated = false;
 	for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
@@ -54,11 +54,6 @@ bool JsonRepeater::localSend(JsonMessage& new_json_message) {
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			JsonMessage new_json_message_copy(new_json_message);
 			
-			// Copy all data from original
-			for (JsonPair kv : old_json_message) {
-				json_copy[kv.key()] = kv.value();
-			}
-		
 			pre_validated = _json_talkers[talker_i]->processMessage(new_json_message_copy);
 			sent_message = true;
 			if (!pre_validated) break;
