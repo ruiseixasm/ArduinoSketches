@@ -109,21 +109,18 @@ public:
     virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json_message) {
         (void)index;		// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
-        (void)old_json_message;	// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
         return false;
 	}
 
 
     virtual void echo(JsonTalker& talker, JsonMessage& new_json_message) {
-        (void)old_json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
     }
 
 
     virtual void error(JsonTalker& talker, JsonMessage& new_json_message) {
-        (void)old_json_message;	// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
         (void)new_json_message;	// Silence unused parameter warning
     }

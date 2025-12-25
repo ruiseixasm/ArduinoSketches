@@ -78,7 +78,8 @@ public:
 					_total_calls++;
 					return true;
 				} else {
-					old_json_message[ valueKey(0) ] = "Already On!";
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+					new_json_message.set_nth_value_string(0, "Already On!");
 					return false;
 				}
 			}
@@ -95,7 +96,8 @@ public:
 					_is_led_on = false;
 					_total_calls++;
 				} else {
-					old_json_message[ valueKey(0) ] = "Already Off!";
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+					new_json_message.set_nth_value_string(0, "Already Off!");
 					return false;
 				}
 				return true;
@@ -103,7 +105,8 @@ public:
 			break;
 			
             case 2:
-				old_json_message[ valueKey(0) ] = _total_calls;
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+				new_json_message.set_nth_value_number(0, _total_calls);
                 return true;
             break;
 				
