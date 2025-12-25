@@ -539,7 +539,7 @@ public:
 	}
 
 	bool is_to_name(const char* name) const {
-		size_t colon_position = get_colon_position('t')
+		size_t colon_position = get_colon_position('t');
 		if (colon_position) {
 			ValueType value_type = get_value_type('t', colon_position);
 			if (value_type == ValueType::STRING) {

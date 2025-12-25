@@ -18,7 +18,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // #define SPY_MANIFESTO_DEBUG
 
-using TalkieKey = TalkieCodes::TalkieKey;
 
 class Spy : public TalkerManifesto {
 public:

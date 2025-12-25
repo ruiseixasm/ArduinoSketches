@@ -36,7 +36,6 @@ using MessageValue = TalkieCodes::MessageValue;
 using InfoValue = TalkieCodes::InfoValue;
 using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
-using TalkieKey = TalkieCodes::TalkieKey;
 using Original = TalkerManifesto::Original;
 using ValueType = JsonMessage::ValueType;
 
@@ -285,7 +284,6 @@ public:
 
 
     virtual bool transmitMessage(JsonMessage& new_json_message) {
-		(void)new_json_message;
 
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("\t"));
@@ -293,43 +291,41 @@ public:
 		Serial.print(F(": "));
 		#endif
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			SourceValue source_value = new_json_message.get_source_value();	// Already returns NOISE
-			switch (source_value) {
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+		SourceValue source_value = new_json_message.get_source_value();	// Already returns NOISE
+		switch (source_value) {
 
-				case SourceValue::LOCAL:
-					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tTransmitted a LOCAL message"));
-					#endif
-					return localSend(new_json_message);
-				
-				case SourceValue::SELF:
-					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tTransmitted an SELF message"));
-					#endif
-					return selfSend(new_json_message);
+			case SourceValue::LOCAL:
+				#ifdef JSON_TALKER_DEBUG
+				Serial.println(F("\tTransmitted a LOCAL message"));
+				#endif
+				return localSend(new_json_message);
+			
+			case SourceValue::SELF:
+				#ifdef JSON_TALKER_DEBUG
+				Serial.println(F("\tTransmitted an SELF message"));
+				#endif
+				return selfSend(new_json_message);
 
-				case SourceValue::NONE:
-					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tTransmitted an SELF message"));
-					#endif
-					return noneSend(new_json_message);
+			case SourceValue::NONE:
+				#ifdef JSON_TALKER_DEBUG
+				Serial.println(F("\tTransmitted an SELF message"));
+				#endif
+				return noneSend(new_json_message);
 
+			// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
+			default:
 				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
-				default:
-					// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
-					#ifdef JSON_TALKER_DEBUG
-					Serial.println(F("\tTransmitted a REMOTE message"));
-					#endif
-					return remoteSend(new_json_message);
-				break;
-			}
+				#ifdef JSON_TALKER_DEBUG
+				Serial.println(F("\tTransmitted a REMOTE message"));
+				#endif
+				return remoteSend(new_json_message);
+			break;
 		}
     }
 
     
     virtual bool processMessage(JsonMessage& new_json_message) {
-		(void)new_json_message;
 
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("\tProcessing JSON message..."));
@@ -381,7 +377,7 @@ public:
 				{
 					uint8_t index_found_i = 255;
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-					ValueType value_type = new_json_message.get_value_type(TalkieKey::ACTION);
+					ValueType value_type = new_json_message.get_value_type(MessageKey::ACTION);
 					switch (value_type) {
 
 						case ValueType::STRING:
