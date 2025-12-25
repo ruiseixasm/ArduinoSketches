@@ -43,12 +43,12 @@ struct NameEntry {
 
 class NameTable {
 private:
-    NameEntry entries[MAX_NAMES];
-    uint8_t count = 0;
+    NameEntry _entries[MAX_NAMES];
+    uint8_t _count = 0;
 
 public:
     bool add(const char* name, uint8_t value) {
-        if (count >= MAX_NAMES)
+        if (_count >= MAX_NAMES)
             return false;
 
         // Reject too-long names
@@ -57,26 +57,27 @@ public:
             return false;
 
         // Prevent duplicates
-        for (uint8_t i = 0; i < count; ++i) {
-            if (strcmp(entries[i].name, name) == 0)
+        for (uint8_t i = 0; i < _count; ++i) {
+            if (strcmp(_entries[i].name, name) == 0)
                 return false;
         }
 
-        strcpy(entries[count].name, name);
-        entries[count].value = value;
-        ++count;
+        strcpy(_entries[_count].name, name);
+        _entries[_count].value = value;
+        ++_count;
         return true;
     }
 
-    bool get(const char* name, uint8_t& out) const {
-        for (uint8_t i = 0; i < count; ++i) {
-            if (strcmp(entries[i].name, name) == 0) {
-                out = entries[i].value;
+    bool get_pin(const char* name, uint8_t& pin) const {
+        for (uint8_t i = 0; i < _count; ++i) {
+            if (strcmp(_entries[i].name, name) == 0) {
+                pin = _entries[i].value;
                 return true;
             }
         }
         return false;
     }
+
 };
 
 
@@ -497,18 +498,14 @@ protected:
 	bool receivedJsonMessage(JsonMessage& new_json_message) override {
 
 		if (BroadcastSocket::receivedJsonMessage(new_json_message)) {
-			String from_name = old_json_message[ TalkieKey::FROM ].as<String>();
 
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
-			Serial.println(from_name);
+			Serial.println(new_json_message.get_from_name());
 			Serial.print(F("\tcheckJsonMessage2: Saved actual named pin: "));
 			Serial.println(_actual_ss_pin);
 			#endif
 
-			// Refresh it each time (don't lose saved data because it is in _named_pins_doc)
-			_named_pins = _named_pins_doc.as<JsonObject>();
-			_named_pins[from_name] = _actual_ss_pin;
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			_new_named_pins_table.add(new_json_message.get_from_name(), _actual_ss_pin);
 
@@ -517,7 +514,7 @@ protected:
 				Serial.println("\t\tERROR: The JsonDocument isn't initiated (still null)");
 			}
 			Serial.print(F("\tcheckJsonMessage3: Confirmed actual named pin: "));
-			Serial.println(_named_pins[from_name].as<uint8_t>());
+			// Serial.println(_named_pins[from_name].as<uint8_t>());
 			#endif
 
 			return true;
@@ -546,31 +543,13 @@ protected:
 			if (as_reply) {
 
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend3: old_json_message TO is a String"));
+				Serial.println(F("\tsend3: json_message TO is a String"));
 				#endif
 
-				String target_name = old_json_message[ TalkieKey::TO ].as<String>();
-				bool found_it = _named_pins_table.get(old_json_message[ TalkieKey::TO ].as<const char*>(), _actual_ss_pin);
-				if (target_name.length() > 0) {
-					as_reply = _named_pins[ target_name ].is<uint8_t>();	// Critical line
-				} else {
-					as_reply = false;  // Empty string isn't a valid key
-				}
-				if (as_reply) {
-					if (!found_it) {
-						_actual_ss_pin = _named_pins[ target_name ].as<uint8_t>();
-					}
-				} else {
-					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println(F("\t\tERROR: Failed to get the pin from name"));
-					if (_named_pins[ target_name ].is<int>()) {
-						Serial.println(F("\t\tNOTE: It's seen as an 'int' though"));
-					}
-					#endif
-				}
+				as_reply = _named_pins_table.get_pin(new_json_message.get_to_name(), &_actual_ss_pin);
 			} else {
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend3: old_json_message TO is NOT a String or doesn't exist"));
+				Serial.println(F("\tsend3: json_message TO is NOT a String or doesn't exist"));
 				#endif
 			}
 
