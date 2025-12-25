@@ -376,7 +376,8 @@ protected:
 	bool receivedJsonMessage(JsonMessage& new_json_message) override {
 
 		if (BroadcastSocket::receivedJsonMessage(new_json_message)) {
-			_from_name = old_json_message[ TalkieKey::FROM ].as<String>();
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+			_from_name = new_json_message.get_from_name();
 			return true;
 		}
 		return false;
@@ -388,7 +389,8 @@ protected:
 
 		if (_initiated && BroadcastSocket::send(new_json_message)) {	// Very important pre processing !!
 
-			bool as_reply = (old_json_message[ TalkieKey::TO ].is<String>() && old_json_message[ TalkieKey::TO ].as<String>() == _from_name);
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+			bool as_reply = new_json_message.is_to_name(_from_name);
 
 			#ifdef ENABLE_DIRECT_ADDRESSING
 			if (as_reply) {
