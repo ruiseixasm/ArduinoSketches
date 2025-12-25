@@ -23,7 +23,6 @@ uint8_t JsonTalker::_talker_count = 0;
 
 // *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 bool JsonTalker::remoteSend(JsonMessage& json_message) {
-	(void)json_message;
     if (!_socket) return false;
 
 	#ifdef JSON_TALKER_DEBUG

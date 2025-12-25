@@ -209,7 +209,6 @@ public:
 
 
     virtual bool localSend(JsonMessage& json_message) {
-		(void)json_message;
 
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("\t"));
@@ -259,7 +258,6 @@ public:
 
 
     virtual bool selfSend(JsonMessage& json_message) {
-		(void)json_message;
 
 		#ifdef JSON_TALKER_DEBUG
 		Serial.print(F("\t"));
