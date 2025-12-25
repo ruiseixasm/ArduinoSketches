@@ -353,13 +353,15 @@ public:
 		#endif
 
         // Is it for me?
-		if (json_message.has_to()) {
-			if (json_message.for_me(_name, _channel)) {
-				if (json_message.has_to_channel()) {
-					talker_match = TalkerMatch::BY_CHANNEL;
-				} else {
-					talker_match = TalkerMatch::BY_NAME;
-				}
+		if (json_message.has_to_name()) {
+			if (json_message.is_to_name(_name)) {
+				talker_match = TalkerMatch::BY_NAME;
+			} else {
+				return talker_match;
+			}
+		} else if (json_message.has_to_channel()) {
+			if (json_message.is_to_channel(_channel)) {
+				talker_match = TalkerMatch::BY_CHANNEL;
 			} else {
 				return talker_match;
 			}
