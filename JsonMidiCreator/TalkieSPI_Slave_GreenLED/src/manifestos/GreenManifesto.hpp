@@ -50,9 +50,8 @@ protected:
 public:
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonObject& old_json_message, JsonMessage& new_json_message) override {
+    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json_message) override {
         (void)talker;		// Silence unused parameter warning
-        (void)new_json_message;	// Silence unused parameter warning
 		
 		if (index >= sizeof(calls)/sizeof(Action)) return false;
 		
@@ -81,7 +80,8 @@ public:
 					_total_calls++;
 					return true;
 				} else {
-					old_json_message[ valueKey(0) ] = "Already On!";
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+					new_json_message.set_nth_value_string(0, "Already On!");
 					return false;
 				}
 			}
@@ -100,7 +100,8 @@ public:
 					_is_led_on = false;
 					_total_calls++;
 				} else {
-					old_json_message[ valueKey(0) ] = "Already Off!";
+					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+					new_json_message.set_nth_value_string(0, "Already Off!");
 					return false;
 				}
 				return true;
@@ -108,7 +109,8 @@ public:
 			break;
 			
             case 2:
-                _bpm_10 = old_json_message[ valueKey(0) ].as<uint16_t>();
+				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+                _bpm_10 = new_json_message.get_nth_value_number(0);
                 return true;
                 break;
 				
