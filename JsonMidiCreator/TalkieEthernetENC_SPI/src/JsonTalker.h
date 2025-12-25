@@ -353,11 +353,11 @@ public:
 				return false;
 			}
 		} else {
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			if (message_data > MessageValue::PING) {
 				// Only TALK, CHANNEL and PING can be broadcasted
 				return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
-			} else if (old_json_message[ valueKey(0) ].is<uint8_t>()) {
+			} else if (new_json_message.has_nth_value_number(0)) {
 				return false;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
 			}
 		}
