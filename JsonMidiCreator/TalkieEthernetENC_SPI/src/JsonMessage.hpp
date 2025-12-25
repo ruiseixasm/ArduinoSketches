@@ -751,6 +751,10 @@ public:
 		return false;
 	}
 
+	bool remove_to() {
+		return remove('t');
+	}
+
 	bool remove_identity() {
 		return remove('i');
 	}

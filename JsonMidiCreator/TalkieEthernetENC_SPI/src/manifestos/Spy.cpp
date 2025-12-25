@@ -43,33 +43,33 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 					// 2. Repurpose it to be a LOCAL PING
 					new_json_message.set_message(MessageValue::PING);
 					new_json_message.remove_identity();
-					if (old_json_message[ valueKey(0) ].is<String>()) {
-						old_json_message[ TalkieKey::TO ] = old_json_message[ valueKey(0) ].as<String>();
+					if (new_json_message.get_nth_value_type(0) == ValueType::STRING) {
+						new_json_message.set_to(new_json_message.get_nth_value_string(0));
 					} else {	// Removes the original TO
-						old_json_message.remove( TalkieKey::TO );	// Without TO works as broadcast
+						new_json_message.remove_to();	// Without TO works as broadcast
 					}
-					old_json_message[ TalkieKey::FROM ] = talker.get_name();	// Avoids swapping
+					new_json_message.set_from(talker.get_name());	// Avoids the swapping
 					// 3. Sends the message LOCALLY
 					talker.localSend(new_json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
-					old_json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
+					new_json_message.set_source(SourceValue::NONE);
 				}
 				break;
 				case 1:
 				{
 					ping = true;
 					// 1. Start by collecting info from message
-					_original_talker = old_json_message[ TalkieKey::FROM ].as<String>();	// Explicit conversion
-					_original_message.identity = old_json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
+					_original_talker = new_json_message.get_from();	// Explicit conversion
+					_original_message.identity = new_json_message.get_identity();
 					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a SELF PING
-					old_json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
-					old_json_message.remove( TalkieKey::IDENTITY );	// Makes sure a new IDENTITY is set
-					old_json_message[ TalkieKey::FROM ] = talker.get_name();	// Avoids swapping
+					new_json_message.set_message(MessageValue::PING);
+					new_json_message.remove_identity();	// Makes sure a new IDENTITY is set
+					new_json_message.set_from(talker.get_name());	// Avoids swapping
 					// 3. Sends the message to myself
 					talker.selfSend(new_json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
-					old_json_message[ TalkieKey::SOURCE ] = static_cast<int>(SourceValue::NONE);
+					new_json_message.set_source(SourceValue::NONE);
 				}
 				break;
 			}
