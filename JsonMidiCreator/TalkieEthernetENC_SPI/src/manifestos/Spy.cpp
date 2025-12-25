@@ -25,8 +25,9 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 	
 	bool ping = false;
 
+	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (TO DO) ***************
 	// As a spy it only answers to REMOTE calls
-	SourceValue source_data = static_cast<SourceValue>( old_json_message[ TalkieKey::SOURCE ].as<int>() );
+	SourceValue source_data = new_json_message.get_source();;
 	if (source_data == SourceValue::REMOTE) {
 
 		if (index < actionsCount()) {
@@ -36,12 +37,12 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& new_json
 				{
 					ping = true;
 					// 1. Start by collecting info from message
-					_original_talker = old_json_message[ TalkieKey::FROM ].as<String>();	// Explicit conversion
-					_original_message.identity = old_json_message[ TalkieKey::IDENTITY ].as<uint16_t>();
+					_original_talker = new_json_message.get_from();
+					_original_message.identity = new_json_message.get_identity();
 					_original_message.message_data = MessageValue::PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a LOCAL PING
-					old_json_message[ TalkieKey::MESSAGE ] = static_cast<int>(MessageValue::PING);
-					old_json_message.remove( TalkieKey::IDENTITY );	// Makes sure a new IDENTITY is set
+					new_json_message.set_message(MessageValue::PING);
+					new_json_message.remove_identity();
 					if (old_json_message[ valueKey(0) ].is<String>()) {
 						old_json_message[ TalkieKey::TO ] = old_json_message[ valueKey(0) ].as<String>();
 					} else {	// Removes the original TO

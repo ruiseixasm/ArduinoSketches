@@ -751,6 +751,10 @@ public:
 		return false;
 	}
 
+	bool remove_identity() {
+		return remove('i');
+	}
+
 	// SETTERS
 
 
