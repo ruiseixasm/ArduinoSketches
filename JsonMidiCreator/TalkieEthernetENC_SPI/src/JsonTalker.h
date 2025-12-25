@@ -44,6 +44,13 @@ class BroadcastSocket;
 
 
 class JsonTalker {
+public:
+
+	enum class TalkerMatch : uint8_t {
+		FAIL, BY_NAME, BY_CHANNEL, NONE
+	};
+
+
 protected:
     
     // The socket can't be static becaus different talkers may use different sockets (remote)
@@ -231,8 +238,8 @@ public:
 
 			// Triggers all local Talkers to processes the json_message
 			bool sent_message = false;
-			bool pre_validated = false;
-			for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {	// _talker_count makes the code safe
+			TalkerMatch talker_match = TalkerMatch::NONE;
+			for (uint8_t talker_i = 0; talker_i < _talker_count && talker_match > TalkerMatch::BY_NAME; ++talker_i) {	// _talker_count makes the code safe
 				if (_json_talkers[talker_i] != this) {  // Can't send to myself
 
 					// CREATE COPY for each talker
@@ -246,9 +253,8 @@ public:
 					Serial.println(talker_i);
 					#endif
 
-					pre_validated = _json_talkers[talker_i]->processMessage(json_message_copy);
+					talker_match = _json_talkers[talker_i]->processMessage(json_message_copy);
 					sent_message = true;
-					if (!pre_validated) break;
 				}
 			}
 			return sent_message;
@@ -271,7 +277,8 @@ public:
 		json_message.set_source_value(SourceValue::SELF);
 		// Despite being a SELF message it also needs to be prepared like any other
 		if (prepareMessage(json_message)) {
-			return processMessage(json_message);	// Calls my self processMessage method right away
+			processMessage(json_message);	// Calls my self processMessage method right away
+			return true;
 		}
 		return false;
     }
@@ -327,13 +334,13 @@ public:
     }
 
     
-    virtual bool processMessage(JsonMessage& json_message) {
+    virtual TalkerMatch processMessage(JsonMessage& json_message) {
 
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("\tProcessing JSON message..."));
         #endif
         
-        bool dont_interrupt = true;   // Doesn't interrupt next talkers process
+        TalkerMatch talker_match = TalkerMatch::NONE;
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		MessageValue message_value = json_message.get_message_value();
@@ -347,16 +354,24 @@ public:
 
         // Is it for me?
 		if (json_message.has_to()) {
-			if (!json_message.for_me(_name, _channel)) {
-				return false;
+			if (json_message.for_me(_name, _channel)) {
+				if (json_message.has_to_channel()) {
+					talker_match = TalkerMatch::BY_CHANNEL;
+				} else {
+					talker_match = TalkerMatch::BY_NAME;
+				}
+			} else {
+				return talker_match;
 			}
 		} else {
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			if (message_value > MessageValue::PING) {
 				// Only TALK, CHANNEL and PING can be broadcasted
-				return false;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
+				return TalkerMatch::FAIL;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
 			} else if (json_message.has_nth_value_number(0)) {
-				return false;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
+				return TalkerMatch::FAIL;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
+			} else {
+				talker_match = TalkerMatch::BY_CHANNEL;
 			}
 		}
 
@@ -566,7 +581,7 @@ public:
 			default:
 				break;
         }
-        return dont_interrupt;
+        return talker_match;
     }
 
 

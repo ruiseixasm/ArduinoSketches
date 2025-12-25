@@ -33,7 +33,7 @@ public:
     bool localSend(JsonMessage& json_message) override;
 
 	
-	bool processMessage(JsonMessage& json_message) override {
+	TalkerMatch processMessage(JsonMessage& json_message) override {
 
 		#ifdef JSON_REPEATER_DEBUG
 		Serial.print(F("\t"));
@@ -60,19 +60,22 @@ public:
 				#ifdef JSON_REPEATER_DEBUG
 				Serial.println(F("Repeated a REMOTE message LOCALLY"));
 				#endif
-				return localSend(json_message);	// Cross transmission
+				localSend(json_message);	// Cross transmission
+				return TalkerMatch::NONE;
 			
 			case SourceValue::SELF:
 				#ifdef JSON_REPEATER_DEBUG
 				Serial.println(F("Repeated an SELF message to SELF"));
 				#endif
-				return selfSend(json_message);	// Straight transmission
+				selfSend(json_message);	// Straight transmission
+				return TalkerMatch::NONE;
 			
 			case SourceValue::NONE:
 				#ifdef JSON_REPEATER_DEBUG
 				Serial.println(F("\tTransmitted an SELF message"));
 				#endif
-				return noneSend(json_message);	// Straight transmission
+				noneSend(json_message);	// Straight transmission
+				return TalkerMatch::NONE;
 
 			// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
 			default: break;
@@ -81,7 +84,8 @@ public:
 		#ifdef JSON_REPEATER_DEBUG
 		Serial.println(F("Repeated a LOCAL message REMOTELY"));
 		#endif
-		return remoteSend(json_message);			// Cross transmission
+		remoteSend(json_message);			// Cross transmission
+		return TalkerMatch::NONE;
 	}
 
 };

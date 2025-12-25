@@ -46,8 +46,8 @@ bool JsonRepeater::localSend(JsonMessage& json_message) {
 	json_message.set_source_value(SourceValue::LOCAL);
 	// Triggers all local Talkers to processes the json_message
 	bool sent_message = false;
-	bool pre_validated = false;
-	for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
+	TalkerMatch talker_match = TalkerMatch::NONE;
+	for (uint8_t talker_i = 0; talker_i < _talker_count && talker_match > TalkerMatch::BY_NAME; ++talker_i) {
 
 		#ifdef JSON_REPEATER_DEBUG_NEW
 		Serial.print(F("\t\t\t\tlocalSend1.1: "));
@@ -64,9 +64,8 @@ bool JsonRepeater::localSend(JsonMessage& json_message) {
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			JsonMessage json_message_copy(json_message);
 			
-			pre_validated = _json_talkers[talker_i]->processMessage(json_message_copy);
+			talker_match = _json_talkers[talker_i]->processMessage(json_message_copy);
 			sent_message = true;
-			if (!pre_validated) break;
 		}
 	}
 	return sent_message;
