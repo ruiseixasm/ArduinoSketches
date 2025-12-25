@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../JsonMessage.hpp"
 
 // #define MESSAGE_TESTER_DEBUG
-#define MESSAGE_TESTER_DEBUG_NEW
+// #define MESSAGE_TESTER_DEBUG_NEW
 
 
 using MessageValue = TalkieCodes::MessageValue;
