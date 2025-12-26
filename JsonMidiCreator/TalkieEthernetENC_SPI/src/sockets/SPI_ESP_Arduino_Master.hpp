@@ -18,10 +18,10 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <SPI.h>
 #include "../BroadcastSocket.hpp"
 
-#define BROADCAST_SPI_DEBUG
+// #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
-#define BROADCAST_SPI_DEBUG_NEW
+// #define BROADCAST_SPI_DEBUG_NEW
 
 
 #define ENABLE_DIRECT_ADDRESSING
