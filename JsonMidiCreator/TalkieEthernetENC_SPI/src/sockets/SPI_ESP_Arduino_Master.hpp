@@ -312,18 +312,18 @@ protected:
 					
 					delayMicroseconds(receive_delay_us);
 					c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
-					_receiving_buffer[0] = c;
+					_received_buffer[0] = c;
 
 					// Starts to receive all chars here
 					for (uint8_t i = 1; c < 128 && i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
-						c = _spi_instance->transfer(_receiving_buffer[i - 1]);
-						_receiving_buffer[i] = c;
+						c = _spi_instance->transfer(_received_buffer[i - 1]);
+						_received_buffer[i] = c;
 						size = i;
 					}
 					if (c == LAST) {
 						delayMicroseconds(receive_delay_us);    // Makes sure the Status Byte is sent
-						c = _spi_instance->transfer(_receiving_buffer[size]);  // Replies the last char to trigger END in return
+						c = _spi_instance->transfer(_received_buffer[size]);  // Replies the last char to trigger END in return
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tReceived LAST"));
 						#endif
@@ -404,7 +404,7 @@ protected:
                 #ifdef BROADCAST_SPI_DEBUG_1
                 if (size > 1) {
                     Serial.print("Received message: ");
-					Serial.write(_receiving_buffer, size - 1);
+					Serial.write(_received_buffer, size - 1);
                     Serial.println();
                 } else {
                 	#ifdef BROADCAST_SPI_DEBUG_2
@@ -592,7 +592,7 @@ protected:
 					
 					#ifdef BROADCAST_SPI_DEBUG
 					Serial.print(F("\treceive1: Received message: "));
-					Serial.write(_receiving_buffer, length);
+					Serial.write(_received_buffer, length);
 					Serial.println();
 					Serial.print(F("\treceive2: Received length: "));
 					Serial.println(length);
@@ -607,7 +607,7 @@ protected:
 					triggerTalkers();
 				}
 			}
-			// Makes sure the _receiving_buffer is deleted with 0
+			// Makes sure the _received_buffer is deleted with 0
 			_received_length = 0;
 		}
         return 0;   // Receives are all called internally in this method

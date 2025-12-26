@@ -157,7 +157,7 @@ protected:
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					SPI.transfer(ERROR);
-					// _receiving_buffer[0] = '\0'; // Implicit char
+					// _received_buffer[0] = '\0'; // Implicit char
 				}
 
 				delayMicroseconds(5);
@@ -221,11 +221,11 @@ protected:
 					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
-							c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1
+							c = SPI.transfer(_received_buffer[length]);    // length == i - 1
 							if (c < 128) {   // Only accepts ASCII chars
 								// Avoids increment beyond the real string size
-								if (_receiving_buffer[length] != '\0') {    // length == i - 1
-									_receiving_buffer[++length] = c;        // length == i (also sets '\0')
+								if (_received_buffer[length] != '\0') {    // length == i - 1
+									_received_buffer[++length] = c;        // length == i (also sets '\0')
 								}
 							} else if (c == END) {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
@@ -247,7 +247,7 @@ protected:
 							c = SPI.transfer('\0');   // Dummy char to get the ACK
 							length = 0;
 							if (c < 128) {	// Makes sure it's an ASCII char
-								_receiving_buffer[0] = c;
+								_received_buffer[0] = c;
 							} else {
 								#ifdef BROADCAST_SPI_DEBUG
 								Serial.println("\t\tNot a valid ASCII char (< 128)");
@@ -260,7 +260,7 @@ protected:
 					#ifdef BROADCAST_SPI_DEBUG
 					Serial.println("\t\tThere is nothing to be received");
 					#endif
-					_receiving_buffer[0] = '\0';
+					_received_buffer[0] = '\0';
 					length = 1; // Nothing received
 					break;
 				} else {
@@ -274,7 +274,7 @@ protected:
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
 					SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
-					_receiving_buffer[0] = '\0'; // Implicit char
+					_received_buffer[0] = '\0'; // Implicit char
 					#ifdef BROADCAST_SPI_DEBUG
 					Serial.println("\t\t\tSent ERROR");
 					#endif
@@ -294,7 +294,7 @@ protected:
                 #ifdef BROADCAST_SPI_DEBUG
                 if (length > 1) {
                     Serial.print("Received message: ");
-					Serial.write(_receiving_buffer, size - 1);
+					Serial.write(_received_buffer, size - 1);
                     Serial.println();
                 } else {
                     Serial.println("\tNothing received");
@@ -475,7 +475,7 @@ public:
 					triggerTalkers();
 				}
 			}
-			// Makes sure the _receiving_buffer is deleted with 0
+			// Makes sure the _received_buffer is deleted with 0
 			_received_length = 0;
 		}
         return 0;   // Receives are all called internally in this method

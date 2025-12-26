@@ -93,7 +93,7 @@ protected:
             // Avoids overflow
             if (packetSize > BROADCAST_SOCKET_BUFFER_SIZE) return 0;
 
-            int length = _udp->read(_receiving_buffer, static_cast<size_t>(packetSize));
+            int length = _udp->read(_received_buffer, static_cast<size_t>(packetSize));
             if (length <= 0) return 0;  // Your requested check - handles all error cases
             
             #ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -104,14 +104,14 @@ protected:
             Serial.print(F(" to "));
             Serial.print(_local_ip);
             Serial.print(F(" -->      "));
-            Serial.println(_receiving_buffer);
+            Serial.println(_received_buffer);
             #endif
             
             _source_ip = _udp->remoteIP();
 			// Makes sure the _received_length is set
 			_received_length = length;
 			triggerTalkers();
-			// Makes sure the _receiving_buffer is deleted with 0
+			// Makes sure the _received_buffer is deleted with 0
 			_received_length = 0;
 			return length;
         }

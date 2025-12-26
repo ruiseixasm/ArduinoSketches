@@ -59,10 +59,10 @@ protected:
 	const uint8_t _talker_count;
 	const BroadcastValue _source_value;
 
-    char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    char _received_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-	uint8_t _received_length = 0;
-	uint8_t _sending_length = 0;
+	size_t _received_length = 0;
+	size_t _sending_length = 0;
 
     // Pointer PRESERVE the polymorphism while objects don't!
     uint8_t _max_delay_ms = 5;
@@ -99,27 +99,28 @@ protected:
 		Serial.print(F(": triggerTalkers1: has a Talkers count of: "));
 		Serial.println(_talker_count);
         Serial.print(F("triggerTalkers2: "));
-        Serial.write(_receiving_buffer, _received_length);
+        Serial.write(_received_buffer, _received_length);
         Serial.println();
         #endif
 
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		JsonMessage json_message(_receiving_buffer, _received_length);
+		size_t colon_position = JsonMessage::get_colon_position('c', _received_buffer, _received_length);
+		uint16_t received_checksum = JsonMessage::get_number('c', _received_buffer, _received_length, colon_position);
+		if (!JsonMessage::remove('c', _received_buffer, &_received_length, colon_position)) return false;
+		uint16_t checksum = generateChecksum(_received_buffer, _received_length);
 
-		#ifdef BROADCASTSOCKET_DEBUG_NEW
-		Serial.print(F("\tjson_message1.1: "));
-		json_message.write_to(Serial);
-		Serial.print(" | ");
-		Serial.println(json_message.validate_fields());
-		#endif
+		if (received_checksum == checksum) {
 
-		if (json_message.validate_fields()) {
+			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+			JsonMessage json_message(_received_buffer, _received_length);
 
-			uint16_t message_checksum = json_message.get_checksum();
-			json_message.remove_checksum();
-			uint16_t checksum = json_message.generate_checksum();
+			#ifdef BROADCASTSOCKET_DEBUG_NEW
+			Serial.print(F("\tjson_message1.1: "));
+			json_message.write_to(Serial);
+			Serial.print(" | ");
+			Serial.println(json_message.validate_fields());
+			#endif
 
-			if (message_checksum == checksum) {
+			if (json_message.validate_fields()) {
 
 				MessageValue message_code = json_message.get_message_value();
 				uint16_t message_timestamp = json_message.get_timestamp();
@@ -200,7 +201,7 @@ protected:
 
 					if (talker_i > 0) {
 						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-						json_message.deserialize_buffer(_receiving_buffer, _received_length);
+						json_message.deserialize_buffer(_received_buffer, _received_length);
 						
 						#ifdef BROADCASTSOCKET_DEBUG_NEW
 						Serial.print(F("\tjson_message1.3: "));
@@ -216,8 +217,8 @@ protected:
 						Serial.println();
 						#endif
 
-						// Updates the _receiving_buffer with the processed message as a source data
-						_received_length = json_message.serialize_json(_receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+						// Updates the _received_buffer with the processed message as a source data
+						_received_length = json_message.serialize_json(_received_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 					}
 					
 					#ifdef BROADCASTSOCKET_DEBUG
@@ -353,7 +354,7 @@ public:
 
 
 	bool deserialize_buffer(JsonMessage& json_message) const {
-		return json_message.deserialize_buffer(_receiving_buffer, _received_length);
+		return json_message.deserialize_buffer(_received_buffer, _received_length);
 	}
 
 
@@ -366,7 +367,7 @@ public:
 		#endif
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (processedJsonMessage(json_message) && json_message.set_checksum() && availableSendingBuffer()) {
+		if (processedJsonMessage(json_message)) {
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("remoteSend2: "));
@@ -376,6 +377,8 @@ public:
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			_sending_length = json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			uint16_t checksum = generateChecksum(_sending_buffer, _sending_length);
+			JsonMessage::set_number('c', checksum, _sending_buffer, &_sending_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG
 			Serial.print(F("remoteSend3: "));
@@ -385,11 +388,10 @@ public:
 			Serial.println(_sending_length);
 			#endif
 
-			if (_sending_length) {
+			if (_sending_length && availableSendingBuffer()) {
 				return send(json_message);
 			}
 		}
-
 		return false;
     }
     
