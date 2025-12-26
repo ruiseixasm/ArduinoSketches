@@ -26,6 +26,9 @@ bool JsonRepeater::remoteSend(JsonMessage& json_message) {
 	#endif
 
 	// DOESN'T SET IDENTITY, IT'S ONLY A REPEATER !!
+
+	// FOR NOW WITHOUT A CENTRALIZED REPEATER, IT NEEDS TO SET AS REMOTE FIRST
+	json_message.set_broadcast_value(BroadcastValue::REMOTE);
 	
     return _socket->remoteSend(json_message);
 }

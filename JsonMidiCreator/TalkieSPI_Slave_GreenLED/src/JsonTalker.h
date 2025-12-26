@@ -28,7 +28,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 // #define JSON_TALKER_DEBUG
-// #define JSON_TALKER_DEBUG_NEW
+#define JSON_TALKER_DEBUG_NEW
 
 using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
