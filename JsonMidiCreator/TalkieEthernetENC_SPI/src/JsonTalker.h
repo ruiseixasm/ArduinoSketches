@@ -171,7 +171,7 @@ public:
 		if (message_value < MessageValue::ECHO) {
 
 			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("remoteSend1: Setting a new identifier (i) for :"));
+			Serial.print(F("socketSend1: Setting a new identifier (i) for :"));
 			json_message.write_to(Serial);
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
@@ -194,7 +194,7 @@ public:
 		} else if (!json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
 
 			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("remoteSend1: Response message with a wrong or without an identifier, now being set (i): "));
+			Serial.print(F("socketSend1: Response message with a wrong or without an identifier, now being set (i): "));
 			json_message.write_to(Serial);
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
@@ -207,7 +207,7 @@ public:
 		} else {
 			
 			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("remoteSend1: Keeping the same identifier (i): "));
+			Serial.print(F("socketSend1: Keeping the same identifier (i): "));
 			json_message.write_to(Serial);
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
@@ -217,7 +217,7 @@ public:
 	}
 
 	
-    virtual bool remoteSend(JsonMessage& json_message);
+    virtual bool socketSend(JsonMessage& json_message);
 
 
     virtual bool localSend(JsonMessage& json_message) {
@@ -333,7 +333,7 @@ public:
 				#ifdef JSON_TALKER_DEBUG
 				Serial.println(F("\tTransmitted a REMOTE message"));
 				#endif
-				return remoteSend(json_message);
+				return socketSend(json_message);
 			break;
 		}
     }

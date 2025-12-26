@@ -29,7 +29,7 @@ public:
         : JsonTalker(name, desc, nullptr) {}
 
 
-    bool remoteSend(JsonMessage& json_message) override;
+    bool socketSend(JsonMessage& json_message) override;
     bool localSend(JsonMessage& json_message) override;
 
 	
@@ -84,7 +84,7 @@ public:
 		#ifdef JSON_REPEATER_DEBUG
 		Serial.println(F("Repeated a LOCAL message REMOTELY"));
 		#endif
-		remoteSend(json_message);			// Cross transmission
+		socketSend(json_message);			// Cross transmission
 		return TalkerMatch::NONE;
 	}
 

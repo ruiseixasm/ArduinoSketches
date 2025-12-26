@@ -54,14 +54,14 @@ public:
 		for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
 			_uplink_sockets[uplink_socket_i]->setLinkType(LinkType::UP);
 		}
-		for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_talkers_count; ++downlink_socket_i) {
-			_downlink_talkers[downlink_socket_i]->setLinkType(LinkType::DOWN);
+		for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
+			_downlink_talkers[downlink_talker_i]->setLinkType(LinkType::DOWN);
 		}
 		for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
 			_downlink_sockets[downlink_socket_i]->setLinkType(LinkType::DOWN);
 		}
-		for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_talkers_count; ++uplink_socket_i) {
-			_uplink_talkers[uplink_socket_i]->setLinkType(LinkType::UP);
+		for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count; ++uplink_talker_i) {
+			_uplink_talkers[uplink_talker_i]->setLinkType(LinkType::UP);
 		}
 	}
 
@@ -70,19 +70,50 @@ public:
 	}
 
 
-	void socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
+	bool socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
+		BroadcastValue broadcast = message.get_broadcast_value();
+		TalkerMatch match = TalkerMatch::NONE;
+		switch (broadcast) {
+
+			case BroadcastValue::REMOTE:
+			{
+				for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_talkers_count; ++downlink_socket_i) {
+					match = _downlink_talkers[downlink_socket_i]->processMessage(message);
+					switch (match) {
+
+						case TalkerMatch::BY_NAME:
+							return true;
+						break;
+						
+						case TalkerMatch::FAIL:
+							return false;
+						break;
+						
+						default: break;
+					}
+				}
+				for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
+					_downlink_sockets[downlink_socket_i]->socketSend(message);
+				}
+			}
+			break;
+			
+			default: break;	// Does nothing, typical for BroadcastValue::NONE
+		}
+	}
+
+	bool talkerUplink(JsonTalker &talker, JsonMessage &message) {
+		BroadcastValue broadcast = message.get_broadcast_value();
 
 	}
 
-	void talkerUplink(JsonTalker &talker, JsonMessage &message) {
+	bool socketUplink(BroadcastSocket &socket, JsonMessage &message) {
+		BroadcastValue broadcast = message.get_broadcast_value();
 
 	}
 
-	void socketUplink(BroadcastSocket &socket, JsonMessage &message) {
-
-	}
-
-	void talkerDownlink(JsonTalker &talker, JsonMessage &message) {
+	bool talkerDownlink(JsonTalker &talker, JsonMessage &message) {
+		BroadcastValue broadcast = message.get_broadcast_value();
 
 	}
 

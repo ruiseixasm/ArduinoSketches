@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.hpp"    // MUST include the full definition!
 
 
-bool JsonRepeater::remoteSend(JsonMessage& json_message) {
+bool JsonRepeater::socketSend(JsonMessage& json_message) {
     if (!_socket) return false;	// Ignores if it's muted or not
 
 	#ifdef JSON_REPEATER_DEBUG
@@ -30,7 +30,7 @@ bool JsonRepeater::remoteSend(JsonMessage& json_message) {
 	// FOR NOW WITHOUT A CENTRALIZED REPEATER, IT NEEDS TO SET AS REMOTE FIRST
 	json_message.set_broadcast_value(BroadcastValue::REMOTE);
 	
-    return _socket->remoteSend(json_message);
+    return _socket->socketSend(json_message);
 }
 
 

@@ -188,7 +188,7 @@ protected:
 						if (!json_message.has_identity()) {
 							json_message.set_identity();
 						}
-						remoteSend(json_message);	// Includes reply swap
+						socketSend(json_message);	// Includes reply swap
 					}
 					return false;
 				}
@@ -330,10 +330,10 @@ public:
 	}
 
 
-    bool remoteSend(const JsonMessage& json_message) {
+    bool socketSend(const JsonMessage& json_message) {
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
-		Serial.print(F("remoteSend1: "));
+		Serial.print(F("socketSend1: "));
 		json_message.write_to(Serial);
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
@@ -342,7 +342,7 @@ public:
 		if (json_message.validate_fields() && processedJsonMessage(json_message) && availableSendingBuffer()) {
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("remoteSend2: "));
+			Serial.print(F("socketSend2: "));
 			json_message.write_to(Serial);
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
@@ -353,7 +353,7 @@ public:
 			JsonMessage::set_number('c', checksum, _sending_buffer, &_sending_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("remoteSend3: "));
+			Serial.print(F("socketSend3: "));
 			Serial.write(_sending_buffer, _sending_length);
 			Serial.print(" | ");
 			Serial.println(_sending_length);

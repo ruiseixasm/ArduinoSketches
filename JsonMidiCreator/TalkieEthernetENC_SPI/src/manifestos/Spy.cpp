@@ -100,7 +100,7 @@ void Spy::echo(JsonTalker& talker, JsonMessage& json_message) {
 				json_message.set_identity(_original_message.identity);
 				// It's already an ECHO message, it's because of that that entered here
 				// Finally answers to the REMOTE caller by repeating all other json fields
-				talker.remoteSend(json_message);
+				talker.socketSend(json_message);
 			}
 			break;
 
