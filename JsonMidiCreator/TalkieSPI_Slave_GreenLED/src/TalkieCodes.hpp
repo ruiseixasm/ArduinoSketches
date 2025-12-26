@@ -19,6 +19,11 @@ https://github.com/ruiseixasm/JsonTalkie
 
 struct TalkieCodes {
 
+	enum class LinkType : uint8_t {
+		DOWN, UP
+	};
+
+
 	// Add a char "enum" struct
     struct MessageKey {
         static constexpr const char BROADCAST		= 'b';

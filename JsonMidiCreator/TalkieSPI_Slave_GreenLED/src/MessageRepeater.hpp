@@ -15,6 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define MESSAGE_REPEATER_HPP
 
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
+#include "JsonMessage.hpp"
 #include "BroadcastSocket.hpp"
 #include "JsonTalker.h"
 
@@ -53,6 +54,23 @@ public:
 
 	~MessageRepeater() {
 		// Does nothing
+	}
+
+
+	void socketDownlink(JsonMessage &json_message) {
+		
+	}
+
+	void talkerUplink(JsonMessage &json_message) {
+
+	}
+
+	void socketUplink(JsonMessage &json_message) {
+
+	}
+
+	void talkerDownlink(JsonMessage &json_message) {
+
 	}
 
 };
