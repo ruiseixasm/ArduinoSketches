@@ -392,6 +392,7 @@ public:
 					{
 						ValueType value_type = get_value_type('m', _json_payload, _json_length, json_i);
 						if (value_type == VALUE_CODE) {
+							if (found_b && found_i && found_f) return true;
 							found_m = true;
 						} else {
 							return false;
@@ -403,6 +404,7 @@ public:
 					{
 						ValueType value_type = get_value_type('b', _json_payload, _json_length, json_i);
 						if (value_type == VALUE_CODE) {
+							if (found_m && found_i && found_f) return true;
 							found_b = true;
 						} else {
 							return false;
@@ -414,6 +416,7 @@ public:
 					{
 						ValueType value_type = get_value_type('i', _json_payload, _json_length, json_i);
 						if (value_type == INTEGER) {
+							if (found_m && found_b && found_f) return true;
 							found_i = true;
 						} else {
 							return false;
@@ -425,6 +428,7 @@ public:
 					{
 						ValueType value_type = get_value_type('f', _json_payload, _json_length, json_i);
 						if (value_type == STRING) {
+							if (found_m && found_b && found_i) return true;
 							found_f = true;
 						} else {
 							return false;
