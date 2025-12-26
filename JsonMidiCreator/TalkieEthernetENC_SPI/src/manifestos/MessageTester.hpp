@@ -296,7 +296,7 @@ public:
 			case 14:
 			{
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				const char final_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+				const char final_payload[] = "{\"b\":0,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 				if (!test_json_message.remove_message() || !test_json_message.compare_buffer(final_payload, sizeof(final_payload) - 1)) {	// The first key (no header ',' char)
 					json_message.set_nth_value_string(0, "1st");
 					return false;
@@ -328,7 +328,7 @@ public:
 					json_message.set_nth_value_string(0, "1st");
 					return false;
 				}
-				const char different_payload[] = "{\"c\":29973,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+				const char different_payload[] = "{\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 				copy_json_message.deserialize_buffer(different_payload, sizeof(different_payload) - 1);
 				if (copy_json_message == test_json_message) {
 					json_message.set_nth_value_string(0, "2nd");
