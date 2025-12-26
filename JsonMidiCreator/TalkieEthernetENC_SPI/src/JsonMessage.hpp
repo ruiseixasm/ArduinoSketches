@@ -309,6 +309,7 @@ public:
 		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
 		if (get_value_type('m') != INTEGER) return false;
 		if (get_number('m') > 9) return false;
+		if (get_value_type('c') != INTEGER) return false;
 		if (get_value_type('i') != INTEGER) return false;
 		if (get_value_type('b') != INTEGER) return false;
 		if (get_value_type('f') != STRING) return false;
@@ -812,9 +813,8 @@ public:
 	}
 
 	bool set_checksum() {
-		if (!set_number('c', 0)) return false;	// Resets 'c' to 0
+		if (!remove('c')) return false;	// MAkes sure the field is removed first
 		const uint16_t checksum = generate_checksum();
-		// Finally inserts the Checksum
 		return set_number('c', checksum);
 	}
 

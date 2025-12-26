@@ -28,7 +28,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCASTSOCKET_DEBUG
-// #define BROADCASTSOCKET_DEBUG_NEW
+#define BROADCASTSOCKET_DEBUG_NEW
 
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
@@ -51,7 +51,7 @@ protected:
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
     uint16_t _last_local_time = 0;
-    uint16_t _last_remote_time = 0;
+    uint16_t _last_message_timestamp = 0;
     uint16_t _drops_count = 0;
 
 
@@ -88,17 +88,8 @@ protected:
 		return 0;
 	}
 
-	bool setBufferSource() {
-		size_t value_position = getValuePosition('c');
-		if (value_position) {
-			_receiving_buffer[value_position] = '0' + static_cast<uint8_t>(_source_value);
-			return true;
-		}
-		return false;
-	}
 
-
-    uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* remote_time) {
+    uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* message_timestamp) {
         
         uint16_t data_checksum = 0;
         // Has to be pre processed (linearly)
@@ -120,8 +111,8 @@ protected:
                     if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
                         at_i = false;
                     } else {
-                        *remote_time *= 10;
-                        *remote_time += _receiving_buffer[i] - '0';
+                        *message_timestamp *= 10;
+                        *message_timestamp += _receiving_buffer[i] - '0';
                     }
                 } else if (at_c) {
                     if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
@@ -243,75 +234,69 @@ protected:
         Serial.println();
         #endif
 
-        if (_received_length > 3*4 + 2) {
+		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+		JsonMessage json_message(_receiving_buffer, _received_length);
 
-            uint8_t message_code_int = 255;    // There is no 255 message code, meaning, it has none!
-            uint16_t remote_time = 0;
-            uint16_t received_checksum = extractChecksum(&message_code_int, &remote_time);
-            uint16_t checksum = generateChecksum(_receiving_buffer, _received_length);
-            
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("triggerTalkers3: Remote time: "));
-            Serial.println(remote_time);
-            #endif
+		if (json_message.validate_fields()) {
 
-            if (received_checksum == checksum) {
-                #ifdef BROADCASTSOCKET_DEBUG
-                Serial.print(F("triggerTalkers4: Validated Checksum of "));
-                Serial.println(checksum);
-                #endif
+			uint16_t message_checksum = json_message.get_checksum();
+			json_message.remove_checksum();
+			uint16_t checksum = json_message.generate_checksum();
 
-                if (message_code_int == 255) { // Found no message code!
-                    #ifdef BROADCASTSOCKET_DEBUG
-                    Serial.println(F("triggerTalkers5: No message code!"));
-                    #endif
+			if (message_checksum == checksum) {
 
-                    return _received_length;
-                }
-                
-                if (_max_delay_ms > 0) {
+				MessageValue message_code = json_message.get_message_value();
+				uint16_t message_timestamp = json_message.get_timestamp();
+				
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.print(F("triggerTalkers3: Remote time: "));
+				Serial.println(message_timestamp);
+				#endif
 
-                    MessageValue message_code = static_cast<MessageValue>(message_code_int);
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.print(F("triggerTalkers4: Validated Checksum of "));
+				Serial.println(checksum);
+				#endif
 
-                    if (message_code == MessageValue::CALL) {	// Only does time control on Calls (drops)
+				if (_max_delay_ms > 0) {
 
-                        #ifdef BROADCASTSOCKET_DEBUG
-                        Serial.print(F("triggerTalkers6: Message code requires delay check: "));
-                        Serial.println(message_code_int);
-                        #endif
+					if (message_code == MessageValue::CALL) {	// Only does time control on Calls (drops)
 
-                        const uint16_t local_time = (uint16_t)millis();
-                        
-                        if (_control_timing) {
-                            
-                            const uint16_t remote_delay = _last_remote_time - remote_time;  // Package received after
+						#ifdef BROADCASTSOCKET_DEBUG
+						Serial.print(F("triggerTalkers6: Message code requires delay check: "));
+						Serial.println(message_code_int);
+						#endif
 
-                            if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
-                                const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
-                                const uint16_t local_delay = local_time - _last_local_time;
-                                #ifdef BROADCASTSOCKET_DEBUG
-                                Serial.print(F("triggerTalkers7: Local delay: "));
-                                Serial.println(local_delay);
-                                #endif
-                                if (remote_delay > allowed_delay || local_delay > allowed_delay) {
-                                    #ifdef BROADCASTSOCKET_DEBUG
-                                    Serial.print(F("triggerTalkers8: Out of time package (remote delay): "));
-                                    Serial.println(remote_delay);
-                                    #endif
-                                    _drops_count++;
-                                    return _received_length;  // Out of time package (too late)
-                                }
-                            }
-                        }
-                        _last_local_time = local_time;
-                        _last_remote_time = remote_time;
-                        _control_timing = true;
-                    }
-                }
+						const uint16_t local_time = (uint16_t)millis();
+						
+						if (_control_timing) {
+							
+							const uint16_t remote_delay = _last_message_timestamp - message_timestamp;  // Package received after
+
+							if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
+								const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
+								const uint16_t local_delay = local_time - _last_local_time;
+								#ifdef BROADCASTSOCKET_DEBUG
+								Serial.print(F("triggerTalkers7: Local delay: "));
+								Serial.println(local_delay);
+								#endif
+								if (remote_delay > allowed_delay || local_delay > allowed_delay) {
+									#ifdef BROADCASTSOCKET_DEBUG
+									Serial.print(F("triggerTalkers8: Out of time package (remote delay): "));
+									Serial.println(remote_delay);
+									#endif
+									_drops_count++;
+									return _received_length;  // Out of time package (too late)
+								}
+							}
+						}
+						_last_local_time = local_time;
+						_last_message_timestamp = message_timestamp;
+						_control_timing = true;
+					}
+				}
 
 				// Gives a chance to show it one time
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				JsonMessage json_message(_receiving_buffer, _received_length);
 
 				if (!receivedJsonMessage(json_message)) {
 					#ifdef JSON_TALKER_DEBUG
@@ -333,49 +318,48 @@ protected:
 				json_message.write_to(Serial);
 				Serial.print(" | ");
 				Serial.print(json_message.validate_fields());
-				Serial.print(" | ");
-				Serial.println(setBufferSource());
 				#endif
 
-				if (setBufferSource()) {	// Has to set the Socket Source Value first
-					TalkerMatch talker_match = TalkerMatch::NONE;
-					// Triggers all Talkers to processes the received data
-					for (uint8_t talker_i = 0; talker_i < _talker_count && talker_match > TalkerMatch::BY_NAME; ++talker_i) {	// _talker_count makes the code safe
+				TalkerMatch talker_match = TalkerMatch::NONE;
+				// Triggers all Talkers to processes the received data
+				for (uint8_t talker_i = 0; talker_i < _talker_count && talker_match > TalkerMatch::BY_NAME; ++talker_i) {	// _talker_count makes the code safe
 
-						#ifdef BROADCASTSOCKET_DEBUG
-						Serial.print(F("triggerTalkers9: Creating new JsonObject for talker: "));
-						Serial.println(_json_talkers[talker_i]->get_name());
-						#endif
+					#ifdef BROADCASTSOCKET_DEBUG
+					Serial.print(F("triggerTalkers9: Creating new JsonObject for talker: "));
+					Serial.println(_json_talkers[talker_i]->get_name());
+					#endif
 
-						if (talker_i > 0) {
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-							json_message.deserialize_buffer(_receiving_buffer, _received_length);
-							
-							#ifdef BROADCASTSOCKET_DEBUG_NEW
-							Serial.print(F("\tjson_message1.2: "));
-							json_message.write_to(Serial);
-							Serial.print(" | ");
-							Serial.println(json_message.validate_fields());
-							#endif
-
-						}
+					if (talker_i > 0) {
+						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+						json_message.deserialize_buffer(_receiving_buffer, _received_length);
 						
-						#ifdef BROADCASTSOCKET_DEBUG
-						Serial.print(F("triggerTalkers10: Triggering the talker: "));
-						Serial.println(_json_talkers[talker_i]->get_name());
+						#ifdef BROADCASTSOCKET_DEBUG_NEW
+						Serial.print(F("\tjson_message1.2: "));
+						json_message.write_to(Serial);
+						Serial.print(" | ");
+						Serial.println(json_message.validate_fields());
 						#endif
 
-						// A non static method
-						talker_match = _json_talkers[talker_i]->processMessage(json_message);
+					} else if (_talker_count > 1) {
+						// Updates the _receiving_buffer with the processed message as a source data
+						json_message.serialize_json(_receiving_buffer, _received_length);
 					}
+					
+					#ifdef BROADCASTSOCKET_DEBUG
+					Serial.print(F("triggerTalkers10: Triggering the talker: "));
+					Serial.println(_json_talkers[talker_i]->get_name());
+					#endif
+
+					// A non static method
+					talker_match = _json_talkers[talker_i]->processMessage(json_message);
 				}
-            } else {
-                #ifdef BROADCASTSOCKET_DEBUG
-                Serial.print(F("triggerTalkers9: Validation of Checksum FAILED: "));
-                Serial.println(checksum);
-                #endif
-            }
-        }
+			} else {
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.print(F("triggerTalkers9: Validation of Checksum FAILED: "));
+				Serial.println(checksum);
+				#endif
+			}
+		}
         return _received_length;
     }
 
@@ -441,30 +425,21 @@ protected:
         Serial.println();
         #endif
 
-        if (insertChecksum()) {	// Where the CHECKSUM is set
-
-			if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
-
-				#ifdef BROADCASTSOCKET_DEBUG
-				Serial.println(F("ERROR: Message too big"));
-				#endif
-
-				return false;
-			}
+		if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
 
 			#ifdef BROADCASTSOCKET_DEBUG
-			Serial.print(F("send2: "));
-			Serial.write(_sending_buffer, _sending_length);
-			Serial.println();
+			Serial.println(F("ERROR: Message too big"));
 			#endif
 
-		} else {
-			
-			#ifdef BROADCASTSOCKET_DEBUG
-			Serial.println(F("ERROR: Couldn't insert Checksum"));
-			#endif
-        	return false;
+			return false;
 		}
+
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.print(F("send2: "));
+		Serial.write(_sending_buffer, _sending_length);
+		Serial.println();
+		#endif
+
         return true;
     }
 
@@ -509,9 +484,6 @@ public:
 
     bool remoteSend(JsonMessage& json_message) {
 
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-        json_message.set_broadcast_value(BroadcastValue::REMOTE);
-
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("remoteSend1: "));
 		json_message.write_to(Serial);
@@ -519,7 +491,7 @@ public:
 		#endif
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (processedJsonMessage(json_message) && availableSendingBuffer()) {
+		if (processedJsonMessage(json_message) && json_message.set_checksum() && availableSendingBuffer()) {
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			_sending_length = json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
