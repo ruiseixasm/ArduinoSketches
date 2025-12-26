@@ -33,7 +33,7 @@ public:
     bool localSend(JsonMessage& json_message) override;
 
 	
-	TalkerMatch processMessage(JsonMessage& json_message) override {
+	TalkerMatch talkerReceive(JsonMessage& json_message) override {
 
 		#ifdef JSON_REPEATER_DEBUG
 		Serial.print(F("\t"));
@@ -45,10 +45,10 @@ public:
 		BroadcastValue broadcast_value = json_message.get_broadcast_value();
 
 		#ifdef JSON_REPEATER_DEBUG_NEW
-		Serial.print(F("\t\t\t\tprocessMessage1.1: "));
+		Serial.print(F("\t\t\t\ttalkerReceive1.1: "));
 		json_message.write_to(Serial);
 		Serial.println();
-		Serial.print(F("\t\t\t\tprocessMessage1.2: "));
+		Serial.print(F("\t\t\t\ttalkerReceive1.2: "));
 		json_message.write_to(Serial);
 		Serial.print(" | ");
 		Serial.println(_name);

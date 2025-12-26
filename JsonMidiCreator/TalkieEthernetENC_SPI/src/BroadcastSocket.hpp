@@ -220,7 +220,7 @@ protected:
 					#endif
 
 					// A non static method
-					talker_match = _json_talkers[talker_i]->processMessage(json_message);
+					talker_match = _json_talkers[talker_i]->talkerReceive(json_message);
 				}
 			} else {
 				#ifdef BROADCASTSOCKET_DEBUG

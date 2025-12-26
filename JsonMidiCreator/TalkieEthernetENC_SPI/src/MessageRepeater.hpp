@@ -78,7 +78,7 @@ public:
 			case BroadcastValue::REMOTE:
 			{
 				for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_talkers_count; ++downlink_socket_i) {
-					match = _downlink_talkers[downlink_socket_i]->processMessage(message);
+					match = _downlink_talkers[downlink_socket_i]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:

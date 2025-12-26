@@ -67,7 +67,7 @@ bool JsonRepeater::localSend(JsonMessage& json_message) {
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			JsonMessage json_message_copy(json_message);
 			
-			talker_match = _json_talkers[talker_i]->processMessage(json_message_copy);
+			talker_match = _json_talkers[talker_i]->talkerReceive(json_message_copy);
 			sent_message = true;
 		}
 	}

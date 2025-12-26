@@ -258,7 +258,7 @@ public:
 					Serial.println(talker_i);
 					#endif
 
-					talker_match = _json_talkers[talker_i]->processMessage(json_message_copy);
+					talker_match = _json_talkers[talker_i]->talkerReceive(json_message_copy);
 					sent_message = true;
 				}
 			}
@@ -282,7 +282,7 @@ public:
 		json_message.set_broadcast_value(BroadcastValue::SELF);
 		// Despite being a SELF message it also needs to be prepared like any other
 		if (prepareMessage(json_message)) {
-			processMessage(json_message);	// Calls my self processMessage method right away
+			talkerReceive(json_message);	// Calls my self talkerReceive method right away
 			return true;
 		}
 		return false;
@@ -339,7 +339,7 @@ public:
     }
 
     
-    virtual TalkerMatch processMessage(JsonMessage& json_message) {
+    virtual TalkerMatch talkerReceive(JsonMessage& json_message) {
 
         #ifdef JSON_TALKER_DEBUG
         Serial.println(F("\tProcessing JSON message..."));
@@ -351,7 +351,7 @@ public:
 		MessageValue message_value = json_message.get_message_value();
 
 		#ifdef JSON_TALKER_DEBUG_NEW
-		Serial.print(F("\t\tprocessMessage1: "));
+		Serial.print(F("\t\ttalkerReceive1: "));
 		json_message.write_to(Serial);
 		Serial.print(" | ");
 		Serial.println(static_cast<int>( message_value ));
