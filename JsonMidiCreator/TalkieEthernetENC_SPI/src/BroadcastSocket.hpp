@@ -28,7 +28,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCASTSOCKET_DEBUG
-#define BROADCASTSOCKET_DEBUG_NEW
+// #define BROADCASTSOCKET_DEBUG_NEW
 
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
@@ -334,7 +334,7 @@ protected:
 						json_message.deserialize_buffer(_receiving_buffer, _received_length);
 						
 						#ifdef BROADCASTSOCKET_DEBUG_NEW
-						Serial.print(F("\tjson_message1.2: "));
+						Serial.println(F("\tjson_message1.2: "));
 						json_message.write_to(Serial);
 						Serial.print(" | ");
 						Serial.println(json_message.validate_fields());
@@ -342,7 +342,7 @@ protected:
 
 					} else if (_talker_count > 1) {
 						// Updates the _receiving_buffer with the processed message as a source data
-						json_message.serialize_json(_receiving_buffer, _received_length);
+						_received_length = json_message.serialize_json(_receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 					}
 					
 					#ifdef BROADCASTSOCKET_DEBUG

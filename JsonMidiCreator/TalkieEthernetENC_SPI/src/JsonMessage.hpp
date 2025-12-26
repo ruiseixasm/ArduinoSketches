@@ -410,8 +410,8 @@ public:
 		return false;
 	}
 
-	size_t serialize_json(char* buffer, size_t length) const {
-		if (buffer && length >= _json_length) {
+	size_t serialize_json(char* buffer, size_t size) const {
+		if (buffer && size >= _json_length) {
 			for (size_t json_i = 0; json_i < _json_length; ++json_i) {
 				buffer[json_i] = _json_payload[json_i];
 			}
