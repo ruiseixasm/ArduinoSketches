@@ -86,21 +86,27 @@ protected:
 	}
 
     
-    uint8_t triggerTalkers() {
-
-		#ifdef BROADCASTSOCKET_DEBUG
-		Serial.print(class_name());
-		Serial.print(F(": triggerTalkers1: has a Talkers count of: "));
-		Serial.println(_talker_count);
-        Serial.print(F("triggerTalkers2: "));
-        Serial.write(_received_buffer, _received_length);
-        Serial.println();
-        #endif
+    bool triggerTalkers() {
 
 		size_t colon_position = JsonMessage::get_colon_position('c', _received_buffer, _received_length);
 		uint16_t received_checksum = JsonMessage::get_value_number('c', _received_buffer, _received_length, colon_position);
+
+		#ifdef BROADCASTSOCKET_DEBUG_NEW
+		Serial.print(F("\ttriggerTalkers0.1: "));
+        Serial.write(_received_buffer, _received_length);
+		Serial.print(" | ");
+		Serial.println(received_checksum);
+		#endif
+
 		if (!JsonMessage::remove('c', _received_buffer, &_received_length, colon_position)) return false;
 		uint16_t checksum = generateChecksum(_received_buffer, _received_length);
+
+		#ifdef BROADCASTSOCKET_DEBUG_NEW
+		Serial.print(F("\ttriggerTalkers0.2: "));
+        Serial.write(_received_buffer, _received_length);
+		Serial.print(" | ");
+		Serial.println(checksum);
+		#endif
 
 		if (received_checksum == checksum) {
 
@@ -157,7 +163,7 @@ protected:
 									Serial.println(remote_delay);
 									#endif
 									_drops_count++;
-									return _received_length;  // Out of time package (too late)
+									return false;  // Out of time package (too late)
 								}
 							}
 						}
@@ -181,7 +187,7 @@ protected:
 						}
 						remoteSend(json_message);	// Includes reply swap
 					}
-					return 0;
+					return false;
 				}
 				
 				TalkerMatch talker_match = TalkerMatch::NONE;
@@ -203,16 +209,6 @@ protected:
 						Serial.println();
 						#endif
 
-					} else if (_talker_count > 1) {
-						
-						#ifdef BROADCASTSOCKET_DEBUG_NEW
-						Serial.print(F("\tjson_message1.2: "));
-						json_message.write_to(Serial);
-						Serial.println();
-						#endif
-
-						// Updates the _received_buffer with the processed message as a source data
-						_received_length = json_message.serialize_json(_received_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 					}
 					
 					#ifdef BROADCASTSOCKET_DEBUG
@@ -230,7 +226,8 @@ protected:
 				#endif
 			}
 		}
-        return _received_length;
+		_received_length = 0;	// Enables new receiving
+        return true;
     }
 
     // Constructor
@@ -280,36 +277,6 @@ protected:
     virtual bool send(const JsonMessage& json_message) {
         (void)json_message;	// Silence unused parameter warning
 		
-        if (_sending_length < 3*4 + 2) {
-
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("Error: Serialization failed"));
-            #endif
-
-            return false;
-        }
-
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("send1: "));
-        Serial.write(_sending_buffer, _sending_length);
-        Serial.println();
-        #endif
-
-		if (_sending_length > BROADCAST_SOCKET_BUFFER_SIZE) {
-
-			#ifdef BROADCASTSOCKET_DEBUG
-			Serial.println(F("ERROR: Message too big"));
-			#endif
-
-			return false;
-		}
-
-		#ifdef BROADCASTSOCKET_DEBUG
-		Serial.print(F("send2: "));
-		Serial.write(_sending_buffer, _sending_length);
-		Serial.println();
-		#endif
-
         return true;
     }
 
@@ -361,7 +328,7 @@ public:
 		#endif
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (processedJsonMessage(json_message)) {
+		if (json_message.validate_fields() && processedJsonMessage(json_message) && availableSendingBuffer()) {
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("remoteSend2: "));
@@ -374,15 +341,14 @@ public:
 			uint16_t checksum = generateChecksum(_sending_buffer, _sending_length);
 			JsonMessage::set_number('c', checksum, _sending_buffer, &_sending_length);
 
-			#ifdef BROADCASTSOCKET_DEBUG
+			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("remoteSend3: "));
 			Serial.write(_sending_buffer, _sending_length);
-			Serial.println();
-			Serial.print(F("remoteSend4: JSON length: "));
+			Serial.print(" | ");
 			Serial.println(_sending_length);
 			#endif
 
-			if (_sending_length && availableSendingBuffer()) {
+			if (_sending_length) {
 				return send(json_message);
 			}
 		}
