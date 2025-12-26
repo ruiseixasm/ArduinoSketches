@@ -15,10 +15,12 @@ https://github.com/ruiseixasm/JsonTalkie
 #define MESSAGE_REPEATER_HPP
 
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
+#include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
 #include "BroadcastSocket.hpp"
 #include "JsonTalker.h"
 
+using LinkType = TalkieCodes::LinkType;
 
 class MessageRepeater {
 protected:
@@ -49,7 +51,18 @@ public:
         _downlink_sockets(downlink_sockets), _downlink_sockets_count(downlink_sockets_count),
         _uplink_talkers(uplink_talkers), _uplink_talkers_count(uplink_talkers_count)
     {
-		// Does nothing
+		for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
+			_uplink_sockets[uplink_socket_i]->setLinkType(LinkType::UP);
+		}
+		for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_talkers_count; ++downlink_socket_i) {
+			_downlink_talkers[downlink_socket_i]->setLinkType(LinkType::DOWN);
+		}
+		for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
+			_downlink_sockets[downlink_socket_i]->setLinkType(LinkType::DOWN);
+		}
+		for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_talkers_count; ++uplink_socket_i) {
+			_uplink_talkers[uplink_socket_i]->setLinkType(LinkType::UP);
+		}
 	}
 
 	~MessageRepeater() {
@@ -58,7 +71,7 @@ public:
 
 
 	void socketDownlink(JsonMessage &json_message) {
-		
+
 	}
 
 	void talkerUplink(JsonMessage &json_message) {
