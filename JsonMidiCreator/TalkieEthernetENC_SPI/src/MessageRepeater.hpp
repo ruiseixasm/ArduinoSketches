@@ -75,7 +75,7 @@ public:
 		TalkerMatch match = TalkerMatch::NONE;
 
 		switch (broadcast) {
-
+			// Uplink sockets or talkers can only process REMOTE messages
 			case BroadcastValue::REMOTE:
 			{
 				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
@@ -160,6 +160,21 @@ public:
 
 			case BroadcastValue::REMOTE:
 			{
+				for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count; ++uplink_talker_i) {
+					match = _uplink_talkers[uplink_talker_i]->talkerReceive(message);
+					switch (match) {
+
+						case TalkerMatch::BY_NAME:
+							return true;
+						break;
+						
+						case TalkerMatch::FAIL:
+							return false;
+						break;
+						
+						default: break;
+					}
+				}
 				for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
 					_uplink_sockets[uplink_socket_i]->socketSend(message);
 				}
@@ -199,6 +214,33 @@ public:
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch match = TalkerMatch::NONE;
 
+		switch (broadcast) {
+			// Uplink sockets or talkers can only process REMOTE messages
+			case BroadcastValue::REMOTE:
+			{
+				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
+					match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
+					switch (match) {
+
+						case TalkerMatch::BY_NAME:
+							return true;
+						break;
+						
+						case TalkerMatch::FAIL:
+							return false;
+						break;
+						
+						default: break;
+					}
+				}
+				for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
+					_downlink_sockets[downlink_socket_i]->socketSend(message);
+				}
+			}
+			break;
+			
+			default: break;	// Does nothing, typical for BroadcastValue::NONE
+		}
 	}
 
 };
