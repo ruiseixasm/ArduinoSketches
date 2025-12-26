@@ -28,7 +28,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCASTSOCKET_DEBUG
-#define BROADCASTSOCKET_DEBUG_NEW
+// #define BROADCASTSOCKET_DEBUG_NEW
 
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
@@ -350,6 +350,12 @@ public:
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
 		if (processedJsonMessage(json_message) && json_message.set_checksum() && availableSendingBuffer()) {
+
+			#ifdef BROADCASTSOCKET_DEBUG_NEW
+			Serial.print(F("remoteSend2: "));
+			json_message.write_to(Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			_sending_length = json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);

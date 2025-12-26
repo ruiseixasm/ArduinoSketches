@@ -813,7 +813,7 @@ public:
 	}
 
 	bool set_checksum() {
-		if (!remove('c')) return false;	// MAkes sure the field is removed first
+		remove('c');	// Makes sure the field is removed first
 		const uint16_t checksum = generate_checksum();
 		return set_number('c', checksum);
 	}
