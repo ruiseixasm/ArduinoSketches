@@ -89,6 +89,13 @@ protected:
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		JsonMessage json_message(_receiving_buffer, _received_length);
 
+		#ifdef BROADCASTSOCKET_DEBUG_NEW
+		Serial.print(F("\tjson_message1.1: "));
+		json_message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println(json_message.validate_fields());
+		#endif
+
 		if (json_message.validate_fields()) {
 
 			uint16_t message_checksum = json_message.get_checksum();
@@ -165,13 +172,6 @@ protected:
 					return 0;
 				}
 				
-				#ifdef BROADCASTSOCKET_DEBUG_NEW
-				Serial.print(F("\tjson_message1.1: "));
-				json_message.write_to(Serial);
-				Serial.print(" | ");
-				Serial.println(json_message.validate_fields());
-				#endif
-
 				TalkerMatch talker_match = TalkerMatch::NONE;
 				// Triggers all Talkers to processes the received data
 				for (uint8_t talker_i = 0; talker_i < _talker_count && talker_match > TalkerMatch::BY_NAME; ++talker_i) {	// _talker_count makes the code safe
@@ -186,13 +186,19 @@ protected:
 						json_message.deserialize_buffer(_receiving_buffer, _received_length);
 						
 						#ifdef BROADCASTSOCKET_DEBUG_NEW
-						Serial.print(F("\tjson_message1.2: "));
+						Serial.print(F("\tjson_message1.3: "));
 						json_message.write_to(Serial);
-						Serial.print(" | ");
-						Serial.println(json_message.validate_fields());
+						Serial.println();
 						#endif
 
 					} else if (_talker_count > 1) {
+						
+						#ifdef BROADCASTSOCKET_DEBUG_NEW
+						Serial.print(F("\tjson_message1.2: "));
+						json_message.write_to(Serial);
+						Serial.println();
+						#endif
+
 						// Updates the _receiving_buffer with the processed message as a source data
 						_received_length = json_message.serialize_json(_receiving_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 					}
