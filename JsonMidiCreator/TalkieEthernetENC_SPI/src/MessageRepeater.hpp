@@ -70,19 +70,19 @@ public:
 	}
 
 
-	void socketDownlink(JsonMessage &json_message) {
+	void socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
 
 	}
 
-	void talkerUplink(JsonMessage &json_message) {
+	void talkerUplink(JsonTalker &talker, JsonMessage &message) {
 
 	}
 
-	void socketUplink(JsonMessage &json_message) {
+	void socketUplink(BroadcastSocket &socket, JsonMessage &message) {
 
 	}
 
-	void talkerDownlink(JsonMessage &json_message) {
+	void talkerDownlink(JsonTalker &talker, JsonMessage &message) {
 
 	}
 
