@@ -13,12 +13,18 @@ https://github.com/ruiseixasm/JsonTalkie
 */
 
 #include "JsonTalker.h"
-#include "BroadcastSocket.hpp"    // MUST include the full definition!
+#include "BroadcastSocket.h"    // MUST include the full definition!
+#include "MessageRepeater.hpp"
 
 
 JsonTalker* const* JsonTalker::_json_talkers = nullptr;
 uint8_t JsonTalker::_talker_count = 0;
 
+
+void JsonTalker::setLink(MessageRepeater* message_repeater, LinkType link_type) {
+	_message_repeater = message_repeater;
+	_link_type = link_type;
+}
 
 
 // *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************

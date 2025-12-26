@@ -40,6 +40,7 @@ using Original = TalkerManifesto::Original;
 using ValueType = JsonMessage::ValueType;
 
 
+class MessageRepeater;
 class BroadcastSocket;
 
 
@@ -58,6 +59,8 @@ protected:
     // Pointer PRESERVE the polymorphism while objects don't!
     static JsonTalker* const* _json_talkers;  // It's capable of communicate with other talkers (local)
     static uint8_t _talker_count;
+
+	MessageRepeater* _message_repeater = nullptr;
 	LinkType _link_type = LinkType::DOWN;
 
     const char* _name;      // Name of the Talker
@@ -88,12 +91,10 @@ public:
 		}
     }
 
+	void setLink(MessageRepeater* message_repeater, LinkType link_type);
+
 	LinkType getLinkType() const {
 		return _link_type;
-	}
-
-	void setLinkType(LinkType link_type) {
-		_link_type = link_type;
 	}
 
 

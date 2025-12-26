@@ -36,6 +36,8 @@ https://github.com/ruiseixasm/JsonTalkie
 using LinkType = TalkieCodes::LinkType;
 using TalkerMatch = JsonTalker::TalkerMatch;
 
+class MessageRepeater;
+
 class BroadcastSocket {
 public:
 
@@ -58,6 +60,7 @@ protected:
 
 	JsonTalker* const* const _json_talkers;	// list of pointers and pointers are const, objects mutable
 	const uint8_t _talker_count;
+	MessageRepeater* _message_repeater = nullptr;
 	LinkType _link_type = LinkType::UP;
 
 	const BroadcastValue _source_value;
@@ -308,9 +311,7 @@ public:
 		return _link_type;
 	}
 
-	void setLinkType(LinkType link_type) {
-		_link_type = link_type;
-	}
+	void setLink(MessageRepeater* message_repeater, LinkType link_type);
 
 	BroadcastValue getSourceValue() const {
 		return _source_value;

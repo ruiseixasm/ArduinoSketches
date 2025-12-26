@@ -13,7 +13,7 @@ https://github.com/ruiseixasm/JsonTalkie
 */
 
 #include "JsonRepeater.h"
-#include "../BroadcastSocket.hpp"    // MUST include the full definition!
+#include "../BroadcastSocket.h"    // MUST include the full definition!
 
 
 bool JsonRepeater::socketSend(JsonMessage& json_message) {

@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #include <SPI.h>
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 
 #define BROADCAST_SPI_DEBUG
 

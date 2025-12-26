@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
-#include "BroadcastSocket.hpp"
+#include "BroadcastSocket.h"
 #include "JsonTalker.h"
 
 using LinkType = TalkieCodes::LinkType;
@@ -52,16 +52,16 @@ public:
         _uplink_talkers(uplink_talkers), _uplink_talkers_count(uplink_talkers_count)
     {
 		for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
-			_uplink_sockets[uplink_socket_i]->setLinkType(LinkType::UP);
+			_uplink_sockets[uplink_socket_i]->setLink(this, LinkType::UP);
 		}
 		for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
-			_downlink_talkers[downlink_talker_i]->setLinkType(LinkType::DOWN);
+			_downlink_talkers[downlink_talker_i]->setLink(this, LinkType::DOWN);
 		}
 		for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
-			_downlink_sockets[downlink_socket_i]->setLinkType(LinkType::DOWN);
+			_downlink_sockets[downlink_socket_i]->setLink(this, LinkType::DOWN);
 		}
 		for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count; ++uplink_talker_i) {
-			_uplink_talkers[uplink_talker_i]->setLinkType(LinkType::UP);
+			_uplink_talkers[uplink_talker_i]->setLink(this, LinkType::UP);
 		}
 	}
 
