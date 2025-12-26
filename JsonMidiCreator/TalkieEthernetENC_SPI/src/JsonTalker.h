@@ -30,6 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define JSON_TALKER_DEBUG
 // #define JSON_TALKER_DEBUG_NEW
 
+using LinkType = TalkieCodes::LinkType;
 using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using InfoValue = TalkieCodes::InfoValue;
@@ -57,6 +58,7 @@ protected:
     // Pointer PRESERVE the polymorphism while objects don't!
     static JsonTalker* const* _json_talkers;  // It's capable of communicate with other talkers (local)
     static uint8_t _talker_count;
+	LinkType _link_type = LinkType::DOWN;
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
@@ -85,6 +87,14 @@ public:
 			_channel = _manifesto->getChannel(_channel, this);
 		}
     }
+
+	LinkType getLinkType() const {
+		return _link_type;
+	}
+
+	void setLinkType(LinkType link_type) {
+		_link_type = link_type;
+	}
 
 
 	bool inSameSocket(const BroadcastSocket* socket) const {

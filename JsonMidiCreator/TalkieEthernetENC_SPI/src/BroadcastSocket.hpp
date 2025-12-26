@@ -33,6 +33,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
+using LinkType = TalkieCodes::LinkType;
 using TalkerMatch = JsonTalker::TalkerMatch;
 
 class BroadcastSocket {
@@ -57,6 +58,8 @@ protected:
 
 	JsonTalker* const* const _json_talkers;	// list of pointers and pointers are const, objects mutable
 	const uint8_t _talker_count;
+	LinkType _link_type = LinkType::UP;
+
 	const BroadcastValue _source_value;
 
     char _received_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
@@ -300,6 +303,14 @@ public:
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
+
+	LinkType getLinkType() const {
+		return _link_type;
+	}
+
+	void setLinkType(LinkType link_type) {
+		_link_type = link_type;
+	}
 
 	BroadcastValue getSourceValue() const {
 		return _source_value;
