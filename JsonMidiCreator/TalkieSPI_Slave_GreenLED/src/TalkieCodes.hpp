@@ -22,7 +22,6 @@ struct TalkieCodes {
 	// Add a char "enum" struct
     struct MessageKey {
         static constexpr const char BROADCAST		= 'b';
-        static constexpr const char CHECKSUM		= 'c';
         static constexpr const char TIMESTAMP		= 'i';
         static constexpr const char IDENTITY 		= 'i';
         static constexpr const char MESSAGE 		= 'm';

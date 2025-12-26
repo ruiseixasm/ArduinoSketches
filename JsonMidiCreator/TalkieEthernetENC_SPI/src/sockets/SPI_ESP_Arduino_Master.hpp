@@ -18,10 +18,10 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <SPI.h>
 #include "../BroadcastSocket.hpp"
 
-// #define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
-// #define BROADCAST_SPI_DEBUG_NEW
+#define BROADCAST_SPI_DEBUG_NEW
 
 
 #define ENABLE_DIRECT_ADDRESSING
@@ -497,9 +497,6 @@ protected:
 			_named_pins_table.add(json_message.get_from_name(), _actual_ss_pin);
 
 			#ifdef BROADCAST_SPI_DEBUG
-			if (_named_pins_doc.isNull()) {
-				Serial.println("\t\tERROR: The JsonDocument isn't initiated (still null)");
-			}
 			Serial.print(F("\tcheckJsonMessage3: Confirmed actual named pin: "));
 			// Serial.println(_named_pins[from_name].as<uint8_t>());
 			#endif
@@ -516,10 +513,10 @@ protected:
 		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 			
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tsend1: Sent message: "));
+			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
 			Serial.write(_sending_buffer, _sending_length);
 			Serial.println();
-			Serial.print(F("\tsend2: Sent length: "));
+			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
 			Serial.println(_sending_length);
 			#endif
 			
@@ -530,13 +527,13 @@ protected:
 			if (as_reply) {
 
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend3: json_message TO is a String"));
+				Serial.println(F("\t\t\t\t\tsend3: json_message TO is a String"));
 				#endif
 
 				as_reply = _named_pins_table.get_pin(json_message.get_to_name(), _actual_ss_pin);
 			} else {
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend3: json_message TO is NOT a String or doesn't exist"));
+				Serial.println(F("\t\t\t\t\tsend3: json_message TO is NOT a String or doesn't exist"));
 				#endif
 			}
 
@@ -545,7 +542,7 @@ protected:
 				sendSPI(_sending_length, _actual_ss_pin);
 
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.print(F("\tsend4: --> Directly sent for the received pin --> "));
+				Serial.print(F("\t\t\t\t\tsend4: --> Directly sent for the received pin --> "));
 				Serial.println(_actual_ss_pin);
 				#endif
 
@@ -555,7 +552,7 @@ protected:
 				}
 				
 				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\tsend4: --> Broadcast sent to all pins -->"));
+				Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
 				#endif
 
 			}
@@ -565,7 +562,7 @@ protected:
 			}
 
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.println(F("\tsend4: --> Broadcast sent to all pins -->"));
+			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
 			#endif
 
 			#endif
