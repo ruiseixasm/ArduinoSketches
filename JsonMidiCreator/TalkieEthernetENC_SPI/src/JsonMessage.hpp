@@ -74,6 +74,7 @@ public:
 		return 0;
 	}
 
+
 	static size_t get_value_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, json_payload, json_length, colon_position);
 		if (colon_position) {			//     01
@@ -83,6 +84,7 @@ public:
 	}
 
 
+
 	static size_t get_key_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, json_payload, json_length, colon_position);
 		if (colon_position) {			//   210
@@ -90,6 +92,7 @@ public:
 		}
 		return 0;
 	}
+
 
 	static size_t get_field_length(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		size_t field_length = 0;
@@ -118,6 +121,7 @@ public:
 		return field_length;
 	}
 
+
 	static ValueType get_value_type(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
 		if (json_i) {
@@ -143,6 +147,7 @@ public:
 		return VOID;
 	}
 
+
 	// When a function receives a buffer and its size, the size must include space for the '\0'
 	static bool get_value_string(char key, char* buffer, size_t size, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		if (buffer && size) {
@@ -162,6 +167,7 @@ public:
 		}
 		return false;
 	}
+
 
 	static uint32_t get_value_number(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		uint32_t json_number = 0;
@@ -189,6 +195,7 @@ public:
 			*json_length = default_length;
 		}
 	}
+
 
 	static bool remove(char key, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, json_payload, *json_length, colon_position);
@@ -253,6 +260,7 @@ public:
 		return true;
 	}
 
+
 	static bool set_string(char key, const char* in_string, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		if (in_string) {
 			size_t length = 0;
@@ -306,20 +314,12 @@ public:
 	}
 
 
-
-
 protected:
 
 	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE];	// Length already managed, no need to zero it
 	size_t _json_length = 0;
 	// If multiple messages may be read at once (or in ISR context, multi-core ESP32, etc.), keep it per-instance to avoid overwriting / race conditions.
     mutable char _temp_string[MAX_LEN];  // mutable allows const methods to modify it (non static for the reasons above)
-
-
-	
-
-
-
 
 
 public:
@@ -368,6 +368,10 @@ public:
 		return _json_length;
 	}
 
+
+	void reset() {
+		reset(_json_payload, &_json_length);
+	}
 
 	bool validate_fields() const {
 		// Minimum length: '{"m":0,"i":0,"c":0,"f":"n"}' = 27
