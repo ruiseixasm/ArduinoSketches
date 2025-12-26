@@ -51,7 +51,7 @@ public:
 
 protected:
 
-    static char* _ptr_receiving_buffer;
+    static char* _ptr_received_buffer;
     static char* _ptr_sending_buffer;
 
     volatile static uint8_t _receiving_index;
@@ -84,7 +84,7 @@ protected:
 			SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
 
             // For static access to the buffers
-            _ptr_receiving_buffer = _receiving_buffer;
+            _ptr_received_buffer = _received_buffer;
             _ptr_sending_buffer = _sending_buffer;
 
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
@@ -154,7 +154,7 @@ protected:
 			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\treceive1: Received message: "));
-			Serial.write(_receiving_buffer, length);
+			Serial.write(_received_buffer, length);
 			Serial.println();
 			Serial.print(F("\treceive1: Received length: "));
 			Serial.println(length);
@@ -208,9 +208,9 @@ public:
             switch (_transmission_mode) {
                 case RECEIVE:
                     if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
-                        _ptr_receiving_buffer[_receiving_index] = c;
+                        _ptr_received_buffer[_receiving_index] = c;
 						if (_receiving_index > 0) {
-							SPDR = _ptr_receiving_buffer[_receiving_index - 1];	// Char sent with an offset to guarantee matching
+							SPDR = _ptr_received_buffer[_receiving_index - 1];	// Char sent with an offset to guarantee matching
 						}
 						_receiving_index++;
                     } else {
@@ -254,7 +254,7 @@ public:
 
             switch (c) {
                 case RECEIVE:
-                    if (_ptr_receiving_buffer) {
+                    if (_ptr_received_buffer) {
 						if (!_received_length_spi) {
 							_transmission_mode = RECEIVE;
 							_receiving_index = 0;
@@ -299,7 +299,7 @@ public:
                     break;
                 case LAST:
 					if (_transmission_mode == RECEIVE) {
-						SPDR = _ptr_receiving_buffer[_receiving_index - 1];
+						SPDR = _ptr_received_buffer[_receiving_index - 1];
                     } else if (_transmission_mode == SEND && _sending_length_spi > 0) {
 						SPDR = _ptr_sending_buffer[_sending_length_spi - 1];
                     } else {
