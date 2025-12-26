@@ -46,7 +46,7 @@ class JsonMessage {
 public:
 	
 	enum ValueType : uint8_t {
-		STRING, INTEGER, OTHER, VOID
+		STRING, INTEGER, VALUE_CODE, OTHER, VOID
 	};
 
 
@@ -64,11 +64,9 @@ public:
 
 
 	static size_t get_colon_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
-		if (json_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
-			for (size_t json_i = colon_position; json_i < json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
-				if (json_payload[json_i] == ':' && json_payload[json_i - 2] == key && json_payload[json_i - 3] == '"' && json_payload[json_i - 1] == '"') {
-					return json_i;
-				}
+		for (size_t json_i = colon_position; json_i < json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
+			if (json_payload[json_i] == ':' && json_payload[json_i - 2] == key && json_payload[json_i - 3] == '"' && json_payload[json_i - 1] == '"') {
+				return json_i;
 			}
 		}
 		return 0;
@@ -140,6 +138,9 @@ public:
 				}
 				if (json_i == json_length) {
 					return VOID;
+				}
+				if (json_payload[json_i - 2] == ':') {
+					return VALUE_CODE;
 				}
 				return INTEGER;
 			}
@@ -374,15 +375,69 @@ public:
 	}
 
 	bool validate_fields() const {
-		// Minimum length: '{"m":0,"i":0,"c":0,"f":"n"}' = 27
+		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
 		if (_json_length < 27) return false;
 		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
-		if (get_value_type('m', _json_payload, _json_length) != INTEGER) return false;
-		if (get_value_number('m', _json_payload, _json_length) > 9) return false;
-		if (get_value_type('b', _json_payload, _json_length) != INTEGER) return false;
-		if (get_value_type('i', _json_payload, _json_length) != INTEGER) return false;
-		if (get_value_type('f', _json_payload, _json_length) != STRING) return false;
-		return true;
+
+		bool found_m = false;
+		bool found_b = false;
+		bool found_i = false;
+		bool found_f = false;
+		for (size_t json_i = 4; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
+			if (_json_payload[json_i] == ':' && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
+
+				switch (_json_payload[json_i - 2]) {
+
+					case 'm':
+					{
+						ValueType value_type = get_value_type('m', _json_payload, _json_length, json_i);
+						if (value_type == VALUE_CODE) {
+							found_m = true;
+						} else {
+							return false;
+						}
+					}
+					break;
+					
+					case 'b':
+					{
+						ValueType value_type = get_value_type('b', _json_payload, _json_length, json_i);
+						if (value_type == VALUE_CODE) {
+							found_b = true;
+						} else {
+							return false;
+						}
+					}
+					break;
+					
+					case 'i':
+					{
+						ValueType value_type = get_value_type('i', _json_payload, _json_length, json_i);
+						if (value_type == INTEGER) {
+							found_i = true;
+						} else {
+							return false;
+						}
+					}
+					break;
+					
+					case 'f':
+					{
+						ValueType value_type = get_value_type('f', _json_payload, _json_length, json_i);
+						if (value_type == STRING) {
+							found_f = true;
+						} else {
+							return false;
+						}
+					}
+					break;
+					
+					default: break;
+				}
+			}
+		}
+
+		return found_m && found_b && found_i && found_f;
 	}
 
 
