@@ -36,6 +36,23 @@ https://github.com/ruiseixasm/JsonTalkie
 using TalkerMatch = JsonTalker::TalkerMatch;
 
 class BroadcastSocket {
+public:
+
+    static uint16_t generateChecksum(const char* buffer, size_t length) {	// 16-bit word and XORing
+        uint16_t checksum = 0;
+		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+			for (size_t i = 0; i < length; i += 2) {
+				uint16_t chunk = buffer[i] << 8;
+				if (i + 1 < length) {
+					chunk |= buffer[i + 1];
+				}
+				checksum ^= chunk;
+			}
+		}
+        return checksum;
+    }
+
+
 protected:
 
 	JsonTalker* const* const _json_talkers;	// list of pointers and pointers are const, objects mutable
