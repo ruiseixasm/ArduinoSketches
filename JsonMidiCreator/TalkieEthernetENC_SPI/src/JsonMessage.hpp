@@ -46,7 +46,7 @@ class JsonMessage {
 public:
 	
 	enum ValueType : uint8_t {
-		STRING, INTEGER, VALUE_CODE, OTHER, VOID
+		STRING, INTEGER, OTHER, VOID
 	};
 
 
@@ -138,9 +138,6 @@ public:
 				}
 				if (json_i == json_length) {
 					return VOID;
-				}
-				if (json_payload[json_i - 2] == ':') {
-					return VALUE_CODE;
 				}
 				return INTEGER;
 			}
@@ -391,9 +388,13 @@ public:
 					case 'm':
 					{
 						ValueType value_type = get_value_type('m', _json_payload, _json_length, json_i);
-						if (value_type == VALUE_CODE) {
-							if (found_b && found_i && found_f) return true;
-							found_m = true;
+						if (value_type == INTEGER) {
+							if (_json_payload[json_i + 2] == ',' || _json_payload[json_i + 2] == '}') {
+								if (found_b && found_i && found_f) return true;
+								found_m = true;
+							} else {
+								return false;
+							}
 						} else {
 							return false;
 						}
@@ -403,9 +404,13 @@ public:
 					case 'b':
 					{
 						ValueType value_type = get_value_type('b', _json_payload, _json_length, json_i);
-						if (value_type == VALUE_CODE) {
-							if (found_m && found_i && found_f) return true;
-							found_b = true;
+						if (value_type == INTEGER) {
+							if (_json_payload[json_i + 2] == ',' || _json_payload[json_i + 2] == '}') {
+								if (found_m && found_i && found_f) return true;
+								found_b = true;
+							} else {
+								return false;
+							}
 						} else {
 							return false;
 						}
