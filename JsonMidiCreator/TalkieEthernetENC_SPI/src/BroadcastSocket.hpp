@@ -28,7 +28,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCASTSOCKET_DEBUG
-// #define BROADCASTSOCKET_DEBUG_NEW
+#define BROADCASTSOCKET_DEBUG_NEW
 
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
@@ -53,154 +53,6 @@ protected:
     uint16_t _last_local_time = 0;
     uint16_t _last_message_timestamp = 0;
     uint16_t _drops_count = 0;
-
-
-    static uint16_t generateChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
-
-	size_t getColonPosition(char key) const {
-		if (_received_length > 6) {	// 6 because {"k":x} meaning 7 of length minumum (> 6)
-			for (size_t i = 4; i < _received_length; ++i) {	// 4 because it's the shortest position possible for ':'
-				if (_receiving_buffer[i] == ':' && _receiving_buffer[i - 2] == key && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
-					return i;
-				}
-			}
-		}
-		return 0;
-	}
-
-	size_t getValuePosition(char key) const {
-		size_t colon_position = getColonPosition(key);
-		if (colon_position) {			//     01
-			return colon_position + 1;	// {"k":x}
-		}
-		return 0;
-	}
-
-
-    uint16_t extractChecksum(uint8_t* message_code_int, uint16_t* message_timestamp) {
-        
-        uint16_t data_checksum = 0;
-        // Has to be pre processed (linearly)
-        bool at_m = false;
-        bool at_c = false;
-        bool at_i = false;
-        uint8_t data_i = 4;	// Optimized {"c": ...
-        for (uint8_t i = data_i; i < _received_length; ++i) {
-            if (_receiving_buffer[i] == ':') {
-                if (_receiving_buffer[i - 2] == 'c' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
-                    at_c = true;
-                } else if (_receiving_buffer[i - 2] == 'i' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
-                    at_i = true;
-                } else if (_receiving_buffer[i - 2] == 'm' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
-                    at_m = true;
-                }
-            } else {
-                if (at_i) {
-                    if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
-                        at_i = false;
-                    } else {
-                        *message_timestamp *= 10;
-                        *message_timestamp += _receiving_buffer[i] - '0';
-                    }
-                } else if (at_c) {
-                    if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
-                        at_c = false;
-                    } else if (_receiving_buffer[i - 1] == ':') { // First number in the row
-                        data_checksum = _receiving_buffer[i] - '0';
-                        _receiving_buffer[i] = '0';
-                    } else {
-                        data_checksum *= 10;
-                        data_checksum += _receiving_buffer[i] - '0';
-                        continue;   // Avoids the copy of the char
-                    }
-                } else if (at_m) {
-                    if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
-                        at_m = false;
-                    } else if (_receiving_buffer[i - 1] == ':') { // First number in the row
-                        *message_code_int = _receiving_buffer[i] - '0';   // Message code found and it's a number
-                    } else {
-                        *message_code_int *= 10;
-                        *message_code_int += _receiving_buffer[i] - '0';
-                    }
-                }
-            }
-            _receiving_buffer[data_i++] = _receiving_buffer[i]; // Does a left offset
-        }
-        _received_length = data_i;
-        return data_checksum;
-    }
-
-
-    bool insertChecksum() {
-
-        uint16_t checksum = generateChecksum(_sending_buffer, _sending_length);
-
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("insertChecksum1: Checksum is: "));
-        Serial.println(checksum);
-        #endif
-
-        if (checksum > 0) { // It's already 0
-
-			#ifdef BROADCASTSOCKET_DEBUG
-			Serial.print(F("insertChecksum2: Initial length: "));
-			Serial.println(_sending_length);
-			#endif
-
-            // First, find how many digits
-
-            uint16_t temp = checksum;
-            uint8_t num_digits = 1;	// 0 has 1 digit
-            while (temp > 9) {
-                temp /= 10;
-                num_digits++;
-            }
-            uint8_t data_i = _sending_length - 1;	// Old length (shorter) (binary processing, no '\0' to take into consideration)
-			uint8_t new_length = _sending_length + num_digits - 1;	// Discount the digit '0' already placed
-            
-			#ifdef BROADCASTSOCKET_DEBUG
-			Serial.print(F("insertChecksum3: New length: "));
-			Serial.println(new_length);
-			#endif
-
-            if (new_length > BROADCAST_SOCKET_BUFFER_SIZE)
-                return false;  // buffer overflow
-
-			_sending_length = new_length;
-
-            bool at_c = false;
-            for (uint8_t i = new_length - 1; data_i > 4; i--) {
-                
-                if (_sending_buffer[data_i - 2] == ':') {	// Must find it at 5 the least (> 4)
-                    if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
-                        at_c = true;
-                    }
-                } else if (at_c) {
-                    if (checksum == 0) {
-                        return true;
-                    } else {
-                        _sending_buffer[i] = '0' + checksum % 10;
-                        checksum /= 10; // Truncates the number (does a floor)
-                        continue;       // Avoids the copy of the char
-                    }
-                }
-                _sending_buffer[i] = _sending_buffer[data_i--]; // Does an offset (NOTE the continue above)
-            }
-        }
-        return true;
-    }
 
 
 	// Allows the overriding class to peek at the received JSON message
@@ -317,7 +169,7 @@ protected:
 				Serial.print(F("\tjson_message1.1: "));
 				json_message.write_to(Serial);
 				Serial.print(" | ");
-				Serial.print(json_message.validate_fields());
+				Serial.println(json_message.validate_fields());
 				#endif
 
 				TalkerMatch talker_match = TalkerMatch::NONE;
@@ -334,7 +186,7 @@ protected:
 						json_message.deserialize_buffer(_receiving_buffer, _received_length);
 						
 						#ifdef BROADCASTSOCKET_DEBUG_NEW
-						Serial.println(F("\tjson_message1.2: "));
+						Serial.print(F("\tjson_message1.2: "));
 						json_message.write_to(Serial);
 						Serial.print(" | ");
 						Serial.println(json_message.validate_fields());
@@ -484,7 +336,7 @@ public:
 
     bool remoteSend(JsonMessage& json_message) {
 
-		#ifdef BROADCASTSOCKET_DEBUG
+		#ifdef BROADCASTSOCKET_DEBUG_NEW
 		Serial.print(F("remoteSend1: "));
 		json_message.write_to(Serial);
 		Serial.println();  // optional: just to add a newline after the JSON
