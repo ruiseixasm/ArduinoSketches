@@ -98,7 +98,7 @@ protected:
         #endif
 
 		size_t colon_position = JsonMessage::get_colon_position('c', _received_buffer, _received_length);
-		uint16_t received_checksum = JsonMessage::get_number('c', _received_buffer, _received_length, colon_position);
+		uint16_t received_checksum = JsonMessage::get_value_number('c', _received_buffer, _received_length, colon_position);
 		if (!JsonMessage::remove('c', _received_buffer, &_received_length, colon_position)) return false;
 		uint16_t checksum = generateChecksum(_received_buffer, _received_length);
 

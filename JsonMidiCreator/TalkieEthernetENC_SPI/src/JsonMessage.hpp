@@ -144,7 +144,7 @@ public:
 	}
 
 	// When a function receives a buffer and its size, the size must include space for the '\0'
-	static bool get_string(char key, char* buffer, size_t size, const char* json_payload, size_t json_length, size_t colon_position = 4) {
+	static bool get_value_string(char key, char* buffer, size_t size, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		if (buffer && size) {
 			size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
 			if (json_i && json_payload[json_i++] == '"' && buffer && size) {	// Safe code
@@ -163,7 +163,7 @@ public:
 		return false;
 	}
 
-	static uint32_t get_number(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
+	static uint32_t get_value_number(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		uint32_t json_number = 0;
 		size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
 		if (json_i) {
@@ -374,7 +374,7 @@ public:
 		if (_json_length < 27) return false;
 		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
 		if (get_value_type('m', _json_payload, _json_length) != INTEGER) return false;
-		if (get_number('m', _json_payload, _json_length) > 9) return false;
+		if (get_value_number('m', _json_payload, _json_length) > 9) return false;
 		if (get_value_type('b', _json_payload, _json_length) != INTEGER) return false;
 		if (get_value_type('i', _json_payload, _json_length) != INTEGER) return false;
 		if (get_value_type('f', _json_payload, _json_length) != STRING) return false;
@@ -419,14 +419,14 @@ public:
 				case STRING:
 					{
 						char message_to[NAME_LEN] = {'\0'};
-						get_string('t', message_to, colon_position, _json_payload, _json_length);
+						get_value_string('t', message_to, colon_position, _json_payload, _json_length);
 						return strcmp(message_to, name) == 0;
 					}
 				break;
 				
 				case INTEGER:
 					{
-						uint32_t number = get_number('t', _json_payload, _json_length, colon_position);
+						uint32_t number = get_value_number('t', _json_payload, _json_length, colon_position);
 						return number == channel;
 					}
 				break;
@@ -527,7 +527,7 @@ public:
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		if (colon_position) {
 			ValueType value_type = get_value_type('t', _json_payload, _json_length, colon_position);
-			if (value_type == ValueType::STRING && get_string('t', _temp_string, NAME_LEN, _json_payload, _json_length, colon_position)) {
+			if (value_type == ValueType::STRING && get_value_string('t', _temp_string, NAME_LEN, _json_payload, _json_length, colon_position)) {
 				return strcmp(_temp_string, name) == 0;
 			}
 		}
@@ -538,16 +538,25 @@ public:
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		return colon_position 
 			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::INTEGER
-			&& get_number('t', _json_payload, _json_length, colon_position) == channel;
+			&& get_value_number('t', _json_payload, _json_length, colon_position) == channel;
 	}
 
 
 	// GETTERS
 
+	
+	ValueType get_value_type(char key) const {
+		return get_value_type(key, _json_payload, _json_length);
+	}
+
+	uint32_t get_value_number(char key) const {
+		return get_value_number(key, _json_payload, _json_length);
+	}
+
 	MessageValue get_message_value() const {
 		size_t colon_position = get_colon_position('m', _json_payload, _json_length);
 		if (colon_position) {
-			uint8_t message_number = get_number('m', _json_payload, _json_length, colon_position);
+			uint8_t message_number = get_value_number('m', _json_payload, _json_length, colon_position);
 			if (message_number < static_cast<uint8_t>( MessageValue::NOISE )) {
 				return static_cast<MessageValue>( message_number );
 			}
@@ -556,7 +565,7 @@ public:
 	}
 
 	uint16_t get_identity() {
-		return static_cast<uint16_t>(get_number('i', _json_payload, _json_length));
+		return static_cast<uint16_t>(get_value_number('i', _json_payload, _json_length));
 	}
 
 	uint16_t get_timestamp() {
@@ -566,7 +575,7 @@ public:
 	BroadcastValue get_broadcast_value() const {
 		size_t colon_position = get_colon_position('b', _json_payload, _json_length);
 		if (colon_position) {
-			BroadcastValue broadcast_value = static_cast<BroadcastValue>( get_number('b', _json_payload, _json_length, colon_position) );
+			BroadcastValue broadcast_value = static_cast<BroadcastValue>( get_value_number('b', _json_payload, _json_length, colon_position) );
 			if (broadcast_value < BroadcastValue::NONE) {
 				return broadcast_value;
 			}
@@ -577,7 +586,7 @@ public:
 	RogerValue get_roger_value() const {
 		size_t colon_position = get_colon_position('r', _json_payload, _json_length);
 		if (colon_position) {
-			uint8_t roger_number = (uint8_t)get_number('r', _json_payload, _json_length, colon_position);
+			uint8_t roger_number = (uint8_t)get_value_number('r', _json_payload, _json_length, colon_position);
 			if (roger_number < static_cast<uint8_t>( RogerValue::NIL )) {
 				return static_cast<RogerValue>( roger_number );
 			}
@@ -588,7 +597,7 @@ public:
 	InfoValue get_info_value() const {
 		size_t colon_position = get_colon_position('s', _json_payload, _json_length);
 		if (colon_position) {
-			uint8_t info_number = (uint8_t)get_number('s', _json_payload, _json_length, colon_position);
+			uint8_t info_number = (uint8_t)get_value_number('s', _json_payload, _json_length, colon_position);
 			if (info_number < static_cast<uint8_t>( InfoValue::UNDEFINED )) {
 				return static_cast<InfoValue>( info_number );
 			}
@@ -598,7 +607,7 @@ public:
 
     // New method using internal temporary buffer (_temp_string)
     char* get_from_name() const {
-        if (get_string('f', _temp_string, NAME_LEN, _json_payload, _json_length)) {
+        if (get_value_string('f', _temp_string, NAME_LEN, _json_payload, _json_length)) {
             return _temp_string;  // safe C string
         }
         return nullptr;  // failed
@@ -612,7 +621,7 @@ public:
     char* get_to_name() const {
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		if (colon_position && get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::STRING) {
-			if (get_string('t', _temp_string, NAME_LEN, _json_payload, _json_length, colon_position)) {
+			if (get_value_string('t', _temp_string, NAME_LEN, _json_payload, _json_length, colon_position)) {
 				return _temp_string;
 			}
 		}
@@ -622,7 +631,7 @@ public:
 	uint8_t get_to_channel() const {
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		if (colon_position && get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::INTEGER) {
-			return (uint8_t)get_number('t', _json_payload, _json_length, colon_position);
+			return (uint8_t)get_value_number('t', _json_payload, _json_length, colon_position);
 		}
 		return 255;	// Means, no chanel
 	}
@@ -637,7 +646,7 @@ public:
 	}
 
 	char* get_nth_value_string(uint8_t nth) const {
-		if (nth < 10 && get_string('0' + nth, _temp_string, MAX_LEN, _json_payload, _json_length)) {
+		if (nth < 10 && get_value_string('0' + nth, _temp_string, MAX_LEN, _json_payload, _json_length)) {
 			return _temp_string;  // safe C string
 		}
 		return nullptr;  // failed
@@ -646,20 +655,20 @@ public:
 	uint32_t get_nth_value_number(uint8_t nth) const {
 		if (nth < 10) {
 			char value_key = '0' + nth;
-			return get_number(value_key, _json_payload, _json_length);
+			return get_value_number(value_key, _json_payload, _json_length);
 		}
 		return false;
 	}
 
 	char* get_action_string() const {
-		if (get_string('a', _temp_string, NAME_LEN, _json_payload, _json_length)) {
+		if (get_value_string('a', _temp_string, NAME_LEN, _json_payload, _json_length)) {
 			return _temp_string;  // safe C string
 		}
 		return nullptr;  // failed
 	}
 
 	uint32_t get_action_number() const {
-		return get_number('a', _json_payload, _json_length);
+		return get_value_number('a', _json_payload, _json_length);
 	}
 
 
