@@ -482,7 +482,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(JsonMessage& json_message) override {
+	bool receivedJsonMessage(const JsonMessage& json_message) override {
 
 		if (BroadcastSocket::receivedJsonMessage(json_message)) {
 

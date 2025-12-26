@@ -294,7 +294,7 @@ protected:
                 #ifdef BROADCAST_SPI_DEBUG
                 if (length > 1) {
                     Serial.print("Received message: ");
-					Serial.write(_received_buffer, size - 1);
+					Serial.write(_received_buffer, _received_length);
                     Serial.println();
                 } else {
                     Serial.println("\tNothing received");
@@ -372,7 +372,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(JsonMessage& json_message) override {
+	bool receivedJsonMessage(const JsonMessage& json_message) override {
 
 		if (BroadcastSocket::receivedJsonMessage(json_message)) {
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
@@ -389,7 +389,7 @@ protected:
 		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			bool as_reply = json_message.is_to_name(_from_name);
+			bool as_reply = json_message.is_to_name(_from_name.c_str());
 
 			#ifdef ENABLE_DIRECT_ADDRESSING
 			if (as_reply) {

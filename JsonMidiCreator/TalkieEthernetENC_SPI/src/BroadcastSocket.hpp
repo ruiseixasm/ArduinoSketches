@@ -73,19 +73,13 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool receivedJsonMessage(JsonMessage& json_message) {
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		if (!json_message.validate_fields()) {
-			#ifdef JSON_TALKER_DEBUG_NEW
-			Serial.println(F("ERROR: Missing fields or wrongly set"));
-			#endif
-			// return false;	// FOR NOW, HAS TO BE CHANGES
-		}
+	virtual bool receivedJsonMessage(const JsonMessage& json_message) {
+		
 		return true;
 	}
 
 	// Allows the overriding class to peek after processing of the JSON message
-	virtual bool processedJsonMessage(JsonMessage& json_message) {
+	virtual bool processedJsonMessage(const JsonMessage& json_message) {
         (void)json_message;	// Silence unused parameter warning
 
 		return true;
@@ -114,7 +108,7 @@ protected:
 			JsonMessage json_message(_received_buffer, _received_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("\tjson_message1.1: "));
+			Serial.print(F("\ttriggerTalkers1.1: "));
 			json_message.write_to(Serial);
 			Serial.print(" | ");
 			Serial.println(json_message.validate_fields());
@@ -358,7 +352,7 @@ public:
 	}
 
 
-    bool remoteSend(JsonMessage& json_message) {
+    bool remoteSend(const JsonMessage& json_message) {
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
 		Serial.print(F("remoteSend1: "));
