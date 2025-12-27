@@ -17,22 +17,24 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
-#include "BroadcastSocket.hpp"
+#include "BroadcastSocket.h"
 #include "JsonTalker.h"
+
+// #define MESSAGE_REPEATER_DEBUG
 
 using LinkType = TalkieCodes::LinkType;
 
 class MessageRepeater {
 protected:
 
-	BroadcastSocket* const* const _uplink_sockets;
-	const uint8_t _uplink_sockets_count;
-	JsonTalker* const* const _downlink_talkers;
-	const uint8_t _downlink_talkers_count;
-	BroadcastSocket* const* const _downlink_sockets;
-	const uint8_t _downlink_sockets_count;
-	JsonTalker* const* const _uplink_talkers;
-	const uint8_t _uplink_talkers_count;
+	BroadcastSocket* const* const _uplinked_sockets;
+	const uint8_t _uplinked_sockets_count;
+	JsonTalker* const* const _downlinked_talkers;
+	const uint8_t _downlinked_talkers_count;
+	BroadcastSocket* const* const _downlinked_sockets;
+	const uint8_t _downlinked_sockets_count;
+	JsonTalker* const* const _uplinked_talkers;
+	const uint8_t _uplinked_talkers_count;
 	
 
 public:
@@ -41,27 +43,27 @@ public:
 
     // Constructor
     MessageRepeater(
-			BroadcastSocket* const* const uplink_sockets, uint8_t uplink_sockets_count,
-			JsonTalker* const* const downlink_talkers, uint8_t downlink_talkers_count,
-			BroadcastSocket* const* const downlink_sockets = nullptr, uint8_t downlink_sockets_count = 0,
-			JsonTalker* const* const uplink_talkers = nullptr, uint8_t uplink_talkers_count = 0
+			BroadcastSocket* const* const uplinked_sockets, uint8_t uplinked_sockets_count,
+			JsonTalker* const* const downlinked_talkers, uint8_t downlinked_talkers_count,
+			BroadcastSocket* const* const downlinked_sockets = nullptr, uint8_t downlinked_sockets_count = 0,
+			JsonTalker* const* const uplinked_talkers = nullptr, uint8_t uplinked_talkers_count = 0
 		)
-        : _uplink_sockets(uplink_sockets), _uplink_sockets_count(uplink_sockets_count),
-        _downlink_talkers(downlink_talkers), _downlink_talkers_count(downlink_talkers_count),
-        _downlink_sockets(downlink_sockets), _downlink_sockets_count(downlink_sockets_count),
-        _uplink_talkers(uplink_talkers), _uplink_talkers_count(uplink_talkers_count)
+        : _uplinked_sockets(uplinked_sockets), _uplinked_sockets_count(uplinked_sockets_count),
+        _downlinked_talkers(downlinked_talkers), _downlinked_talkers_count(downlinked_talkers_count),
+        _downlinked_sockets(downlinked_sockets), _downlinked_sockets_count(downlinked_sockets_count),
+        _uplinked_talkers(uplinked_talkers), _uplinked_talkers_count(uplinked_talkers_count)
     {
-		for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
-			_uplink_sockets[uplink_socket_i]->setLinkType(LinkType::UP);
+		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+			_uplinked_sockets[socket_j]->setLink(this, LinkType::UP_LINKED);
 		}
-		for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_talkers_count; ++downlink_socket_i) {
-			_downlink_talkers[downlink_socket_i]->setLinkType(LinkType::DOWN);
+		for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
+			_downlinked_talkers[talker_i]->setLink(this, LinkType::DOWN_LINKED);
 		}
-		for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
-			_downlink_sockets[downlink_socket_i]->setLinkType(LinkType::DOWN);
+		for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+			_downlinked_sockets[socket_j]->setLink(this, LinkType::DOWN_LINKED);
 		}
-		for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_talkers_count; ++uplink_socket_i) {
-			_uplink_talkers[uplink_socket_i]->setLinkType(LinkType::UP);
+		for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
+			_uplinked_talkers[talker_i]->setLink(this, LinkType::UP_LINKED);
 		}
 	}
 
@@ -69,21 +71,323 @@ public:
 		// Does nothing
 	}
 
+    void loop() {
+		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+			_uplinked_sockets[socket_j]->loop();
+		}
+		for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
+			_downlinked_talkers[talker_i]->loop();
+		}
+		for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+			_downlinked_sockets[socket_j]->loop();
+		}
+		for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
+			_uplinked_talkers[talker_i]->loop();
+		}
+    }
 
-	void socketDownlink(JsonMessage &json_message) {
 
+	bool socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
+		BroadcastValue broadcast = message.get_broadcast_value();
+		TalkerMatch match = TalkerMatch::NONE;
+
+		#ifdef MESSAGE_REPEATER_DEBUG
+		Serial.print(F("\t\tsocketDownlink1: "));
+		message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println((int)broadcast);
+		#endif
+
+		switch (broadcast) {
+			// Uplink sockets or talkers can only process REMOTE messages
+			case BroadcastValue::REMOTE:
+			{
+				for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+
+					match = _downlinked_talkers[talker_i++]->talkerReceive(message);
+					switch (match) {
+
+						case TalkerMatch::BY_NAME:
+							return true;
+						break;
+						
+						case TalkerMatch::ANY:
+						case TalkerMatch::BY_CHANNEL:
+							if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
+								socket.deserialize_buffer(message);
+							}
+						break;
+						
+						case TalkerMatch::FAIL:
+							return false;
+						break;
+						
+						default: break;
+					}
+				}
+				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+					_downlinked_sockets[socket_j]->socketSend(message);
+				}
+				return true;
+			}
+			break;
+			
+			default: break;	// Does nothing, typical for BroadcastValue::NONE
+		}
+		return false;
 	}
 
-	void talkerUplink(JsonMessage &json_message) {
+	bool talkerUplink(JsonTalker &talker, JsonMessage &message) {
+		BroadcastValue broadcast = message.get_broadcast_value();
+		TalkerMatch match = TalkerMatch::NONE;
 
+		#ifdef MESSAGE_REPEATER_DEBUG
+		Serial.print(F("\t\ttalkerUplink1: "));
+		message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println((int)broadcast);
+		#endif
+
+		switch (broadcast) {
+
+			case BroadcastValue::REMOTE:
+			{
+				if (_uplinked_talkers_count) {
+					// Talkers have no buffer, so a message copy will be necessary
+					JsonMessage original_message(message);
+
+					for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
+
+						match = _uplinked_talkers[talker_i++]->talkerReceive(message);
+						switch (match) {
+
+							case TalkerMatch::BY_NAME:
+								return true;
+							break;
+							
+							case TalkerMatch::ANY:
+							case TalkerMatch::BY_CHANNEL:
+								if (talker_i < _uplinked_talkers_count) {
+									message = original_message;
+								}
+							break;
+							
+							case TalkerMatch::FAIL:
+								return false;
+							break;
+							
+							default: break;
+						}
+					}
+					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+						_uplinked_sockets[socket_j]->socketSend(original_message);
+					}
+				} else {
+					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+						_uplinked_sockets[socket_j]->socketSend(message);
+					}
+				}
+				return true;
+			}
+			break;
+			
+			case BroadcastValue::LOCAL:
+			{
+				if (_downlinked_talkers_count) {
+					// Talkers have no buffer, so a message copy will be necessary
+					JsonMessage original_message(message);
+
+					for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+						if (_downlinked_talkers[talker_i] != &talker) {	// Shouldn't locally Uplink to itself
+
+							match = _downlinked_talkers[talker_i++]->talkerReceive(message);
+							switch (match) {
+
+								case TalkerMatch::BY_NAME:
+									return true;
+								break;
+								
+								case TalkerMatch::ANY:
+								case TalkerMatch::BY_CHANNEL:
+									if (talker_i < _downlinked_talkers_count) {
+										message = original_message;
+									}
+								break;
+							
+								case TalkerMatch::FAIL:
+									return false;
+								break;
+								
+								default: break;
+							}
+						}
+					}
+					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+						_downlinked_sockets[socket_j]->socketSend(original_message);
+					}
+				} else {
+					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+						_downlinked_sockets[socket_j]->socketSend(message);
+					}
+				}
+				return true;
+			}
+			break;
+			
+			case BroadcastValue::SELF:
+			{
+				talker.talkerReceive(message);
+			}
+			break;
+			
+			default: break;	// Does nothing, typical for BroadcastValue::NONE
+		}
+		return false;
 	}
 
-	void socketUplink(JsonMessage &json_message) {
+	bool socketUplink(BroadcastSocket &socket, JsonMessage &message) {
+		BroadcastValue broadcast = message.get_broadcast_value();
+		TalkerMatch match = TalkerMatch::NONE;
 
+		#ifdef MESSAGE_REPEATER_DEBUG
+		Serial.print(F("\t\tsocketUplink1: "));
+		message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println((int)broadcast);
+		#endif
+
+		switch (broadcast) {
+
+			case BroadcastValue::REMOTE:
+			{
+				for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
+
+					match = _uplinked_talkers[talker_i++]->talkerReceive(message);
+					switch (match) {
+
+						case TalkerMatch::BY_NAME:
+							return true;
+						break;
+						
+						case TalkerMatch::ANY:
+						case TalkerMatch::BY_CHANNEL:
+							if (talker_i < _uplinked_talkers_count || _uplinked_sockets_count) {
+								socket.deserialize_buffer(message);
+							}
+						break;
+						
+						case TalkerMatch::FAIL:
+							return false;
+						break;
+						
+						default: break;
+					}
+				}
+				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+					_uplinked_sockets[socket_j]->socketSend(message);
+				}
+				return true;
+			}
+			break;
+			
+			case BroadcastValue::LOCAL:
+			{
+				for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
+
+					match = _uplinked_talkers[talker_i++]->talkerReceive(message);
+					switch (match) {
+
+						case TalkerMatch::BY_NAME:
+							return true;
+						break;
+						
+						case TalkerMatch::ANY:
+						case TalkerMatch::BY_CHANNEL:
+							if (talker_i < _uplinked_talkers_count || _downlinked_sockets_count) {
+								socket.deserialize_buffer(message);
+							}
+						break;
+						
+						case TalkerMatch::FAIL:
+							return false;
+						break;
+						
+						default: break;
+					}
+				}
+				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+					if (_downlinked_sockets[socket_j] != &socket) {	// Shouldn't locally Uplink to itself
+						_downlinked_sockets[socket_j]->socketSend(message);
+					}
+				}
+				return true;
+			}
+			break;
+			
+			default: break;	// Does nothing, typical for BroadcastValue::NONE
+		}
+		return false;
 	}
 
-	void talkerDownlink(JsonMessage &json_message) {
+	bool talkerDownlink(JsonTalker &talker, JsonMessage &message) {
+		BroadcastValue broadcast = message.get_broadcast_value();
+		TalkerMatch match = TalkerMatch::NONE;
 
+		#ifdef MESSAGE_REPEATER_DEBUG
+		Serial.print(F("\t\ttalkerDownlink1: "));
+		message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println((int)broadcast);
+		#endif
+
+		switch (broadcast) {
+			// Uplink sockets or talkers can only process REMOTE messages
+			case BroadcastValue::REMOTE:
+			{
+				if (_uplinked_talkers_count) {
+					// Talkers have no buffer, so a message copy will be necessary
+					JsonMessage original_message(message);
+
+					for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
+						if (_uplinked_talkers[talker_i++] != &talker) {
+
+							match = _uplinked_talkers[talker_i++]->talkerReceive(message);
+							switch (match) {
+
+								case TalkerMatch::BY_NAME:
+									return true;
+								break;
+								
+								case TalkerMatch::ANY:
+								case TalkerMatch::BY_CHANNEL:
+									if (talker_i < _uplinked_talkers_count) {
+										message = original_message;
+									}
+								break;
+								
+								case TalkerMatch::FAIL:
+									return false;
+								break;
+								
+								default: break;
+							}
+						}
+					}
+					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+						_uplinked_sockets[socket_j]->socketSend(original_message);
+					}
+				} else {
+					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+						_uplinked_sockets[socket_j]->socketSend(message);
+					}
+				}
+				return true;
+			}
+			break;
+			
+			default: break;	// Does nothing, typical for BroadcastValue::NONE
+		}
+		return false;
 	}
 
 };

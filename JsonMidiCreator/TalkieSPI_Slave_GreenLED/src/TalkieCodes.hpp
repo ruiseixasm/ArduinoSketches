@@ -20,7 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 struct TalkieCodes {
 
 	enum class LinkType : uint8_t {
-		DOWN, UP
+		DOWN_LINKED, UP_LINKED
 	};
 
 
