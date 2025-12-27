@@ -89,15 +89,15 @@ public:
 			{
 				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
 
-					if (match == TalkerMatch::BY_CHANNEL) {
-						socket.deserialize_buffer(message);
-					}
-
 					match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
 							return true;
+						break;
+						
+						case TalkerMatch::BY_CHANNEL:
+							socket.deserialize_buffer(message);
 						break;
 						
 						case TalkerMatch::FAIL:
@@ -146,10 +146,6 @@ public:
 				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
 					if (_downlink_talkers[downlink_talker_i] != &talker) {	// Shouldn't locally Uplink to itself
 
-						if (match == TalkerMatch::BY_CHANNEL) {
-							message.deserialize_message(message_copy);
-						}
-
 						match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
 						switch (match) {
 
@@ -157,6 +153,10 @@ public:
 								return true;
 							break;
 							
+							case TalkerMatch::BY_CHANNEL:
+								message.deserialize_message(message_copy);
+							break;
+						
 							case TalkerMatch::FAIL:
 								return false;
 							break;
@@ -198,15 +198,15 @@ public:
 			{
 				for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count; ++uplink_talker_i) {
 
-					if (match == TalkerMatch::BY_CHANNEL) {
-						socket.deserialize_buffer(message);
-					}
-
 					match = _uplink_talkers[uplink_talker_i]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
 							return true;
+						break;
+						
+						case TalkerMatch::BY_CHANNEL:
+							socket.deserialize_buffer(message);
 						break;
 						
 						case TalkerMatch::FAIL:
@@ -226,15 +226,15 @@ public:
 			{
 				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
 
-					if (match == TalkerMatch::BY_CHANNEL) {
-						socket.deserialize_buffer(message);
-					}
-
 					match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
 							return true;
+						break;
+						
+						case TalkerMatch::BY_CHANNEL:
+							socket.deserialize_buffer(message);
 						break;
 						
 						case TalkerMatch::FAIL:
@@ -276,15 +276,15 @@ public:
 			{
 				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
 
-					if (match == TalkerMatch::BY_CHANNEL) {
-						message.deserialize_message(message_copy);
-					}
-
 					match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
 							return true;
+						break;
+						
+						case TalkerMatch::BY_CHANNEL:
+							message.deserialize_message(message_copy);
 						break;
 						
 						case TalkerMatch::FAIL:
