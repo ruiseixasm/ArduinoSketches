@@ -214,31 +214,6 @@ public:
 		Serial.println(static_cast<int>( message_value ));
 		#endif
 
-        // Is it for me?
-		if (json_message.has_to_name()) {
-			if (json_message.is_to_name(_name)) {
-				talker_match = TalkerMatch::BY_NAME;
-			} else {
-				return talker_match;
-			}
-		} else if (json_message.has_to_channel()) {
-			if (json_message.is_to_channel(_channel)) {
-				talker_match = TalkerMatch::BY_CHANNEL;
-			} else {
-				return talker_match;
-			}
-		} else {
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			if (message_value > MessageValue::PING) {
-				// Only TALK, CHANNEL and PING can be broadcasted
-				return TalkerMatch::FAIL;	// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
-			} else if (json_message.has_nth_value_number(0)) {
-				return TalkerMatch::FAIL;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
-			} else {
-				talker_match = TalkerMatch::ANY;
-			}
-		}
-
         #ifdef JSON_TALKER_DEBUG
         Serial.print(F("\tProcess: "));
         json_message.write_to(Serial);
