@@ -29,6 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/manifestos/GreenManifesto.hpp"
 #include "src/JsonTalker.h"
 #include "src/sockets/SPI_ESP_Arduino_Slave.h"
+#include "src/MessageRepeater.hpp"
 
 
 const char talker_name[] = "green";
@@ -82,10 +83,6 @@ void setup() {
     Serial.println("SPI started successfully");
     delay(1000);
 
-    // Connect the talkers with each other (static variable)
-    Serial.println("Connecting Talkers with each other");
-    JsonTalker::connectTalkers(talkers, sizeof(talkers)/sizeof(JsonTalker*));
-
     // Final startup indication
     digitalWrite(GREEN_LED, HIGH);
     delay(500);
@@ -96,6 +93,6 @@ void setup() {
 
 
 void loop() {
-    spi_socket.loop();
+    message_repeater.loop();
 }
 

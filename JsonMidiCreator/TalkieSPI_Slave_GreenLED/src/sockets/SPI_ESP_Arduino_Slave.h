@@ -172,9 +172,9 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static SPI_ESP_Arduino_Slave& instance(JsonTalker** const json_talkers, uint8_t talker_count, BroadcastValue source_value = BroadcastValue::REMOTE) {
+    static SPI_ESP_Arduino_Slave& instance() {
 
-        static SPI_ESP_Arduino_Slave instance(json_talkers, talker_count, source_value);
+        static SPI_ESP_Arduino_Slave instance;
         return instance;
     }
 
