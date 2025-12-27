@@ -45,13 +45,6 @@ class BroadcastSocket;
 
 
 class JsonTalker {
-public:
-
-	enum class TalkerMatch : uint8_t {
-		NONE, ANY, BY_CHANNEL, BY_NAME, FAIL
-	};
-
-
 protected:
     
 	MessageRepeater* _message_repeater = nullptr;

@@ -34,7 +34,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
 using LinkType = TalkieCodes::LinkType;
-using TalkerMatch = JsonTalker::TalkerMatch;
+using TalkerMatch = TalkieCodes::TalkerMatch;
 
 class MessageRepeater;
 

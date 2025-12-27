@@ -23,6 +23,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define MESSAGE_REPEATER_DEBUG
 
 using LinkType = TalkieCodes::LinkType;
+using TalkerMatch = TalkieCodes::TalkerMatch;
 
 class MessageRepeater {
 protected:
@@ -89,42 +90,64 @@ public:
 
 	bool socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
-		// TalkerMatch talker_match = message.
-		TalkerMatch match = TalkerMatch::NONE;
+		TalkerMatch talker_match = message.get_talker_match();
 
 		#ifdef MESSAGE_REPEATER_DEBUG
 		Serial.print(F("\t\tsocketDownlink1: "));
 		message.write_to(Serial);
 		Serial.print(" | ");
-		Serial.println((int)broadcast);
+		Serial.print((int)broadcast);
+		Serial.print(" | ");
+		Serial.println((int)talker_match);
 		#endif
 
 		switch (broadcast) {
 			// Uplink sockets or talkers can only process REMOTE messages
 			case BroadcastValue::REMOTE:
 			{
-				for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+				switch (talker_match) {
 
-					match = _downlinked_talkers[talker_i++]->talkerReceive(message);
-					switch (match) {
-
-						case TalkerMatch::BY_NAME:
-							return true;
-						break;
-						
-						case TalkerMatch::ANY:
-						case TalkerMatch::BY_CHANNEL:
+					case TalkerMatch::ANY:
+					{
+						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+							_downlinked_talkers[talker_i++]->talkerReceive(message);
 							if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
 								socket.deserialize_buffer(message);
 							}
-						break;
-						
-						case TalkerMatch::FAIL:
-							return false;
-						break;
-						
-						default: break;
+						}
 					}
+					break;
+					
+					case TalkerMatch::BY_CHANNEL:
+					{
+						uint8_t message_channel = message.get_to_channel();
+						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
+							uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
+							if (talker_channel == message_channel) {
+								_downlinked_talkers[talker_i]->talkerReceive(message);
+								if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
+									socket.deserialize_buffer(message);
+								}
+							}
+						}
+					}
+					break;
+					
+					case TalkerMatch::BY_NAME:
+					{
+						char message_to_name[NAME_LEN];
+						strcpy(message_to_name, message.get_to_name());
+						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
+							const char* talker_name = _downlinked_talkers[talker_i]->get_name();
+							if (strcmp(talker_name, message_to_name) == 0) {
+								_downlinked_talkers[talker_i]->talkerReceive(message);
+								return true;
+							}
+						}
+					}
+					break;
+					
+					default: return false;
 				}
 				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
 					_downlinked_sockets[socket_j]->socketSend(message);

@@ -40,6 +40,7 @@ using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using RogerValue = TalkieCodes::RogerValue;
 using InfoValue = TalkieCodes::InfoValue;
+using TalkerMatch = TalkieCodes::TalkerMatch;
 
 class BroadcastSocket;
 
