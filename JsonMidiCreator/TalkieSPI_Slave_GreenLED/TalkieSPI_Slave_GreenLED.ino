@@ -35,11 +35,17 @@ const char talker_name[] = "green";
 const char talker_desc[] = "I'm a green talker";
 GreenManifesto green_manifesto;
 JsonTalker talker = JsonTalker(talker_name, talker_desc, &green_manifesto);
-JsonTalker* talkers[] = { &talker };   // It's an array of pointers of JsonTalker (keep it as JsonTalker!)
+
 // Singleton requires the & (to get a reference variable)
+auto& spi_socket = SPI_ESP_Arduino_Slave::instance();
 
-auto& spi_socket = SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
-
+// SETTING THE REPEATER
+BroadcastSocket* uplinked_sockets[] = { &spi_socket };
+JsonTalker* downlinked_talkers[] = { &talker };
+MessageRepeater message_repeater(
+		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),
+		downlinked_talkers, sizeof(downlinked_talkers)/sizeof(JsonTalker*)
+	);
 
 
 void setup() {

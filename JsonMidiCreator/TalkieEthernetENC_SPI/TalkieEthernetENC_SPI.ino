@@ -50,12 +50,6 @@ MessageTester message_tester;
 JsonTalker t_tester = JsonTalker(t_tester_name, t_tester_desc, &message_tester);
 
 
-// LIST OF TALKERS FOR EACH SOCKET
-JsonTalker* ethernet_talkers[] = { &t_spy };   // It's an array of pointers
-JsonTalker* spi_talkers[] = { };   // It's an array of pointers
-JsonTalker* all_talkers[] = { &t_spy, &t_tester, &l_blue };	// It's an array of pointers
-
-
 // SOCKETS
 
 // Singleton requires the & (to get a reference variable)
