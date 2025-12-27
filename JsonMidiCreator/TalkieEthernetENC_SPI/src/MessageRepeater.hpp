@@ -304,7 +304,43 @@ public:
 			
 			case BroadcastValue::SELF:
 			{
-				talker.talkerReceive(message);
+				TalkerMatch talker_match = message.get_talker_match();
+
+				switch (talker_match) {
+
+					case TalkerMatch::ANY:
+					{
+						talker.talkerReceive(message);
+						return true;
+					}
+					break;
+					
+					case TalkerMatch::BY_CHANNEL:
+					{
+						uint8_t message_channel = message.get_to_channel();
+						uint8_t talker_channel = talker.get_channel();
+						if (talker_channel == message_channel) {
+							talker.talkerReceive(message);
+							return true;
+						}
+					}
+					break;
+					
+					case TalkerMatch::BY_NAME:
+					{
+						char message_to_name[NAME_LEN];
+						strcpy(message_to_name, message.get_to_name());
+						
+						const char* talker_name = talker.get_name();
+						if (strcmp(talker_name, message_to_name) == 0) {
+							talker.talkerReceive(message);
+							return true;
+						}
+					}
+					break;
+					
+					default: return false;
+				}
 			}
 			break;
 			
