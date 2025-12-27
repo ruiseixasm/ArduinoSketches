@@ -63,8 +63,6 @@ protected:
 	MessageRepeater* _message_repeater = nullptr;
 	LinkType _link_type = LinkType::UP_LINKED;
 
-	const BroadcastValue _source_value;
-
     char _received_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
 	size_t _received_length = 0;
@@ -213,10 +211,9 @@ protected:
     }
 
     // Constructor
-    BroadcastSocket(JsonTalker* const* const json_talkers, uint8_t talker_count, BroadcastValue broadcast_value = BroadcastValue::REMOTE)
+    BroadcastSocket(JsonTalker* const* const json_talkers, uint8_t talker_count)
         : _json_talkers(json_talkers),
-          _talker_count(talker_count),
-          _source_value(broadcast_value)
+          _talker_count(talker_count)
     {
 		// Each talker has its remote connections, ONLY local connections are static
 		for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
@@ -289,10 +286,6 @@ public:
 
 	void setLink(MessageRepeater* message_repeater, LinkType link_type);
 
-	BroadcastValue getSourceValue() const {
-		return _source_value;
-	}
-	
 
     virtual void loop() {
         receive();

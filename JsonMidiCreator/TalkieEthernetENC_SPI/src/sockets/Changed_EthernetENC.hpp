@@ -50,8 +50,8 @@ protected:
 
 	
     // Constructor
-    Changed_EthernetENC(JsonTalker* const* const json_talkers, uint8_t talker_count, BroadcastValue broadcast_value = BroadcastValue::REMOTE)
-        : BroadcastSocket(json_talkers, talker_count, broadcast_value) {}
+    Changed_EthernetENC(JsonTalker* const* const json_talkers, uint8_t talker_count)
+        : BroadcastSocket(json_talkers, talker_count) {}
 
 
 
@@ -226,8 +226,8 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static Changed_EthernetENC& instance(JsonTalker* const* json_talkers, uint8_t talker_count, BroadcastValue broadcast_value = BroadcastValue::REMOTE) {
-        static Changed_EthernetENC instance(json_talkers, talker_count, broadcast_value);
+    static Changed_EthernetENC& instance(JsonTalker* const* json_talkers, uint8_t talker_count) {
+        static Changed_EthernetENC instance(json_talkers, talker_count);
         return instance;
     }
 
