@@ -27,14 +27,14 @@ using LinkType = TalkieCodes::LinkType;
 class MessageRepeater {
 protected:
 
-	BroadcastSocket* const* const _uplink_sockets;
-	const uint8_t _uplink_sockets_count;
-	JsonTalker* const* const _downlink_talkers;
-	const uint8_t _downlink_talkers_count;
-	BroadcastSocket* const* const _downlink_sockets;
-	const uint8_t _downlink_sockets_count;
-	JsonTalker* const* const _uplink_talkers;
-	const uint8_t _uplink_talkers_count;
+	BroadcastSocket* const* const _uplinked_sockets;
+	const uint8_t _uplinked_sockets_count;
+	JsonTalker* const* const _downlinked_talkers;
+	const uint8_t _downlinked_talkers_count;
+	BroadcastSocket* const* const _downlinked_sockets;
+	const uint8_t _downlinked_sockets_count;
+	JsonTalker* const* const _uplinked_talkers;
+	const uint8_t _uplinked_talkers_count;
 	
 
 public:
@@ -48,22 +48,22 @@ public:
 			BroadcastSocket* const* const downlink_sockets = nullptr, uint8_t downlink_sockets_count = 0,
 			JsonTalker* const* const uplink_talkers = nullptr, uint8_t uplink_talkers_count = 0
 		)
-        : _uplink_sockets(uplink_sockets), _uplink_sockets_count(uplink_sockets_count),
-        _downlink_talkers(downlink_talkers), _downlink_talkers_count(downlink_talkers_count),
-        _downlink_sockets(downlink_sockets), _downlink_sockets_count(downlink_sockets_count),
-        _uplink_talkers(uplink_talkers), _uplink_talkers_count(uplink_talkers_count)
+        : _uplinked_sockets(uplink_sockets), _uplinked_sockets_count(uplink_sockets_count),
+        _downlinked_talkers(downlink_talkers), _downlinked_talkers_count(downlink_talkers_count),
+        _downlinked_sockets(downlink_sockets), _downlinked_sockets_count(downlink_sockets_count),
+        _uplinked_talkers(uplink_talkers), _uplinked_talkers_count(uplink_talkers_count)
     {
-		for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
-			_uplink_sockets[uplink_socket_i]->setLink(this, LinkType::UP);
+		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+			_uplinked_sockets[socket_j]->setLink(this, LinkType::UP);
 		}
-		for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
-			_downlink_talkers[downlink_talker_i]->setLink(this, LinkType::DOWN);
+		for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
+			_downlinked_talkers[talker_i]->setLink(this, LinkType::DOWN);
 		}
-		for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
-			_downlink_sockets[downlink_socket_i]->setLink(this, LinkType::DOWN);
+		for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+			_downlinked_sockets[socket_j]->setLink(this, LinkType::DOWN);
 		}
-		for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count; ++uplink_talker_i) {
-			_uplink_talkers[uplink_talker_i]->setLink(this, LinkType::UP);
+		for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
+			_uplinked_talkers[talker_i]->setLink(this, LinkType::UP);
 		}
 	}
 
@@ -72,17 +72,17 @@ public:
 	}
 
     void loop() {
-		for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
-			_uplink_sockets[uplink_socket_i]->loop();
+		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+			_uplinked_sockets[socket_j]->loop();
 		}
-		for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
-			_downlink_talkers[downlink_talker_i]->loop();
+		for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
+			_downlinked_talkers[talker_i]->loop();
 		}
-		for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
-			_downlink_sockets[downlink_socket_i]->loop();
+		for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+			_downlinked_sockets[socket_j]->loop();
 		}
-		for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count; ++uplink_talker_i) {
-			_uplink_talkers[uplink_talker_i]->loop();
+		for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
+			_uplinked_talkers[talker_i]->loop();
 		}
     }
 
@@ -102,9 +102,9 @@ public:
 			// Uplink sockets or talkers can only process REMOTE messages
 			case BroadcastValue::REMOTE:
 			{
-				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count;) {
+				for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
 
-					match = _downlink_talkers[downlink_talker_i++]->talkerReceive(message);
+					match = _downlinked_talkers[talker_i++]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
@@ -113,7 +113,7 @@ public:
 						
 						case TalkerMatch::ANY:
 						case TalkerMatch::BY_CHANNEL:
-							if (downlink_talker_i < _downlink_talkers_count || _downlink_sockets_count) {
+							if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
 								socket.deserialize_buffer(message);
 							}
 						break;
@@ -125,8 +125,8 @@ public:
 						default: break;
 					}
 				}
-				for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
-					_downlink_sockets[downlink_socket_i]->socketSend(message);
+				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+					_downlinked_sockets[socket_j]->socketSend(message);
 				}
 			}
 			break;
@@ -150,8 +150,8 @@ public:
 
 			case BroadcastValue::REMOTE:
 			{
-				for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
-					_uplink_sockets[uplink_socket_i]->socketSend(message);
+				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+					_uplinked_sockets[socket_j]->socketSend(message);
 				}
 			}
 			break;
@@ -161,10 +161,10 @@ public:
 				// Talkers have no buffer, so a message copy will be necessary
 				JsonMessage original_message(message);
 
-				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count;) {
-					if (_downlink_talkers[downlink_talker_i] != &talker) {	// Shouldn't locally Uplink to itself
+				for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+					if (_downlinked_talkers[talker_i] != &talker) {	// Shouldn't locally Uplink to itself
 
-						match = _downlink_talkers[downlink_talker_i++]->talkerReceive(message);
+						match = _downlinked_talkers[talker_i++]->talkerReceive(message);
 						switch (match) {
 
 							case TalkerMatch::BY_NAME:
@@ -173,7 +173,7 @@ public:
 							
 							case TalkerMatch::ANY:
 							case TalkerMatch::BY_CHANNEL:
-								if (downlink_talker_i < _downlink_talkers_count) {
+								if (talker_i < _downlinked_talkers_count) {
 									message = original_message;
 								}
 							break;
@@ -186,8 +186,8 @@ public:
 						}
 					}
 				}
-				for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
-					_downlink_sockets[downlink_socket_i]->socketSend(original_message);
+				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+					_downlinked_sockets[socket_j]->socketSend(original_message);
 				}
 			}
 			break;
@@ -217,9 +217,9 @@ public:
 
 			case BroadcastValue::REMOTE:
 			{
-				for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count;) {
+				for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
 
-					match = _uplink_talkers[uplink_talker_i++]->talkerReceive(message);
+					match = _uplinked_talkers[talker_i++]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
@@ -228,7 +228,7 @@ public:
 						
 						case TalkerMatch::ANY:
 						case TalkerMatch::BY_CHANNEL:
-							if (uplink_talker_i < _uplink_talkers_count || _uplink_sockets_count) {
+							if (talker_i < _uplinked_talkers_count || _uplinked_sockets_count) {
 								socket.deserialize_buffer(message);
 							}
 						break;
@@ -240,17 +240,17 @@ public:
 						default: break;
 					}
 				}
-				for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
-					_uplink_sockets[uplink_socket_i]->socketSend(message);
+				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+					_uplinked_sockets[socket_j]->socketSend(message);
 				}
 			}
 			break;
 			
 			case BroadcastValue::LOCAL:
 			{
-				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _uplink_talkers_count;) {
+				for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
 
-					match = _uplink_talkers[downlink_talker_i++]->talkerReceive(message);
+					match = _uplinked_talkers[talker_i++]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
@@ -259,7 +259,7 @@ public:
 						
 						case TalkerMatch::ANY:
 						case TalkerMatch::BY_CHANNEL:
-							if (downlink_talker_i < _uplink_talkers_count || _downlink_sockets_count) {
+							if (talker_i < _uplinked_talkers_count || _downlinked_sockets_count) {
 								socket.deserialize_buffer(message);
 							}
 						break;
@@ -271,9 +271,9 @@ public:
 						default: break;
 					}
 				}
-				for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
-					if (_downlink_sockets[downlink_socket_i] != &socket) {	// Shouldn't locally Uplink to itself
-						_downlink_sockets[downlink_socket_i]->socketSend(message);
+				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+					if (_downlinked_sockets[socket_j] != &socket) {	// Shouldn't locally Uplink to itself
+						_downlinked_sockets[socket_j]->socketSend(message);
 					}
 				}
 			}
@@ -301,10 +301,10 @@ public:
 				// Talkers have no buffer, so a message copy will be necessary
 				JsonMessage original_message(message);
 
-				for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count;) {
-					if (_uplink_talkers[uplink_talker_i++] != &talker) {
+				for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
+					if (_uplinked_talkers[talker_i++] != &talker) {
 
-						match = _uplink_talkers[uplink_talker_i++]->talkerReceive(message);
+						match = _uplinked_talkers[talker_i++]->talkerReceive(message);
 						switch (match) {
 
 							case TalkerMatch::BY_NAME:
@@ -313,7 +313,7 @@ public:
 							
 							case TalkerMatch::ANY:
 							case TalkerMatch::BY_CHANNEL:
-								if (uplink_talker_i < _uplink_talkers_count) {
+								if (talker_i < _uplinked_talkers_count) {
 									message = original_message;
 								}
 							break;
@@ -326,8 +326,8 @@ public:
 						}
 					}
 				}
-				for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
-					_uplink_sockets[uplink_socket_i]->socketSend(original_message);
+				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+					_uplinked_sockets[socket_j]->socketSend(original_message);
 				}
 			}
 			break;
