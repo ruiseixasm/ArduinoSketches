@@ -132,7 +132,7 @@ public:
 		#endif
 
 		// Talkers have no buffer, so a message copy will be necessary
-		JsonMessage message_copy(message);
+		JsonMessage original_message(message);
 
 		switch (broadcast) {
 
@@ -158,8 +158,8 @@ public:
 							
 							case TalkerMatch::ANY:
 							case TalkerMatch::BY_CHANNEL:
-								if (downlink_talker_i < _downlink_talkers_count || _downlink_sockets_count) {
-									message.deserialize_message(message_copy);
+								if (downlink_talker_i < _downlink_talkers_count) {
+									message.deserialize_message(original_message);
 								}
 							break;
 						
@@ -172,7 +172,7 @@ public:
 					}
 				}
 				for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
-					_downlink_sockets[downlink_socket_i]->socketSend(message);
+					_downlink_sockets[downlink_socket_i]->socketSend(original_message);
 				}
 			}
 			break;
@@ -281,7 +281,7 @@ public:
 		#endif
 
 		// Talkers have no buffer, so a message copy will be necessary
-		JsonMessage message_copy(message);
+		JsonMessage original_message(message);
 
 		switch (broadcast) {
 			// Uplink sockets or talkers can only process REMOTE messages
@@ -298,8 +298,8 @@ public:
 						
 						case TalkerMatch::ANY:
 						case TalkerMatch::BY_CHANNEL:
-							if (downlink_talker_i < _downlink_talkers_count || _downlink_sockets_count) {
-								message.deserialize_message(message_copy);
+							if (downlink_talker_i < _downlink_talkers_count) {
+								message.deserialize_message(original_message);
 							}
 						break;
 						
@@ -311,7 +311,7 @@ public:
 					}
 				}
 				for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
-					_downlink_sockets[downlink_socket_i]->socketSend(message);
+					_downlink_sockets[downlink_socket_i]->socketSend(original_message);
 				}
 			}
 			break;
