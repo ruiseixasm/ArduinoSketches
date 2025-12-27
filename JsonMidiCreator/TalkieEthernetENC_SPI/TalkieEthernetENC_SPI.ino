@@ -81,9 +81,9 @@ BroadcastSocket* uplink_sockets[] = { &ethernet_socket };
 JsonTalker* downlink_talkers[] = { &r_ethernet, &r_spi, &t_spy, &t_tester, &l_blue };
 BroadcastSocket* downlink_sockets[] = { &spi_socket };
 MessageRepeater message_repeater(
-		uplink_sockets, sizeof(uplink_sockets)/sizeof(BroadcastSocket),
-		downlink_talkers, sizeof(downlink_talkers)/sizeof(JsonTalker),
-		downlink_sockets, sizeof(downlink_sockets)/sizeof(BroadcastSocket)
+		uplink_sockets, sizeof(uplink_sockets)/sizeof(BroadcastSocket*),
+		downlink_talkers, sizeof(downlink_talkers)/sizeof(JsonTalker*),
+		downlink_sockets, sizeof(downlink_sockets)/sizeof(BroadcastSocket*)
 	);
 
 
