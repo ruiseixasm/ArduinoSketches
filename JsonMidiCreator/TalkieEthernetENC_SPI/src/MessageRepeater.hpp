@@ -103,7 +103,7 @@ public:
 
 		switch (broadcast) {
 			// Uplink sockets or talkers can only process REMOTE messages
-			case BroadcastValue::REMOTE:
+			case BroadcastValue::REMOTE:		// To downlinked nodes
 			{
 				switch (talker_match) {
 
@@ -175,7 +175,7 @@ public:
 
 		switch (broadcast) {
 
-			case BroadcastValue::REMOTE:
+			case BroadcastValue::REMOTE:		// To uplinked nodes
 			{
 				if (_uplinked_talkers_count) {
 					TalkerMatch talker_match = message.get_talker_match();
@@ -238,7 +238,7 @@ public:
 			}
 			break;
 			
-			case BroadcastValue::LOCAL:
+			case BroadcastValue::LOCAL:		// To downlinked nodes
 			{
 				if (_downlinked_talkers_count) {
 					TalkerMatch talker_match = message.get_talker_match();
@@ -373,7 +373,7 @@ public:
 
 		switch (broadcast) {
 
-			case BroadcastValue::REMOTE:
+			case BroadcastValue::REMOTE:		// To uplinked nodes
 			{
 				switch (talker_match) {
 
@@ -426,7 +426,7 @@ public:
 			}
 			break;
 			
-			case BroadcastValue::LOCAL:
+			case BroadcastValue::LOCAL:		// To downlinked nodes
 			{
 
 				switch (talker_match) {
@@ -501,44 +501,63 @@ public:
 
 		switch (broadcast) {
 			// Uplink sockets or talkers can only process REMOTE messages
-			case BroadcastValue::REMOTE:
+			case BroadcastValue::REMOTE:		// To downlinked nodes
 			{
-				if (_uplinked_talkers_count) {
+				if (_downlinked_talkers_count) {
 					TalkerMatch talker_match = message.get_talker_match();
 					// Talkers have no buffer, so a message copy will be necessary
 					JsonMessage original_message(message);
 
-					for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
-						if (_uplinked_talkers[talker_i++] != &talker) {
+					switch (talker_match) {
 
-							match = _uplinked_talkers[talker_i++]->talkerReceive(message);
-							switch (match) {
-
-								case TalkerMatch::BY_NAME:
-									return true;
-								break;
-								
-								case TalkerMatch::ANY:
-								case TalkerMatch::BY_CHANNEL:
-									if (talker_i < _uplinked_talkers_count) {
-										message = original_message;
-									}
-								break;
-								
-								case TalkerMatch::FAIL:
-									return false;
-								break;
-								
-								default: break;
+						case TalkerMatch::ANY:
+						{
+							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+								_downlinked_talkers[talker_i++]->talkerReceive(message);
+								if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
+									message = original_message;
+								}
 							}
 						}
+						break;
+						
+						case TalkerMatch::BY_CHANNEL:
+						{
+							uint8_t message_channel = message.get_to_channel();
+							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+								uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
+								if (talker_channel == message_channel) {
+									_downlinked_talkers[talker_i++]->talkerReceive(message);
+									if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
+										message = original_message;
+									}
+								}
+							}
+						}
+						break;
+						
+						case TalkerMatch::BY_NAME:
+						{
+							char message_to_name[NAME_LEN];
+							strcpy(message_to_name, message.get_to_name());
+							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
+								const char* talker_name = _downlinked_talkers[talker_i]->get_name();
+								if (strcmp(talker_name, message_to_name) == 0) {
+									_downlinked_talkers[talker_i]->talkerReceive(message);
+									return true;
+								}
+							}
+						}
+						break;
+						
+						default: return false;
 					}
-					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						_uplinked_sockets[socket_j]->socketSend(original_message);
+					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+						_downlinked_sockets[socket_j]->socketSend(original_message);
 					}
 				} else {
-					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						_uplinked_sockets[socket_j]->socketSend(message);
+					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+						_downlinked_sockets[socket_j]->socketSend(message);
 					}
 				}
 				return true;
