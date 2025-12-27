@@ -715,6 +715,27 @@ public:
 		return 255;	// Means, no chanel
 	}
 
+	TalkerMatch get_talker_match() const {
+		if (has_to()) {
+			ValueType value_type = get_to_type();
+			switch (value_type) {
+				case ValueType::INTEGER: return TalkerMatch::BY_CHANNEL;
+				case ValueType::STRING: return TalkerMatch::BY_NAME;
+				default: break;
+			}
+		} else {
+			MessageValue message_value = get_message_value();
+			if (message_value > MessageValue::PING || has_nth_value_number(0)) {
+				// Only TALK, CHANNEL and PING can be for ANY
+				// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
+				// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
+				return TalkerMatch::FAIL;
+			} else {
+				return TalkerMatch::ANY;
+			}
+		}
+		return TalkerMatch::NONE;
+	}
 
 	ValueType get_nth_value_type(uint8_t nth) {
 		if (nth < 10) {

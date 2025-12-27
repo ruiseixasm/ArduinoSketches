@@ -89,6 +89,7 @@ public:
 
 	bool socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
+		// TalkerMatch talker_match = message.
 		TalkerMatch match = TalkerMatch::NONE;
 
 		#ifdef MESSAGE_REPEATER_DEBUG
