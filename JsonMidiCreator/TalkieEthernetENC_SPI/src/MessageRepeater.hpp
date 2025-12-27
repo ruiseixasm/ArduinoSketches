@@ -159,7 +159,7 @@ public:
 							case TalkerMatch::ANY:
 							case TalkerMatch::BY_CHANNEL:
 								if (downlink_talker_i < _downlink_talkers_count) {
-									message.deserialize_message(original_message);
+									message = original_message;
 								}
 							break;
 						
@@ -299,7 +299,7 @@ public:
 						case TalkerMatch::ANY:
 						case TalkerMatch::BY_CHANNEL:
 							if (downlink_talker_i < _downlink_talkers_count) {
-								message.deserialize_message(original_message);
+								message = original_message;
 							}
 						break;
 						

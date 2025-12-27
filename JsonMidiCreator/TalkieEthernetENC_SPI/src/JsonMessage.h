@@ -362,6 +362,16 @@ public:
 		return !(*this == other);
 	}
 
+    JsonMessage& operator=(const JsonMessage& other) {
+        if (this == &other) return *this;
+
+        _json_length = other._json_length;
+        for (size_t i = 0; i < _json_length; ++i) {
+            _json_payload[i] = other._json_payload[i];
+        }
+        return *this;
+    }
+
 
 	size_t get_length() const {
 		return _json_length;
@@ -452,13 +462,6 @@ public:
 
 
 	bool deserialize_socket(const BroadcastSocket &socket);
-
-	bool deserialize_message(const JsonMessage &message) {
-		_json_length = message._json_length;
-		for (size_t json_i = 0; json_i < _json_length; ++json_i) {
-			_json_payload[json_i] = message._json_payload[json_i];
-		}
-	}
 
 	bool deserialize_buffer(const char* buffer, size_t length) {
 		if (buffer && length && length <= BROADCAST_SOCKET_BUFFER_SIZE) {
