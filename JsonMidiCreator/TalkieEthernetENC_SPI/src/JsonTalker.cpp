@@ -28,7 +28,7 @@ void JsonTalker::setLink(MessageRepeater* message_repeater, LinkType link_type) 
 
 
 bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
-	if (_message_repeater) {
+	if (_message_repeater && prepareMessage(json_message)) {
 		switch (_link_type) {
 
 			case LinkType::UP:

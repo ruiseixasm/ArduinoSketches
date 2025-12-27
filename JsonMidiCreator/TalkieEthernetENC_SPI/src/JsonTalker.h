@@ -437,14 +437,14 @@ public:
 					}
 				}
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
+				transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::TALK:
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				json_message.set_nth_value_string(0, _desc);
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
+				transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::CHANNEL:
@@ -461,12 +461,12 @@ public:
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				json_message.set_nth_value_number(0, _channel);
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitMessage(json_message);
+				transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::PING:
 				// Talker name already set in FROM (ready to transmit)
-				transmitMessage(json_message);
+				transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::LIST:
@@ -485,7 +485,7 @@ public:
 						json_message.set_nth_value_number(0, action_index++);
 						json_message.set_nth_value_string(1, action->name);
 						json_message.set_nth_value_string(2, action->desc);
-						transmitMessage(json_message);	// One-to-Many
+						transmitToRepeater(json_message);	// One-to-Many
 					}
 					if (!action_index) {
 						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
@@ -568,7 +568,7 @@ public:
 					}
 
 					// In the end sends back the processed message (single message, one-to-one)
-					transmitMessage(json_message);
+					transmitToRepeater(json_message);
 				}
 				break;
 			
