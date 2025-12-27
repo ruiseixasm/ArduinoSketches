@@ -58,8 +58,6 @@ public:
 
 protected:
 
-	JsonTalker* const* const _json_talkers;	// list of pointers and pointers are const, objects mutable
-	const uint8_t _talker_count;
 	MessageRepeater* _message_repeater = nullptr;
 	LinkType _link_type = LinkType::UP_LINKED;
 
@@ -211,14 +209,8 @@ protected:
     }
 
     // Constructor
-    BroadcastSocket(JsonTalker* const* const json_talkers, uint8_t talker_count)
-        : _json_talkers(json_talkers),
-          _talker_count(talker_count)
-    {
-		// Each talker has its remote connections, ONLY local connections are static
-		for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-			_json_talkers[talker_i]->setSocket(this);
-		}
+    BroadcastSocket() {
+		// Does nothing here
 	}
 
 

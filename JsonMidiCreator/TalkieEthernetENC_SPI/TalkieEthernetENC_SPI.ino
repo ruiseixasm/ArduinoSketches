@@ -59,11 +59,9 @@ JsonTalker* all_talkers[] = { &t_spy, &t_tester, &l_blue };	// It's an array of 
 // SOCKETS
 
 // Singleton requires the & (to get a reference variable)
-auto& ethernet_socket = Changed_EthernetENC::instance(ethernet_talkers, sizeof(ethernet_talkers)/sizeof(JsonTalker*));
+auto& ethernet_socket = Changed_EthernetENC::instance();
 int spi_pins[] = {4, 16};
-auto& spi_socket = SPI_ESP_Arduino_Master::instance(
-	spi_pins, sizeof(spi_pins)/sizeof(int), spi_talkers, sizeof(spi_talkers)/sizeof(JsonTalker*)
-);
+auto& spi_socket = SPI_ESP_Arduino_Master::instance(spi_pins, sizeof(spi_pins)/sizeof(int));
 
 
 // SETTING THE REPEATER
