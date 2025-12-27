@@ -204,8 +204,6 @@ void loop() {
     // Maintain DHCP lease (important for long-running applications)
     Ethernet.maintain();
     
-    // ethernet_socket.loop();
-    // spi_socket.loop();
 	message_repeater.loop();
 }
 

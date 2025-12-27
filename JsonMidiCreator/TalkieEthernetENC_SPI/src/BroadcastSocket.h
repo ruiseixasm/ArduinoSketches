@@ -201,36 +201,6 @@ protected:
 
 				transmitToRepeater(json_message);
 
-				
-				// TalkerMatch talker_match = TalkerMatch::NONE;
-				// // Triggers all Talkers to processes the received data
-				// for (uint8_t talker_i = 0; talker_i < _talker_count && talker_match > TalkerMatch::BY_NAME; ++talker_i) {	// _talker_count makes the code safe
-
-				// 	#ifdef BROADCASTSOCKET_DEBUG
-				// 	Serial.print(F("triggerTalkers9: Creating new JsonObject for talker: "));
-				// 	Serial.println(_json_talkers[talker_i]->get_name());
-				// 	#endif
-
-				// 	if (talker_i > 0) {
-				// 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				// 		json_message.deserialize_buffer(_received_buffer, _received_length);
-						
-				// 		#ifdef BROADCASTSOCKET_DEBUG_NEW
-				// 		Serial.print(F("\tjson_message1.3: "));
-				// 		json_message.write_to(Serial);
-				// 		Serial.println();
-				// 		#endif
-
-				// 	}
-					
-				// 	#ifdef BROADCASTSOCKET_DEBUG
-				// 	Serial.print(F("triggerTalkers10: Triggering the talker: "));
-				// 	Serial.println(_json_talkers[talker_i]->get_name());
-				// 	#endif
-
-				// 	// A non static method
-				// 	talker_match = _json_talkers[talker_i]->talkerReceive(json_message);
-				// }
 			} else {
 				#ifdef BROADCASTSOCKET_DEBUG
 				Serial.print(F("triggerTalkers9: Validation of Checksum FAILED: "));
@@ -326,9 +296,6 @@ public:
 
     virtual void loop() {
         receive();
-        // for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-        //     _json_talkers[talker_i]->loop();
-        // }
     }
 
 
