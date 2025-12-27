@@ -16,6 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.h"    // MUST include the full definition!
 #include "MessageRepeater.hpp"
 
+#define MESSAGE_REPEATER_DEBUG
 
 JsonTalker* const* JsonTalker::_json_talkers = nullptr;
 uint8_t JsonTalker::_talker_count = 0;
@@ -28,6 +29,13 @@ void JsonTalker::setLink(MessageRepeater* message_repeater, LinkType link_type) 
 
 
 bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
+
+	#ifdef MESSAGE_REPEATER_DEBUG
+	Serial.print(F("\t\t\ttransmitToRepeater(Talker): "));
+	json_message.write_to(Serial);
+	Serial.println();  // optional: just to add a newline after the JSON
+	#endif
+
 	if (_message_repeater && prepareMessage(json_message)) {
 		switch (_link_type) {
 

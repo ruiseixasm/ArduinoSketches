@@ -16,6 +16,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "MessageRepeater.hpp"
 
 
+#define MESSAGE_REPEATER_DEBUG
+
 
 void BroadcastSocket::setLink(MessageRepeater* message_repeater, LinkType link_type) {
 	_message_repeater = message_repeater;
@@ -24,6 +26,12 @@ void BroadcastSocket::setLink(MessageRepeater* message_repeater, LinkType link_t
 
 
 bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
+
+	#ifdef MESSAGE_REPEATER_DEBUG
+	Serial.print(F("\t\ttransmitToRepeater(Socket): "));
+	json_message.write_to(Serial);
+	Serial.println();  // optional: just to add a newline after the JSON
+	#endif
 
 	if (_message_repeater) {
 		switch (_link_type) {
