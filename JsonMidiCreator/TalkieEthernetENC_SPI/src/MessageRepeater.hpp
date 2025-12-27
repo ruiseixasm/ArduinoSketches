@@ -87,17 +87,20 @@ public:
 			// Uplink sockets or talkers can only process REMOTE messages
 			case BroadcastValue::REMOTE:
 			{
-				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
+				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count;) {
 
-					match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
+					match = _downlink_talkers[downlink_talker_i++]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
 							return true;
 						break;
 						
+						case TalkerMatch::ANY:
 						case TalkerMatch::BY_CHANNEL:
-							socket.deserialize_buffer(message);
+							if (downlink_talker_i < _downlink_talkers_count || _downlink_sockets_count) {
+								socket.deserialize_buffer(message);
+							}
 						break;
 						
 						case TalkerMatch::FAIL:
@@ -143,18 +146,21 @@ public:
 			
 			case BroadcastValue::LOCAL:
 			{
-				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
+				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count;) {
 					if (_downlink_talkers[downlink_talker_i] != &talker) {	// Shouldn't locally Uplink to itself
 
-						match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
+						match = _downlink_talkers[downlink_talker_i++]->talkerReceive(message);
 						switch (match) {
 
 							case TalkerMatch::BY_NAME:
 								return true;
 							break;
 							
+							case TalkerMatch::ANY:
 							case TalkerMatch::BY_CHANNEL:
-								message.deserialize_message(message_copy);
+								if (downlink_talker_i < _downlink_talkers_count || _downlink_sockets_count) {
+									message.deserialize_message(message_copy);
+								}
 							break;
 						
 							case TalkerMatch::FAIL:
@@ -196,17 +202,20 @@ public:
 
 			case BroadcastValue::REMOTE:
 			{
-				for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count; ++uplink_talker_i) {
+				for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count;) {
 
-					match = _uplink_talkers[uplink_talker_i]->talkerReceive(message);
+					match = _uplink_talkers[uplink_talker_i++]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
 							return true;
 						break;
 						
+						case TalkerMatch::ANY:
 						case TalkerMatch::BY_CHANNEL:
-							socket.deserialize_buffer(message);
+							if (uplink_talker_i < _uplink_talkers_count || _uplink_sockets_count) {
+								socket.deserialize_buffer(message);
+							}
 						break;
 						
 						case TalkerMatch::FAIL:
@@ -224,16 +233,20 @@ public:
 			
 			case BroadcastValue::LOCAL:
 			{
-				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
+				for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count;) {
 
-					match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
+					match = _uplink_talkers[uplink_talker_i++]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
 							return true;
 						break;
 						
+						case TalkerMatch::ANY:
 						case TalkerMatch::BY_CHANNEL:
+							if (uplink_talker_i < _uplink_talkers_count || _uplink_sockets_count) {
+								socket.deserialize_buffer(message);
+							}
 							socket.deserialize_buffer(message);
 						break;
 						
@@ -274,17 +287,20 @@ public:
 			// Uplink sockets or talkers can only process REMOTE messages
 			case BroadcastValue::REMOTE:
 			{
-				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
+				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count;) {
 
-					match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
+					match = _downlink_talkers[downlink_talker_i++]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
 							return true;
 						break;
 						
+						case TalkerMatch::ANY:
 						case TalkerMatch::BY_CHANNEL:
-							message.deserialize_message(message_copy);
+							if (downlink_talker_i < _downlink_talkers_count || _downlink_sockets_count) {
+								message.deserialize_message(message_copy);
+							}
 						break;
 						
 						case TalkerMatch::FAIL:

@@ -48,7 +48,7 @@ class JsonTalker {
 public:
 
 	enum class TalkerMatch : uint8_t {
-		FAIL, BY_NAME, BY_CHANNEL, NONE
+		NONE, ANY, BY_CHANNEL, BY_NAME, FAIL
 	};
 
 
@@ -382,7 +382,7 @@ public:
 			} else if (json_message.has_nth_value_number(0)) {
 				return TalkerMatch::FAIL;	// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
 			} else {
-				talker_match = TalkerMatch::BY_CHANNEL;
+				talker_match = TalkerMatch::ANY;
 			}
 		}
 
