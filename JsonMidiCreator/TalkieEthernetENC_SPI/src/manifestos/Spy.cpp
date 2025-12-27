@@ -50,7 +50,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					}
 					json_message.set_from_name(talker.get_name());	// Avoids the swapping
 					// 3. Sends the message LOCALLY
-					talker.localSend(json_message);	// Dispatches it directly as LOCAL
+					talker.transmitToRepeater(json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
 					json_message.set_broadcast_value(BroadcastValue::NONE);
 				}
@@ -67,7 +67,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					json_message.remove_identity();	// Makes sure a new IDENTITY is set
 					json_message.set_from_name(talker.get_name());	// Avoids swapping
 					// 3. Sends the message to myself
-					talker.selfSend(json_message);	// Dispatches it directly as LOCAL
+					talker.transmitToRepeater(json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
 					json_message.set_broadcast_value(BroadcastValue::NONE);
 				}
@@ -100,7 +100,7 @@ void Spy::echo(JsonTalker& talker, JsonMessage& json_message) {
 				json_message.set_identity(_original_message.identity);
 				// It's already an ECHO message, it's because of that that entered here
 				// Finally answers to the REMOTE caller by repeating all other json fields
-				talker.socketSend(json_message);
+				talker.transmitToRepeater(json_message);
 			}
 			break;
 

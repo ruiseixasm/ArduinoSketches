@@ -183,12 +183,6 @@ void setup() {
     ethernet_socket.set_port(PORT);
     ethernet_socket.set_udp(&udp);
 
-    Serial.println("Talker ready with EthernetENC!");
-    Serial.println("Connecting Talkers with each other");
-
-    // Connects the all talkers with each other (static variable)
-    JsonTalker::connectTalkers(all_talkers, sizeof(all_talkers)/sizeof(JsonTalker*));
-
     // Final startup indication
     digitalWrite(LED_BUILTIN, HIGH);
     delay(500);

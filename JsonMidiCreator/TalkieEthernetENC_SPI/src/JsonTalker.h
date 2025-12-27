@@ -54,12 +54,6 @@ public:
 
 protected:
     
-    // The socket can't be static becaus different talkers may use different sockets (remote)
-    BroadcastSocket* _socket = nullptr;
-    // Pointer PRESERVE the polymorphism while objects don't!
-    static JsonTalker* const* _json_talkers;  // It's capable of communicate with other talkers (local)
-    static uint8_t _talker_count;
-
 	MessageRepeater* _message_repeater = nullptr;
 	LinkType _link_type = LinkType::DOWN_LINKED;
 
@@ -95,14 +89,6 @@ public:
 
 	LinkType getLinkType() const {
 		return _link_type;
-	}
-
-
-	bool inSameSocket(const BroadcastSocket* socket) const {
-		if (_socket) {	// Being in nullptr is NOT in a socket
-			return socket == _socket;
-		}
-		return false;
 	}
 
 
@@ -143,12 +129,6 @@ public:
         if (_manifesto) {
             _manifesto->loop(this);
         }
-    }
-
-
-    static void connectTalkers(JsonTalker* const* json_talkers, uint8_t talker_count) {
-        _json_talkers = json_talkers;
-        _talker_count = talker_count;
     }
 
 
@@ -218,129 +198,9 @@ public:
 	}
 
 	
-    virtual bool socketSend(JsonMessage& json_message);
-
-
-    virtual bool localSend(JsonMessage& json_message) {
-
-		#ifdef JSON_TALKER_DEBUG
-		Serial.print(F("\t"));
-		Serial.print(_name);
-		Serial.print(F(": "));
-		Serial.println(F("Sending a LOCAL message"));
-		#endif
-
-		if (prepareMessage(json_message)) {
-
-			// Tags the message as LOCAL sourced
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			json_message.set_broadcast_value(BroadcastValue::LOCAL);
-			
-			#ifdef JSON_TALKER_DEBUG_NEW
-			Serial.print(F("\t\t\t\tlocalSend1.1: "));
-			json_message.write_to(Serial);
-			Serial.println();
-			#endif
-
-			// Triggers all local Talkers to processes the json_message
-			bool sent_message = false;
-			TalkerMatch talker_match = TalkerMatch::NONE;
-			for (uint8_t talker_i = 0; talker_i < _talker_count && talker_match > TalkerMatch::BY_NAME; ++talker_i) {	// _talker_count makes the code safe
-				if (_json_talkers[talker_i] != this) {  // Can't send to myself
-
-					// CREATE COPY for each talker
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-					JsonMessage json_message_copy(json_message);
-					
-					#ifdef JSON_TALKER_DEBUG_NEW
-					Serial.print(F("\t\t\t\tlocalSend1.2: "));
-					json_message_copy.write_to(Serial);
-					Serial.print(" | ");
-					Serial.println(talker_i);
-					#endif
-
-					talker_match = _json_talkers[talker_i]->talkerReceive(json_message_copy);
-					sent_message = true;
-				}
-			}
-			return sent_message;
-		}
-		return false;
-    }
-
-
-    virtual bool selfSend(JsonMessage& json_message) {
-
-		#ifdef JSON_TALKER_DEBUG
-		Serial.print(F("\t"));
-		Serial.print(_name);
-		Serial.print(F(": "));
-		Serial.println(F("Sending a SELF message"));
-		#endif
-
-		// Tags the message as LOCAL sourced
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		json_message.set_broadcast_value(BroadcastValue::SELF);
-		// Despite being a SELF message it also needs to be prepared like any other
-		if (prepareMessage(json_message)) {
-			talkerReceive(json_message);	// Calls my self talkerReceive method right away
-			return true;
-		}
-		return false;
-    }
-
-
-	virtual bool noneSend(JsonMessage& json_message) {
-		(void)json_message;
-
-		// It's absolutely neutral, does nothing, NONE
-		return true;
-	}
-
 
 	bool transmitToRepeater(JsonMessage& json_message);
 
-
-    virtual bool transmitMessage(JsonMessage& json_message) {
-
-		#ifdef JSON_TALKER_DEBUG
-		Serial.print(F("\t"));
-		Serial.print(_name);
-		Serial.print(F(": "));
-		#endif
-
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		BroadcastValue broadcast_value = json_message.get_broadcast_value();	// Already returns NOISE
-		switch (broadcast_value) {
-
-			case BroadcastValue::LOCAL:
-				#ifdef JSON_TALKER_DEBUG
-				Serial.println(F("\tTransmitted a LOCAL message"));
-				#endif
-				return localSend(json_message);
-			
-			case BroadcastValue::SELF:
-				#ifdef JSON_TALKER_DEBUG
-				Serial.println(F("\tTransmitted an SELF message"));
-				#endif
-				return selfSend(json_message);
-
-			case BroadcastValue::NONE:
-				#ifdef JSON_TALKER_DEBUG
-				Serial.println(F("\tTransmitted an SELF message"));
-				#endif
-				return noneSend(json_message);
-
-			// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
-			default:
-				// By default it's sent to REMOTE because it's safer ("c" = 0 auto set by socket)
-				#ifdef JSON_TALKER_DEBUG
-				Serial.println(F("\tTransmitted a REMOTE message"));
-				#endif
-				return socketSend(json_message);
-			break;
-		}
-    }
 
     
     virtual TalkerMatch talkerReceive(JsonMessage& json_message) {
@@ -507,26 +367,6 @@ public:
 							json_message.set_nth_value_string(0, board_description());
 							break;
 
-						case InfoValue::DROPS:
-							if (_socket) {
-								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-								json_message.set_nth_value_number(0, get_drops());
-							} else {
-								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-								json_message.set_roger_value(RogerValue::NIL);
-							}
-							break;
-
-						case InfoValue::DELAY:
-							if (_socket) {
-								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-								json_message.set_nth_value_number(0, get_delay());
-							} else {
-								// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-								json_message.set_roger_value(RogerValue::NIL);
-							}
-							break;
-
 						case InfoValue::MUTE:
 							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							if (json_message.has_nth_value_number(0)) {
@@ -543,11 +383,6 @@ public:
 									json_message.set_nth_value_number(0, 0);
 								}
 							}
-							break;
-
-						case InfoValue::SOCKET:
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-							json_message.set_nth_value_string(0, socket_class_name());
 							break;
 
 						case InfoValue::TALKER:

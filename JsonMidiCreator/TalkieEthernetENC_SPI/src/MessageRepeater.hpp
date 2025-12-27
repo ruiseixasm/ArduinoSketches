@@ -194,7 +194,7 @@ public:
 			
 			case BroadcastValue::SELF:
 			{
-				talker.socketSend(message);
+				talker.talkerReceive(message);
 			}
 			break;
 			
