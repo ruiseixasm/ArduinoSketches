@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <SPI.h>
 #include <ArduinoJson.h>    // Include ArduinoJson Library to be used as a dictionary
-#include "../BroadcastSocket.hpp"
+#include "../BroadcastSocket.h"
 
 
 // #define BROADCAST_SPI_DEBUG
@@ -64,8 +64,7 @@ protected:
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    SPI_ESP_Arduino_Slave(JsonTalker** const json_talkers, uint8_t talker_count, BroadcastValue source_value = BroadcastValue::REMOTE)
-        : BroadcastSocket(json_talkers, talker_count, source_value) {
+    SPI_ESP_Arduino_Slave() : BroadcastSocket() {
             
 			// Initialize SPI
 			SPI.begin();
@@ -141,7 +140,6 @@ protected:
             _sending_length_spi = _sending_length;
 			
 		}
-
         return false;
     }
 
@@ -174,9 +172,9 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static SPI_ESP_Arduino_Slave& instance(JsonTalker** const json_talkers, uint8_t talker_count, BroadcastValue source_value = BroadcastValue::REMOTE) {
+    static SPI_ESP_Arduino_Slave& instance() {
 
-        static SPI_ESP_Arduino_Slave instance(json_talkers, talker_count, source_value);
+        static SPI_ESP_Arduino_Slave instance;
         return instance;
     }
 

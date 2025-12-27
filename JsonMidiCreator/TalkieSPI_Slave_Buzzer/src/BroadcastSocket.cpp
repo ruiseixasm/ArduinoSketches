@@ -12,39 +12,39 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#include "JsonTalker.h"
 #include "BroadcastSocket.h"    // MUST include the full definition!
 #include "MessageRepeater.hpp"
+
 
 // #define MESSAGE_REPEATER_DEBUG
 
 
-void JsonTalker::setLink(MessageRepeater* message_repeater, LinkType link_type) {
+void BroadcastSocket::setLink(MessageRepeater* message_repeater, LinkType link_type) {
 	_message_repeater = message_repeater;
 	_link_type = link_type;
 }
 
 
-bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
+bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
 
 	#ifdef MESSAGE_REPEATER_DEBUG
-	Serial.print(F("\t\t\ttransmitToRepeater(Talker): "));
+	Serial.print(F("\t\ttransmitToRepeater(Socket): "));
 	json_message.write_to(Serial);
 	Serial.println();  // optional: just to add a newline after the JSON
 	#endif
 
-	if (_message_repeater && prepareMessage(json_message)) {
+	if (_message_repeater) {
 		switch (_link_type) {
 
 			case LinkType::UP_LINKED:
 			{
-				return _message_repeater->talkerDownlink(*this, json_message);
+				return _message_repeater->socketDownlink(*this, json_message);
 			}
 			break;
 			
 			case LinkType::DOWN_LINKED:
 			{
-				return _message_repeater->talkerUplink(*this, json_message);
+				return _message_repeater->socketUplink(*this, json_message);
 			}
 			break;
 			
@@ -53,5 +53,4 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 	}
 	return false;
 }
-
 

@@ -41,6 +41,7 @@ using MessageValue = TalkieCodes::MessageValue;
 using RogerValue = TalkieCodes::RogerValue;
 using InfoValue = TalkieCodes::InfoValue;
 
+class BroadcastSocket;
 
 class JsonMessage {
 public:
@@ -361,6 +362,16 @@ public:
 		return !(*this == other);
 	}
 
+    JsonMessage& operator=(const JsonMessage& other) {
+        if (this == &other) return *this;
+
+        _json_length = other._json_length;
+        for (size_t i = 0; i < _json_length; ++i) {
+            _json_payload[i] = other._json_payload[i];
+        }
+        return *this;
+    }
+
 
 	size_t get_length() const {
 		return _json_length;
@@ -449,7 +460,7 @@ public:
 		return found_m && found_b && found_i && found_f;
 	}
 
-
+	
 	bool deserialize_buffer(const char* buffer, size_t length) {
 		if (buffer && length && length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t char_j = 0; char_j < length; ++char_j) {
