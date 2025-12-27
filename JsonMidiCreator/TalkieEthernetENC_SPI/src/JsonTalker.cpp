@@ -27,6 +27,12 @@ void JsonTalker::setLink(MessageRepeater* message_repeater, LinkType link_type) 
 }
 
 
+bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
+
+
+}
+
+
 // *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 bool JsonTalker::socketSend(JsonMessage& json_message) {
     if (!_socket) return false;

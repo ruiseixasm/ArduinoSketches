@@ -298,6 +298,9 @@ public:
 	}
 
 
+	bool transmitToRepeater(JsonMessage& json_message);
+
+
     virtual bool transmitMessage(JsonMessage& json_message) {
 
 		#ifdef JSON_TALKER_DEBUG

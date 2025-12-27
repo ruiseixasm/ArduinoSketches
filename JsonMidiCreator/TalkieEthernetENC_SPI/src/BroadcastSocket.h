@@ -91,6 +91,9 @@ protected:
 		return true;
 	}
 
+	
+	bool transmitToRepeater(JsonMessage& json_message);
+
     
     bool triggerTalkers() {
 

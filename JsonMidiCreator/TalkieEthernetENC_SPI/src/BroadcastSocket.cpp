@@ -23,3 +23,8 @@ void BroadcastSocket::setLink(MessageRepeater* message_repeater, LinkType link_t
 }
 
 
+bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
+
+
+}
+
