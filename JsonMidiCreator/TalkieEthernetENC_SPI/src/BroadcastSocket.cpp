@@ -36,13 +36,13 @@ bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
 	if (_message_repeater) {
 		switch (_link_type) {
 
-			case LinkType::UP:
+			case LinkType::UP_LINKED:
 			{
 				return _message_repeater->socketDownlink(*this, json_message);
 			}
 			break;
 			
-			case LinkType::DOWN:
+			case LinkType::DOWN_LINKED:
 			{
 				return _message_repeater->socketUplink(*this, json_message);
 			}

@@ -39,13 +39,13 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 	if (_message_repeater && prepareMessage(json_message)) {
 		switch (_link_type) {
 
-			case LinkType::UP:
+			case LinkType::UP_LINKED:
 			{
 				return _message_repeater->talkerDownlink(*this, json_message);
 			}
 			break;
 			
-			case LinkType::DOWN:
+			case LinkType::DOWN_LINKED:
 			{
 				return _message_repeater->talkerUplink(*this, json_message);
 			}

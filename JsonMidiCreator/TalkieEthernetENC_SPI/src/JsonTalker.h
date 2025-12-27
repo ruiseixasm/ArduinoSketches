@@ -61,7 +61,7 @@ protected:
     static uint8_t _talker_count;
 
 	MessageRepeater* _message_repeater = nullptr;
-	LinkType _link_type = LinkType::DOWN;
+	LinkType _link_type = LinkType::DOWN_LINKED;
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device

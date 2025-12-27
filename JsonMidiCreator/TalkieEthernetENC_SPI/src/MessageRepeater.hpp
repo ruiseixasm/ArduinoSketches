@@ -54,16 +54,16 @@ public:
         _uplinked_talkers(uplinked_talkers), _uplinked_talkers_count(uplinked_talkers_count)
     {
 		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-			_uplinked_sockets[socket_j]->setLink(this, LinkType::UP);
+			_uplinked_sockets[socket_j]->setLink(this, LinkType::UP_LINKED);
 		}
 		for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
-			_downlinked_talkers[talker_i]->setLink(this, LinkType::DOWN);
+			_downlinked_talkers[talker_i]->setLink(this, LinkType::DOWN_LINKED);
 		}
 		for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-			_downlinked_sockets[socket_j]->setLink(this, LinkType::DOWN);
+			_downlinked_sockets[socket_j]->setLink(this, LinkType::DOWN_LINKED);
 		}
 		for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
-			_uplinked_talkers[talker_i]->setLink(this, LinkType::UP);
+			_uplinked_talkers[talker_i]->setLink(this, LinkType::UP_LINKED);
 		}
 	}
 

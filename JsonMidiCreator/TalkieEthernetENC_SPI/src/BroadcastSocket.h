@@ -61,7 +61,7 @@ protected:
 	JsonTalker* const* const _json_talkers;	// list of pointers and pointers are const, objects mutable
 	const uint8_t _talker_count;
 	MessageRepeater* _message_repeater = nullptr;
-	LinkType _link_type = LinkType::UP;
+	LinkType _link_type = LinkType::UP_LINKED;
 
 	const BroadcastValue _source_value;
 
