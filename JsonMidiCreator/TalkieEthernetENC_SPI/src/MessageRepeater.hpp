@@ -43,15 +43,15 @@ public:
 
     // Constructor
     MessageRepeater(
-			BroadcastSocket* const* const uplink_sockets, uint8_t uplink_sockets_count,
-			JsonTalker* const* const downlink_talkers, uint8_t downlink_talkers_count,
-			BroadcastSocket* const* const downlink_sockets = nullptr, uint8_t downlink_sockets_count = 0,
-			JsonTalker* const* const uplink_talkers = nullptr, uint8_t uplink_talkers_count = 0
+			BroadcastSocket* const* const uplinked_sockets, uint8_t uplinked_sockets_count,
+			JsonTalker* const* const downlinked_talkers, uint8_t downlinked_talkers_count,
+			BroadcastSocket* const* const downlinked_sockets = nullptr, uint8_t downlinked_sockets_count = 0,
+			JsonTalker* const* const uplinked_talkers = nullptr, uint8_t uplinked_talkers_count = 0
 		)
-        : _uplinked_sockets(uplink_sockets), _uplinked_sockets_count(uplink_sockets_count),
-        _downlinked_talkers(downlink_talkers), _downlinked_talkers_count(downlink_talkers_count),
-        _downlinked_sockets(downlink_sockets), _downlinked_sockets_count(downlink_sockets_count),
-        _uplinked_talkers(uplink_talkers), _uplinked_talkers_count(uplink_talkers_count)
+        : _uplinked_sockets(uplinked_sockets), _uplinked_sockets_count(uplinked_sockets_count),
+        _downlinked_talkers(downlinked_talkers), _downlinked_talkers_count(downlinked_talkers_count),
+        _downlinked_sockets(downlinked_sockets), _downlinked_sockets_count(downlinked_sockets_count),
+        _uplinked_talkers(uplinked_talkers), _uplinked_talkers_count(uplinked_talkers_count)
     {
 		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 			_uplinked_sockets[socket_j]->setLink(this, LinkType::UP);

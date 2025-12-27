@@ -67,13 +67,13 @@ auto& spi_socket = SPI_ESP_Arduino_Master::instance(
 
 
 // SETTING THE REPEATER
-BroadcastSocket* uplink_sockets[] = { &ethernet_socket };
-JsonTalker* downlink_talkers[] = { &t_spy, &t_tester, &l_blue };
-BroadcastSocket* downlink_sockets[] = { &spi_socket };
+BroadcastSocket* uplinked_sockets[] = { &ethernet_socket };
+JsonTalker* downlinked_talkers[] = { &t_spy, &t_tester, &l_blue };
+BroadcastSocket* downlinked_sockets[] = { &spi_socket };
 MessageRepeater message_repeater(
-		uplink_sockets, sizeof(uplink_sockets)/sizeof(BroadcastSocket*),
-		downlink_talkers, sizeof(downlink_talkers)/sizeof(JsonTalker*),
-		downlink_sockets, sizeof(downlink_sockets)/sizeof(BroadcastSocket*)
+		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),
+		downlinked_talkers, sizeof(downlinked_talkers)/sizeof(JsonTalker*),
+		downlinked_sockets, sizeof(downlinked_sockets)/sizeof(BroadcastSocket*)
 	);
 
 
