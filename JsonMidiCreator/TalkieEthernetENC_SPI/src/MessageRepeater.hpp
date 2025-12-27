@@ -146,9 +146,6 @@ public:
 		Serial.println((int)broadcast);
 		#endif
 
-		// Talkers have no buffer, so a message copy will be necessary
-		JsonMessage original_message(message);
-
 		switch (broadcast) {
 
 			case BroadcastValue::REMOTE:
@@ -161,6 +158,9 @@ public:
 			
 			case BroadcastValue::LOCAL:
 			{
+				// Talkers have no buffer, so a message copy will be necessary
+				JsonMessage original_message(message);
+
 				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count;) {
 					if (_downlink_talkers[downlink_talker_i] != &talker) {	// Shouldn't locally Uplink to itself
 
@@ -248,9 +248,9 @@ public:
 			
 			case BroadcastValue::LOCAL:
 			{
-				for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count;) {
+				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _uplink_talkers_count;) {
 
-					match = _uplink_talkers[uplink_talker_i++]->talkerReceive(message);
+					match = _uplink_talkers[downlink_talker_i++]->talkerReceive(message);
 					switch (match) {
 
 						case TalkerMatch::BY_NAME:
@@ -259,10 +259,9 @@ public:
 						
 						case TalkerMatch::ANY:
 						case TalkerMatch::BY_CHANNEL:
-							if (uplink_talker_i < _uplink_talkers_count || _uplink_sockets_count) {
+							if (downlink_talker_i < _uplink_talkers_count || _downlink_sockets_count) {
 								socket.deserialize_buffer(message);
 							}
-							socket.deserialize_buffer(message);
 						break;
 						
 						case TalkerMatch::FAIL:
@@ -295,13 +294,13 @@ public:
 		Serial.println((int)broadcast);
 		#endif
 
-		// Talkers have no buffer, so a message copy will be necessary
-		JsonMessage original_message(message);
-
 		switch (broadcast) {
 			// Uplink sockets or talkers can only process REMOTE messages
 			case BroadcastValue::REMOTE:
 			{
+				// Talkers have no buffer, so a message copy will be necessary
+				JsonMessage original_message(message);
+
 				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count;) {
 
 					match = _downlink_talkers[downlink_talker_i++]->talkerReceive(message);
