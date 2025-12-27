@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "MessageRepeater.hpp"
 
 
-#define MESSAGE_REPEATER_DEBUG
+// #define MESSAGE_REPEATER_DEBUG
 
 
 void BroadcastSocket::setLink(MessageRepeater* message_repeater, LinkType link_type) {
