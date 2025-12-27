@@ -31,7 +31,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCAST_ETHERNETENC_DEBUG
-// #define BROADCAST_ETHERNETENC_DEBUG_NEW
+#define BROADCAST_ETHERNETENC_DEBUG_NEW
 
 #define ENABLE_DIRECT_ADDRESSING
 
