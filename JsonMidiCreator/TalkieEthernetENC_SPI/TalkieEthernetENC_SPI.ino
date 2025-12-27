@@ -27,6 +27,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/manifestos/Spy.h"
 #include "src/manifestos/BlueManifesto.hpp"
 #include "src/manifestos/MessageTester.hpp"
+#include "src/MessageRepeater.hpp"
 
 
 // TALKERS 
@@ -74,6 +75,16 @@ auto& spi_socket = SPI_ESP_Arduino_Master::instance(
 	spi_pins, sizeof(spi_pins)/sizeof(int), spi_talkers, sizeof(spi_talkers)/sizeof(JsonTalker*)
 );
 
+
+// SETTING THE REPEATER
+BroadcastSocket* uplink_sockets[] = { &ethernet_socket };
+JsonTalker* downlink_talkers[] = { &r_ethernet, &r_spi, &t_spy, &t_tester, &l_blue };
+BroadcastSocket* downlink_sockets[] = { &spi_socket };
+MessageRepeater message_repeater(
+		uplink_sockets, sizeof(uplink_sockets)/sizeof(BroadcastSocket),
+		downlink_talkers, sizeof(downlink_talkers)/sizeof(JsonTalker),
+		downlink_sockets, sizeof(downlink_sockets)/sizeof(BroadcastSocket)
+	);
 
 
 EthernetUDP udp;
@@ -203,7 +214,8 @@ void loop() {
     // Maintain DHCP lease (important for long-running applications)
     Ethernet.maintain();
     
-    ethernet_socket.loop();
-    spi_socket.loop();
+    // ethernet_socket.loop();
+    // spi_socket.loop();
+	message_repeater.loop();
 }
 
