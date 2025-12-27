@@ -18,16 +18,24 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/manifestos/BuzzerManifesto.hpp"
 #include "src/JsonTalker.h"
 #include "src/sockets/SPI_ESP_Arduino_Slave.h"
+#include "src/MessageRepeater.hpp"
 
 
 const char talker_name[] = "buzzer";
 const char talker_desc[] = "I'm a buzzer that buzzes";
 BuzzerManifesto talker_manifesto;
 JsonTalker talker = JsonTalker(talker_name, talker_desc, &talker_manifesto);
-JsonTalker* talkers[] = { &talker };   // It's an array of pointers of JsonTalker (keep it as JsonTalker!)
-// Singleton requires the & (to get a reference variable)
 
-auto& spi_socket = SPI_ESP_Arduino_Slave::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+// Singleton requires the & (to get a reference variable)
+auto& spi_socket = SPI_ESP_Arduino_Slave::instance();
+
+// SETTING THE REPEATER
+BroadcastSocket* uplinked_sockets[] = { &spi_socket };
+JsonTalker* downlinked_talkers[] = { &talker };
+MessageRepeater message_repeater(
+		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),
+		downlinked_talkers, sizeof(downlinked_talkers)/sizeof(JsonTalker*)
+	);
 
 
 
@@ -40,16 +48,12 @@ void setup() {
     Serial.println("SPI started successfully");
     delay(1000);
 
-    // Connect the talkers with each other (static variable)
-    Serial.println("Connecting Talkers with each other");
-    JsonTalker::connectTalkers(talkers, sizeof(talkers)/sizeof(JsonTalker*));
-
     Serial.println("Setup completed - Ready for JSON communication!");
 }
 
 
 
 void loop() {
-    spi_socket.loop();
+    message_repeater.loop();
 }
 
