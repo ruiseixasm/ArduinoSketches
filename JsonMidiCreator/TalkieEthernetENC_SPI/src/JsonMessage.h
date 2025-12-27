@@ -453,6 +453,13 @@ public:
 
 	bool deserialize_socket(const BroadcastSocket &socket);
 
+	bool deserialize_message(const JsonMessage &message) {
+		_json_length = message._json_length;
+		for (size_t json_i = 0; json_i < _json_length; ++json_i) {
+			_json_payload[json_i] = message._json_payload[json_i];
+		}
+	}
+
 	bool deserialize_buffer(const char* buffer, size_t length) {
 		if (buffer && length && length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t char_j = 0; char_j < length; ++char_j) {

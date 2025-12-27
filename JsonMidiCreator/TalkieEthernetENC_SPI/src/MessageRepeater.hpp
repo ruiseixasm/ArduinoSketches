@@ -128,6 +128,9 @@ public:
 		Serial.println((int)broadcast);
 		#endif
 
+		// Talkers have no buffer, so a message copy will be necessary
+		JsonMessage message_copy(message);
+
 		switch (broadcast) {
 
 			case BroadcastValue::REMOTE:
@@ -142,6 +145,11 @@ public:
 			{
 				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
 					if (_downlink_talkers[downlink_talker_i] != &talker) {	// Shouldn't locally Uplink to itself
+
+						if (match == TalkerMatch::BY_CHANNEL) {
+							message.deserialize_message(message_copy);
+						}
+
 						match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
 						switch (match) {
 
@@ -259,11 +267,19 @@ public:
 		Serial.println((int)broadcast);
 		#endif
 
+		// Talkers have no buffer, so a message copy will be necessary
+		JsonMessage message_copy(message);
+
 		switch (broadcast) {
 			// Uplink sockets or talkers can only process REMOTE messages
 			case BroadcastValue::REMOTE:
 			{
 				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count; ++downlink_talker_i) {
+
+					if (match == TalkerMatch::BY_CHANNEL) {
+						message.deserialize_message(message_copy);
+					}
+
 					match = _downlink_talkers[downlink_talker_i]->talkerReceive(message);
 					switch (match) {
 
