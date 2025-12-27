@@ -23,7 +23,6 @@ https://github.com/ruiseixasm/JsonTalkie
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/Changed_EthernetENC.hpp"
 #include "src/sockets/SPI_ESP_Arduino_Master.hpp"
-#include "src/talkers/JsonRepeater.h"
 #include "src/manifestos/Spy.h"
 #include "src/manifestos/BlueManifesto.hpp"
 #include "src/manifestos/MessageTester.hpp"
@@ -32,15 +31,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // TALKERS 
 // Ethernet Socket Repeater
-const char r_ethernet_name[] = "r_ethernet";
-const char r_ethernet_desc[] = "I'm an Ethernet talker";
-JsonRepeater r_ethernet = JsonRepeater(r_ethernet_name, r_ethernet_desc);	// Just a REPEATER, doesn't need a Manifesto
-
-// SPI Socket Repeater
-const char r_spi_name[] = "r_spi";
-const char r_spi_desc[] = "I'm a SPI talker";
-JsonRepeater r_spi = JsonRepeater(r_spi_name, r_spi_desc);	// A REPEATER
-
 // Spy Talker (being sockless devoids it of answering direct remote calls, and that also works, but differently)
 const char t_spy_name[] = "spy";
 const char t_spy_desc[] = "I'm a Spy and I spy the talkers' pings";
@@ -61,9 +51,9 @@ JsonTalker t_tester = JsonTalker(t_tester_name, t_tester_desc, &message_tester);
 
 
 // LIST OF TALKERS FOR EACH SOCKET
-JsonTalker* ethernet_talkers[] = { &r_ethernet, &t_spy };   // It's an array of pointers
-JsonTalker* spi_talkers[] = { &r_spi };   // It's an array of pointers
-JsonTalker* all_talkers[] = { &r_ethernet, &r_spi, &t_spy, &t_tester, &l_blue };	// It's an array of pointers
+JsonTalker* ethernet_talkers[] = { &t_spy };   // It's an array of pointers
+JsonTalker* spi_talkers[] = { };   // It's an array of pointers
+JsonTalker* all_talkers[] = { &t_spy, &t_tester, &l_blue };	// It's an array of pointers
 
 
 // SOCKETS
@@ -78,7 +68,7 @@ auto& spi_socket = SPI_ESP_Arduino_Master::instance(
 
 // SETTING THE REPEATER
 BroadcastSocket* uplink_sockets[] = { &ethernet_socket };
-JsonTalker* downlink_talkers[] = { &r_ethernet, &r_spi, &t_spy, &t_tester, &l_blue };
+JsonTalker* downlink_talkers[] = { &t_spy, &t_tester, &l_blue };
 BroadcastSocket* downlink_sockets[] = { &spi_socket };
 MessageRepeater message_repeater(
 		uplink_sockets, sizeof(uplink_sockets)/sizeof(BroadcastSocket*),

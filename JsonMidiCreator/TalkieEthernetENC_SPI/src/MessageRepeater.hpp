@@ -301,31 +301,33 @@ public:
 				// Talkers have no buffer, so a message copy will be necessary
 				JsonMessage original_message(message);
 
-				for (uint8_t downlink_talker_i = 0; downlink_talker_i < _downlink_talkers_count;) {
+				for (uint8_t uplink_talker_i = 0; uplink_talker_i < _uplink_talkers_count;) {
+					if (_uplink_talkers[uplink_talker_i++] != &talker) {
 
-					match = _downlink_talkers[downlink_talker_i++]->talkerReceive(message);
-					switch (match) {
+						match = _uplink_talkers[uplink_talker_i++]->talkerReceive(message);
+						switch (match) {
 
-						case TalkerMatch::BY_NAME:
-							return true;
-						break;
-						
-						case TalkerMatch::ANY:
-						case TalkerMatch::BY_CHANNEL:
-							if (downlink_talker_i < _downlink_talkers_count) {
-								message = original_message;
-							}
-						break;
-						
-						case TalkerMatch::FAIL:
-							return false;
-						break;
-						
-						default: break;
+							case TalkerMatch::BY_NAME:
+								return true;
+							break;
+							
+							case TalkerMatch::ANY:
+							case TalkerMatch::BY_CHANNEL:
+								if (uplink_talker_i < _uplink_talkers_count) {
+									message = original_message;
+								}
+							break;
+							
+							case TalkerMatch::FAIL:
+								return false;
+							break;
+							
+							default: break;
+						}
 					}
 				}
-				for (uint8_t downlink_socket_i = 0; downlink_socket_i < _downlink_sockets_count; ++downlink_socket_i) {
-					_downlink_sockets[downlink_socket_i]->socketSend(original_message);
+				for (uint8_t uplink_socket_i = 0; uplink_socket_i < _uplink_sockets_count; ++uplink_socket_i) {
+					_uplink_sockets[uplink_socket_i]->socketSend(original_message);
 				}
 			}
 			break;
