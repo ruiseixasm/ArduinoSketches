@@ -25,6 +25,24 @@ void BroadcastSocket::setLink(MessageRepeater* message_repeater, LinkType link_t
 
 bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
 
+	if (_message_repeater) {
+		switch (_link_type) {
 
+			case LinkType::UP:
+			{
+				_message_repeater->socketDownlink(*this, json_message);
+			}
+			break;
+			
+			case LinkType::DOWN:
+			{
+				_message_repeater->socketUplink(*this, json_message);
+			}
+			break;
+			
+			default: break;
+		}
+	}
+	return false;
 }
 
