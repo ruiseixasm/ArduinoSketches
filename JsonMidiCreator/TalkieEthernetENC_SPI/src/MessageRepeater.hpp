@@ -20,6 +20,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.h"
 #include "JsonTalker.h"
 
+#define MESSAGE_REPEATER_DEBUG
+
 using LinkType = TalkieCodes::LinkType;
 
 class MessageRepeater {
@@ -74,6 +76,13 @@ public:
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch match = TalkerMatch::NONE;
 
+		#ifdef MESSAGE_REPEATER_DEBUG
+		Serial.print(F("\t\tsocketDownlink1: "));
+		message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println((int)broadcast);
+		#endif
+
 		switch (broadcast) {
 			// Uplink sockets or talkers can only process REMOTE messages
 			case BroadcastValue::REMOTE:
@@ -106,6 +115,13 @@ public:
 	bool talkerUplink(JsonTalker &talker, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch match = TalkerMatch::NONE;
+
+		#ifdef MESSAGE_REPEATER_DEBUG
+		Serial.print(F("\t\ttalkerUplink1: "));
+		message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println((int)broadcast);
+		#endif
 
 		switch (broadcast) {
 
@@ -155,6 +171,13 @@ public:
 	bool socketUplink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch match = TalkerMatch::NONE;
+
+		#ifdef MESSAGE_REPEATER_DEBUG
+		Serial.print(F("\t\tsocketUplink1: "));
+		message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println((int)broadcast);
+		#endif
 
 		switch (broadcast) {
 
@@ -213,6 +236,13 @@ public:
 	bool talkerDownlink(JsonTalker &talker, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch match = TalkerMatch::NONE;
+
+		#ifdef MESSAGE_REPEATER_DEBUG
+		Serial.print(F("\t\ttalkerDownlink1: "));
+		message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println((int)broadcast);
+		#endif
 
 		switch (broadcast) {
 			// Uplink sockets or talkers can only process REMOTE messages
