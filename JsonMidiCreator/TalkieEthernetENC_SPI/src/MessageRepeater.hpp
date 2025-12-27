@@ -128,11 +128,13 @@ public:
 				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
 					_downlinked_sockets[socket_j]->socketSend(message);
 				}
+				return true;
 			}
 			break;
 			
 			default: break;	// Does nothing, typical for BroadcastValue::NONE
 		}
+		return false;
 	}
 
 	bool talkerUplink(JsonTalker &talker, JsonMessage &message) {
@@ -185,6 +187,7 @@ public:
 						_uplinked_sockets[socket_j]->socketSend(message);
 					}
 				}
+				return true;
 			}
 			break;
 			
@@ -227,6 +230,7 @@ public:
 						_downlinked_sockets[socket_j]->socketSend(message);
 					}
 				}
+				return true;
 			}
 			break;
 			
@@ -238,6 +242,7 @@ public:
 			
 			default: break;	// Does nothing, typical for BroadcastValue::NONE
 		}
+		return false;
 	}
 
 	bool socketUplink(BroadcastSocket &socket, JsonMessage &message) {
@@ -281,6 +286,7 @@ public:
 				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 					_uplinked_sockets[socket_j]->socketSend(message);
 				}
+				return true;
 			}
 			break;
 			
@@ -314,11 +320,13 @@ public:
 						_downlinked_sockets[socket_j]->socketSend(message);
 					}
 				}
+				return true;
 			}
 			break;
 			
 			default: break;	// Does nothing, typical for BroadcastValue::NONE
 		}
+		return false;
 	}
 
 	bool talkerDownlink(JsonTalker &talker, JsonMessage &message) {
@@ -373,11 +381,13 @@ public:
 						_uplinked_sockets[socket_j]->socketSend(message);
 					}
 				}
+				return true;
 			}
 			break;
 			
 			default: break;	// Does nothing, typical for BroadcastValue::NONE
 		}
+		return false;
 	}
 
 };
