@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>    // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "JsonTalker.h"
 #include "TalkieCodes.hpp"
-#include "JsonMessage.h"
+#include "JsonMessage.hpp"
 
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128

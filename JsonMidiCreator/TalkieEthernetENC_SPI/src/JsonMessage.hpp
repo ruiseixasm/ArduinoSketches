@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef JSON_MESSAGE_H
-#define JSON_MESSAGE_H
+#ifndef JSON_MESSAGE_HPP
+#define JSON_MESSAGE_HPP
 
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 #include "TalkieCodes.hpp"
@@ -460,9 +460,7 @@ public:
 		return found_m && found_b && found_i && found_f;
 	}
 
-
-	bool deserialize_socket(const BroadcastSocket &socket);
-
+	
 	bool deserialize_buffer(const char* buffer, size_t length) {
 		if (buffer && length && length <= BROADCAST_SOCKET_BUFFER_SIZE) {
 			for (size_t char_j = 0; char_j < length; ++char_j) {
@@ -892,4 +890,4 @@ public:
 
 
 
-#endif // JSON_MESSAGE_H
+#endif // JSON_MESSAGE_HPP
