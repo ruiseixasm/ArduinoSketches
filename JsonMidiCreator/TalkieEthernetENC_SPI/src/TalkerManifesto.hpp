@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include <Arduino.h>
 #include "TalkieCodes.hpp"
-#include "JsonMessage.hpp"
+#include "JsonMessage.h"
 
 using MessageValue = TalkieCodes::MessageValue;
 using ValueType = JsonMessage::ValueType;

@@ -15,7 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define MESSAGE_TESTER_MANIFESTO_HPP
 
 #include "../TalkerManifesto.hpp"
-#include "../JsonMessage.hpp"
+#include "../JsonMessage.h"
 
 // #define MESSAGE_TESTER_DEBUG
 // #define MESSAGE_TESTER_DEBUG_NEW
