@@ -154,7 +154,6 @@ public:
 		} else {
 			return broadcast == BroadcastValue::NONE;
 		}
-		return false;
 	}
 
 	bool talkerUplink(JsonTalker &talker, JsonMessage &message) {
