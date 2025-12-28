@@ -36,10 +36,9 @@ protected:
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action calls[3] = {
+    Action calls[2] = {
 		{"buzz", "Buzz for a while"},
-		{"ms", "Sets the buzzing duration"},
-		{"ms", "Gets the buzzing duration"}
+		{"ms", "Gets and sets the buzzing duration"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -95,8 +94,12 @@ public:
 				break;
 
 				case 1:
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
-					_buzz_duration_ms = (uint16_t)json_message.get_nth_value_number(0);
+					if (json_message.has_nth_value_number(0)) {
+						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (IN PROGRESS) ***************
+						_buzz_duration_ms = (uint16_t)json_message.get_nth_value_number(0);
+					} else {
+						json_message.set_nth_value_number(0, _buzz_duration_ms);
+					}
 					return true;
 				break;
 
