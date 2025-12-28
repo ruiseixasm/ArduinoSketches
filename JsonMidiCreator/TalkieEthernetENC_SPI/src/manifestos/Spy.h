@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../TalkerManifesto.hpp"
 
-#define SPY_MANIFESTO_DEBUG
+// #define SPY_MANIFESTO_DEBUG
 
 
 class Spy : public TalkerManifesto {
