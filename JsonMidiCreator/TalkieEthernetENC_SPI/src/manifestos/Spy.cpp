@@ -55,7 +55,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					json_message.set_broadcast_value(BroadcastValue::LOCAL);
 					talker.transmitToRepeater(json_message);	// Dispatches it directly as LOCAL
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
-					json_message.set_broadcast_value(BroadcastValue::NONE);
+					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
 				}
 				break;
 				case 1:
@@ -71,9 +71,9 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					json_message.set_from_name(talker.get_name());	// Avoids swapping
 					// 3. Sends the message to myself
 					json_message.set_broadcast_value(BroadcastValue::SELF);
-					talker.transmitToRepeater(json_message);	// Dispatches it directly as LOCAL
+					talker.transmitToRepeater(json_message);	// Dispatches it directly as SELF
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
-					json_message.set_broadcast_value(BroadcastValue::NONE);
+					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
 				}
 				break;
 			}
