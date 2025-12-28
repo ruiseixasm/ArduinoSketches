@@ -45,6 +45,8 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					json_message.remove_identity();
 					if (json_message.get_nth_value_type(0) == ValueType::STRING) {
 						json_message.set_to_name(json_message.get_nth_value_string(0));
+					} else if (json_message.get_nth_value_type(0) == ValueType::INTEGER) {
+						json_message.set_to_channel((uint8_t)json_message.get_nth_value_number(0));
 					} else {	// Removes the original TO
 						json_message.remove_to();	// Without TO works as broadcast
 					}

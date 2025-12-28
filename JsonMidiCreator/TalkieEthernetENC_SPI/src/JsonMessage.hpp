@@ -854,6 +854,10 @@ public:
 		return set_string('t', name, _json_payload, &_json_length);
 	}
 
+	bool set_to_channel(uint8_t channel) {
+		return set_number('t', channel, _json_payload, &_json_length);
+	}
+
 	bool set_broadcast_value(BroadcastValue broadcast_value) {
 		size_t value_position = get_value_position('b', _json_payload, _json_length);
 		if (value_position) {
