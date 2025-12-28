@@ -121,8 +121,15 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 
 
 void Spy::echo(JsonTalker& talker, JsonMessage& json_message) {
-	
 	Original original_message = talker.get_original();
+	
+	#ifdef SPY_MANIFESTO_DEBUG
+	Serial.print(F("\t\t\tSpy::echo1: "));
+	json_message.write_to(Serial);
+	Serial.print(" | ");
+	Serial.println((int)original_message.message_value);
+	#endif
+
 	switch (original_message.message_value) {
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
