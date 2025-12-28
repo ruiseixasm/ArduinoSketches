@@ -55,10 +55,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					json_message.set_from_name(talker.get_name());	// Avoids the swapping
 					// 3. Sends the message LOCALLY
 					json_message.set_broadcast_value(BroadcastValue::LOCAL);
-					talker.transmitToRepeater(json_message);	// Dispatches it directly as LOCAL
-					// 4. Finally, makes sure the ECHO message isn't returned to the REMOTE sender by setting its source as NONE
-					json_message.set_message_value(MessageValue::ECHO);	// Avoids default roger transmission
-					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
+					// No need to transmit the message, the normal ROGER reply does that for us!
 				}
 				break;
 
@@ -75,10 +72,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					json_message.set_from_name(talker.get_name());	// Avoids swapping
 					// 3. Sends the message to myself
 					json_message.set_broadcast_value(BroadcastValue::SELF);
-					talker.transmitToRepeater(json_message);	// Dispatches it directly as SELF
-					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
-					json_message.set_message_value(MessageValue::ECHO);	// Avoids default roger transmission
-					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
+					// No need to transmit the message, the normal ROGER reply does that for us!
 				}
 				break;
 				
@@ -111,10 +105,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					json_message.set_from_name(talker.get_name());	// Avoids the swapping
 					// 4. Sends the message LOCALLY
 					json_message.set_broadcast_value(BroadcastValue::LOCAL);
-					talker.transmitToRepeater(json_message);	// Dispatches it directly as LOCAL
-					// 5. Finally, makes sure the ECHO message isn't returned to the REMOTE sender by setting its source as NONE
-					json_message.set_message_value(MessageValue::ECHO);	// Avoids default roger transmission
-					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
+					// No need to transmit the message, the normal ROGER reply does that for us!
 				}
 				break;
 
