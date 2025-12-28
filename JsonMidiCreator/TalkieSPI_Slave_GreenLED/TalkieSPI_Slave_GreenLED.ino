@@ -80,6 +80,7 @@ void setup() {
     // Defines the CS pin by Talker name here
 	
     Serial.println("Step 1: Starting SPI...");
+	spi_socket.setLinkType(LinkType::UP_BRIDGED);	// Makes sure it accepts LOCAL messages too
     Serial.println("SPI started successfully");
     delay(1000);
 
