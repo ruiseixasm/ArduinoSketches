@@ -186,7 +186,7 @@ protected:
 					#endif
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					if (json_message.swap_from_with_to()) {
-						json_message.set_message(MessageValue::ERROR);
+						json_message.set_message_value(MessageValue::ERROR);
 						if (!json_message.has_identity()) {
 							json_message.set_identity();
 						}

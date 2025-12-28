@@ -174,7 +174,7 @@ public:
 			#endif
 
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			json_message.set_message(MessageValue::ERROR);
+			json_message.set_message_value(MessageValue::ERROR);
 			json_message.set_identity();
 			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::IDENTITY));
 
@@ -198,10 +198,6 @@ public:
     
     virtual TalkerMatch talkerReceive(JsonMessage& json_message) {
 
-        #ifdef JSON_TALKER_DEBUG
-        Serial.println(F("\tProcessing JSON message..."));
-        #endif
-        
         TalkerMatch talker_match = TalkerMatch::NONE;
 
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
@@ -214,17 +210,11 @@ public:
 		Serial.println(static_cast<int>( message_value ));
 		#endif
 
-        #ifdef JSON_TALKER_DEBUG
-        Serial.print(F("\tProcess: "));
-        json_message.write_to(Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
-        #endif
-
 		// Doesn't apply to ECHO nor ERROR
 		if (message_value < MessageValue::ECHO) {
 			_received_message = message_value;
 			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-			json_message.set_message(MessageValue::ECHO);
+			json_message.set_message_value(MessageValue::ECHO);
 		}
 
         switch (message_value) {
@@ -377,9 +367,20 @@ public:
 			
 			case MessageValue::ECHO:
 				if (_manifesto) {
+
 					// Makes sure it has the same id first (echo condition)
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					uint16_t message_id = json_message.get_identity();
+
+					#ifdef JSON_TALKER_DEBUG_NEW
+					Serial.print(F("\t\ttalkerReceive1: "));
+					json_message.write_to(Serial);
+					Serial.print(" | ");
+					Serial.print(message_id);
+					Serial.print(" | ");
+					Serial.println(_original_message.identity);
+					#endif
+
 					if (message_id == _original_message.identity) {
 						_manifesto->echo(*this, json_message);
 					}
