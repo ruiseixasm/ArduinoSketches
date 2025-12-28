@@ -716,6 +716,7 @@ public:
 		return 255;	// Means, no chanel
 	}
 
+
 	TalkerMatch get_talker_match() const {
 		if (has_to()) {
 			ValueType value_type = get_to_type();
@@ -738,6 +739,7 @@ public:
 		return TalkerMatch::NONE;
 	}
 
+	
 	ValueType get_nth_value_type(uint8_t nth) {
 		if (nth < 10) {
 			char value_key = '0' + nth;

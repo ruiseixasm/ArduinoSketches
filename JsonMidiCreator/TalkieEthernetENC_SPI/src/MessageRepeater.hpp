@@ -121,11 +121,11 @@ public:
 					case TalkerMatch::BY_CHANNEL:
 					{
 						uint8_t message_channel = message.get_to_channel();
-						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 							uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 							if (talker_channel == message_channel) {
-								_downlinked_talkers[talker_i++]->talkerReceive(message);
-								if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
+								_downlinked_talkers[talker_i]->talkerReceive(message);
+								if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
 									socket.deserialize_buffer(message);
 								}
 							}
@@ -186,9 +186,9 @@ public:
 
 						case TalkerMatch::ANY:
 						{
-							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
-								_uplinked_talkers[talker_i++]->talkerReceive(message);
-								if (talker_i < _uplinked_talkers_count) {
+							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
+								_uplinked_talkers[talker_i]->talkerReceive(message);
+								if (talker_i + 1 < _uplinked_talkers_count) {
 									message = original_message;
 								}
 							}
@@ -198,10 +198,10 @@ public:
 						case TalkerMatch::BY_CHANNEL:
 						{
 							uint8_t message_channel = message.get_to_channel();
-							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
+							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
 								uint8_t talker_channel = _uplinked_talkers[talker_i]->get_channel();
 								if (talker_channel == message_channel) {
-									_uplinked_talkers[talker_i++]->talkerReceive(message);
+									_uplinked_talkers[talker_i]->talkerReceive(message);
 									if (talker_i < _uplinked_talkers_count) {
 										message = original_message;
 									}
@@ -249,14 +249,12 @@ public:
 
 						case TalkerMatch::ANY:
 						{
-							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								if (_downlinked_talkers[talker_i] != &talker) {
-									_downlinked_talkers[talker_i++]->talkerReceive(message);
-									if (talker_i < _downlinked_talkers_count) {
+									_downlinked_talkers[talker_i]->talkerReceive(message);
+									if (talker_i + 1 < _downlinked_talkers_count) {
 										message = original_message;
 									}
-								} else {
-									talker_i++;
 								}
 							}
 						}
@@ -265,17 +263,15 @@ public:
 						case TalkerMatch::BY_CHANNEL:
 						{
 							uint8_t message_channel = message.get_to_channel();
-							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								if (_downlinked_talkers[talker_i] != &talker) {
 									uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 									if (talker_channel == message_channel) {
-										_downlinked_talkers[talker_i++]->talkerReceive(message);
-										if (talker_i < _downlinked_talkers_count) {
+										_downlinked_talkers[talker_i]->talkerReceive(message);
+										if (talker_i + 1 < _downlinked_talkers_count) {
 											message = original_message;
 										}
 									}
-								} else {
-									talker_i++;
 								}
 							}
 						}
@@ -292,8 +288,6 @@ public:
 										_downlinked_talkers[talker_i]->talkerReceive(message);
 										return true;
 									}
-								} else {
-									talker_i++;
 								}
 							}
 						}
@@ -445,11 +439,11 @@ public:
 					case TalkerMatch::BY_CHANNEL:
 					{
 						uint8_t message_channel = message.get_to_channel();
-						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 							uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 							if (talker_channel == message_channel) {
-								_downlinked_talkers[talker_i++]->talkerReceive(message);
-								if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
+								_downlinked_talkers[talker_i]->talkerReceive(message);
+								if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
 									socket.deserialize_buffer(message);
 								}
 							}
@@ -524,11 +518,11 @@ public:
 						case TalkerMatch::BY_CHANNEL:
 						{
 							uint8_t message_channel = message.get_to_channel();
-							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 								if (talker_channel == message_channel) {
-									_downlinked_talkers[talker_i++]->talkerReceive(message);
-									if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
+									_downlinked_talkers[talker_i]->talkerReceive(message);
+									if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
 										message = original_message;
 									}
 								}
