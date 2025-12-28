@@ -130,51 +130,21 @@ void Spy::echo(JsonTalker& talker, JsonMessage& json_message) {
 	Serial.println((int)original_message.message_value);
 	#endif
 
-	switch (original_message.message_value) {
-
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-		case MessageValue::PING:
-			{
-				// In condition to calculate the delay right away, no need to extra messages
-				uint16_t actual_time = static_cast<uint16_t>(millis());
-				uint16_t message_time = json_message.get_timestamp();	// must have
-				uint16_t time_delay = actual_time - message_time;
-				json_message.set_nth_value_number(0, time_delay);
-				json_message.set_nth_value_string(1, json_message.get_from_name());
-				// Prepares headers for the original REMOTE sender
-				json_message.set_to_name(_original_talker.c_str());
-				json_message.set_from_name(talker.get_name());
-				// Emulates the REMOTE original call
-				json_message.set_identity(_original_message.identity);
-				// It's already an ECHO message, it's because of that that entered here
-				// Finally answers to the REMOTE caller by repeating all other json fields
-				json_message.set_broadcast_value(BroadcastValue::REMOTE);
-				talker.transmitToRepeater(json_message);
-			}
-			break;
-
-		case MessageValue::CALL:
-			{
-				// In condition to calculate the delay right away, no need to extra messages
-				uint16_t actual_time = static_cast<uint16_t>(millis());
-				uint16_t message_time = json_message.get_timestamp();	// must have
-				uint16_t time_delay = actual_time - message_time;
-				json_message.set_nth_value_number(0, time_delay);
-				json_message.set_nth_value_string(1, json_message.get_from_name());
-				// Prepares headers for the original REMOTE sender
-				json_message.set_to_name(_original_talker.c_str());
-				json_message.set_from_name(talker.get_name());
-				// Emulates the REMOTE original call
-				json_message.set_identity(_original_message.identity);
-				// It's already an ECHO message, it's because of that that entered here
-				// Finally answers to the REMOTE caller by repeating all other json fields
-				json_message.set_broadcast_value(BroadcastValue::REMOTE);
-				talker.transmitToRepeater(json_message);
-			}
-			break;
-
-		default: break;	// Ignores all the rest
-	}
+	// In condition to calculate the delay right away, no need to extra messages
+	uint16_t actual_time = static_cast<uint16_t>(millis());
+	uint16_t message_time = json_message.get_timestamp();	// must have
+	uint16_t time_delay = actual_time - message_time;
+	json_message.set_nth_value_number(0, time_delay);
+	json_message.set_nth_value_string(1, json_message.get_from_name());
+	// Prepares headers for the original REMOTE sender
+	json_message.set_to_name(_original_talker.c_str());
+	json_message.set_from_name(talker.get_name());
+	// Emulates the REMOTE original call
+	json_message.set_identity(_original_message.identity);
+	// It's already an ECHO message, it's because of that that entered here
+	// Finally answers to the REMOTE caller by repeating all other json fields
+	json_message.set_broadcast_value(BroadcastValue::REMOTE);
+	talker.transmitToRepeater(json_message);
 }
 
 
