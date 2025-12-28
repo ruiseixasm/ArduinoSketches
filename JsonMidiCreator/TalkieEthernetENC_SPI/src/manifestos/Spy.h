@@ -35,7 +35,7 @@ protected:
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
     Action calls[2] = {
-		{"ping", "I ping every talker around me"},
+		{"ping", "I ping every talker around me or a named one"},
 		{"ping_self", "I can even ping myself"}
     };
     
