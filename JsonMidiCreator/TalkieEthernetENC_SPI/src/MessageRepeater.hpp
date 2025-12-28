@@ -151,6 +151,8 @@ public:
 				_downlinked_sockets[socket_j]->socketSend(message);
 			}
 			return true;
+		} else {
+			return broadcast == BroadcastValue::NONE;
 		}
 		return false;
 	}
@@ -353,7 +355,9 @@ public:
 			}
 			break;
 			
-			default: break;	// Does nothing, typical for BroadcastValue::NONE
+			case BroadcastValue::NONE: return true;
+			
+			default: break;
 		}
 		return false;
 	}
@@ -484,8 +488,10 @@ public:
 				return true;
 			}
 			break;
+
+			case BroadcastValue::NONE: return true;
 			
-			default: break;	// Does nothing, typical for BroadcastValue::NONE
+			default: break;
 		}
 		return false;
 	}
@@ -567,7 +573,9 @@ public:
 			}
 			break;
 			
-			default: break;	// Does nothing, typical for BroadcastValue::NONE
+			case BroadcastValue::NONE: return true;
+			
+			default: break;
 		}
 		return false;
 	}
