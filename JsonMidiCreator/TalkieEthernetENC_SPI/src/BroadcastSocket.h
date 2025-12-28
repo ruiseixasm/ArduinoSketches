@@ -272,6 +272,10 @@ public:
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
+	void setLinkType(LinkType link_type) {
+		_link_type = link_type;
+	}
+
 	LinkType getLinkType() const {
 		return _link_type;
 	}
