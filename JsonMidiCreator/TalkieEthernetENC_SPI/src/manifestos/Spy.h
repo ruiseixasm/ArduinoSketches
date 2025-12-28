@@ -34,9 +34,10 @@ protected:
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action calls[2] = {
+    Action calls[3] = {
 		{"ping", "I ping every talker, a named one, or by channel"},
-		{"ping_self", "I can even ping myself"}
+		{"ping_self", "I can even ping myself"},
+		{"call", "I can call actions on others [<talker> <action>]"}
     };
     
     const Action* getActionsArray() const override { return calls; }

@@ -33,6 +33,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 		if (index < actionsCount()) {
 			// Actual implementation would do something based on index
 			switch(index) {
+
 				case 0:
 				{
 					ping = true;
@@ -58,6 +59,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
 				}
 				break;
+
 				case 1:
 				{
 					ping = true;
@@ -76,6 +78,41 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
 				}
 				break;
+				
+				case 2:
+				{
+					ping = true;
+					// 1. Start by setting the Action fields
+					if (json_message.get_nth_value_type(0) == ValueType::STRING) {
+						json_message.set_to_name(json_message.get_nth_value_string(0));
+					} else if (json_message.get_nth_value_type(0) == ValueType::INTEGER) {
+						json_message.set_to_channel((uint8_t)json_message.get_nth_value_number(0));
+					} else {
+						return false;
+					}
+					if (json_message.get_nth_value_type(1) == ValueType::STRING) {
+						json_message.set_action_name(json_message.get_nth_value_string(1));
+					} else if (json_message.get_nth_value_type(1) == ValueType::INTEGER) {
+						json_message.set_action_number((uint8_t)json_message.get_nth_value_number(1));
+					} else {
+						return false;
+					}
+					json_message.set_message(MessageValue::CALL);
+					// 2. Collect info from message
+					_original_talker = json_message.get_from_name();
+					_original_message.identity = json_message.get_identity();
+					_original_message.message_value = MessageValue::CALL;	// It's is the emulated message (not CALL)
+					// 3. Repurpose message with new targets
+					json_message.remove_identity();
+					json_message.set_from_name(talker.get_name());	// Avoids the swapping
+					// 4. Sends the message LOCALLY
+					json_message.set_broadcast_value(BroadcastValue::LOCAL);
+					talker.transmitToRepeater(json_message);	// Dispatches it directly as LOCAL
+					// 5. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
+					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
+				}
+				break;
+
 			}
 		}
 	}
