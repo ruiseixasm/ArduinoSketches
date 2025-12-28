@@ -42,7 +42,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					_original_message.identity = json_message.get_identity();
 					_original_message.message_value = MessageValue::PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a LOCAL PING
-					json_message.set_message(MessageValue::PING);
+					json_message.set_message_value(MessageValue::PING);
 					json_message.remove_identity();
 					if (json_message.get_nth_value_type(0) == ValueType::STRING) {
 						json_message.set_to_name(json_message.get_nth_value_string(0));
@@ -51,11 +51,13 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					} else {	// Removes the original TO
 						json_message.remove_to();	// Without TO works as broadcast
 					}
+					json_message.remove_nth_value(0);
 					json_message.set_from_name(talker.get_name());	// Avoids the swapping
 					// 3. Sends the message LOCALLY
 					json_message.set_broadcast_value(BroadcastValue::LOCAL);
 					talker.transmitToRepeater(json_message);	// Dispatches it directly as LOCAL
-					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
+					// 4. Finally, makes sure the ECHO message isn't returned to the REMOTE sender by setting its source as NONE
+					json_message.set_message_value(MessageValue::ECHO);	// Avoids default roger transmission
 					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
 				}
 				break;
@@ -68,13 +70,14 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					_original_message.identity = json_message.get_identity();
 					_original_message.message_value = MessageValue::PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a SELF PING
-					json_message.set_message(MessageValue::PING);
+					json_message.set_message_value(MessageValue::PING);
 					json_message.remove_identity();	// Makes sure a new IDENTITY is set
 					json_message.set_from_name(talker.get_name());	// Avoids swapping
 					// 3. Sends the message to myself
 					json_message.set_broadcast_value(BroadcastValue::SELF);
 					talker.transmitToRepeater(json_message);	// Dispatches it directly as SELF
 					// 4. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
+					json_message.set_message_value(MessageValue::ECHO);	// Avoids default roger transmission
 					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
 				}
 				break;
@@ -97,7 +100,8 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					} else {
 						return false;
 					}
-					json_message.set_message(MessageValue::CALL);
+					json_message.remove_nth_value(0);
+					json_message.set_message_value(MessageValue::CALL);
 					// 2. Collect info from message
 					_original_talker = json_message.get_from_name();
 					_original_message.identity = json_message.get_identity();
@@ -108,7 +112,8 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					// 4. Sends the message LOCALLY
 					json_message.set_broadcast_value(BroadcastValue::LOCAL);
 					talker.transmitToRepeater(json_message);	// Dispatches it directly as LOCAL
-					// 5. Finally, makes sure the message isn't returned to the REMOTE sender by setting its source as NONE
+					// 5. Finally, makes sure the ECHO message isn't returned to the REMOTE sender by setting its source as NONE
+					json_message.set_message_value(MessageValue::ECHO);	// Avoids default roger transmission
 					json_message.set_broadcast_value(BroadcastValue::NONE);	// Avoids default roger transmission
 				}
 				break;

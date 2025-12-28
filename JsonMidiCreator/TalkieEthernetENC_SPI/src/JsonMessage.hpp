@@ -820,7 +820,7 @@ public:
 	// SETTERS
 
 
-	bool set_message(MessageValue message_value) {
+	bool set_message_value(MessageValue message_value) {
 		size_t value_position = get_value_position('m', _json_payload, _json_length);
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(message_value);
