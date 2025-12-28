@@ -23,6 +23,9 @@ struct TalkieCodes {
 		DOWN_LINKED, UP_LINKED
 	};
 
+	enum class TalkerMatch : uint8_t {
+		NONE, ANY, BY_CHANNEL, BY_NAME, FAIL
+	};
 
 	// Add a char "enum" struct
     struct MessageKey {
