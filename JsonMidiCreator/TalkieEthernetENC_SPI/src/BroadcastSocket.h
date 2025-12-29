@@ -272,6 +272,12 @@ public:
 
     virtual const char* class_name() const { return "BroadcastSocket"; }
 
+    virtual void loop() {
+        receive();
+    }
+
+	void setLink(MessageRepeater* message_repeater, LinkType link_type);
+
 	void setLinkType(LinkType link_type) {
 		_link_type = link_type;
 	}
@@ -279,14 +285,6 @@ public:
 	LinkType getLinkType() const {
 		return _link_type;
 	}
-
-	void setLink(MessageRepeater* message_repeater, LinkType link_type);
-
-
-    virtual void loop() {
-        receive();
-    }
-
 
 	bool deserialize_buffer(JsonMessage& json_message) const {
 		return json_message.deserialize_buffer(_received_buffer, _received_length);
