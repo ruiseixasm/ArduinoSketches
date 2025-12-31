@@ -129,10 +129,8 @@ public:
 	
 
 
-	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	bool prepareMessage(JsonMessage& json_message) {
 
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		if (json_message.has_from()) {
 			if (strcmp(json_message.get_from_name(), _name) != 0) {
 				// FROM is different from _name, must be swapped (replaces "f" with "t")
@@ -144,7 +142,6 @@ public:
 			json_message.set_from_name(_name);
 		}
 
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		MessageValue message_value = json_message.get_message_value();
 		if (message_value < MessageValue::ECHO) {
 
@@ -162,7 +159,6 @@ public:
 				_received_message = MessageValue::NOISE;	// Avoids false mutes for self generated messages (safe code)
 			}
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			uint16_t message_id = (uint16_t)millis();
 			if (message_value < MessageValue::ECHO) {
 				_original_message.identity = message_id;
@@ -177,7 +173,6 @@ public:
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			json_message.set_message_value(MessageValue::ERROR);
 			json_message.set_identity();
 			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::IDENTITY));
@@ -204,7 +199,6 @@ public:
 
         TalkerMatch talker_match = TalkerMatch::NONE;
 
-		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 		MessageValue message_value = json_message.get_message_value();
 
 		#ifdef JSON_TALKER_DEBUG_NEW
@@ -217,7 +211,6 @@ public:
 		// Doesn't apply to ECHO nor ERROR
 		if (message_value < MessageValue::ECHO) {
 			_received_message = message_value;
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			json_message.set_message_value(MessageValue::ECHO);
 		}
 
@@ -226,7 +219,6 @@ public:
 			case MessageValue::CALL:
 				{
 					uint8_t index_found_i = 255;
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					ValueType value_type = json_message.get_value_type(MessageKey::ACTION);
 					switch (value_type) {
 
@@ -240,7 +232,6 @@ public:
 						
 						default: break;
 					}
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					if (index_found_i < 255) {
 
 						#ifdef JSON_TALKER_DEBUG
@@ -263,14 +254,12 @@ public:
 				break;
 			
 			case MessageValue::TALK:
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				json_message.set_nth_value_string(0, _desc);
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::CHANNEL:
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				if (json_message.has_nth_value_number(0)) {
 
 					#ifdef JSON_TALKER_DEBUG
@@ -280,7 +269,6 @@ public:
 
 					_channel = json_message.get_nth_value_number(0);
 				}
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				json_message.set_nth_value_number(0, _channel);
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitToRepeater(json_message);
@@ -300,24 +288,24 @@ public:
 					#endif
 
 					uint8_t action_index = 0;
-					const TalkerManifesto::Action* action;
-					_manifesto->iterateActionsReset();
-					while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
-						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-						json_message.set_nth_value_number(0, action_index++);
-						json_message.set_nth_value_string(1, action->name);
-						json_message.set_nth_value_string(2, action->desc);
-						transmitToRepeater(json_message);	// One-to-Many
+					if (_manifesto) {
+						const TalkerManifesto::Action* action;
+						_manifesto->iterateActionsReset();
+						while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
+							json_message.set_nth_value_number(0, action_index++);
+							json_message.set_nth_value_string(1, action->name);
+							json_message.set_nth_value_string(2, action->desc);
+							transmitToRepeater(json_message);	// Many-to-One
+						}
 					}
 					if (!action_index) {
-						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 						json_message.set_roger_value(RogerValue::NIL);
+						transmitToRepeater(json_message);	// One-to-One
 					}
 				}
 				break;
 			
 			case MessageValue::INFO:
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				if (json_message.has_info()) {
 
 					InfoValue system_code = json_message.get_info_value();
@@ -325,12 +313,10 @@ public:
 					switch (system_code) {
 
 						case InfoValue::BOARD:
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							json_message.set_nth_value_string(0, board_description());
 							break;
 
 						case InfoValue::MUTE:
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							if (json_message.has_nth_value_number(0)) {
 								uint8_t mute = (uint8_t)json_message.get_nth_value_number(0);
 								if (mute) {
@@ -348,12 +334,10 @@ public:
 							break;
 
 						case InfoValue::TALKER:
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							json_message.set_nth_value_string(0, class_name());
 							break;
 
 						case InfoValue::MANIFESTO:
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							if (_manifesto) {
 								json_message.set_nth_value_string(0, _manifesto->class_name());
 							} else {
@@ -373,7 +357,6 @@ public:
 				if (_manifesto) {
 
 					// Makes sure it has the same id first (echo condition)
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					uint16_t message_id = json_message.get_identity();
 
 					#ifdef JSON_TALKER_DEBUG_NEW
