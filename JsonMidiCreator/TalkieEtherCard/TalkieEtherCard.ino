@@ -66,7 +66,7 @@ JsonTalker uno = JsonTalker(uno_name, uno_desc);
 JsonTalker* downlinked_talkers[] = { &nano, &uno };    // Only an array of pointers preserves polymorphism!!
 // Singleton requires the & (to get a reference variable)
 auto& ethernet_socket = BroadcastSocket_EtherCard::instance();
-BroadcastSocket* uplinked_sockets[] = { &ethernet_socket };
+BroadcastSocket* uplinked_sockets[] = { &ethernet_socket };	// list of pointers
 
 MessageRepeater message_repeater(
 		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),
@@ -80,7 +80,7 @@ MessageRepeater message_repeater(
 
 void setup() {
     // Serial is a singleton class (can be began multiple times)
-    Serial.begin(9600);
+    Serial.begin(115200);
     while (!Serial);
     
     delay(2000);    // Just to give some time to Serial
@@ -104,17 +104,16 @@ void setup() {
 
     Serial.println(F("Socket ready"));
 
-    #ifndef BROADCAST_SOCKET_SERIAL_HPP
     pinMode(buzzer_pin, OUTPUT);
     digitalWrite(buzzer_pin, HIGH);
     delay(10); 
     digitalWrite(buzzer_pin, LOW);
-    #endif
+
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     digitalWrite(LED_BUILTIN, LOW);
 
-    Serial.println(F("Sending JSON..."));
+    Serial.println(F("Receiving JSON..."));
 }
 
 
