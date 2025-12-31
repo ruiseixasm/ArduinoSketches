@@ -34,7 +34,7 @@ protected:
     uint16_t _total_calls = 0;
 
 
-    Action calls[4] = {
+    Action calls[3] = {
 		{"on", "Turns led ON"},
 		{"off", "Turns led OFF"},
 		{"bpm_10", "Sets the Tempo in BPM x 10"}
