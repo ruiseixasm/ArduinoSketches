@@ -68,12 +68,15 @@ protected:
 
 
     size_t receive() override {
-        _data_length = BroadcastSocket::receive();  // Makes sure it's the Ethernet reading that sets it! (always returns 0)
-		_received_length = _data_length;
-        ether.packetLoop(ether.packetReceive());	// Updates the _data_length variable
-        BroadcastSocket::triggerTalkers();
-		_received_length = 0;
-		return _data_length;
+		ether.packetLoop(ether.packetReceive());	// Updates the _data_length variable
+		if (_data_length) {
+			BroadcastSocket::receive();  // Makes sure it's the Ethernet reading that sets it! (always returns 0)
+			_received_length = _data_length;
+			BroadcastSocket::triggerTalkers();
+			_received_length = 0;
+			return _data_length;
+		}
+		return 0;
     }
 
 
