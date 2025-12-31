@@ -219,7 +219,7 @@ public:
 			case MessageValue::MSG_CALL:
 				{
 					uint8_t index_found_i = 255;
-					ValueType value_type = json_message.get_value_type(MessageKey::ACTION);
+					ValueType value_type = json_message.get_action_type();
 					switch (value_type) {
 
 						case ValueType::STRING:

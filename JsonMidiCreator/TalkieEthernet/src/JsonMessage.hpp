@@ -35,7 +35,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
-using MessageKey = TalkieCodes::MessageKey;
 using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using RogerValue = TalkieCodes::RogerValue;
@@ -761,6 +760,10 @@ public:
 			return get_value_number(value_key, _json_payload, _json_length);
 		}
 		return false;
+	}
+
+	ValueType get_action_type() const {
+		return get_value_type('a', _json_payload, _json_length);
 	}
 
 	char* get_action_string() const {
