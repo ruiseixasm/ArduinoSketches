@@ -175,7 +175,7 @@ public:
 
 			json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
 			json_message.set_identity();
-			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::ERR_IDENTITY));
+			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::TALKIE_ERR_IDENTITY));
 
 		} else {
 			

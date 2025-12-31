@@ -72,15 +72,15 @@ struct TalkieCodes {
 		TALKIE_ROGER_NIL
     };
 
-    enum class ErrorValue : uint8_t {
-        ERR_FROM,
-        ERR_FIELD,
-        ERR_CHECKSUM,
-        ERR_MESSAGE,
-        ERR_IDENTITY,
-        ERR_DELAY,
-        ERR_KEY,
-        ERR_DATA
+    enum ErrorValue : uint8_t {
+        TALKIE_ERR_FROM,
+        TALKIE_ERR_FIELD,
+        TALKIE_ERR_CHECKSUM,
+        TALKIE_ERR_MESSAGE,
+        TALKIE_ERR_IDENTITY,
+        TALKIE_ERR_ERR_DELAY,
+        TALKIE_ERR_ERR_KEY,
+        TALKIE_ERR_ERR_DATA
     };
 
 };
