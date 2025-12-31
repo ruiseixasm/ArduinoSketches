@@ -406,6 +406,12 @@ public:
 				}
 				break;
 			
+			case MessageValue::TALKIE_MSG_NOISE:
+				if (_manifesto) {
+					_manifesto->noise(*this, json_message);
+				}
+				break;
+			
 			default:
 				break;
         }
