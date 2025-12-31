@@ -120,11 +120,11 @@ public:
 		ValueType value_type = json_message.get_nth_value_type(0);
 		switch (value_type) {
 
-			case ValueType::STRING:
+			case ValueType::TALKIE_VT_STRING:
 				Serial.println(json_message.get_nth_value_string(0));
 			break;
 			
-			case ValueType::INTEGER:
+			case ValueType::TALKIE_VT_INTEGER:
 				Serial.println(json_message.get_nth_value_number(0));
 			break;
 			
@@ -144,11 +144,11 @@ public:
 		ValueType value_type = json_message.get_nth_value_type(0);
 		switch (value_type) {
 
-			case ValueType::STRING:
+			case ValueType::TALKIE_VT_STRING:
 				Serial.println(json_message.get_nth_value_string(0));
 			break;
 			
-			case ValueType::INTEGER:
+			case ValueType::TALKIE_VT_INTEGER:
 				Serial.println(json_message.get_nth_value_number(0));
 			break;
 			
