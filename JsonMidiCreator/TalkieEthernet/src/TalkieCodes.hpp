@@ -19,19 +19,18 @@ https://github.com/ruiseixasm/JsonTalkie
 
 struct TalkieCodes {
 
-
-	enum class LinkType : uint8_t {
-		DOWN_LINKED,
-		UP_LINKED,
-		UP_BRIDGED	// UP_BRIDGED allows the sending of LOCAL broadcasted messages
+	enum LinkType : uint8_t {
+		TALKIE_DOWN_LINKED,
+		TALKIE_UP_LINKED,
+		TALKIE_UP_BRIDGED	// TALKIE_UP_BRIDGED allows the sending of LOCAL broadcasted messages
 	};
 
-	enum class TalkerMatch : uint8_t {
-		NONE,
-		ANY,
-		BY_CHANNEL,
-		BY_NAME,
-		FAIL
+	enum TalkerMatch : uint8_t {
+		TALKIE_MATCH_NONE,
+		TALKIE_MATCH_ANY,
+		TALKIE_MATCH_BY_CHANNEL,
+		TALKIE_MATCH_BY_NAME,
+		TALKIE_MATCH_FAIL
 	};
 
 	enum class BroadcastValue : uint8_t {

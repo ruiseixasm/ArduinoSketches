@@ -55,16 +55,16 @@ public:
         _uplinked_talkers(uplinked_talkers), _uplinked_talkers_count(uplinked_talkers_count)
     {
 		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-			_uplinked_sockets[socket_j]->setLink(this, LinkType::UP_LINKED);
+			_uplinked_sockets[socket_j]->setLink(this, LinkType::TALKIE_UP_LINKED);
 		}
 		for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
-			_downlinked_talkers[talker_i]->setLink(this, LinkType::DOWN_LINKED);
+			_downlinked_talkers[talker_i]->setLink(this, LinkType::TALKIE_DOWN_LINKED);
 		}
 		for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-			_downlinked_sockets[socket_j]->setLink(this, LinkType::DOWN_LINKED);
+			_downlinked_sockets[socket_j]->setLink(this, LinkType::TALKIE_DOWN_LINKED);
 		}
 		for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
-			_uplinked_talkers[talker_i]->setLink(this, LinkType::UP_LINKED);
+			_uplinked_talkers[talker_i]->setLink(this, LinkType::TALKIE_UP_LINKED);
 		}
 	}
 
@@ -102,10 +102,10 @@ public:
 		#endif
 
 		// To downlinked nodes (BRIDGED uplinks process LOCAL messages too)
-		if (broadcast == BroadcastValue::REMOTE || (broadcast == BroadcastValue::LOCAL && socket.getLinkType() == LinkType::UP_BRIDGED)) {
+		if (broadcast == BroadcastValue::REMOTE || (broadcast == BroadcastValue::LOCAL && socket.getLinkType() == LinkType::TALKIE_UP_BRIDGED)) {
 			switch (talker_match) {
 
-				case TalkerMatch::ANY:
+				case TalkerMatch::TALKIE_MATCH_ANY:
 				{
 					for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
 						_downlinked_talkers[talker_i++]->talkerReceive(message);
@@ -116,7 +116,7 @@ public:
 				}
 				break;
 				
-				case TalkerMatch::BY_CHANNEL:
+				case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
 				{
 					uint8_t message_channel = message.get_to_channel();
 					for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
@@ -131,7 +131,7 @@ public:
 				}
 				break;
 				
-				case TalkerMatch::BY_NAME:
+				case TalkerMatch::TALKIE_MATCH_BY_NAME:
 				{
 					char message_to_name[NAME_LEN];
 					strcpy(message_to_name, message.get_to_name());
@@ -159,7 +159,7 @@ public:
 	bool talkerUplink(JsonTalker &talker, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 
-		TalkerMatch match = TalkerMatch::NONE;
+		TalkerMatch match = TalkerMatch::TALKIE_MATCH_NONE;
 
 		#ifdef MESSAGE_REPEATER_DEBUG
 		Serial.print(F("\t\ttalkerUplink1: "));
@@ -179,7 +179,7 @@ public:
 
 					switch (talker_match) {
 
-						case TalkerMatch::ANY:
+						case TalkerMatch::TALKIE_MATCH_ANY:
 						{
 							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
 								_uplinked_talkers[talker_i++]->talkerReceive(message);
@@ -190,7 +190,7 @@ public:
 						}
 						break;
 						
-						case TalkerMatch::BY_CHANNEL:
+						case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
 						{
 							uint8_t message_channel = message.get_to_channel();
 							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
@@ -205,7 +205,7 @@ public:
 						}
 						break;
 						
-						case TalkerMatch::BY_NAME:
+						case TalkerMatch::TALKIE_MATCH_BY_NAME:
 						{
 							char message_to_name[NAME_LEN];
 							strcpy(message_to_name, message.get_to_name());
@@ -242,7 +242,7 @@ public:
 
 					switch (talker_match) {
 
-						case TalkerMatch::ANY:
+						case TalkerMatch::TALKIE_MATCH_ANY:
 						{
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								if (_downlinked_talkers[talker_i] != &talker) {
@@ -255,7 +255,7 @@ public:
 						}
 						break;
 						
-						case TalkerMatch::BY_CHANNEL:
+						case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
 						{
 							uint8_t message_channel = message.get_to_channel();
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
@@ -272,7 +272,7 @@ public:
 						}
 						break;
 						
-						case TalkerMatch::BY_NAME:
+						case TalkerMatch::TALKIE_MATCH_BY_NAME:
 						{
 							char message_to_name[NAME_LEN];
 							strcpy(message_to_name, message.get_to_name());
@@ -294,7 +294,7 @@ public:
 						_downlinked_sockets[socket_j]->socketSend(original_message);
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::UP_BRIDGED) {
+						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_UP_BRIDGED) {
 							_uplinked_sockets[socket_j]->socketSend(original_message);
 						}
 					}
@@ -303,7 +303,7 @@ public:
 						_downlinked_sockets[socket_j]->socketSend(message);
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::UP_BRIDGED) {
+						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_UP_BRIDGED) {
 							_uplinked_sockets[socket_j]->socketSend(message);
 						}
 					}
@@ -318,14 +318,14 @@ public:
 
 				switch (talker_match) {
 
-					case TalkerMatch::ANY:
+					case TalkerMatch::TALKIE_MATCH_ANY:
 					{
 						talker.talkerReceive(message);
 						return true;
 					}
 					break;
 					
-					case TalkerMatch::BY_CHANNEL:
+					case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
 					{
 						uint8_t message_channel = message.get_to_channel();
 						uint8_t talker_channel = talker.get_channel();
@@ -336,7 +336,7 @@ public:
 					}
 					break;
 					
-					case TalkerMatch::BY_NAME:
+					case TalkerMatch::TALKIE_MATCH_BY_NAME:
 					{
 						char message_to_name[NAME_LEN];
 						strcpy(message_to_name, message.get_to_name());
@@ -378,7 +378,7 @@ public:
 			{
 				switch (talker_match) {
 
-					case TalkerMatch::ANY:
+					case TalkerMatch::TALKIE_MATCH_ANY:
 					{
 						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
 							_uplinked_talkers[talker_i++]->talkerReceive(message);
@@ -389,7 +389,7 @@ public:
 					}
 					break;
 					
-					case TalkerMatch::BY_CHANNEL:
+					case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
 					{
 						uint8_t message_channel = message.get_to_channel();
 						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
@@ -404,7 +404,7 @@ public:
 					}
 					break;
 					
-					case TalkerMatch::BY_NAME:
+					case TalkerMatch::TALKIE_MATCH_BY_NAME:
 					{
 						char message_to_name[NAME_LEN];
 						strcpy(message_to_name, message.get_to_name());
@@ -432,7 +432,7 @@ public:
 
 				switch (talker_match) {
 
-					case TalkerMatch::ANY:
+					case TalkerMatch::TALKIE_MATCH_ANY:
 					{
 						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
 							_downlinked_talkers[talker_i++]->talkerReceive(message);
@@ -443,7 +443,7 @@ public:
 					}
 					break;
 					
-					case TalkerMatch::BY_CHANNEL:
+					case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
 					{
 						uint8_t message_channel = message.get_to_channel();
 						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
@@ -458,7 +458,7 @@ public:
 					}
 					break;
 					
-					case TalkerMatch::BY_NAME:
+					case TalkerMatch::TALKIE_MATCH_BY_NAME:
 					{
 						char message_to_name[NAME_LEN];
 						strcpy(message_to_name, message.get_to_name());
@@ -480,7 +480,7 @@ public:
 					}
 				}
 				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-					if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::UP_BRIDGED) {
+					if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_UP_BRIDGED) {
 						_uplinked_sockets[socket_j]->socketSend(message);
 					}
 				}
@@ -498,7 +498,7 @@ public:
 	bool talkerDownlink(JsonTalker &talker, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 
-		TalkerMatch match = TalkerMatch::NONE;
+		TalkerMatch match = TalkerMatch::TALKIE_MATCH_NONE;
 
 		#ifdef MESSAGE_REPEATER_DEBUG
 		Serial.print(F("\t\ttalkerDownlink1: "));
@@ -518,7 +518,7 @@ public:
 
 					switch (talker_match) {
 
-						case TalkerMatch::ANY:
+						case TalkerMatch::TALKIE_MATCH_ANY:
 						{
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
 								_downlinked_talkers[talker_i++]->talkerReceive(message);
@@ -529,7 +529,7 @@ public:
 						}
 						break;
 						
-						case TalkerMatch::BY_CHANNEL:
+						case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
 						{
 							uint8_t message_channel = message.get_to_channel();
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
@@ -544,7 +544,7 @@ public:
 						}
 						break;
 						
-						case TalkerMatch::BY_NAME:
+						case TalkerMatch::TALKIE_MATCH_BY_NAME:
 						{
 							char message_to_name[NAME_LEN];
 							strcpy(message_to_name, message.get_to_name());

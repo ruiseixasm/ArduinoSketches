@@ -720,8 +720,8 @@ public:
 		if (has_to()) {
 			ValueType value_type = get_to_type();
 			switch (value_type) {
-				case ValueType::INTEGER: return TalkerMatch::BY_CHANNEL;
-				case ValueType::STRING: return TalkerMatch::BY_NAME;
+				case ValueType::INTEGER: return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
+				case ValueType::STRING: return TalkerMatch::TALKIE_MATCH_BY_NAME;
 				default: break;
 			}
 		} else {
@@ -730,12 +730,12 @@ public:
 				// Only TALK, CHANNEL and PING can be for ANY
 				// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
 				// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
-				return TalkerMatch::FAIL;
+				return TalkerMatch::TALKIE_MATCH_FAIL;
 			} else {
-				return TalkerMatch::ANY;
+				return TalkerMatch::TALKIE_MATCH_ANY;
 			}
 		}
-		return TalkerMatch::NONE;
+		return TalkerMatch::TALKIE_MATCH_NONE;
 	}
 
 	

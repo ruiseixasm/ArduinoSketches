@@ -48,7 +48,7 @@ class JsonTalker {
 protected:
     
 	MessageRepeater* _message_repeater = nullptr;
-	LinkType _link_type = LinkType::DOWN_LINKED;
+	LinkType _link_type = LinkType::TALKIE_DOWN_LINKED;
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
@@ -197,7 +197,7 @@ public:
     
     virtual TalkerMatch talkerReceive(JsonMessage& json_message) {
 
-        TalkerMatch talker_match = TalkerMatch::NONE;
+        TalkerMatch talker_match = TalkerMatch::TALKIE_MATCH_NONE;
 
 		MessageValue message_value = json_message.get_message_value();
 
