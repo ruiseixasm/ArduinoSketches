@@ -54,7 +54,6 @@ public:
 	};
 
 
-
 	// READ ONLY METHODS
 
 	static size_t number_of_digits(uint32_t number) {
