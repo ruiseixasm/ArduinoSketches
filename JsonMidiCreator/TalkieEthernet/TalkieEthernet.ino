@@ -24,7 +24,9 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Ethernet.hpp"
+#include "src/manifestos/MegaManifesto.hpp"
 #include "src/JsonTalker.h"
+#include "src/MessageRepeater.hpp"
 
 const char talker_name[] = "talker";
 const char talker_desc[] = "I'm a talker";

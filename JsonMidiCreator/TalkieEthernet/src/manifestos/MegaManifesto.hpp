@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../TalkerManifesto.hpp"
 
-// #define GREEN_TALKER_DEBUG
+// #define MEGA_MANIFESTO_DEBUG
 
 
 class MegaManifesto : public TalkerManifesto {
@@ -59,20 +59,20 @@ public:
 
 			case 0:
 			{
-				#ifdef GREEN_MANIFESTO_DEBUG
+				#ifdef MEGA_MANIFESTO_DEBUG
 				Serial.println(F("\tCase 0 - Turning LED ON"));
 				#endif
 		
 				if (!_is_led_on) {
-				#ifdef GREEN_LED
-					#ifdef GREEN_MANIFESTO_DEBUG
-						Serial.print(F("\tGREEN_LED IS DEFINED as: "));
-						Serial.println(GREEN_LED);
+				#ifdef LED_BUILTIN
+					#ifdef MEGA_MANIFESTO_DEBUG
+						Serial.print(F("\tLED_BUILTIN IS DEFINED as: "));
+						Serial.println(LED_BUILTIN);
 					#endif
-					digitalWrite(GREEN_LED, HIGH);
+					digitalWrite(LED_BUILTIN, HIGH);
 				#else
-					#ifdef GREEN_MANIFESTO_DEBUG
-						Serial.println(F("\tGREEN_LED IS NOT DEFINED in this context!"));
+					#ifdef MEGA_MANIFESTO_DEBUG
+						Serial.println(F("\tLED_BUILTIN IS NOT DEFINED in this context!"));
 					#endif
 				#endif
 					_is_led_on = true;
@@ -88,13 +88,13 @@ public:
 
 			case 1:
 			{
-				#ifdef GREEN_MANIFESTO_DEBUG
+				#ifdef MEGA_MANIFESTO_DEBUG
 				Serial.println(F("\tCase 1 - Turning LED OFF"));
 				#endif
 		
 				if (_is_led_on) {
-				#ifdef GREEN_LED
-					digitalWrite(GREEN_LED, LOW);
+				#ifdef LED_BUILTIN
+					digitalWrite(LED_BUILTIN, LOW);
 				#endif
 					_is_led_on = false;
 					_total_calls++;
