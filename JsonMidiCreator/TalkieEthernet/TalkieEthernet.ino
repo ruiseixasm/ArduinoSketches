@@ -16,25 +16,25 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <SPI.h>
 
 
-// LED_BUILTIN is already defined by ESP32 platform
-// Typically GPIO2 for most ESP32 boards
-#ifndef LED_BUILTIN
-  #define LED_BUILTIN 2  // Fallback definition if not already defined
-#endif
-
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/BroadcastSocket_Ethernet.hpp"
 #include "src/manifestos/MegaManifesto.hpp"
 #include "src/JsonTalker.h"
 #include "src/MessageRepeater.hpp"
 
-const char talker_name[] = "talker";
-const char talker_desc[] = "I'm a talker";
-JsonTalker talker = JsonTalker(talker_name, talker_desc);
-JsonTalker* talkers[] = { &talker, &player };   // It's an array of pointers
-// Singleton requires the & (to get a reference variable)
-auto& broadcast_socket = BroadcastSocket_Ethernet::instance(talkers, sizeof(talkers)/sizeof(JsonTalker*));
+const char mega_name[] = "mega";
+const char mega_desc[] = "I'm a Mega talker";
+JsonTalker mega = JsonTalker(mega_name, mega_desc);
 
+JsonTalker* downlinked_talkers[] = { &mega };    // Only an array of pointers preserves polymorphism!!
+// Singleton requires the & (to get a reference variable)
+auto& ethernet_socket = BroadcastSocket_EtherCard::instance();
+BroadcastSocket* uplinked_sockets[] = { &ethernet_socket };	// list of pointers
+
+MessageRepeater message_repeater(
+		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),
+		downlinked_talkers, sizeof(downlinked_talkers)/sizeof(JsonTalker*)
+	);
 
 
 EthernetUDP udp;
@@ -165,7 +165,6 @@ void setup() {
 
     Serial.println("Setup completed - Ready for JSON communication!");
 }
-
 
 
 void loop() {

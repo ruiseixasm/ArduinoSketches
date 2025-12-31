@@ -12,35 +12,33 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#include "JsonTalker.h"         // Includes the ArduinoJson Library
+#include "JsonTalker.h"
 #include "BroadcastSocket.h"    // MUST include the full definition!
+#include "MessageRepeater.hpp"
 
 
-JsonTalker** JsonTalker::_json_talkers = nullptr;
-uint8_t JsonTalker::_talker_count = 0;
-bool JsonTalker::_is_led_on = false;
-
-
-
-bool JsonTalker::remoteSend(JsonObject json_message, bool as_reply) {
-    if (_muted || _socket == nullptr) return false;
-    json_message["f"] = _name;
-    // 'c' = 0 means REMOTE communication (already set by socket's remoteSend)
-    return _socket->remoteSend(json_message, as_reply);
+void JsonTalker::setLink(MessageRepeater* message_repeater, LinkType link_type) {
+	_message_repeater = message_repeater;
+	_link_type = link_type;
 }
 
 
-void JsonTalker::set_delay(uint8_t delay) {
-    return _socket->set_max_delay(delay);
-}
+bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 
-uint8_t JsonTalker::get_delay() {
-    return _socket->get_max_delay();
-}
+	#ifdef JSON_TALKER_DEBUG_NEW
+	Serial.print(F("\t\t\ttransmitToRepeater(Talker): "));
+	json_message.write_to(Serial);
+	Serial.println();  // optional: just to add a newline after the JSON
+	#endif
 
-uint16_t JsonTalker::get_total_drops() {
-    return _socket->get_drops_count();
+	if (_message_repeater && prepareMessage(json_message)) {
+		if (_link_type == LinkType::DOWN_LINKED) {
+			return _message_repeater->talkerUplink(*this, json_message);
+		} else {
+			return _message_repeater->talkerDownlink(*this, json_message);
+		}
+	}
+	return false;
 }
-
 
 

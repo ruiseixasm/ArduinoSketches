@@ -12,18 +12,34 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
+#include "BroadcastSocket.h"    // MUST include the full definition!
+#include "MessageRepeater.hpp"
 
-#include "BroadcastSocket.h"  // MUST include the full definition!
+
+// #define MESSAGE_REPEATER_DEBUG
 
 
-char BroadcastSocket::_receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
-char BroadcastSocket::_sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {'\0'};
+void BroadcastSocket::setLink(MessageRepeater* message_repeater, LinkType link_type) {
+	_message_repeater = message_repeater;
+	_link_type = link_type;
+}
 
-JsonTalker** BroadcastSocket::_json_talkers = nullptr;   // It's a singleton, so, no need to be static
-uint8_t BroadcastSocket::_talker_count = 0;
-bool BroadcastSocket::_control_timing = false;
-uint32_t BroadcastSocket::_last_local_time = 0;
-uint32_t BroadcastSocket::_last_remote_time = 0;
-uint16_t BroadcastSocket::_drops_count = 0;
-uint8_t BroadcastSocket::_max_delay_ms = 5;
+
+bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
+
+	#ifdef MESSAGE_REPEATER_DEBUG
+	Serial.print(F("\t\ttransmitToRepeater(Socket): "));
+	json_message.write_to(Serial);
+	Serial.println();  // optional: just to add a newline after the JSON
+	#endif
+
+	if (_message_repeater) {
+		if (_link_type == LinkType::DOWN_LINKED) {
+			return _message_repeater->socketUplink(*this, json_message);
+		} else {
+			return _message_repeater->socketDownlink(*this, json_message);
+		}
+	}
+	return false;
+}
 
