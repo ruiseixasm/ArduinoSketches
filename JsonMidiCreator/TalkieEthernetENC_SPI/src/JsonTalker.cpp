@@ -41,3 +41,8 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 }
 
 
+bool JsonTalker::transmitSockets(JsonMessage& json_message) {
+	
+
+}
+

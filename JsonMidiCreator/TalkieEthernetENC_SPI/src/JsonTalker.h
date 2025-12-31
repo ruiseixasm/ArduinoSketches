@@ -79,10 +79,10 @@ public:
 		}
     }
 
-    virtual const char* class_name() const { return "JsonTalker"; }
+    const char* class_name() const { return "JsonTalker"; }
 
 
-    virtual void loop() {
+    void loop() {
         if (_manifesto) {
             _manifesto->loop(this);
         }
@@ -194,9 +194,10 @@ public:
 
 	bool transmitToRepeater(JsonMessage& json_message);
 
+	bool transmitSockets(JsonMessage& json_message);
 
     
-    virtual TalkerMatch talkerReceive(JsonMessage& json_message) {
+    TalkerMatch talkerReceive(JsonMessage& json_message) {
 
         TalkerMatch talker_match = TalkerMatch::TALKIE_MATCH_NONE;
 

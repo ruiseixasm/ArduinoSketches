@@ -37,6 +37,9 @@ protected:
 	JsonTalker* const* const _uplinked_talkers;
 	const uint8_t _uplinked_talkers_count;
 	
+    // Iterator states
+    uint8_t socketsIterIdx = 0;
+
 
 public:
 
@@ -72,6 +75,7 @@ public:
 		// Does nothing
 	}
 
+
     void loop() {
 		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 			_uplinked_sockets[socket_j]->loop();
@@ -87,6 +91,19 @@ public:
 		}
     }
 
+	
+	virtual void iterateSocketsReset() {
+		socketsIterIdx = 0;
+	}
+
+    // Iterator next methods - IMPLEMENTED in base class
+    const BroadcastSocket* iterateSocketNext() {
+        if (socketsIterIdx < _uplinked_sockets_count) {
+            return _uplinked_sockets[socketsIterIdx++];
+        }
+        return nullptr;
+    }
+    
 
 	bool socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
