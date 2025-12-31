@@ -339,18 +339,12 @@ public:
 							break;
 
 						case InfoValue::TALKIE_INFO_SOCKET:
-							{
-								uint8_t socket_index = 0;
-								const BroadcastSocket* socket;
-								// _manifesto->iterateActionsReset();
-								// while ((socket = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
-								// 	json_message.set_nth_value_number(0, socket_index++);
-								// 	json_message.set_nth_value_string(1, socket->name);
-								// 	json_message.set_nth_value_string(2, socket->desc);
-								// 	transmitToRepeater(json_message);	// Many-to-One
-								// }
-								break;
+							if (!transmitSockets(json_message)) {
+								json_message.set_nth_value_string(0, "none");
+							} else {
+        						return talker_match;	// Avoids extra transmissions sends
 							}
+							break;
 
 						case InfoValue::TALKIE_INFO_TALKER:
 							json_message.set_nth_value_string(0, class_name());
