@@ -574,7 +574,7 @@ protected:
 
 	
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    uint8_t receive() override {
+    size_t receive() override {
 
 		if (_initiated) {
 

@@ -63,7 +63,7 @@ public:
     // Explicit default constructor
     JsonTalker() = delete;
         
-    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto)
+    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr)
         : _name(name), _desc(desc), _manifesto(manifesto) {
 		// AVOIDS EVERY TALKER WITH THE SAME CHANNEL
 		// XOR is great for 8-bit mixing
@@ -78,14 +78,27 @@ public:
 		}
     }
 
+    virtual const char* class_name() const { return "JsonTalker"; }
+
+
+    virtual void loop() {
+        if (_manifesto) {
+            _manifesto->loop(this);
+        }
+    }
+
+	// Getter and setters
+
 	void setLink(MessageRepeater* message_repeater, LinkType link_type);
+
+	void setLinkType(LinkType link_type) {
+		_link_type = link_type;
+	}
 
 	LinkType getLinkType() const {
 		return _link_type;
 	}
 
-
-	// Getter and setters
 
     void setSocket(BroadcastSocket* socket);
     BroadcastSocket& getSocket();
@@ -114,15 +127,6 @@ public:
     uint8_t get_delay();
     uint16_t get_drops();
 	
-
-    virtual const char* class_name() const { return "JsonTalker"; }
-
-
-    virtual void loop() {
-        if (_manifesto) {
-            _manifesto->loop(this);
-        }
-    }
 
 
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************

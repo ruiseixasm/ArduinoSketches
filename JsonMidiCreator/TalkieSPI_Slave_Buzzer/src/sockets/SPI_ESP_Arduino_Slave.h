@@ -143,7 +143,7 @@ protected:
         return false;
     }
 
-    uint8_t receive() override {
+    size_t receive() override {
 
         // Need to call homologous method in super class first
         uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
