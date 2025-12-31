@@ -46,7 +46,7 @@ protected:
             // Avoids overflow
             if (packetSize > BROADCAST_SOCKET_BUFFER_SIZE) return 0;
 
-            int length = _udp->read(_receiving_buffer, static_cast<size_t>(packetSize));
+            int length = _udp->read(_received_buffer, static_cast<size_t>(packetSize));
 			if (length > 0) {
 
 				_received_length = (size_t)length;
@@ -58,7 +58,7 @@ protected:
 				Serial.print(F(":"));
 				Serial.print(_udp->remotePort());
 				Serial.print(F(" -> "));
-				Serial.write(_receiving_buffer, _received_length);
+				Serial.write(_received_buffer, _received_length);
 				Serial.println();
 				#endif
 				
@@ -80,7 +80,7 @@ protected:
 			IPAddress broadcastIP(255, 255, 255, 255);
 
 			#ifdef ENABLE_DIRECT_ADDRESSING
-			if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
+			if (!_udp->beginPacket(_source_ip, _port)) {
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
 				Serial.println(F("Failed to begin packet"));
 				#endif

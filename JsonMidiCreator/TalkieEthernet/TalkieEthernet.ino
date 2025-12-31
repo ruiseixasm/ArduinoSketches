@@ -28,7 +28,7 @@ JsonTalker mega = JsonTalker(mega_name, mega_desc);
 
 JsonTalker* downlinked_talkers[] = { &mega };    // Only an array of pointers preserves polymorphism!!
 // Singleton requires the & (to get a reference variable)
-auto& ethernet_socket = BroadcastSocket_EtherCard::instance();
+auto& ethernet_socket = BroadcastSocket_Ethernet::instance();
 BroadcastSocket* uplinked_sockets[] = { &ethernet_socket };	// list of pointers
 
 MessageRepeater message_repeater(

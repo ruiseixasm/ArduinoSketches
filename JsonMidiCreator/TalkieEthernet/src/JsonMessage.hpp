@@ -637,11 +637,11 @@ public:
 		size_t colon_position = get_colon_position('m', _json_payload, _json_length);
 		if (colon_position) {
 			uint8_t message_number = get_value_number('m', _json_payload, _json_length, colon_position);
-			if (message_number < static_cast<uint8_t>( MessageValue::NOISE )) {
+			if (message_number < static_cast<uint8_t>( MessageValue::MSG_NOISE )) {
 				return static_cast<MessageValue>( message_number );
 			}
 		}
-		return MessageValue::NOISE;
+		return MessageValue::MSG_NOISE;
 	}
 
 	uint16_t get_identity() {
@@ -678,11 +678,11 @@ public:
 		size_t colon_position = get_colon_position('s', _json_payload, _json_length);
 		if (colon_position) {
 			uint8_t info_number = (uint8_t)get_value_number('s', _json_payload, _json_length, colon_position);
-			if (info_number < static_cast<uint8_t>( InfoValue::UNDEFINED )) {
+			if (info_number < static_cast<uint8_t>( InfoValue::INFO_UNDEFINED )) {
 				return static_cast<InfoValue>( info_number );
 			}
 		}
-		return InfoValue::UNDEFINED;
+		return InfoValue::INFO_UNDEFINED;
 	}
 
     // New method using internal temporary buffer (_temp_string)
@@ -727,7 +727,7 @@ public:
 			}
 		} else {
 			MessageValue message_value = get_message_value();
-			if (message_value > MessageValue::PING || has_nth_value_number(0)) {
+			if (message_value > MessageValue::MSG_PING || has_nth_value_number(0)) {
 				// Only TALK, CHANNEL and PING can be for ANY
 				// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
 				// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE

@@ -54,8 +54,8 @@ protected:
     const char* _desc;      // Description of the Device
 	TalkerManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
-	MessageValue _received_message = MessageValue::NOISE;
-	Original _original_message = {0, MessageValue::NOISE};
+	MessageValue _received_message = MessageValue::MSG_NOISE;
+	Original _original_message = {0, MessageValue::MSG_NOISE};
     bool _muted_calls = false;
 
 public:
@@ -143,7 +143,7 @@ public:
 		}
 
 		MessageValue message_value = json_message.get_message_value();
-		if (message_value < MessageValue::ECHO) {
+		if (message_value < MessageValue::MSG_ECHO) {
 
 			#ifdef JSON_TALKER_DEBUG
 			Serial.print(F("socketSend1: Setting a new identifier (i) for :"));
@@ -152,15 +152,15 @@ public:
 			#endif
 
 			// _muted_calls mutes CALL echoes only
-			if (_muted_calls && _received_message == MessageValue::CALL) {
-				_received_message = MessageValue::NOISE;	// Avoids false mutes for self generated messages (safe code)
+			if (_muted_calls && _received_message == MessageValue::MSG_CALL) {
+				_received_message = MessageValue::MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
 				return false;
 			} else {
-				_received_message = MessageValue::NOISE;	// Avoids false mutes for self generated messages (safe code)
+				_received_message = MessageValue::MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
 			}
 
 			uint16_t message_id = (uint16_t)millis();
-			if (message_value < MessageValue::ECHO) {
+			if (message_value < MessageValue::MSG_ECHO) {
 				_original_message.identity = message_id;
 				_original_message.message_value = message_value;
 			}
@@ -173,9 +173,9 @@ public:
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
-			json_message.set_message_value(MessageValue::ERROR);
+			json_message.set_message_value(MessageValue::MSG_ERROR);
 			json_message.set_identity();
-			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::IDENTITY));
+			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::ERR_IDENTITY));
 
 		} else {
 			
@@ -209,14 +209,14 @@ public:
 		#endif
 
 		// Doesn't apply to ECHO nor ERROR
-		if (message_value < MessageValue::ECHO) {
+		if (message_value < MessageValue::MSG_ECHO) {
 			_received_message = message_value;
-			json_message.set_message_value(MessageValue::ECHO);
+			json_message.set_message_value(MessageValue::MSG_ECHO);
 		}
 
         switch (message_value) {
 
-			case MessageValue::CALL:
+			case MessageValue::MSG_CALL:
 				{
 					uint8_t index_found_i = 255;
 					ValueType value_type = json_message.get_value_type(MessageKey::ACTION);
@@ -253,13 +253,13 @@ public:
 				transmitToRepeater(json_message);
 				break;
 			
-			case MessageValue::TALK:
+			case MessageValue::MSG_TALK:
 				json_message.set_nth_value_string(0, _desc);
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitToRepeater(json_message);
 				break;
 			
-			case MessageValue::CHANNEL:
+			case MessageValue::MSG_CHANNEL:
 				if (json_message.has_nth_value_number(0)) {
 
 					#ifdef JSON_TALKER_DEBUG
@@ -274,12 +274,12 @@ public:
 				transmitToRepeater(json_message);
 				break;
 			
-			case MessageValue::PING:
+			case MessageValue::MSG_PING:
 				// Talker name already set in FROM (ready to transmit)
 				transmitToRepeater(json_message);
 				break;
 			
-			case MessageValue::LIST:
+			case MessageValue::MSG_LIST:
 				{   // Because of action_index and action !!!
 
 					#ifdef JSON_TALKER_DEBUG
@@ -305,18 +305,18 @@ public:
 				}
 				break;
 			
-			case MessageValue::INFO:
+			case MessageValue::MSG_INFO:
 				if (json_message.has_info()) {
 
 					InfoValue system_code = json_message.get_info_value();
 
 					switch (system_code) {
 
-						case InfoValue::BOARD:
+						case InfoValue::INFO_BOARD:
 							json_message.set_nth_value_string(0, board_description());
 							break;
 
-						case InfoValue::MUTE:
+						case InfoValue::INFO_MUTE:
 							if (json_message.has_nth_value_number(0)) {
 								uint8_t mute = (uint8_t)json_message.get_nth_value_number(0);
 								if (mute) {
@@ -333,11 +333,11 @@ public:
 							}
 							break;
 
-						case InfoValue::TALKER:
+						case InfoValue::INFO_TALKER:
 							json_message.set_nth_value_string(0, class_name());
 							break;
 
-						case InfoValue::MANIFESTO:
+						case InfoValue::INFO_MANIFESTO:
 							if (_manifesto) {
 								json_message.set_nth_value_string(0, _manifesto->class_name());
 							} else {
@@ -353,7 +353,7 @@ public:
 				}
 				break;
 			
-			case MessageValue::ECHO:
+			case MessageValue::MSG_ECHO:
 				if (_manifesto) {
 
 					// Makes sure it has the same id first (echo condition)
@@ -374,7 +374,7 @@ public:
 				}
 				break;
 			
-			case MessageValue::ERROR:
+			case MessageValue::MSG_ERROR:
 				if (_manifesto) {
 					_manifesto->error(*this, json_message);
 				}

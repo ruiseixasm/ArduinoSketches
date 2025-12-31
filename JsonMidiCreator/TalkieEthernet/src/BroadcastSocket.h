@@ -142,7 +142,7 @@ protected:
 
 				if (_max_delay_ms > 0) {
 
-					if (message_code == MessageValue::CALL) {	// Only does time control on Calls (drops)
+					if (message_code == MessageValue::MSG_CALL) {	// Only does time control on Calls (drops)
 
 						#ifdef BROADCASTSOCKET_DEBUG
 						Serial.print(F("triggerTalkers6: Message code requires delay check: "));
@@ -186,7 +186,7 @@ protected:
 					#endif
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					if (json_message.swap_from_with_to()) {
-						json_message.set_message_value(MessageValue::ERROR);
+						json_message.set_message_value(MessageValue::MSG_ERROR);
 						if (!json_message.has_identity()) {
 							json_message.set_identity();
 						}
