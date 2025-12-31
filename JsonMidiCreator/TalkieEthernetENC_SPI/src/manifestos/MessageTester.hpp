@@ -180,17 +180,17 @@ public:
 			case 6:
 			{
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				if (test_json_message.get_value_type('m') != ValueType::INTEGER) {
+				if (test_json_message.get_value_type('m') != ValueType::TALKIE_VT_INTEGER) {
 					json_message.set_nth_value_string(0, "m");
 					json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_value_type('m')));
 					return false;
 				}
-				if (test_json_message.get_value_type('f') != ValueType::STRING) {
+				if (test_json_message.get_value_type('f') != ValueType::TALKIE_VT_STRING) {
 					json_message.set_nth_value_string(0, "f");
 					json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_value_type('f')));
 					return false;
 				}
-				if (test_json_message.get_value_type('i') != ValueType::INTEGER) {
+				if (test_json_message.get_value_type('i') != ValueType::TALKIE_VT_INTEGER) {
 					json_message.set_nth_value_string(0, "i");
 					json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_value_type('i')));
 					return false;

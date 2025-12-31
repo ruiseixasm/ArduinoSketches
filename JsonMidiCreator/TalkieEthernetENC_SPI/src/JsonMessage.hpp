@@ -47,7 +47,10 @@ class JsonMessage {
 public:
 	
 	enum ValueType : uint8_t {
-		STRING, INTEGER, OTHER, TALKIE_VT_VOID
+		TALKIE_VT_STRING,
+		TALKIE_VT_INTEGER,
+		TALKIE_VT_OTHER,
+		TALKIE_VT_VOID
 	};
 
 
@@ -101,14 +104,14 @@ public:
 			ValueType value_type = get_value_type(key, json_payload, json_length, json_i - 1);
 			switch (value_type) {
 
-				case ValueType::STRING:
+				case ValueType::TALKIE_VT_STRING:
 					field_length += 2;	// Adds the two '"' associated to the string
 					for (json_i++; json_i < json_length && json_payload[json_i] != '"'; json_i++) {
 						field_length++;
 					}
 					break;
 				
-				case ValueType::INTEGER:
+				case ValueType::TALKIE_VT_INTEGER:
 					for (; json_i < json_length && !(json_payload[json_i] > '9' || json_payload[json_i] < '0'); json_i++) {
 						field_length++;
 					}
@@ -129,18 +132,18 @@ public:
 				if (json_i == json_length) {
 					return TALKIE_VT_VOID;
 				}
-				return STRING;
+				return TALKIE_VT_STRING;
 			} else {
 				while (json_i < json_length && json_payload[json_i] != ',' && json_payload[json_i] != '}') {
 					if (json_payload[json_i] > '9' || json_payload[json_i] < '0') {
-						return OTHER;
+						return TALKIE_VT_OTHER;
 					}
 					json_i++;
 				}
 				if (json_i == json_length) {
 					return TALKIE_VT_VOID;
 				}
-				return INTEGER;
+				return TALKIE_VT_INTEGER;
 			}
 		}
 		return TALKIE_VT_VOID;
@@ -399,7 +402,7 @@ public:
 					case 'm':
 					{
 						ValueType value_type = get_value_type('m', _json_payload, _json_length, json_i);
-						if (value_type == INTEGER) {
+						if (value_type == TALKIE_VT_INTEGER) {
 							if (_json_payload[json_i + 2] == ',' || _json_payload[json_i + 2] == '}') {
 								if (found_b && found_i && found_f) return true;
 								found_m = true;
@@ -415,7 +418,7 @@ public:
 					case 'b':
 					{
 						ValueType value_type = get_value_type('b', _json_payload, _json_length, json_i);
-						if (value_type == INTEGER) {
+						if (value_type == TALKIE_VT_INTEGER) {
 							if (_json_payload[json_i + 2] == ',' || _json_payload[json_i + 2] == '}') {
 								if (found_m && found_i && found_f) return true;
 								found_b = true;
@@ -431,7 +434,7 @@ public:
 					case 'i':
 					{
 						ValueType value_type = get_value_type('i', _json_payload, _json_length, json_i);
-						if (value_type == INTEGER) {
+						if (value_type == TALKIE_VT_INTEGER) {
 							if (found_m && found_b && found_f) return true;
 							found_i = true;
 						} else {
@@ -443,7 +446,7 @@ public:
 					case 'f':
 					{
 						ValueType value_type = get_value_type('f', _json_payload, _json_length, json_i);
-						if (value_type == STRING) {
+						if (value_type == TALKIE_VT_STRING) {
 							if (found_m && found_b && found_i) return true;
 							found_f = true;
 						} else {
@@ -495,7 +498,7 @@ public:
 			ValueType value_type = get_value_type('t', _json_payload, _json_length, colon_position);
 			switch (value_type) {
 
-				case STRING:
+				case TALKIE_VT_STRING:
 					{
 						char message_to[NAME_LEN] = {'\0'};
 						get_value_string('t', message_to, colon_position, _json_payload, _json_length);
@@ -503,7 +506,7 @@ public:
 					}
 				break;
 				
-				case INTEGER:
+				case TALKIE_VT_INTEGER:
 					{
 						uint32_t number = get_value_number('t', _json_payload, _json_length, colon_position);
 						return number == channel;
@@ -550,13 +553,13 @@ public:
 	bool has_to_name() const {
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		return colon_position 
-			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::STRING;
+			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING;
 	}
 
 	bool has_to_channel() const {
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		return colon_position 
-			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::INTEGER;
+			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER;
 	}
 
 	bool has_info() const {
@@ -576,7 +579,7 @@ public:
 			char value_key = '0' + nth;
 			size_t colon_position = get_colon_position(value_key, _json_payload, _json_length);
 			if (colon_position) {
-				return get_value_type(value_key, _json_payload, _json_length, colon_position) == ValueType::STRING;
+				return get_value_type(value_key, _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING;
 			}
 		}
 		return false;
@@ -587,7 +590,7 @@ public:
 			char value_key = '0' + nth;
 			size_t colon_position = get_colon_position(value_key, _json_payload, _json_length);
 			if (colon_position) {
-				return get_value_type(value_key, _json_payload, _json_length, colon_position) == ValueType::INTEGER;
+				return get_value_type(value_key, _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER;
 			}
 		}
 		return false;
@@ -606,7 +609,7 @@ public:
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		if (colon_position) {
 			ValueType value_type = get_value_type('t', _json_payload, _json_length, colon_position);
-			if (value_type == ValueType::STRING && get_value_string('t', _temp_string, NAME_LEN, _json_payload, _json_length, colon_position)) {
+			if (value_type == ValueType::TALKIE_VT_STRING && get_value_string('t', _temp_string, NAME_LEN, _json_payload, _json_length, colon_position)) {
 				return strcmp(_temp_string, name) == 0;
 			}
 		}
@@ -616,7 +619,7 @@ public:
 	bool is_to_channel(uint8_t channel) const {
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		return colon_position 
-			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::INTEGER
+			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER
 			&& get_value_number('t', _json_payload, _json_length, colon_position) == channel;
 	}
 
@@ -699,7 +702,7 @@ public:
     // New method using internal temporary buffer (_temp_string)
     char* get_to_name() const {
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
-		if (colon_position && get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::STRING) {
+		if (colon_position && get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING) {
 			if (get_value_string('t', _temp_string, NAME_LEN, _json_payload, _json_length, colon_position)) {
 				return _temp_string;
 			}
@@ -709,7 +712,7 @@ public:
 	
 	uint8_t get_to_channel() const {
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
-		if (colon_position && get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::INTEGER) {
+		if (colon_position && get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER) {
 			return (uint8_t)get_value_number('t', _json_payload, _json_length, colon_position);
 		}
 		return 255;	// Means, no chanel
@@ -720,8 +723,8 @@ public:
 		if (has_to()) {
 			ValueType value_type = get_to_type();
 			switch (value_type) {
-				case ValueType::INTEGER: return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
-				case ValueType::STRING: return TalkerMatch::TALKIE_MATCH_BY_NAME;
+				case ValueType::TALKIE_VT_INTEGER: return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
+				case ValueType::TALKIE_VT_STRING: return TalkerMatch::TALKIE_MATCH_BY_NAME;
 				default: break;
 			}
 		} else {

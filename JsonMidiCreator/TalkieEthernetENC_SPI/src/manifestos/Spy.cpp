@@ -44,9 +44,9 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					// 2. Repurpose it to be a LOCAL PING
 					json_message.set_message_value(MessageValue::TALKIE_MSG_PING);
 					json_message.remove_identity();
-					if (json_message.get_nth_value_type(0) == ValueType::STRING) {
+					if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_STRING) {
 						json_message.set_to_name(json_message.get_nth_value_string(0));
-					} else if (json_message.get_nth_value_type(0) == ValueType::INTEGER) {
+					} else if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER) {
 						json_message.set_to_channel((uint8_t)json_message.get_nth_value_number(0));
 					} else {	// Removes the original TO
 						json_message.remove_to();	// Without TO works as broadcast
@@ -80,16 +80,16 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 				{
 					ping = true;
 					// 1. Start by setting the Action fields
-					if (json_message.get_nth_value_type(0) == ValueType::STRING) {
+					if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_STRING) {
 						json_message.set_to_name(json_message.get_nth_value_string(0));
-					} else if (json_message.get_nth_value_type(0) == ValueType::INTEGER) {
+					} else if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER) {
 						json_message.set_to_channel((uint8_t)json_message.get_nth_value_number(0));
 					} else {
 						return false;
 					}
-					if (json_message.get_nth_value_type(1) == ValueType::STRING) {
+					if (json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_STRING) {
 						json_message.set_action_name(json_message.get_nth_value_string(1));
-					} else if (json_message.get_nth_value_type(1) == ValueType::INTEGER) {
+					} else if (json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
 						json_message.set_action_number((uint8_t)json_message.get_nth_value_number(1));
 					} else {
 						return false;
@@ -151,11 +151,11 @@ void Spy::error(JsonTalker& talker, JsonMessage& json_message) {
 	ValueType value_type = json_message.get_nth_value_type(0);
 	switch (value_type) {
 
-		case ValueType::STRING:
+		case ValueType::TALKIE_VT_STRING:
 			Serial.println(json_message.get_nth_value_string(0));
 			break;
 		
-		case ValueType::INTEGER:
+		case ValueType::TALKIE_VT_INTEGER:
 			Serial.println(json_message.get_nth_value_number(0));
 			break;
 		
