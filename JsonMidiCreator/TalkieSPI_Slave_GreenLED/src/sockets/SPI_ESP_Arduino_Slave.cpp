@@ -25,7 +25,7 @@ volatile uint8_t SPI_ESP_Arduino_Slave::_sending_index = 0;
 volatile uint8_t SPI_ESP_Arduino_Slave::_validation_index = 0;
 volatile uint8_t SPI_ESP_Arduino_Slave::_sending_length_spi = 0;
 volatile SPI_ESP_Arduino_Slave::StatusByte SPI_ESP_Arduino_Slave::_transmission_mode 
-									= SPI_ESP_Arduino_Slave::StatusByte::NONE;
+									= SPI_ESP_Arduino_Slave::StatusByte::TALKIE_SB_NONE;
 
 
 // Define ISR at GLOBAL SCOPE (outside the class)

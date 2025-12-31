@@ -31,21 +31,21 @@ public:
     const char* class_name() const override { return "SPI_ESP_Arduino_Slave"; }
 
     enum StatusByte : uint8_t {
-        ACK     = 0xF0, // Acknowledge
-        NACK    = 0xF1, // Not acknowledged
-        READY   = 0xF2, // Slave is ready
-        BUSY    = 0xF3, // Tells the Master to wait a little
-        RECEIVE = 0xF4, // Asks the receiver to start receiving
-        SEND    = 0xF5, // Asks the receiver to start sending
-        NONE    = 0xF6, // Means nothing to send
-        START   = 0xF7, // Start of transmission
-        END     = 0xF8, // End of transmission
-		LAST	= 0xF9,	// Asks for the last char
-		DONE	= 0xFA,	// Marks the action as DONE
-        ERROR   = 0xFB, // Error frame
-        FULL    = 0xFC, // Signals the buffer as full
+        TALKIE_SB_ACK		= 0xF0, // Acknowledge
+        TALKIE_SB_NACK		= 0xF1, // Not acknowledged
+        TALKIE_SB_READY   	= 0xF2, // Slave is ready
+        TALKIE_SB_BUSY   	= 0xF3, // Tells the Master to wait a little
+        TALKIE_SB_RECEIVE	= 0xF4, // Asks the receiver to start receiving
+        TALKIE_SB_SEND    	= 0xF5, // Asks the receiver to start sending
+        TALKIE_SB_NONE    	= 0xF6, // Means nothing to send
+        TALKIE_SB_START   	= 0xF7, // Start of transmission
+        TALKIE_SB_END     	= 0xF8, // End of transmission
+		TALKIE_SB_LAST		= 0xF9,	// Asks for the last char
+		TALKIE_SB_DONE		= 0xFA,	// Marks the action as DONE
+        TALKIE_SB_ERROR   	= 0xFB, // Error frame
+        TALKIE_SB_FULL    	= 0xFC, // Signals the buffer as full
         
-        VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
+        TALKIE_SB_VOID    	= 0xFF  // MISO floating (0xFF) → no slave responding
     };
 
 
@@ -205,7 +205,7 @@ public:
             // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses a jump table
 
             switch (_transmission_mode) {
-                case RECEIVE:
+                case TALKIE_SB_RECEIVE:
                     if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
                         _ptr_received_buffer[_receiving_index] = c;
 						if (_receiving_index > 0) {
@@ -213,28 +213,28 @@ public:
 						}
 						_receiving_index++;
                     } else {
-						_transmission_mode = NONE;
-                        SPDR = FULL;
+						_transmission_mode = TALKIE_SB_NONE;
+                        SPDR = TALKIE_SB_FULL;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Slave buffer overflow"));
 						#endif
                     }
                     break;
-                case SEND:
+                case TALKIE_SB_SEND:
 					if (_sending_index < _sending_length_spi) {
 						SPDR = _ptr_sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
 					} else if (_sending_index == _sending_length_spi) {
-						SPDR = LAST;	// Asks for the LAST char
+						SPDR = TALKIE_SB_LAST;	// Asks for the TALKIE_SB_LAST char
 					} else {	// Less missed sends this way
-						SPDR = END;		// All chars have been checked
+						SPDR = TALKIE_SB_END;		// All chars have been checked
 					}
 					// Starts checking 2 indexes after
 					if (_sending_index > 1) {    // Two positions of delay
 						if (c == _ptr_sending_buffer[_validation_index]) {	// Checks all chars
 							_validation_index++; // Starts checking after two sent
 						} else {
-							_transmission_mode = NONE;  // Makes sure no more communication is done, regardless
-							SPDR = ERROR;
+							_transmission_mode = TALKIE_SB_NONE;  // Makes sure no more communication is done, regardless
+							SPDR = TALKIE_SB_ERROR;
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tERROR: Sent char mismatch"));
 							#endif
@@ -244,7 +244,7 @@ public:
 					_sending_index++;
                     break;
                 default:
-                    SPDR = NACK;
+                    SPDR = TALKIE_SB_NACK;
             }
 
         } else {    // It's a control message 0xFX
@@ -252,87 +252,87 @@ public:
             // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses a jump table
 
             switch (c) {
-                case RECEIVE:
+                case TALKIE_SB_RECEIVE:
                     if (_ptr_received_buffer) {
 						if (!_received_length_spi) {
-							_transmission_mode = RECEIVE;
+							_transmission_mode = TALKIE_SB_RECEIVE;
 							_receiving_index = 0;
-							SPDR = READY;	// Doing it at the end makes sure everything above was actually set
+							SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
 						} else {
-                        	SPDR = BUSY;
+                        	SPDR = TALKIE_SB_BUSY;
 							#ifdef BROADCAST_SPI_DEBUG_1
-							Serial.println(F("\t\tBUSY: I'm busy (RECEIVE)"));
+							Serial.println(F("\t\tBUSY: I'm busy (TALKIE_SB_RECEIVE)"));
 							#endif
 						}
                     } else {
-                        SPDR = VOID;
+                        SPDR = TALKIE_SB_VOID;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Receiving buffer pointer NOT set"));
 						#endif
                     }
                     break;
-                case SEND:
+                case TALKIE_SB_SEND:
                     if (_ptr_sending_buffer) {
                         if (_sending_length_spi) {
 							if (_sending_length_spi > BROADCAST_SOCKET_BUFFER_SIZE) {
 								_sending_length_spi = 0;
-								SPDR = FULL;
+								SPDR = TALKIE_SB_FULL;
 							} else {
-								_transmission_mode = SEND;
+								_transmission_mode = TALKIE_SB_SEND;
 								_sending_index = 0;
 								_validation_index = 0;
-								SPDR = READY;	// Doing it at the end makes sure everything above was actually set
+								SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
 							}
                         } else {
-                            SPDR = NONE;
+                            SPDR = TALKIE_SB_NONE;
 							#ifdef BROADCAST_SPI_DEBUG_2
 							Serial.println(F("\tNothing to be sent"));
 							#endif
                         }
                     } else {
-                        SPDR = VOID;
+                        SPDR = TALKIE_SB_VOID;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Sending buffer pointer NOT set"));
 						#endif
                     }
                     break;
-                case LAST:
-					if (_transmission_mode == RECEIVE) {
+                case TALKIE_SB_LAST:
+					if (_transmission_mode == TALKIE_SB_RECEIVE) {
 						SPDR = _ptr_received_buffer[_receiving_index - 1];
-                    } else if (_transmission_mode == SEND && _sending_length_spi > 0) {
+                    } else if (_transmission_mode == TALKIE_SB_SEND && _sending_length_spi > 0) {
 						SPDR = _ptr_sending_buffer[_sending_length_spi - 1];
                     } else {
-						SPDR = NONE;
+						SPDR = TALKIE_SB_NONE;
 					}
                     break;
-                case END:
-					if (_transmission_mode == RECEIVE) {
+                case TALKIE_SB_END:
+					if (_transmission_mode == TALKIE_SB_RECEIVE) {
 						_received_length_spi = _receiving_index;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tReceived message"));
 						#endif
-                    } else if (_transmission_mode == SEND) {
+                    } else if (_transmission_mode == TALKIE_SB_SEND) {
                         _sending_length_spi = 0;	// Makes sure the sending buffer is zeroed
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tSent message"));
 						#endif
 					}
-                    _transmission_mode = NONE;
-					SPDR = DONE;	// Doing it at the end makes sure everything above was actually set
+                    _transmission_mode = TALKIE_SB_NONE;
+					SPDR = TALKIE_SB_DONE;	// Doing it at the end makes sure everything above was actually set
                     break;
-                case ACK:
-                    SPDR = ACK;
+                case TALKIE_SB_ACK:
+                    SPDR = TALKIE_SB_ACK;
                     break;
-                case ERROR:
-                case FULL:
-					_transmission_mode = NONE;
-					SPDR = ACK;
+                case TALKIE_SB_ERROR:
+                case TALKIE_SB_FULL:
+					_transmission_mode = TALKIE_SB_NONE;
+					SPDR = TALKIE_SB_ACK;
 					#ifdef BROADCAST_SPI_DEBUG_1
-					Serial.println(F("\tTransmission ended with received ERROR or FULL"));
+					Serial.println(F("\tTransmission ended with received TALKIE_SB_ERROR or TALKIE_SB_FULL"));
 					#endif
                     break;
                 default:
-                    SPDR = NACK;
+                    SPDR = TALKIE_SB_NACK;
             }
         }
     }

@@ -80,7 +80,6 @@ public:
 					_total_calls++;
 					return true;
 				} else {
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					json_message.set_nth_value_string(0, "Already On!");
 					return false;
 				}
@@ -100,7 +99,6 @@ public:
 					_is_led_on = false;
 					_total_calls++;
 				} else {
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					json_message.set_nth_value_string(0, "Already Off!");
 					return false;
 				}
@@ -109,7 +107,6 @@ public:
 			break;
 			
             case 2:
-				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
                 _bpm_10 = json_message.get_nth_value_number(0);
                 return true;
                 break;
