@@ -122,12 +122,7 @@ public:
         return *this;
     }
 
-    bool muted() { return _muted_calls; }
-
-    void set_delay(uint8_t delay);
-    uint8_t get_delay();
-    uint16_t get_drops();
-	
+    bool muted() const { return _muted_calls; }
 
 
 	bool prepareMessage(JsonMessage& json_message) {
