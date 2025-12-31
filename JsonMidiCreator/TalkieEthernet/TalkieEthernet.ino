@@ -152,8 +152,8 @@ void setup() {
     }
 
     Serial.println("Setting up broadcast socket...");
-    broadcast_socket.set_port(PORT);
-    broadcast_socket.set_udp(&udp);
+    ethernet_socket.set_port(PORT);
+    ethernet_socket.set_udp(&udp);
 
     Serial.println("Talker ready with EthernetENC!");
     Serial.println("Connecting Talkers with each other");
@@ -169,7 +169,7 @@ void setup() {
 
 void loop() {
     Ethernet.maintain();	// Maintain DHCP lease (important for long-running applications)
-    broadcast_socket.loop();
+    message_repeater.loop();
 }
 
 

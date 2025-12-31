@@ -18,9 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <EthernetUdp.h>
 #include "../BroadcastSocket.h"
 
-#define BROADCAST_ETHERNETENC_DEBUG
-
-
+// #define BROADCAST_ETHERNETENC_DEBUG
 #define ENABLE_DIRECT_ADDRESSING
 
 
@@ -31,73 +29,15 @@ private:
     EthernetUDP* _udp = nullptr;
 
 protected:
-    // Needed for the compiler, the base class is the one being called though
-    // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    BroadcastSocket_Ethernet(JsonTalker** json_talkers, uint8_t talker_count)
-        : BroadcastSocket(json_talkers, talker_count) {}
-
-public:
-
-    // Move ONLY the singleton instance method to subclass
-    static BroadcastSocket_Ethernet& instance(JsonTalker** json_talkers, uint8_t talker_count) {
-        static BroadcastSocket_Ethernet instance(json_talkers, talker_count);
-        return instance;
-    }
-
-    void set_port(uint16_t port) {
-        _port = port;
-    }
-    
-
-    size_t send(size_t length, bool as_reply = false) override {
-        if (_udp == nullptr) return false;
-
-        IPAddress broadcastIP(255, 255, 255, 255);
-        
-        // Need to call homologous method in super class first
-        length = BroadcastSocket::send(length, as_reply); // Very important pre processing !!
-
-        #ifdef ENABLE_DIRECT_ADDRESSING
-        if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.println(F("Failed to begin packet"));
-            #endif
-            return false;
-        }
-        #else
-        if (!_udp->beginPacket(broadcastIP, _port)) {
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.println(F("Failed to begin packet"));
-            #endif
-            return false;
-        }
-        #endif
-
-        size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(_sending_buffer), length);
-        (void)bytesSent; // Silence unused variable warning
-
-        if (!_udp->endPacket()) {
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.println(F("Failed to end packet"));
-            #endif
-            return false;
-        }
-
-        #ifdef BROADCAST_ETHERNETENC_DEBUG
-        Serial.print(F("S: "));
-        Serial.write(_sending_buffer, length);
-        Serial.println();
-        #endif
-
-        return length;
-    }
+    // Constructor
+    BroadcastSocket_Ethernet() : BroadcastSocket() {}
 
 
     size_t receive() override {
         if (_udp == nullptr) return 0;
 
         // Need to call homologous method in super class first
-        BroadcastSocket::receive(); // Very im_portant to do or else it may stop receiving !!
+        BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
         // Receive packets
         int packetSize = _udp->parsePacket();
@@ -107,24 +47,88 @@ public:
             if (packetSize > BROADCAST_SOCKET_BUFFER_SIZE) return 0;
 
             int length = _udp->read(_receiving_buffer, static_cast<size_t>(packetSize));
-            if (length <= 0) return 0;  // Your requested check - handles all error cases
-            
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.print(packetSize);
-            Serial.print(F("B from "));
-            Serial.print(_udp->remoteIP());
-            Serial.print(F(":"));
-            Serial.print(_udp->remotePort());
-            Serial.print(F(" -> "));
-            Serial.println(_receiving_buffer);
-            #endif
-            
-            _source_ip = _udp->remoteIP();
-            return triggerTalkers(static_cast<size_t>(length));
+			if (length > 0) {
+
+				_received_length = (size_t)length;
+				
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				Serial.print(packetSize);
+				Serial.print(F("B from "));
+				Serial.print(_udp->remoteIP());
+				Serial.print(F(":"));
+				Serial.print(_udp->remotePort());
+				Serial.print(F(" -> "));
+				Serial.write(_receiving_buffer, _received_length);
+				Serial.println();
+				#endif
+				
+				_source_ip = _udp->remoteIP();
+				triggerTalkers();
+				_received_length = 0;
+				return (size_t)length;
+			}
         }
         return 0;   // nothing received
     }
 
+
+    bool send(const JsonMessage& json_message) override {
+        if (_udp == nullptr) return false;
+
+        if (BroadcastSocket::send(json_message)) {	// Very important pre processing !!
+
+			IPAddress broadcastIP(255, 255, 255, 255);
+
+			#ifdef ENABLE_DIRECT_ADDRESSING
+			if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				Serial.println(F("Failed to begin packet"));
+				#endif
+				return false;
+			}
+			#else
+			if (!_udp->beginPacket(broadcastIP, _port)) {
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				Serial.println(F("Failed to begin packet"));
+				#endif
+				return false;
+			}
+			#endif
+
+			size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(_sending_buffer), _sending_length);
+			(void)bytesSent; // Silence unused variable warning
+
+			if (!_udp->endPacket()) {
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				Serial.println(F("Failed to end packet"));
+				#endif
+				return false;
+			}
+
+			#ifdef BROADCAST_ETHERNETENC_DEBUG
+			Serial.print(F("S: "));
+			Serial.write(_sending_buffer, _sending_length);
+			Serial.println();
+			#endif
+
+			_sending_length = 0;	// Marks sending buffer available
+			return true;
+		}
+
+        return false;
+    }
+
+
+public:
+
+    // Move ONLY the singleton instance method to subclass
+    static BroadcastSocket_Ethernet& instance() {
+        static BroadcastSocket_Ethernet instance;
+        return instance;
+    }
+
+
+    void set_port(uint16_t port) { _port = port; }
     void set_udp(EthernetUDP* udp) { _udp = udp; }
 };
 
