@@ -30,7 +30,7 @@ public:
 protected:
 
 	String _original_talker = "";
-	Original _original_message = {0, MessageValue::NOISE};
+	Original _original_message = {0, MessageValue::TALKIE_MSG_NOISE};
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 

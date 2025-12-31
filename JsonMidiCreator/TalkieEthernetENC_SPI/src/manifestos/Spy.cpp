@@ -28,7 +28,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	// As a spy it only answers to REMOTE calls
 	BroadcastValue source_data = json_message.get_broadcast_value();
-	if (source_data == BroadcastValue::REMOTE) {
+	if (source_data == BroadcastValue::TALKIE_BC_REMOTE) {
 
 		if (index < actionsCount()) {
 			// Actual implementation would do something based on index
@@ -40,9 +40,9 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					// 1. Start by collecting info from message
 					_original_talker = json_message.get_from_name();
 					_original_message.identity = json_message.get_identity();
-					_original_message.message_value = MessageValue::PING;	// It's is the emulated message (not CALL)
+					_original_message.message_value = MessageValue::TALKIE_MSG_PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a LOCAL PING
-					json_message.set_message_value(MessageValue::PING);
+					json_message.set_message_value(MessageValue::TALKIE_MSG_PING);
 					json_message.remove_identity();
 					if (json_message.get_nth_value_type(0) == ValueType::STRING) {
 						json_message.set_to_name(json_message.get_nth_value_string(0));
@@ -54,7 +54,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					json_message.remove_nth_value(0);
 					json_message.set_from_name(talker.get_name());	// Avoids the swapping
 					// 3. Sends the message LOCALLY
-					json_message.set_broadcast_value(BroadcastValue::LOCAL);
+					json_message.set_broadcast_value(BroadcastValue::TALKIE_BC_LOCAL);
 					// No need to transmit the message, the normal ROGER reply does that for us!
 				}
 				break;
@@ -65,13 +65,13 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 					// 1. Start by collecting info from message
 					_original_talker = json_message.get_from_name();	// Explicit conversion
 					_original_message.identity = json_message.get_identity();
-					_original_message.message_value = MessageValue::PING;	// It's is the emulated message (not CALL)
+					_original_message.message_value = MessageValue::TALKIE_MSG_PING;	// It's is the emulated message (not CALL)
 					// 2. Repurpose it to be a SELF PING
-					json_message.set_message_value(MessageValue::PING);
+					json_message.set_message_value(MessageValue::TALKIE_MSG_PING);
 					json_message.remove_identity();	// Makes sure a new IDENTITY is set
 					json_message.set_from_name(talker.get_name());	// Avoids swapping
 					// 3. Sends the message to myself
-					json_message.set_broadcast_value(BroadcastValue::SELF);
+					json_message.set_broadcast_value(BroadcastValue::TALKIE_BC_SELF);
 					// No need to transmit the message, the normal ROGER reply does that for us!
 				}
 				break;
@@ -95,16 +95,16 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 						return false;
 					}
 					json_message.remove_nth_value(0);
-					json_message.set_message_value(MessageValue::CALL);
+					json_message.set_message_value(MessageValue::TALKIE_MSG_CALL);
 					// 2. Collect info from message
 					_original_talker = json_message.get_from_name();
 					_original_message.identity = json_message.get_identity();
-					_original_message.message_value = MessageValue::CALL;	// It's is the emulated message (not CALL)
+					_original_message.message_value = MessageValue::TALKIE_MSG_CALL;	// It's is the emulated message (not CALL)
 					// 3. Repurpose message with new targets
 					json_message.remove_identity();
 					json_message.set_from_name(talker.get_name());	// Avoids the swapping
 					// 4. Sends the message LOCALLY
-					json_message.set_broadcast_value(BroadcastValue::LOCAL);
+					json_message.set_broadcast_value(BroadcastValue::TALKIE_BC_LOCAL);
 					// No need to transmit the message, the normal ROGER reply does that for us!
 				}
 				break;
@@ -139,7 +139,7 @@ void Spy::echo(JsonTalker& talker, JsonMessage& json_message) {
 	json_message.set_identity(_original_message.identity);
 	// It's already an ECHO message, it's because of that that entered here
 	// Finally answers to the REMOTE caller by repeating all other json fields
-	json_message.set_broadcast_value(BroadcastValue::REMOTE);
+	json_message.set_broadcast_value(BroadcastValue::TALKIE_BC_REMOTE);
 	talker.transmitToRepeater(json_message);
 }
 

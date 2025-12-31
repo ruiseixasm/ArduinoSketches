@@ -34,7 +34,7 @@ bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
 	#endif
 
 	if (_message_repeater) {
-		if (_link_type == LinkType::DOWN_LINKED) {
+		if (_link_type == LinkType::TALKIE_DOWN_LINKED) {
 			return _message_repeater->socketUplink(*this, json_message);
 		} else {
 			return _message_repeater->socketDownlink(*this, json_message);

@@ -59,7 +59,7 @@ public:
 protected:
 
 	MessageRepeater* _message_repeater = nullptr;
-	LinkType _link_type = LinkType::UP_LINKED;
+	LinkType _link_type = LinkType::TALKIE_UP_LINKED;
 
     char _received_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
@@ -142,7 +142,7 @@ protected:
 
 				if (_max_delay_ms > 0) {
 
-					if (message_code == MessageValue::CALL) {	// Only does time control on Calls (drops)
+					if (message_code == MessageValue::TALKIE_MSG_CALL) {	// Only does time control on Calls (drops)
 
 						#ifdef BROADCASTSOCKET_DEBUG
 						Serial.print(F("triggerTalkers6: Message code requires delay check: "));
@@ -186,7 +186,7 @@ protected:
 					#endif
 					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					if (json_message.swap_from_with_to()) {
-						json_message.set_message_value(MessageValue::ERROR);
+						json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
 						if (!json_message.has_identity()) {
 							json_message.set_identity();
 						}

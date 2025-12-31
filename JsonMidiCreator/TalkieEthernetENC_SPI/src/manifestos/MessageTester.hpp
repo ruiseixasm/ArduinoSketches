@@ -226,8 +226,8 @@ public:
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 				MessageValue message_value = static_cast<MessageValue>( test_json_message.get_value_number('m') );
 				json_message.set_nth_value_number(0, static_cast<int>(message_value));
-				json_message.set_nth_value_number(1, static_cast<int>(MessageValue::ECHO));
-				return message_value == MessageValue::ECHO;	// 6 is ECHO
+				json_message.set_nth_value_number(1, static_cast<int>(MessageValue::TALKIE_MSG_ECHO));
+				return message_value == MessageValue::TALKIE_MSG_ECHO;
 			}
 			break;
 				

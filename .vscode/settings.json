@@ -8,6 +8,7 @@
 		"Ethercard",
 		"fullclean",
 		"HSPI",
+		"ICSP",
 		"IMXRT",
 		"IRAM",
 		"llums",
