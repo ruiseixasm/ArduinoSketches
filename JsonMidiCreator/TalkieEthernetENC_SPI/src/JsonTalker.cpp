@@ -56,3 +56,19 @@ bool JsonTalker::transmitSockets(JsonMessage& json_message) {
 	return false;
 }
 
+
+bool JsonTalker::transmitDrops(JsonMessage& json_message) {
+	if (_message_repeater) {
+		uint8_t socket_index = 0;
+		const BroadcastSocket* socket;
+		_message_repeater->iterateSocketsReset();
+		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
+			json_message.set_nth_value_number(0, socket_index++);
+			json_message.set_nth_value_number(1, socket->get_drops_count());
+			transmitToRepeater(json_message);	// Many-to-One
+		}
+		return socket_index > 0;
+	}
+	return false;
+}
+

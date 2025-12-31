@@ -106,11 +106,11 @@ public:
 
 	const char* socket_class_name();
 
-    const char* get_name() { return _name; }
-    const char* get_desc() { return _desc; }
+    const char* get_name() const { return _name; }
+    const char* get_desc() const { return _desc; }
     void set_channel(uint8_t channel) { _channel = channel; }
-    uint8_t get_channel() { return _channel; }
-    Original& get_original() { return _original_message; }
+    uint8_t get_channel() const { return _channel; }
+    const Original& get_original() const { return _original_message; }
     
     JsonTalker& mute() {    // It does NOT make a copy!
         _muted_calls = true;
@@ -195,6 +195,8 @@ public:
 	bool transmitToRepeater(JsonMessage& json_message);
 
 	bool transmitSockets(JsonMessage& json_message);
+	bool transmitDrops(JsonMessage& json_message);
+	bool transmitDelays(JsonMessage& json_message);
 
     
     TalkerMatch talkerReceive(JsonMessage& json_message) {
