@@ -636,11 +636,11 @@ public:
 		size_t colon_position = get_colon_position('m', _json_payload, _json_length);
 		if (colon_position) {
 			uint8_t message_number = get_value_number('m', _json_payload, _json_length, colon_position);
-			if (message_number < static_cast<uint8_t>( MessageValue::MSG_NOISE )) {
+			if (message_number < static_cast<uint8_t>( MessageValue::TALKIE_MSG_NOISE )) {
 				return static_cast<MessageValue>( message_number );
 			}
 		}
-		return MessageValue::MSG_NOISE;
+		return MessageValue::TALKIE_MSG_NOISE;
 	}
 
 	uint16_t get_identity() {
@@ -666,11 +666,11 @@ public:
 		size_t colon_position = get_colon_position('r', _json_payload, _json_length);
 		if (colon_position) {
 			uint8_t roger_number = (uint8_t)get_value_number('r', _json_payload, _json_length, colon_position);
-			if (roger_number < static_cast<uint8_t>( RogerValue::NIL )) {
+			if (roger_number < static_cast<uint8_t>( RogerValue::TALKIE_ROGER_NIL )) {
 				return static_cast<RogerValue>( roger_number );
 			}
 		}
-		return RogerValue::NIL;
+		return RogerValue::TALKIE_ROGER_NIL;
 	}
 
 	InfoValue get_info_value() const {
@@ -726,7 +726,7 @@ public:
 			}
 		} else {
 			MessageValue message_value = get_message_value();
-			if (message_value > MessageValue::MSG_PING || has_nth_value_number(0)) {
+			if (message_value > MessageValue::TALKIE_MSG_PING || has_nth_value_number(0)) {
 				// Only TALK, CHANNEL and PING can be for ANY
 				// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
 				// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE

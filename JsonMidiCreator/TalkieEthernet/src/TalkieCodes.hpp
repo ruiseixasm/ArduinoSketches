@@ -42,16 +42,16 @@ struct TalkieCodes {
 
 
     // PREFIXED VERSION - 100% safe across all boards
-    enum class MessageValue : uint8_t {
-        MSG_TALK,
-        MSG_CHANNEL,
-        MSG_PING,
-        MSG_CALL,
-        MSG_LIST,
-        MSG_INFO,
-        MSG_ECHO,
-        MSG_ERROR,
-        MSG_NOISE
+    enum MessageValue : uint8_t {
+        TALKIE_MSG_TALK,
+        TALKIE_MSG_CHANNEL,
+        TALKIE_MSG_PING,
+        TALKIE_MSG_CALL,
+        TALKIE_MSG_LIST,
+        TALKIE_MSG_INFO,
+        TALKIE_MSG_ECHO,
+        TALKIE_MSG_ERROR,
+        TALKIE_MSG_NOISE
     };
 
     enum class InfoValue : uint8_t {
@@ -65,11 +65,11 @@ struct TalkieCodes {
         INFO_UNDEFINED
     };
 
-    enum class RogerValue : uint8_t {
-        ROGER,
-		NEGATIVE,
-		SAY_AGAIN,
-		NIL
+    enum RogerValue : uint8_t {
+        TALKIE_ROGER_ROGER,
+		TALKIE_ROGER_NEGATIVE,
+		TALKIE_ROGER_SAY_AGAIN,
+		TALKIE_ROGER_NIL
     };
 
     enum class ErrorValue : uint8_t {

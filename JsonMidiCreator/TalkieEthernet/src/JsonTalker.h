@@ -54,8 +54,8 @@ protected:
     const char* _desc;      // Description of the Device
 	TalkerManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
-	MessageValue _received_message = MessageValue::MSG_NOISE;
-	Original _original_message = {0, MessageValue::MSG_NOISE};
+	MessageValue _received_message = MessageValue::TALKIE_MSG_NOISE;
+	Original _original_message = {0, MessageValue::TALKIE_MSG_NOISE};
     bool _muted_calls = false;
 
 public:
@@ -143,7 +143,7 @@ public:
 		}
 
 		MessageValue message_value = json_message.get_message_value();
-		if (message_value < MessageValue::MSG_ECHO) {
+		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
 
 			#ifdef JSON_TALKER_DEBUG
 			Serial.print(F("socketSend1: Setting a new identifier (i) for :"));
@@ -152,15 +152,15 @@ public:
 			#endif
 
 			// _muted_calls mutes CALL echoes only
-			if (_muted_calls && _received_message == MessageValue::MSG_CALL) {
-				_received_message = MessageValue::MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
+			if (_muted_calls && _received_message == MessageValue::TALKIE_MSG_CALL) {
+				_received_message = MessageValue::TALKIE_MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
 				return false;
 			} else {
-				_received_message = MessageValue::MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
+				_received_message = MessageValue::TALKIE_MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
 			}
 
 			uint16_t message_id = (uint16_t)millis();
-			if (message_value < MessageValue::MSG_ECHO) {
+			if (message_value < MessageValue::TALKIE_MSG_ECHO) {
 				_original_message.identity = message_id;
 				_original_message.message_value = message_value;
 			}
@@ -173,7 +173,7 @@ public:
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
-			json_message.set_message_value(MessageValue::MSG_ERROR);
+			json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
 			json_message.set_identity();
 			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::ERR_IDENTITY));
 
@@ -209,14 +209,14 @@ public:
 		#endif
 
 		// Doesn't apply to ECHO nor ERROR
-		if (message_value < MessageValue::MSG_ECHO) {
+		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
 			_received_message = message_value;
-			json_message.set_message_value(MessageValue::MSG_ECHO);
+			json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 		}
 
         switch (message_value) {
 
-			case MessageValue::MSG_CALL:
+			case MessageValue::TALKIE_MSG_CALL:
 				{
 					uint8_t index_found_i = 255;
 					ValueType value_type = json_message.get_action_type();
@@ -242,24 +242,24 @@ public:
 
 						// ROGER should be implicit for CALL to spare json string size for more data index value nth
 						if (!_manifesto->actionByIndex(index_found_i, *this, json_message)) {
-							json_message.set_roger_value(RogerValue::NEGATIVE);
+							json_message.set_roger_value(RogerValue::TALKIE_ROGER_NEGATIVE);
 						}
 					} else {
 						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-						json_message.set_roger_value(RogerValue::SAY_AGAIN);
+						json_message.set_roger_value(RogerValue::TALKIE_ROGER_SAY_AGAIN);
 					}
 				}
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitToRepeater(json_message);
 				break;
 			
-			case MessageValue::MSG_TALK:
+			case MessageValue::TALKIE_MSG_TALK:
 				json_message.set_nth_value_string(0, _desc);
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitToRepeater(json_message);
 				break;
 			
-			case MessageValue::MSG_CHANNEL:
+			case MessageValue::TALKIE_MSG_CHANNEL:
 				if (json_message.has_nth_value_number(0)) {
 
 					#ifdef JSON_TALKER_DEBUG
@@ -274,12 +274,12 @@ public:
 				transmitToRepeater(json_message);
 				break;
 			
-			case MessageValue::MSG_PING:
+			case MessageValue::TALKIE_MSG_PING:
 				// Talker name already set in FROM (ready to transmit)
 				transmitToRepeater(json_message);
 				break;
 			
-			case MessageValue::MSG_LIST:
+			case MessageValue::TALKIE_MSG_LIST:
 				{   // Because of action_index and action !!!
 
 					#ifdef JSON_TALKER_DEBUG
@@ -299,13 +299,13 @@ public:
 						}
 					}
 					if (!action_index) {
-						json_message.set_roger_value(RogerValue::NIL);
+						json_message.set_roger_value(RogerValue::TALKIE_ROGER_NIL);
 						transmitToRepeater(json_message);	// One-to-One
 					}
 				}
 				break;
 			
-			case MessageValue::MSG_INFO:
+			case MessageValue::TALKIE_MSG_INFO:
 				if (json_message.has_info()) {
 
 					InfoValue system_code = json_message.get_info_value();
@@ -353,7 +353,7 @@ public:
 				}
 				break;
 			
-			case MessageValue::MSG_ECHO:
+			case MessageValue::TALKIE_MSG_ECHO:
 				if (_manifesto) {
 
 					// Makes sure it has the same id first (echo condition)
@@ -374,7 +374,7 @@ public:
 				}
 				break;
 			
-			case MessageValue::MSG_ERROR:
+			case MessageValue::TALKIE_MSG_ERROR:
 				if (_manifesto) {
 					_manifesto->error(*this, json_message);
 				}
