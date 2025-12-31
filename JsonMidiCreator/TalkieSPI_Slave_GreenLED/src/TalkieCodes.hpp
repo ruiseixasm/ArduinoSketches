@@ -17,57 +17,78 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 
 
+// PREFIXED VERSION - 100% safe across all boards
 struct TalkieCodes {
 
-	enum class LinkType : uint8_t {
-		DOWN_LINKED, UP_LINKED, UP_BRIDGED	// UP_BRIDGED allows the sending of LOCAL broadcasted messages
+	enum LinkType : uint8_t {
+		TALKIE_DOWN_LINKED,
+		TALKIE_UP_LINKED,
+		TALKIE_UP_BRIDGED	// TALKIE_UP_BRIDGED allows the sending of LOCAL broadcasted messages
 	};
 
-	enum class TalkerMatch : uint8_t {
-		NONE, ANY, BY_CHANNEL, BY_NAME, FAIL
+
+	enum TalkerMatch : uint8_t {
+		TALKIE_MATCH_NONE,
+		TALKIE_MATCH_ANY,
+		TALKIE_MATCH_BY_CHANNEL,
+		TALKIE_MATCH_BY_NAME,
+		TALKIE_MATCH_FAIL
 	};
 
-	// Add a char "enum" struct
-    struct MessageKey {
-        static constexpr const char BROADCAST		= 'b';
-        static constexpr const char TIMESTAMP		= 'i';
-        static constexpr const char IDENTITY 		= 'i';
-        static constexpr const char MESSAGE 		= 'm';
-        static constexpr const char FROM 			= 'f';
-        static constexpr const char TO 				= 't';
-        static constexpr const char INFO 			= 's';
-        static constexpr const char ACTION			= 'a';
-        static constexpr const char ROGER 			= 'r';
+
+	enum BroadcastValue : uint8_t {
+		TALKIE_BC_REMOTE,
+		TALKIE_BC_LOCAL,
+		TALKIE_BC_SELF,
+		TALKIE_BC_NONE
+	};
+
+
+    enum MessageValue : uint8_t {
+        TALKIE_MSG_TALK,
+        TALKIE_MSG_CHANNEL,
+        TALKIE_MSG_PING,
+        TALKIE_MSG_CALL,
+        TALKIE_MSG_LIST,
+        TALKIE_MSG_INFO,
+        TALKIE_MSG_ECHO,
+        TALKIE_MSG_ERROR,
+        TALKIE_MSG_NOISE
     };
 
 
-	enum class BroadcastValue : uint8_t {
-		REMOTE, LOCAL, SELF, NONE
-	};
+    enum InfoValue : uint8_t {
+        TALKIE_INFO_BOARD,
+        TALKIE_INFO_DROPS,
+        TALKIE_INFO_DELAY,
+        TALKIE_INFO_MUTE,
+        TALKIE_INFO_SOCKET,
+        TALKIE_INFO_TALKER,
+        TALKIE_INFO_MANIFESTO,
+        TALKIE_INFO_UNDEFINED
+    };
 
 
-	enum class MessageValue : uint8_t {
-		TALK, CHANNEL, PING, CALL, LIST, INFO, ECHO, ERROR, NOISE
-	};
+    enum RogerValue : uint8_t {
+        TALKIE_RGR_ROGER,
+		TALKIE_RGR_NEGATIVE,
+		TALKIE_RGR_SAY_AGAIN,
+		TALKIE_RGR_NIL,
+		TALKIE_RGR_NO_JOY
+    };
 
 
-	enum class InfoValue : uint8_t {
-		BOARD, DROPS, DELAY, MUTE, SOCKET, TALKER, MANIFESTO, UNDEFINED
-	};
-
-
-	// Only applicable to CALL messages
-	enum class RogerValue : uint8_t {
-		ROGER, NEGATIVE, SAY_AGAIN, NIL
-	};
-
-
-	enum class ErrorValue : uint8_t {
-		FROM, FIELD, CHECKSUM, MESSAGE, IDENTITY, DELAY, KEY, DATA
-	};
-
+    enum ErrorValue : uint8_t {
+        TALKIE_ERR_FROM,
+        TALKIE_ERR_FIELD,
+        TALKIE_ERR_CHECKSUM,
+        TALKIE_ERR_MESSAGE,
+        TALKIE_ERR_IDENTITY,
+        TALKIE_ERR_ERR_DELAY,
+        TALKIE_ERR_ERR_KEY,
+        TALKIE_ERR_ERR_DATA
+    };
 };
-
 
 
 #endif // TALKIE_CODES_HPP

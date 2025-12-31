@@ -35,7 +35,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
-using MessageKey = TalkieCodes::MessageKey;
 using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using RogerValue = TalkieCodes::RogerValue;
@@ -637,11 +636,11 @@ public:
 		size_t colon_position = get_colon_position('m', _json_payload, _json_length);
 		if (colon_position) {
 			uint8_t message_number = get_value_number('m', _json_payload, _json_length, colon_position);
-			if (message_number < static_cast<uint8_t>( MessageValue::NOISE )) {
+			if (message_number < static_cast<uint8_t>( MessageValue::TALKIE_MSG_NOISE )) {
 				return static_cast<MessageValue>( message_number );
 			}
 		}
-		return MessageValue::NOISE;
+		return MessageValue::TALKIE_MSG_NOISE;
 	}
 
 	uint16_t get_identity() {
@@ -656,33 +655,33 @@ public:
 		size_t colon_position = get_colon_position('b', _json_payload, _json_length);
 		if (colon_position) {
 			BroadcastValue broadcast_value = static_cast<BroadcastValue>( get_value_number('b', _json_payload, _json_length, colon_position) );
-			if (broadcast_value < BroadcastValue::NONE) {
+			if (broadcast_value < BroadcastValue::TALKIE_BC_NONE) {
 				return broadcast_value;
 			}
 		}
-		return BroadcastValue::NONE;
+		return BroadcastValue::TALKIE_BC_NONE;
 	}
 
 	RogerValue get_roger_value() const {
 		size_t colon_position = get_colon_position('r', _json_payload, _json_length);
 		if (colon_position) {
 			uint8_t roger_number = (uint8_t)get_value_number('r', _json_payload, _json_length, colon_position);
-			if (roger_number < static_cast<uint8_t>( RogerValue::NIL )) {
+			if (roger_number < static_cast<uint8_t>( RogerValue::TALKIE_RGR_NIL )) {
 				return static_cast<RogerValue>( roger_number );
 			}
 		}
-		return RogerValue::NIL;
+		return RogerValue::TALKIE_RGR_NIL;
 	}
 
 	InfoValue get_info_value() const {
 		size_t colon_position = get_colon_position('s', _json_payload, _json_length);
 		if (colon_position) {
 			uint8_t info_number = (uint8_t)get_value_number('s', _json_payload, _json_length, colon_position);
-			if (info_number < static_cast<uint8_t>( InfoValue::UNDEFINED )) {
+			if (info_number < static_cast<uint8_t>( InfoValue::TALKIE_INFO_UNDEFINED )) {
 				return static_cast<InfoValue>( info_number );
 			}
 		}
-		return InfoValue::UNDEFINED;
+		return InfoValue::TALKIE_INFO_UNDEFINED;
 	}
 
     // New method using internal temporary buffer (_temp_string)
@@ -721,22 +720,22 @@ public:
 		if (has_to()) {
 			ValueType value_type = get_to_type();
 			switch (value_type) {
-				case ValueType::INTEGER: return TalkerMatch::BY_CHANNEL;
-				case ValueType::STRING: return TalkerMatch::BY_NAME;
+				case ValueType::INTEGER: return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
+				case ValueType::STRING: return TalkerMatch::TALKIE_MATCH_BY_NAME;
 				default: break;
 			}
 		} else {
 			MessageValue message_value = get_message_value();
-			if (message_value > MessageValue::PING || has_nth_value_number(0)) {
+			if (message_value > MessageValue::TALKIE_MSG_PING || has_nth_value_number(0)) {
 				// Only TALK, CHANNEL and PING can be for ANY
 				// AVOIDS DANGEROUS ALL AT ONCE TRIGGERING (USE CHANNEL INSTEAD)
 				// AVOIDS DANGEROUS SETTING OF ALL CHANNELS AT ONCE
-				return TalkerMatch::FAIL;
+				return TalkerMatch::TALKIE_MATCH_FAIL;
 			} else {
-				return TalkerMatch::ANY;
+				return TalkerMatch::TALKIE_MATCH_ANY;
 			}
 		}
-		return TalkerMatch::NONE;
+		return TalkerMatch::TALKIE_MATCH_NONE;
 	}
 
 	
@@ -761,6 +760,10 @@ public:
 			return get_value_number(value_key, _json_payload, _json_length);
 		}
 		return false;
+	}
+
+	ValueType get_action_type() const {
+		return get_value_type('a', _json_payload, _json_length);
 	}
 
 	char* get_action_string() const {
