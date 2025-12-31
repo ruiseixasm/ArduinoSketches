@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <EtherCard.h>
 
 
-#define BROADCAST_ETHERCARD_DEBUG
+// #define BROADCAST_ETHERCARD_DEBUG
 // #define ENABLE_DIRECT_ADDRESSING
 
 
@@ -45,9 +45,10 @@ private:
         }
 
         #ifdef BROADCAST_ETHERCARD_DEBUG
-        Serial.print(F("R: "));
+        Serial.print(F("C: "));
         Serial.write(data, length);
-        Serial.println();
+        Serial.print(" | ");
+        Serial.println(length);
         #endif
 
         if (length && length < BROADCAST_SOCKET_BUFFER_SIZE) {
@@ -66,10 +67,12 @@ protected:
 		
 		// For static access to the buffers
 		_ptr_received_buffer = _received_buffer;
+		ether.udpServerListenOnPort(staticCallback, _port);
 	}
 
 
     size_t receive() override {
+		_data_length = 0;	// Makes sure this is only called once per message received (it's the Ethernet reading that sets it)
 		ether.packetLoop(ether.packetReceive());	// Updates the _data_length variable
 		if (_data_length) {
 			_received_length = _data_length;
