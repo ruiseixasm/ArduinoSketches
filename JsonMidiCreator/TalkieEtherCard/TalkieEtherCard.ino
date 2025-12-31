@@ -15,7 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
-#include "src/sockets/BroadcastSocket_EtherCard.hpp"
+#include "src/sockets/BroadcastSocket_EtherCard.h"
 #include "src/manifestos/BlackManifesto.hpp"
 #include "src/JsonTalker.h"
 #include "src/MessageRepeater.hpp"
@@ -55,9 +55,6 @@ uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x02};
 // uint8_t mac[] = {0x02, 0xAA, 0xFA, 0xCE, 0x10, 0x04};
 // uint8_t mac[] = {0x02, 0xAA, 0xFA, 0xCE, 0x10, 0x05};
 
-#define PORT 5005                                       // UDP port
-
-
 
 const char nano_name[] = "nano";
 const char nano_desc[] = "Arduino Nano";
@@ -68,7 +65,8 @@ const char uno_desc[] = "Arduino Uno";
 JsonTalker uno = JsonTalker(uno_name, uno_desc);
 JsonTalker* downlinked_talkers[] = { &nano, &uno };    // Only an array of pointers preserves polymorphism!!
 // Singleton requires the & (to get a reference variable)
-auto& uplinked_sockets = BroadcastSocket_EtherCard::instance();
+auto& ethernet_socket = BroadcastSocket_EtherCard::instance();
+BroadcastSocket* uplinked_sockets[] = { &ethernet_socket };
 
 MessageRepeater message_repeater(
 		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),
@@ -103,11 +101,6 @@ void setup() {
     }
     // Makes sure it allows broadcast
     ether.enableBroadcast();
-
-
-    // By default is already 5005
-    broadcast_socket.set_port(5005);
-
 
     Serial.println(F("Socket ready"));
 

@@ -252,7 +252,7 @@ protected:
     }
 
 
-    virtual uint8_t receive() {
+    virtual size_t receive() {
         // In theory, a UDP packet on a local area network (LAN) could survive
         // for about 4.25 minutes (255 seconds).
         // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN

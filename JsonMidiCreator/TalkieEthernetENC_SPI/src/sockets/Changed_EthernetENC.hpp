@@ -53,7 +53,7 @@ protected:
     Changed_EthernetENC() : BroadcastSocket() {}
 
 
-    uint8_t receive() override {
+    size_t receive() override {
         if (_udp == nullptr) return 0;
 
         // Need to call homologous method in super class first
@@ -107,11 +107,11 @@ protected:
             
             _source_ip = _udp->remoteIP();
 			// Makes sure the _received_length is set
-			_received_length = length;
+			_received_length = (size_t)length;
 			triggerTalkers();
 			// Makes sure the _received_buffer is deleted with 0
 			_received_length = 0;
-			return length;
+			return (size_t)length;
         }
         return 0;   // nothing received
     }
