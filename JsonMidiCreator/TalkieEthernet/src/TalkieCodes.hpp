@@ -17,6 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 
 
+// PREFIXED VERSION - 100% safe across all boards
 struct TalkieCodes {
 
 	enum LinkType : uint8_t {
@@ -24,6 +25,7 @@ struct TalkieCodes {
 		TALKIE_UP_LINKED,
 		TALKIE_UP_BRIDGED	// TALKIE_UP_BRIDGED allows the sending of LOCAL broadcasted messages
 	};
+
 
 	enum TalkerMatch : uint8_t {
 		TALKIE_MATCH_NONE,
@@ -33,6 +35,7 @@ struct TalkieCodes {
 		TALKIE_MATCH_FAIL
 	};
 
+
 	enum BroadcastValue : uint8_t {
 		TALKIE_BC_REMOTE,
 		TALKIE_BC_LOCAL,
@@ -41,7 +44,6 @@ struct TalkieCodes {
 	};
 
 
-    // PREFIXED VERSION - 100% safe across all boards
     enum MessageValue : uint8_t {
         TALKIE_MSG_TALK,
         TALKIE_MSG_CHANNEL,
@@ -54,6 +56,7 @@ struct TalkieCodes {
         TALKIE_MSG_NOISE
     };
 
+
     enum InfoValue : uint8_t {
         TALKIE_INFO_BOARD,
         TALKIE_INFO_DROPS,
@@ -65,12 +68,14 @@ struct TalkieCodes {
         TALKIE_INFO_UNDEFINED
     };
 
+
     enum RogerValue : uint8_t {
         TALKIE_ROGER_ROGER,
 		TALKIE_ROGER_NEGATIVE,
 		TALKIE_ROGER_SAY_AGAIN,
 		TALKIE_ROGER_NIL
     };
+
 
     enum ErrorValue : uint8_t {
         TALKIE_ERR_FROM,
@@ -82,9 +87,7 @@ struct TalkieCodes {
         TALKIE_ERR_ERR_KEY,
         TALKIE_ERR_ERR_DATA
     };
-
 };
-
 
 
 #endif // TALKIE_CODES_HPP
