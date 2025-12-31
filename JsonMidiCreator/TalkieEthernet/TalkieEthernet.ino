@@ -24,7 +24,8 @@ https://github.com/ruiseixasm/JsonTalkie
 
 const char mega_name[] = "mega";
 const char mega_desc[] = "I'm a Mega talker";
-JsonTalker mega = JsonTalker(mega_name, mega_desc);
+MegaManifesto mega_manifesto;
+JsonTalker mega = JsonTalker(mega_name, mega_desc, &mega_manifesto);
 
 JsonTalker* downlinked_talkers[] = { &mega };    // Only an array of pointers preserves polymorphism!!
 // Singleton requires the & (to get a reference variable)

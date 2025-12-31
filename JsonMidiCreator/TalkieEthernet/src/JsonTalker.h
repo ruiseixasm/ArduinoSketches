@@ -218,35 +218,39 @@ public:
 
 			case MessageValue::TALKIE_MSG_CALL:
 				{
-					uint8_t index_found_i = 255;
-					ValueType value_type = json_message.get_action_type();
-					switch (value_type) {
+					if (_manifesto) {
+						uint8_t index_found_i = 255;
+						ValueType value_type = json_message.get_action_type();
+						switch (value_type) {
 
-						case ValueType::STRING:
-							index_found_i = _manifesto->actionIndex(json_message.get_action_string());
-							break;
-						
-						case ValueType::INTEGER:
-							index_found_i = _manifesto->actionIndex(json_message.get_action_number());
-							break;
-						
-						default: break;
-					}
-					if (index_found_i < 255) {
+							case ValueType::STRING:
+								index_found_i = _manifesto->actionIndex(json_message.get_action_string());
+								break;
+							
+							case ValueType::INTEGER:
+								index_found_i = _manifesto->actionIndex(json_message.get_action_number());
+								break;
+							
+							default: break;
+						}
+						if (index_found_i < 255) {
 
-						#ifdef JSON_TALKER_DEBUG
-						Serial.print(F("\tRUN found at "));
-						Serial.print(index_found_i);
-						Serial.println(F(", now being processed..."));
-						#endif
+							#ifdef JSON_TALKER_DEBUG
+							Serial.print(F("\tRUN found at "));
+							Serial.print(index_found_i);
+							Serial.println(F(", now being processed..."));
+							#endif
 
-						// ROGER should be implicit for CALL to spare json string size for more data index value nth
-						if (!_manifesto->actionByIndex(index_found_i, *this, json_message)) {
-							json_message.set_roger_value(RogerValue::TALKIE_ROGER_NEGATIVE);
+							// ROGER should be implicit for CALL to spare json string size for more data index value nth
+							if (!_manifesto->actionByIndex(index_found_i, *this, json_message)) {
+								json_message.set_roger_value(RogerValue::TALKIE_ROGER_NEGATIVE);
+							}
+						} else {
+							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
+							json_message.set_roger_value(RogerValue::TALKIE_ROGER_SAY_AGAIN);
 						}
 					} else {
-						// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-						json_message.set_roger_value(RogerValue::TALKIE_ROGER_SAY_AGAIN);
+						json_message.set_roger_value(RogerValue::TALKIE_ROGER_NO_JOY);
 					}
 				}
 				// In the end sends back the processed message (single message, one-to-one)
