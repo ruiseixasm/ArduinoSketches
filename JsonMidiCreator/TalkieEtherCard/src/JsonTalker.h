@@ -288,13 +288,15 @@ public:
 					#endif
 
 					uint8_t action_index = 0;
-					const TalkerManifesto::Action* action;
-					_manifesto->iterateActionsReset();
-					while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
-						json_message.set_nth_value_number(0, action_index++);
-						json_message.set_nth_value_string(1, action->name);
-						json_message.set_nth_value_string(2, action->desc);
-						transmitToRepeater(json_message);	// Many-to-One
+					if (_manifesto) {
+						const TalkerManifesto::Action* action;
+						_manifesto->iterateActionsReset();
+						while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
+							json_message.set_nth_value_number(0, action_index++);
+							json_message.set_nth_value_string(1, action->name);
+							json_message.set_nth_value_string(2, action->desc);
+							transmitToRepeater(json_message);	// Many-to-One
+						}
 					}
 					if (!action_index) {
 						json_message.set_roger_value(RogerValue::NIL);
