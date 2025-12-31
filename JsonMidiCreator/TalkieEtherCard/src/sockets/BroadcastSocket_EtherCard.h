@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <EtherCard.h>
 
 
-// #define BROADCAST_ETHERCARD_DEBUG
+#define BROADCAST_ETHERCARD_DEBUG
 // #define ENABLE_DIRECT_ADDRESSING
 
 
@@ -72,8 +72,15 @@ protected:
     size_t receive() override {
 		ether.packetLoop(ether.packetReceive());	// Updates the _data_length variable
 		if (_data_length) {
-			BroadcastSocket::receive();  // Makes sure it's the Ethernet reading that sets it! (always returns 0)
 			_received_length = _data_length;
+			
+			#ifdef BROADCAST_ETHERCARD_DEBUG
+			Serial.print(F("R: "));
+			Serial.write(_received_buffer, _received_length);
+			Serial.println();
+			#endif
+
+			BroadcastSocket::receive();  // Makes sure it's the Ethernet reading that sets it! (always returns 0)
 			BroadcastSocket::triggerTalkers();
 			_received_length = 0;
 			return _data_length;
