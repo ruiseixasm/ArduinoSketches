@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // #define BLACK_MANIFESTO_DEBUG
 
-#define BUZZ_PIN 2	// External BLACK pin
+#define BUZZ_PIN 3	// External BLACK pin
 
 
 class BlackManifesto : public TalkerManifesto {

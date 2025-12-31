@@ -63,7 +63,7 @@ public:
     // Explicit default constructor
     JsonTalker() = delete;
         
-    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto)
+    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr)
         : _name(name), _desc(desc), _manifesto(manifesto) {
 		// AVOIDS EVERY TALKER WITH THE SAME CHANNEL
 		// XOR is great for 8-bit mixing
