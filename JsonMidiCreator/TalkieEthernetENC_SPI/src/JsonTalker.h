@@ -343,6 +343,22 @@ public:
 							}
 							break;
 
+						case InfoValue::TALKIE_INFO_DROPS:
+							if (!transmitDrops(json_message)) {
+								json_message.set_nth_value_string(0, "none");
+							} else {
+        						return talker_match;	// Avoids extra transmissions sends
+							}
+							break;
+
+						case InfoValue::TALKIE_INFO_DELAY:
+							if (!transmitDelays(json_message)) {
+								json_message.set_nth_value_string(0, "none");
+							} else {
+        						return talker_match;	// Avoids extra transmissions sends
+							}
+							break;
+
 						case InfoValue::TALKIE_INFO_TALKER:
 							json_message.set_nth_value_string(0, class_name());
 							break;
