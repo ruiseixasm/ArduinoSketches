@@ -102,7 +102,7 @@ public:
 		#endif
 
 		// To downlinked nodes (BRIDGED uplinks process LOCAL messages too)
-		if (broadcast == BroadcastValue::REMOTE || (broadcast == BroadcastValue::LOCAL && socket.getLinkType() == LinkType::TALKIE_UP_BRIDGED)) {
+		if (broadcast == BroadcastValue::TALKIE_BC_REMOTE || (broadcast == BroadcastValue::TALKIE_BC_LOCAL && socket.getLinkType() == LinkType::TALKIE_UP_BRIDGED)) {
 			switch (talker_match) {
 
 				case TalkerMatch::TALKIE_MATCH_ANY:
@@ -152,7 +152,7 @@ public:
 			}
 			return true;
 		} else {
-			return broadcast == BroadcastValue::NONE;
+			return broadcast == BroadcastValue::TALKIE_BC_NONE;
 		}
 	}
 
@@ -170,7 +170,7 @@ public:
 
 		switch (broadcast) {
 
-			case BroadcastValue::REMOTE:		// To uplinked nodes
+			case BroadcastValue::TALKIE_BC_REMOTE:		// To uplinked nodes
 			{
 				if (_uplinked_talkers_count) {
 					TalkerMatch talker_match = message.get_talker_match();
@@ -233,7 +233,7 @@ public:
 			}
 			break;
 			
-			case BroadcastValue::LOCAL:		// To downlinked nodes
+			case BroadcastValue::TALKIE_BC_LOCAL:		// To downlinked nodes
 			{
 				if (_downlinked_talkers_count) {
 					TalkerMatch talker_match = message.get_talker_match();
@@ -312,7 +312,7 @@ public:
 			}
 			break;
 			
-			case BroadcastValue::SELF:
+			case BroadcastValue::TALKIE_BC_SELF:
 			{
 				TalkerMatch talker_match = message.get_talker_match();
 
@@ -354,7 +354,7 @@ public:
 			}
 			break;
 			
-			case BroadcastValue::NONE: return true;
+			case BroadcastValue::TALKIE_BC_NONE: return true;
 			
 			default: break;
 		}
@@ -374,7 +374,7 @@ public:
 
 		switch (broadcast) {
 
-			case BroadcastValue::REMOTE:		// To uplinked nodes
+			case BroadcastValue::TALKIE_BC_REMOTE:		// To uplinked nodes
 			{
 				switch (talker_match) {
 
@@ -427,7 +427,7 @@ public:
 			}
 			break;
 			
-			case BroadcastValue::LOCAL:		// To downlinked nodes
+			case BroadcastValue::TALKIE_BC_LOCAL:		// To downlinked nodes
 			{
 
 				switch (talker_match) {
@@ -488,7 +488,7 @@ public:
 			}
 			break;
 
-			case BroadcastValue::NONE: return true;
+			case BroadcastValue::TALKIE_BC_NONE: return true;
 			
 			default: break;
 		}
@@ -509,7 +509,7 @@ public:
 
 		switch (broadcast) {
 			// Uplink sockets or talkers can only process REMOTE messages
-			case BroadcastValue::REMOTE:		// To downlinked nodes
+			case BroadcastValue::TALKIE_BC_REMOTE:		// To downlinked nodes
 			{
 				if (_downlinked_talkers_count) {
 					TalkerMatch talker_match = message.get_talker_match();
@@ -572,7 +572,7 @@ public:
 			}
 			break;
 			
-			case BroadcastValue::NONE: return true;
+			case BroadcastValue::TALKIE_BC_NONE: return true;
 			
 			default: break;
 		}

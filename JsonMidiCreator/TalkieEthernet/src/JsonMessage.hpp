@@ -655,11 +655,11 @@ public:
 		size_t colon_position = get_colon_position('b', _json_payload, _json_length);
 		if (colon_position) {
 			BroadcastValue broadcast_value = static_cast<BroadcastValue>( get_value_number('b', _json_payload, _json_length, colon_position) );
-			if (broadcast_value < BroadcastValue::NONE) {
+			if (broadcast_value < BroadcastValue::TALKIE_BC_NONE) {
 				return broadcast_value;
 			}
 		}
-		return BroadcastValue::NONE;
+		return BroadcastValue::TALKIE_BC_NONE;
 	}
 
 	RogerValue get_roger_value() const {

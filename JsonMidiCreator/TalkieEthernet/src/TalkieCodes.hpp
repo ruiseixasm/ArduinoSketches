@@ -33,11 +33,11 @@ struct TalkieCodes {
 		TALKIE_MATCH_FAIL
 	};
 
-	enum class BroadcastValue : uint8_t {
-		REMOTE,
-		LOCAL,
-		SELF,
-		NONE
+	enum BroadcastValue : uint8_t {
+		TALKIE_BC_REMOTE,
+		TALKIE_BC_LOCAL,
+		TALKIE_BC_SELF,
+		TALKIE_BC_NONE
 	};
 
 
