@@ -13,7 +13,6 @@ https://github.com/ruiseixasm/JsonTalkie
 */
 
 #include "JsonTalker.h"
-#include "BroadcastSocket.h"    // MUST include the full definition!
 #include "MessageRepeater.hpp"
 
 
