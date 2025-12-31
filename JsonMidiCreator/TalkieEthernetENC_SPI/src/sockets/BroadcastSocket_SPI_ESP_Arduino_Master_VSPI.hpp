@@ -374,7 +374,6 @@ protected:
 	bool receivedJsonMessage(const JsonMessage& json_message) override {
 
 		if (BroadcastSocket::receivedJsonMessage(json_message)) {
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			_from_name = json_message.get_from_name();
 			return true;
 		}
@@ -387,7 +386,6 @@ protected:
 
 		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			bool as_reply = json_message.is_to_name(_from_name.c_str());
 
 			#ifdef ENABLE_DIRECT_ADDRESSING

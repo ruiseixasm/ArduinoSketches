@@ -121,7 +121,6 @@ protected:
 	bool receivedJsonMessage(const JsonMessage& json_message) override {
 
 		if (BroadcastSocket::receivedJsonMessage(json_message)) {
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			strcpy(_new_from_name, json_message.get_from_name());
 			
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
@@ -145,7 +144,6 @@ protected:
 
             #ifdef ENABLE_DIRECT_ADDRESSING
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			bool as_reply = json_message.is_to_name(_new_from_name);
 
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW

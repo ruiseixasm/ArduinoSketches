@@ -25,7 +25,6 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 	
 	bool ping = false;
 
-	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	// As a spy it only answers to REMOTE calls
 	BroadcastValue source_data = json_message.get_broadcast_value();
 	if (source_data == BroadcastValue::TALKIE_BC_REMOTE) {
@@ -145,7 +144,6 @@ void Spy::echo(JsonTalker& talker, JsonMessage& json_message) {
 
 
 void Spy::error(JsonTalker& talker, JsonMessage& json_message) {
-	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	Serial.print(json_message.get_from_name());
 	Serial.print(" - ");
 	ValueType value_type = json_message.get_nth_value_type(0);

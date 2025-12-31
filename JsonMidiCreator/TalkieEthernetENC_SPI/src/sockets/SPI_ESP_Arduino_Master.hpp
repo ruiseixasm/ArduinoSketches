@@ -109,7 +109,6 @@ protected:
     int* _ss_pins;
     uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
-	// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 	NameTable _named_pins_table;
 
 
@@ -491,7 +490,6 @@ protected:
 			Serial.println(_actual_ss_pin);
 			#endif
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			_named_pins_table.add(json_message.get_from_name(), _actual_ss_pin);
 
 			#ifdef BROADCAST_SPI_DEBUG
@@ -520,7 +518,6 @@ protected:
 			
 			#ifdef ENABLE_DIRECT_ADDRESSING
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			bool as_reply = json_message.has_to_name();
 			if (as_reply) {
 
