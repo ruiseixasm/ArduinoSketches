@@ -46,14 +46,12 @@ bool JsonTalker::transmitSockets(JsonMessage& json_message) {
 		uint8_t socket_index = 0;
 		const BroadcastSocket* socket;
 		_message_repeater->iterateSocketsReset();
-		bool has_some = false;
 		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
-			has_some = true;
 			json_message.set_nth_value_number(0, socket_index++);
 			json_message.set_nth_value_string(1, socket->class_name());
 			transmitToRepeater(json_message);	// Many-to-One
 		}
-		return has_some;
+		return socket_index > 0;
 	}
 	return false;
 }
