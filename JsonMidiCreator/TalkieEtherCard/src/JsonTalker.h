@@ -208,7 +208,7 @@ public:
 		Serial.println(static_cast<int>( message_value ));
 		#endif
 
-		// Doesn't apply to ECHO nor ERROR
+		// Doesn't apply to ECHO nor TALKIE_SB_ERROR
 		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
 			_received_message = message_value;
 			json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
@@ -246,7 +246,6 @@ public:
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
 							}
 						} else {
-							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 							json_message.set_roger_value(RogerValue::TALKIE_RGR_SAY_AGAIN);
 						}
 					} else {

@@ -115,7 +115,6 @@ protected:
 
 		if (received_checksum == checksum) {
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			JsonMessage json_message(_received_buffer, _received_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
@@ -184,7 +183,6 @@ protected:
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
-					// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 					if (json_message.swap_from_with_to()) {
 						json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
 						if (!json_message.has_identity()) {
@@ -308,7 +306,6 @@ public:
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
-			// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
 			_sending_length = json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
 			uint16_t checksum = generateChecksum(_sending_buffer, _sending_length);
 			JsonMessage::set_number('c', checksum, _sending_buffer, &_sending_length);

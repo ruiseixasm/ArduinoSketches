@@ -47,7 +47,7 @@ class JsonMessage {
 public:
 	
 	enum ValueType : uint8_t {
-		STRING, INTEGER, OTHER, VOID
+		STRING, INTEGER, OTHER, TALKIE_SB_VOID
 	};
 
 
@@ -127,7 +127,7 @@ public:
 			if (json_payload[json_i] == '"') {
 				for (json_i++; json_i < json_length && json_payload[json_i] != '"'; json_i++) {}
 				if (json_i == json_length) {
-					return VOID;
+					return TALKIE_SB_VOID;
 				}
 				return STRING;
 			} else {
@@ -138,12 +138,12 @@ public:
 					json_i++;
 				}
 				if (json_i == json_length) {
-					return VOID;
+					return TALKIE_SB_VOID;
 				}
 				return INTEGER;
 			}
 		}
-		return VOID;
+		return TALKIE_SB_VOID;
 	}
 
 
@@ -744,7 +744,7 @@ public:
 			char value_key = '0' + nth;
 			return get_value_type(value_key, _json_payload, _json_length);
 		}
-		return ValueType::VOID;
+		return ValueType::TALKIE_SB_VOID;
 	}
 
 	char* get_nth_value_string(uint8_t nth) const {
