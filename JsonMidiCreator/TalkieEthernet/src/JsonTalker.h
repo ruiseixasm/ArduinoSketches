@@ -312,11 +312,11 @@ public:
 
 					switch (system_code) {
 
-						case InfoValue::INFO_BOARD:
+						case InfoValue::TALKIE_INFO_BOARD:
 							json_message.set_nth_value_string(0, board_description());
 							break;
 
-						case InfoValue::INFO_MUTE:
+						case InfoValue::TALKIE_INFO_MUTE:
 							if (json_message.has_nth_value_number(0)) {
 								uint8_t mute = (uint8_t)json_message.get_nth_value_number(0);
 								if (mute) {
@@ -333,11 +333,11 @@ public:
 							}
 							break;
 
-						case InfoValue::INFO_TALKER:
+						case InfoValue::TALKIE_INFO_TALKER:
 							json_message.set_nth_value_string(0, class_name());
 							break;
 
-						case InfoValue::INFO_MANIFESTO:
+						case InfoValue::TALKIE_INFO_MANIFESTO:
 							if (_manifesto) {
 								json_message.set_nth_value_string(0, _manifesto->class_name());
 							} else {

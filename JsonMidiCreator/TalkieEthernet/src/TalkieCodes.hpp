@@ -54,15 +54,15 @@ struct TalkieCodes {
         TALKIE_MSG_NOISE
     };
 
-    enum class InfoValue : uint8_t {
-        INFO_BOARD,
-        INFO_DROPS,
-        INFO_DELAY,
-        INFO_MUTE,
-        INFO_SOCKET,
-        INFO_TALKER,
-        INFO_MANIFESTO,
-        INFO_UNDEFINED
+    enum InfoValue : uint8_t {
+        TALKIE_INFO_BOARD,
+        TALKIE_INFO_DROPS,
+        TALKIE_INFO_DELAY,
+        TALKIE_INFO_MUTE,
+        TALKIE_INFO_SOCKET,
+        TALKIE_INFO_TALKER,
+        TALKIE_INFO_MANIFESTO,
+        TALKIE_INFO_UNDEFINED
     };
 
     enum RogerValue : uint8_t {

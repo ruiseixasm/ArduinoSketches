@@ -677,11 +677,11 @@ public:
 		size_t colon_position = get_colon_position('s', _json_payload, _json_length);
 		if (colon_position) {
 			uint8_t info_number = (uint8_t)get_value_number('s', _json_payload, _json_length, colon_position);
-			if (info_number < static_cast<uint8_t>( InfoValue::INFO_UNDEFINED )) {
+			if (info_number < static_cast<uint8_t>( InfoValue::TALKIE_INFO_UNDEFINED )) {
 				return static_cast<InfoValue>( info_number );
 			}
 		}
-		return InfoValue::INFO_UNDEFINED;
+		return InfoValue::TALKIE_INFO_UNDEFINED;
 	}
 
     // New method using internal temporary buffer (_temp_string)
