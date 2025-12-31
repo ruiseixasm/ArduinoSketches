@@ -21,15 +21,24 @@ struct TalkieCodes {
 
 
 	enum class LinkType : uint8_t {
-		DOWN_LINKED, UP_LINKED, UP_BRIDGED	// UP_BRIDGED allows the sending of LOCAL broadcasted messages
+		DOWN_LINKED,
+		UP_LINKED,
+		UP_BRIDGED	// UP_BRIDGED allows the sending of LOCAL broadcasted messages
 	};
 
 	enum class TalkerMatch : uint8_t {
-		NONE, ANY, BY_CHANNEL, BY_NAME, FAIL
+		NONE,
+		ANY,
+		BY_CHANNEL,
+		BY_NAME,
+		FAIL
 	};
 
 	enum class BroadcastValue : uint8_t {
-		REMOTE, LOCAL, SELF, NONE
+		REMOTE,
+		LOCAL,
+		SELF,
+		NONE
 	};
 
 
@@ -58,7 +67,10 @@ struct TalkieCodes {
     };
 
     enum class RogerValue : uint8_t {
-        ROGER, NEGATIVE, SAY_AGAIN, NIL
+        ROGER,
+		NEGATIVE,
+		SAY_AGAIN,
+		NIL
     };
 
     enum class ErrorValue : uint8_t {
