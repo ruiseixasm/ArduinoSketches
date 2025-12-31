@@ -42,21 +42,21 @@ class BroadcastSocket_SPI_ESP_Arduino_Master_VSPI : public BroadcastSocket {
 public:
 
     enum StatusByte : uint8_t {
-        ACK     = 0xF0, // Acknowledge
-        NACK    = 0xF1, // Not acknowledged
-        READY   = 0xF2, // Slave is ready
-        BUSY    = 0xF3, // Tells the Master to wait a little
-        RECEIVE = 0xF4, // Asks the receiver to start receiving
-        SEND    = 0xF5, // Asks the receiver to start sending
-        NONE    = 0xF6, // Means nothing to send
-        START   = 0xF7, // Start of transmission
-        END     = 0xF8, // End of transmission
-		LAST	= 0xF9,	// Asks for the last char
-		DONE	= 0xFA,	// Marks the action as DONE
-        ERROR   = 0xFB, // Error frame
-        FULL    = 0xFC, // Signals the buffer as full
+        TALKIE_SB_ACK		= 0xF0, // Acknowledge
+        TALKIE_SB_NACK		= 0xF1, // Not acknowledged
+        TALKIE_SB_READY   	= 0xF2, // Slave is ready
+        TALKIE_SB_BUSY   	= 0xF3, // Tells the Master to wait a little
+        TALKIE_SB_RECEIVE	= 0xF4, // Asks the receiver to start receiving
+        TALKIE_SB_SEND    	= 0xF5, // Asks the receiver to start sending
+        TALKIE_SB_NONE    	= 0xF6, // Means nothing to send
+        TALKIE_SB_START   	= 0xF7, // Start of transmission
+        TALKIE_SB_END     	= 0xF8, // End of transmission
+		TALKIE_SB_LAST		= 0xF9,	// Asks for the last char
+		TALKIE_SB_DONE		= 0xFA,	// Marks the action as DONE
+        TALKIE_SB_ERROR   	= 0xFB, // Error frame
+        TALKIE_SB_FULL    	= 0xFC, // Signals the buffer as full
         
-        VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
+        TALKIE_SB_VOID    	= 0xFF  // MISO floating (0xFF) → no slave responding
     };
 
 
@@ -101,14 +101,14 @@ protected:
 				delayMicroseconds(5);
 
 				// Asks the Slave to start receiving
-				c = SPI.transfer(RECEIVE);
+				c = SPI.transfer(TALKIE_SB_RECEIVE);
 
-				if (c != VOID) {
+				if (c != TALKIE_SB_VOID) {
 
 					delayMicroseconds(10);	// Makes sure ACK is set by the slave (10us) (critical path)
 					c = SPI.transfer(_sending_buffer[0]);
 
-					if (c == ACK) {
+					if (c == TALKIE_SB_ACK) {
 					
 						for (uint8_t i = 1; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
 							delayMicroseconds(send_delay_us);
@@ -123,7 +123,7 @@ protected:
 							}
 							if (_sending_buffer[i] == '\0') {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
-								c = SPI.transfer(END);
+								c = SPI.transfer(TALKIE_SB_END);
 								if (c == '\0') {
 									#ifdef BROADCAST_SPI_DEBUG
 									Serial.println("\t\tSend completed");
@@ -155,7 +155,7 @@ protected:
 
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
-					SPI.transfer(ERROR);
+					SPI.transfer(TALKIE_SB_ERROR);
 					// _received_buffer[0] = '\0'; // Implicit char
 				}
 
@@ -207,14 +207,14 @@ protected:
             delayMicroseconds(5);
 
             // Asks the Slave to start receiving
-            c = SPI.transfer(SEND);
+            c = SPI.transfer(TALKIE_SB_SEND);
 			
-			if (c != VOID) {
+			if (c != TALKIE_SB_VOID) {
 
 				delayMicroseconds(10);	// Makes sure ACK or NONE is set by the slave (10us) (critical path)
 				c = SPI.transfer('\0');   // Dummy char to get the ACK
 
-				if (c == ACK) { // Makes sure there is an Acknowledge first
+				if (c == TALKIE_SB_ACK) { // Makes sure there is an Acknowledge first
 					
 					// Starts to receive all chars here
 					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
@@ -226,9 +226,9 @@ protected:
 								if (_received_buffer[length] != '\0') {    // length == i - 1
 									_received_buffer[++length] = c;        // length == i (also sets '\0')
 								}
-							} else if (c == END) {
+							} else if (c == TALKIE_SB_END) {
 								delayMicroseconds(10);    // Makes sure the Status Byte is sent
-								SPI.transfer(END);  // Replies the END to confirm reception and thus Slave buffer deletion
+								SPI.transfer(TALKIE_SB_END);  // Replies the END to confirm reception and thus Slave buffer deletion
 								#ifdef BROADCAST_SPI_DEBUG
 								Serial.println("\t\tReceive completed");
 								#endif
@@ -255,7 +255,7 @@ protected:
 							}
 						}
 					}
-				} else if (c == NONE) {
+				} else if (c == TALKIE_SB_NONE) {
 					#ifdef BROADCAST_SPI_DEBUG
 					Serial.println("\t\tThere is nothing to be received");
 					#endif
@@ -272,7 +272,7 @@ protected:
 
 				if (length == 0) {
 					delayMicroseconds(10);    // Makes sure the Status Byte is sent
-					SPI.transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
+					SPI.transfer(TALKIE_SB_ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
 					_received_buffer[0] = '\0'; // Implicit char
 					#ifdef BROADCAST_SPI_DEBUG
 					Serial.println("\t\t\tSent ERROR");
@@ -328,14 +328,14 @@ protected:
             delayMicroseconds(5);
 
             // Asks the Slave to acknowledge readiness
-            c = SPI.transfer(ACK);
+            c = SPI.transfer(TALKIE_SB_ACK);
 
-			if (c != VOID) {
+			if (c != TALKIE_SB_VOID) {
 
 				delayMicroseconds(10);
-				c = SPI.transfer(ACK);  // When the response is collected
+				c = SPI.transfer(TALKIE_SB_ACK);  // When the response is collected
 				
-				if (c == READY) {
+				if (c == TALKIE_SB_READY) {
                 	#ifdef BROADCAST_SPI_DEBUG
                 	Serial.println("\t\tAcknowledge with READY");
 					#endif
