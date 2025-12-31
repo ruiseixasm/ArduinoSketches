@@ -180,19 +180,19 @@ public:
 			case 6:
 			{
 				// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-				if (test_json_message.get_value_type('m') != JsonMessage::INTEGER) {
+				if (test_json_message.get_value_type('m') != ValueType::INTEGER) {
 					json_message.set_nth_value_string(0, "m");
 					json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_value_type('m')));
 					return false;
 				}
-				if (test_json_message.get_value_type('f') != JsonMessage::STRING) {
+				if (test_json_message.get_value_type('f') != ValueType::STRING) {
 					json_message.set_nth_value_string(0, "f");
 					json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_value_type('f')));
 					return false;
 				}
-				if (test_json_message.get_value_type('e') != JsonMessage::VOID) {
-					json_message.set_nth_value_string(0, "e");
-					json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_value_type('e')));
+				if (test_json_message.get_value_type('i') != ValueType::INTEGER) {
+					json_message.set_nth_value_string(0, "i");
+					json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_value_type('i')));
 					return false;
 				}
 				return true;
