@@ -223,11 +223,11 @@ public:
 						ValueType value_type = json_message.get_action_type();
 						switch (value_type) {
 
-							case ValueType::STRING:
+							case ValueType::TALKIE_VT_STRING:
 								index_found_i = _manifesto->actionIndex(json_message.get_action_string());
 								break;
 							
-							case ValueType::INTEGER:
+							case ValueType::TALKIE_VT_INTEGER:
 								index_found_i = _manifesto->actionIndex(json_message.get_action_number());
 								break;
 							
