@@ -666,11 +666,11 @@ public:
 		size_t colon_position = get_colon_position('r', _json_payload, _json_length);
 		if (colon_position) {
 			uint8_t roger_number = (uint8_t)get_value_number('r', _json_payload, _json_length, colon_position);
-			if (roger_number < static_cast<uint8_t>( RogerValue::TALKIE_ROGER_NIL )) {
+			if (roger_number < static_cast<uint8_t>( RogerValue::TALKIE_RGR_NIL )) {
 				return static_cast<RogerValue>( roger_number );
 			}
 		}
-		return RogerValue::TALKIE_ROGER_NIL;
+		return RogerValue::TALKIE_RGR_NIL;
 	}
 
 	InfoValue get_info_value() const {

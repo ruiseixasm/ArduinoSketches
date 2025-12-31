@@ -243,14 +243,14 @@ public:
 
 							// ROGER should be implicit for CALL to spare json string size for more data index value nth
 							if (!_manifesto->actionByIndex(index_found_i, *this, json_message)) {
-								json_message.set_roger_value(RogerValue::TALKIE_ROGER_NEGATIVE);
+								json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
 							}
 						} else {
 							// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
-							json_message.set_roger_value(RogerValue::TALKIE_ROGER_SAY_AGAIN);
+							json_message.set_roger_value(RogerValue::TALKIE_RGR_SAY_AGAIN);
 						}
 					} else {
-						json_message.set_roger_value(RogerValue::TALKIE_ROGER_NO_JOY);
+						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 					}
 				}
 				// In the end sends back the processed message (single message, one-to-one)
@@ -303,7 +303,7 @@ public:
 						}
 					}
 					if (!action_index) {
-						json_message.set_roger_value(RogerValue::TALKIE_ROGER_NIL);
+						json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
 						transmitToRepeater(json_message);	// One-to-One
 					}
 				}
