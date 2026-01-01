@@ -55,7 +55,6 @@ protected:
     const char* _desc;      // Description of the Device
 	TalkerManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
-	MessageValue _received_message = MessageValue::TALKIE_MSG_NOISE;
 	Original _original_message = {0, MessageValue::TALKIE_MSG_NOISE};
     bool _muted_calls = false;
 
@@ -68,9 +67,8 @@ public:
         : _name(name), _desc(desc), _manifesto(manifesto) {
 		// AVOIDS EVERY TALKER WITH THE SAME CHANNEL
 		// XOR is great for 8-bit mixing
-		_channel ^= strlen(this->class_name()) << 1;    // Shift before XOR
-		_channel ^= strlen(_name) << 2;
-		_channel ^= strlen(_desc) << 3;
+		_channel ^= strlen(_name) << 1;
+		_channel ^= strlen(_desc) << 2;
 		// Add microsecond LSB for entropy
 		_channel ^= micros() & 0xFF;
 		if (_manifesto) {	// Safe code
@@ -78,9 +76,6 @@ public:
 			_channel = _manifesto->getChannel(_channel, this);
 		}
     }
-
-    const char* class_name() const { return "JsonTalker"; }
-
 
     void loop() {
         if (_manifesto) {
@@ -138,8 +133,8 @@ public:
 			json_message.set_from_name(_name);
 		}
 
-		MessageValue message_value = json_message.get_message_value();
-		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
+		MessageValue received_message_value = json_message.get_message_value();
+		if (received_message_value < MessageValue::TALKIE_MSG_ECHO) {
 
 			#ifdef JSON_TALKER_DEBUG
 			Serial.print(F("socketSend1: Setting a new identifier (i) for :"));
@@ -147,18 +142,10 @@ public:
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
-			// _muted_calls mutes CALL echoes only
-			if (_muted_calls && _received_message == MessageValue::TALKIE_MSG_CALL) {
-				_received_message = MessageValue::TALKIE_MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
-				return false;
-			} else {
-				_received_message = MessageValue::TALKIE_MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
-			}
-
 			uint16_t message_id = (uint16_t)millis();
-			if (message_value < MessageValue::TALKIE_MSG_ECHO) {
+			if (received_message_value < MessageValue::TALKIE_MSG_ECHO) {
 				_original_message.identity = message_id;
-				_original_message.message_value = message_value;
+				_original_message.message_value = received_message_value;
 			}
 			json_message.set_identity(message_id);
 		} else if (!json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
@@ -186,35 +173,30 @@ public:
 	}
 
 	
-
 	bool transmitToRepeater(JsonMessage& json_message);
-
 	bool transmitSockets(JsonMessage& json_message);
 	bool transmitDrops(JsonMessage& json_message);
 	bool transmitDelays(JsonMessage& json_message);
 	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
 
     
-    TalkerMatch talkerReceive(JsonMessage& json_message) {
+    bool talkerReceive(JsonMessage& json_message) {
 
-        TalkerMatch talker_match = TalkerMatch::TALKIE_MATCH_NONE;
-
-		MessageValue message_value = json_message.get_message_value();
+		MessageValue received_message_value = json_message.get_message_value();
 
 		#ifdef JSON_TALKER_DEBUG_NEW
 		Serial.print(F("\t\ttalkerReceive1: "));
 		json_message.write_to(Serial);
 		Serial.print(" | ");
-		Serial.println(static_cast<int>( message_value ));
+		Serial.println(static_cast<int>( received_message_value ));
 		#endif
 
 		// Doesn't apply to ECHO nor TALKIE_SB_ERROR
-		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
-			_received_message = message_value;
+		if (received_message_value < MessageValue::TALKIE_MSG_ECHO) {
 			json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 		}
 
-        switch (message_value) {
+        switch (received_message_value) {
 
 			case MessageValue::TALKIE_MSG_CALL:
 				{
@@ -251,9 +233,9 @@ public:
 					} else {
 						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 					}
+					// In the end sends back the processed message (single message, one-to-one)
+					if (!_muted_calls) transmitToRepeater(json_message);
 				}
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::TALKIE_MSG_TALK:
@@ -343,7 +325,7 @@ public:
 							if (!transmitDrops(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
-        						return talker_match;	// Avoids extra transmissions sends
+        						return true;	// Avoids extra transmissions sends
 							}
 							break;
 
@@ -358,7 +340,7 @@ public:
 								if (!transmitDelays(json_message)) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
-									return talker_match;	// Avoids extra transmissions sends
+									return true;	// Avoids extra transmissions sends
 								}
 							}
 							break;
@@ -367,7 +349,7 @@ public:
 							if (!transmitSockets(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
-        						return talker_match;	// Avoids extra transmissions sends
+        						return true;	// Avoids extra transmissions sends
 							}
 							break;
 
@@ -420,10 +402,9 @@ public:
 				}
 				break;
 			
-			default:
-				break;
+			default: return false;
         }
-        return talker_match;
+        return true;
     }
 
 

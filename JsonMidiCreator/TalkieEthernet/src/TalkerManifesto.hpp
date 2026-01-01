@@ -18,7 +18,12 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
 
+using LinkType = TalkieCodes::LinkType;
+using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
+using InfoValue = TalkieCodes::InfoValue;
+using RogerValue = TalkieCodes::RogerValue;
+using ErrorValue = TalkieCodes::ErrorValue;
 using ValueType = JsonMessage::ValueType;
 
 class JsonTalker;
@@ -27,7 +32,8 @@ class TalkerManifesto {
 
 public:
 
-    virtual const char* class_name() const { return "TalkerManifesto"; }
+	// The subclass must have the class name defined (pure virtual)
+    virtual const char* class_name() const = 0;
 
     TalkerManifesto(const TalkerManifesto&) = delete;
     TalkerManifesto& operator=(const TalkerManifesto&) = delete;
