@@ -134,6 +134,14 @@ public:
 			json_message.set_from_name(_name);
 		}
 
+		// _muted_calls mutes CALL echoes only
+		if (_muted_calls && _received_message == MessageValue::TALKIE_MSG_CALL) {
+			_received_message = MessageValue::TALKIE_MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
+			return false;
+		} else {
+			_received_message = MessageValue::TALKIE_MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
+		}
+
 		MessageValue message_value = json_message.get_message_value();
 		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
 
@@ -142,14 +150,6 @@ public:
 			json_message.write_to(Serial);
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
-
-			// _muted_calls mutes CALL echoes only
-			if (_muted_calls && _received_message == MessageValue::TALKIE_MSG_CALL) {
-				_received_message = MessageValue::TALKIE_MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
-				return false;
-			} else {
-				_received_message = MessageValue::TALKIE_MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
-			}
 
 			uint16_t message_id = (uint16_t)millis();
 			if (message_value < MessageValue::TALKIE_MSG_ECHO) {
