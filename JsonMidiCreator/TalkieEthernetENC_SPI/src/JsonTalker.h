@@ -297,9 +297,9 @@ public:
 				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				if (json_message.has_system()) {
 
-					SystemValue system_code = json_message.get_system_value();
+					SystemValue system_value = json_message.get_system_value();
 
-					switch (system_code) {
+					switch (system_value) {
 
 						case SystemValue::TALKIE_SYS_BOARD:
 							json_message.set_nth_value_string(0, board_description());
