@@ -354,7 +354,7 @@ public:
 
 						case InfoValue::TALKIE_INFO_DELAY:
 							if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER && json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
-								if (!setSocketDelay(json_message.get_nth_value_number(0), json_message.get_nth_value_number(0))) {
+								if (!setSocketDelay((uint8_t)json_message.get_nth_value_number(0), (uint8_t)json_message.get_nth_value_number(0))) {
 									json_message.remove_nth_value(0);
 									json_message.remove_nth_value(1);
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
