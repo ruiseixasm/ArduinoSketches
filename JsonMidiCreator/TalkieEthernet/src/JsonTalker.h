@@ -133,8 +133,8 @@ public:
 			json_message.set_from_name(_name);
 		}
 
-		MessageValue received_message_value = json_message.get_message_value();
-		if (received_message_value < MessageValue::TALKIE_MSG_ECHO) {
+		MessageValue message_value = json_message.get_message_value();
+		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
 
 			#ifdef JSON_TALKER_DEBUG
 			Serial.print(F("socketSend1: Setting a new identifier (i) for :"));
@@ -143,9 +143,9 @@ public:
 			#endif
 
 			uint16_t message_id = (uint16_t)millis();
-			if (received_message_value < MessageValue::TALKIE_MSG_ECHO) {
+			if (message_value < MessageValue::TALKIE_MSG_ECHO) {
 				_original_message.identity = message_id;
-				_original_message.message_value = received_message_value;
+				_original_message.message_value = message_value;
 			}
 			json_message.set_identity(message_id);
 		} else if (!json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
@@ -182,23 +182,19 @@ public:
     
     bool talkerReceive(JsonMessage& json_message) {
 
-		MessageValue received_message_value = json_message.get_message_value();
+		MessageValue message_value = json_message.get_message_value();
 
 		#ifdef JSON_TALKER_DEBUG_NEW
 		Serial.print(F("\t\ttalkerReceive1: "));
 		json_message.write_to(Serial);
 		Serial.print(" | ");
-		Serial.println(static_cast<int>( received_message_value ));
+		Serial.println(static_cast<int>( message_value ));
 		#endif
 
-		// Doesn't apply to ECHO nor TALKIE_SB_ERROR
-		if (received_message_value < MessageValue::TALKIE_MSG_ECHO) {
-			json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
-		}
-
-        switch (received_message_value) {
+        switch (message_value) {
 
 			case MessageValue::TALKIE_MSG_CALL:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				{
 					if (_manifesto) {
 						uint8_t index_found_i = 255;
@@ -239,12 +235,14 @@ public:
 				break;
 			
 			case MessageValue::TALKIE_MSG_TALK:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				json_message.set_nth_value_string(0, _desc);
 				// In the end sends back the processed message (single message, one-to-one)
 				transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::TALKIE_MSG_CHANNEL:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				if (json_message.has_nth_value_number(0)) {
 
 					#ifdef JSON_TALKER_DEBUG
@@ -260,11 +258,13 @@ public:
 				break;
 			
 			case MessageValue::TALKIE_MSG_PING:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				// Talker name already set in FROM (ready to transmit)
 				transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::TALKIE_MSG_LIST:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				{   // Because of action_index and action !!!
 
 					#ifdef JSON_TALKER_DEBUG
@@ -294,6 +294,7 @@ public:
 				break;
 			
 			case MessageValue::TALKIE_MSG_INFO:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				if (json_message.has_info()) {
 
 					InfoValue system_code = json_message.get_info_value();
