@@ -58,7 +58,7 @@ public:
 protected:
 
 	MessageRepeater* _message_repeater = nullptr;
-	LinkType _link_type = LinkType::TALKIE_UP_LINKED;
+	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
     char _received_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];

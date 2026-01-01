@@ -31,7 +31,7 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 	#endif
 
 	if (_message_repeater && prepareMessage(json_message)) {
-		if (_link_type == LinkType::TALKIE_DOWN_LINKED) {
+		if (_link_type == LinkType::TALKIE_LT_DOWN_LINKED) {
 			return _message_repeater->talkerUplink(*this, json_message);
 		} else {
 			return _message_repeater->talkerDownlink(*this, json_message);

@@ -21,9 +21,10 @@ https://github.com/ruiseixasm/JsonTalkie
 struct TalkieCodes {
 
 	enum LinkType : uint8_t {
-		TALKIE_DOWN_LINKED,
-		TALKIE_UP_LINKED,
-		TALKIE_UP_BRIDGED	// TALKIE_UP_BRIDGED allows the sending of LOCAL broadcasted messages
+		TALKIE_LT_NONE,
+		TALKIE_LT_DOWN_LINKED,
+		TALKIE_LT_UP_LINKED,
+		TALKIE_LT_UP_BRIDGED	// TALKIE_LT_UP_BRIDGED allows the sending of LOCAL broadcasted messages
 	};
 
 

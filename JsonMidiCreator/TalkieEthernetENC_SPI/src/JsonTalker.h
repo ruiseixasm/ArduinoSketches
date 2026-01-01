@@ -49,7 +49,7 @@ class JsonTalker {
 protected:
     
 	MessageRepeater* _message_repeater = nullptr;
-	LinkType _link_type = LinkType::TALKIE_DOWN_LINKED;
+	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device

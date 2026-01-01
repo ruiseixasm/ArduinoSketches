@@ -34,12 +34,14 @@ bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
 	#endif
 
 	if (_message_repeater) {
-		if (_link_type == LinkType::TALKIE_DOWN_LINKED) {
-			return _message_repeater->socketUplink(*this, json_message);
-		} else {
-			return _message_repeater->socketDownlink(*this, json_message);
+		switch (_link_type) {
+			case LinkType::TALKIE_LT_UP_LINKED:
+			case LinkType::TALKIE_LT_UP_BRIDGED:
+				return _message_repeater->socketDownlink(*this, json_message);
+			case LinkType::TALKIE_LT_DOWN_LINKED:
+				return _message_repeater->socketUplink(*this, json_message);
+			default: return false;
 		}
-	}
-	return false;
+	}	
 }
 
