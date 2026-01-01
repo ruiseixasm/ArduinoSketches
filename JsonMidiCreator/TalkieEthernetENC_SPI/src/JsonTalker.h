@@ -192,7 +192,7 @@ public:
 	bool transmitSockets(JsonMessage& json_message);
 	bool transmitDrops(JsonMessage& json_message);
 	bool transmitDelays(JsonMessage& json_message);
-	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value);
+	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
 
     
     TalkerMatch talkerReceive(JsonMessage& json_message) {

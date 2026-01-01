@@ -89,7 +89,7 @@ bool JsonTalker::transmitDelays(JsonMessage& json_message) {
 }
 
 
-bool JsonTalker::setSocketDelay(uint8_t socket_index, uint8_t delay_value) {
+bool JsonTalker::setSocketDelay(uint8_t socket_index, uint8_t delay_value) const {
 	if (_message_repeater) {
 		BroadcastSocket* socket = _message_repeater->accessSocket(socket_index);
 		socket->set_max_delay(delay_value);
