@@ -14,11 +14,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "Spy.h"
 #include "../JsonTalker.h"  // It NEEDS to know because the .h file doesn't
 
-    
-using MessageValue = TalkieCodes::MessageValue;
-using InfoValue = TalkieCodes::InfoValue;
-
-
 
 // Index-based operations (simplified examples)
 bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message) {
@@ -144,8 +139,6 @@ void Spy::echo(JsonTalker& talker, JsonMessage& json_message) {
 
 
 void Spy::error(JsonTalker& talker, JsonMessage& json_message) {
-	Serial.print(json_message.get_from_name());
-	Serial.print(" - ");
 	ValueType value_type = json_message.get_nth_value_type(0);
 	switch (value_type) {
 
