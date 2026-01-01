@@ -79,8 +79,17 @@ class BroadcastSocket;
 class JsonMessage {
 public:
 
-	// READ ONLY METHODS
+    // ============================================
+    // STATIC METHODS (Parsing utilities)
+    // ============================================
 
+    /**
+     * @brief Calculate number of digits in an unsigned integer
+     * @param number The number to analyze
+     * @return Number of decimal digits (1-10)
+     * 
+     * @note Handles numbers from 0 to 4,294,967,295
+     */
 	static size_t number_of_digits(uint32_t number) {
 		size_t length = 1;	// 0 has 1 digit
 		while (number > 9) {
@@ -91,6 +100,16 @@ public:
 	}
 
 
+    /**
+     * @brief Find the position of the colon for a given key
+     * @param key Single character key to search for
+     * @param json_payload JSON string to search in
+     * @param json_length Length of JSON string
+     * @param colon_position Starting position for search (default: 4)
+     * @return Position of colon, or 0 if not found
+     * 
+     * @note Searches for pattern: `"key":`
+     */
 	static size_t get_colon_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		for (size_t json_i = colon_position; json_i < json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
 			if (json_payload[json_i] == ':' && json_payload[json_i - 2] == key && json_payload[json_i - 3] == '"' && json_payload[json_i - 1] == '"') {
@@ -101,6 +120,14 @@ public:
 	}
 
 
+    /**
+     * @brief Get position of value for a given key
+     * @param key Single character key
+     * @param json_payload JSON string
+     * @param json_length Length of JSON
+     * @param colon_position Optional hint for colon position
+     * @return Position of first character after colon, or 0 if not found
+     */
 	static size_t get_value_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, json_payload, json_length, colon_position);
 		if (colon_position) {			//     01
@@ -110,7 +137,14 @@ public:
 	}
 
 
-
+    /**
+     * @brief Get position of key character
+     * @param key Single character key
+     * @param json_payload JSON string
+     * @param json_length Length of JSON
+     * @param colon_position Optional hint for colon position
+     * @return Position of key character, or 0 if not found
+     */
 	static size_t get_key_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, json_payload, json_length, colon_position);
 		if (colon_position) {			//   210
@@ -120,6 +154,14 @@ public:
 	}
 
 
+    /**
+     * @brief Calculate total field length (key + value)
+     * @param key Single character key
+     * @param json_payload JSON string
+     * @param json_length Length of JSON
+     * @param colon_position Optional hint for colon position
+     * @return Total characters occupied by field (including quotes, colon, commas)
+     */
 	static size_t get_field_length(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		size_t field_length = 0;
 		size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
@@ -148,6 +190,14 @@ public:
 	}
 
 
+	/**
+     * @brief Determine value type for a key
+     * @param key Single character key
+     * @param json_payload JSON string
+     * @param json_length Length of JSON
+     * @param colon_position Optional hint for colon position
+     * @return ValueType enum indicating the type of value
+     */
 	static ValueType get_value_type(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
 		if (json_i) {
@@ -174,7 +224,18 @@ public:
 	}
 
 
-	// When a function receives a buffer and its size, the size must include space for the '\0'
+    /**
+     * @brief Extract string value for a key
+     * @param key Single character key
+     * @param[out] buffer Output buffer for string
+     * @param size Size of output buffer (including null terminator)
+     * @param json_payload JSON string
+     * @param json_length Length of JSON
+     * @param colon_position Optional hint for colon position
+     * @return true if successful, false if key not found or buffer too small
+     * 
+     * @warning Buffer size must include space for null terminator
+     */
 	static bool get_value_string(char key, char* buffer, size_t size, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		if (buffer && size) {
 			size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
@@ -195,6 +256,14 @@ public:
 	}
 
 
+	/**
+     * @brief Extract numeric value for a key
+     * @param key Single character key
+     * @param json_payload JSON string
+     * @param json_length Length of JSON
+     * @param colon_position Optional hint for colon position
+     * @return Extracted number, or 0 if key not found or not a number
+     */
 	static uint32_t get_value_number(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		uint32_t json_number = 0;
 		size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
@@ -208,8 +277,17 @@ public:
 	}
 
 
-	// WRITE METHODS
+    // ============================================
+    // STATIC METHODS (Modification utilities)
+    // ============================================
 
+    /**
+     * @brief Reset JSON to default minimal message
+     * @param[in,out] json_payload Buffer to reset
+     * @param[in,out] json_length Current length, updated to new length
+     * 
+     * Default message: `{"m":0,"b":0,"i":0,"f":""}`
+     */
 	static void reset(char* json_payload, size_t *json_length) {
 		// Only static guarantees it won't live on the stack!
 		static const char default_payload[] = "{\"m\":0,\"b\":0,\"i\":0,\"f\":\"\"}";
@@ -223,6 +301,16 @@ public:
 	}
 
 
+    /**
+     * @brief Remove a key-value pair from JSON
+     * @param key Key to remove
+     * @param[in,out] json_payload JSON buffer
+     * @param[in,out] json_length Current length, updated after removal
+     * @param colon_position Optional hint for colon position
+     * @return true if key was found and removed, false otherwise
+     * 
+     * @note Also removes leading or trailing commas as needed
+     */
 	static bool remove(char key, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, json_payload, *json_length, colon_position);
 		if (colon_position) {
@@ -244,6 +332,17 @@ public:
 	}
 
 
+    /**
+     * @brief Set numeric value for a key
+     * @param key Key to set
+     * @param number Numeric value
+     * @param[in,out] json_payload JSON buffer
+     * @param[in,out] json_length Current length, updated after change
+     * @param colon_position Optional hint for colon position
+     * @return true if successful, false if buffer too small
+     * 
+     * @note If key exists, it's replaced. Otherwise, it's added before closing brace.
+     */
 	static bool set_number(char key, uint32_t number, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, json_payload, *json_length, colon_position);
 		if (colon_position) {
@@ -287,6 +386,15 @@ public:
 	}
 
 
+    /**
+     * @brief Set string value for a key
+     * @param key Key to set
+     * @param in_string String value (null-terminated)
+     * @param[in,out] json_payload JSON buffer
+     * @param[in,out] json_length Current length, updated after change
+     * @param colon_position Optional hint for colon position
+     * @return true if successful, false if buffer too small or string empty
+     */
 	static bool set_string(char key, const char* in_string, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		if (in_string) {
 			size_t length = 0;
@@ -342,24 +450,44 @@ public:
 
 protected:
 
-	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE];	// Length already managed, no need to zero it
-	size_t _json_length = 0;
-	// If multiple messages may be read at once (or in ISR context, multi-core ESP32, etc.), keep it per-instance to avoid overwriting / race conditions.
-    mutable char _temp_string[MAX_LEN];  // mutable allows const methods to modify it (non static for the reasons above)
+	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE];	///< Internal JSON buffer
+	size_t _json_length = 0;							///< Current length of JSON string
+    mutable char _temp_string[MAX_LEN];					///< Temporary buffer for string operations
 
 
 public:
+    // ============================================
+    // CONSTRUCTORS AND DESTRUCTOR
+    // ============================================
 
+    /**
+     * @brief Default constructor
+     * 
+     * Initializes with default message: `{"m":0,"b":0,"i":0,"f":""}`
+     */
 	JsonMessage() {
-		reset(_json_payload, &_json_length);	// Initiate with the minimum
+		reset(_json_payload, &_json_length);	// Initiate with the bare minimum
 	}
 
+
+    /**
+     * @brief Constructor from buffer
+     * @param buffer Source buffer containing JSON
+     * @param length Length of buffer
+     * 
+     * @note If deserialization fails, resets to default message
+     */
 	JsonMessage(const char* buffer, size_t length) {
 		if (!deserialize_buffer(buffer, length)) {
 			reset(_json_payload, &_json_length);
 		}
 	}
 
+
+    /**
+     * @brief Copy constructor
+     * @param other JsonMessage to copy from
+     */
 	JsonMessage(const JsonMessage& other) {
 		_json_length = other._json_length;
 		for (size_t json_i = 0; json_i < _json_length; ++json_i) {
@@ -367,10 +495,24 @@ public:
 		}
 	}
 
+
+    /**
+     * @brief Destructor
+     */
 	~JsonMessage() {
 		// Does nothing
 	}
 
+
+    // ============================================
+    // OPERATORS
+    // ============================================
+
+    /**
+     * @brief Equality operator
+     * @param other JsonMessage to compare with
+     * @return true if JSON content is identical
+     */
 	bool operator==(const JsonMessage& other) const {
 		if (_json_length == other._json_length) {
 			for (size_t json_i = 0; json_i < _json_length; ++json_i) {
@@ -383,10 +525,22 @@ public:
 		return false;
 	}
 
+
+    /**
+     * @brief Inequality operator
+     * @param other JsonMessage to compare with
+     * @return true if JSON content differs
+     */
 	bool operator!=(const JsonMessage& other) const {
 		return !(*this == other);
 	}
 
+
+    /**
+     * @brief Assignment operator
+     * @param other JsonMessage to copy from
+     * @return Reference to this object
+     */
     JsonMessage& operator=(const JsonMessage& other) {
         if (this == &other) return *this;
 
@@ -398,15 +552,36 @@ public:
     }
 
 
+    // ============================================
+    // BASIC OPERATIONS
+    // ============================================
+
+    /**
+     * @brief Get current JSON length
+     * @return Length of JSON string (not including null terminator)
+     */
 	size_t get_length() const {
 		return _json_length;
 	}
 
 
+    /**
+     * @brief Reset to default message
+     * 
+     * Resets to: `{"m":0,"b":0,"i":0,"f":""}`
+     */
 	void reset() {
 		reset(_json_payload, &_json_length);
 	}
 
+
+    /**
+     * @brief Validate required fields
+     * @return true if all mandatory fields are present and valid
+     * 
+     * Mandatory fields: m, b, i, f
+     * Minimum length: 27 characters
+     */
 	bool validate_fields() const {
 		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
 		if (_json_length < 27) return false;
