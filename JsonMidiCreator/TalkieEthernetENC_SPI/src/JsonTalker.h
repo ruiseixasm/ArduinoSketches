@@ -300,10 +300,13 @@ public:
 							json_message.set_nth_value_string(2, action->desc);
 							transmitToRepeater(json_message);	// Many-to-One
 						}
-					}
-					if (!action_index) {
-						json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
-						transmitToRepeater(json_message);	// One-to-One
+						if (!action_index) {
+							json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
+							transmitToRepeater(json_message);	// One-to-One
+						}
+					} else {
+						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+						transmitToRepeater(json_message);		// One-to-One
 					}
 				}
 				break;
