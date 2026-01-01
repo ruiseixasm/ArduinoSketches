@@ -341,7 +341,7 @@ public:
 
 						case InfoValue::TALKIE_INFO_DROPS:
 							if (!transmitDrops(json_message)) {
-								json_message.set_nth_value_string(0, "none");
+								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
         						return talker_match;	// Avoids extra transmissions sends
 							}
@@ -356,7 +356,7 @@ public:
 								}
 							} else {
 								if (!transmitDelays(json_message)) {
-									json_message.set_nth_value_string(0, "none");
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
 									return talker_match;	// Avoids extra transmissions sends
 								}
@@ -365,7 +365,7 @@ public:
 
 						case InfoValue::TALKIE_INFO_SOCKET:
 							if (!transmitSockets(json_message)) {
-								json_message.set_nth_value_string(0, "none");
+								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
         						return talker_match;	// Avoids extra transmissions sends
 							}
@@ -375,7 +375,7 @@ public:
 							if (_manifesto) {
 								json_message.set_nth_value_string(0, _manifesto->class_name());
 							} else {
-								json_message.set_nth_value_string(0, "none");
+								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							}
 							break;
 
