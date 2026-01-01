@@ -37,6 +37,9 @@ protected:
 	JsonTalker* const* const _uplinked_talkers;
 	const uint8_t _uplinked_talkers_count;
 	
+    // Iterator states
+    uint8_t socketsIterIdx = 0;
+
 
 public:
 
@@ -55,22 +58,23 @@ public:
         _uplinked_talkers(uplinked_talkers), _uplinked_talkers_count(uplinked_talkers_count)
     {
 		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-			_uplinked_sockets[socket_j]->setLink(this, LinkType::TALKIE_UP_LINKED);
+			_uplinked_sockets[socket_j]->setLink(this, LinkType::TALKIE_LT_UP_LINKED);
 		}
 		for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
-			_downlinked_talkers[talker_i]->setLink(this, LinkType::TALKIE_DOWN_LINKED);
+			_downlinked_talkers[talker_i]->setLink(this, LinkType::TALKIE_LT_DOWN_LINKED);
 		}
 		for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-			_downlinked_sockets[socket_j]->setLink(this, LinkType::TALKIE_DOWN_LINKED);
+			_downlinked_sockets[socket_j]->setLink(this, LinkType::TALKIE_LT_DOWN_LINKED);
 		}
 		for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
-			_uplinked_talkers[talker_i]->setLink(this, LinkType::TALKIE_UP_LINKED);
+			_uplinked_talkers[talker_i]->setLink(this, LinkType::TALKIE_LT_UP_LINKED);
 		}
 	}
 
 	~MessageRepeater() {
 		// Does nothing
 	}
+
 
     void loop() {
 		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
@@ -87,6 +91,27 @@ public:
 		}
     }
 
+	
+	virtual void iterateSocketsReset() {
+		socketsIterIdx = 0;
+	}
+
+    // Iterator next methods - IMPLEMENTED in base class
+    const BroadcastSocket* iterateSocketNext() {
+        if (socketsIterIdx < _uplinked_sockets_count) {
+            return _uplinked_sockets[socketsIterIdx++];
+        }
+        return nullptr;
+    }
+
+
+	BroadcastSocket* accessSocket(u_int8_t socket_index) const {
+		if (socket_index < _uplinked_sockets_count) {
+			return _uplinked_sockets[socket_index];
+		}
+		return nullptr;
+	}
+    
 
 	bool socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
@@ -102,7 +127,7 @@ public:
 		#endif
 
 		// To downlinked nodes (BRIDGED uplinks process LOCAL messages too)
-		if (broadcast == BroadcastValue::TALKIE_BC_REMOTE || (broadcast == BroadcastValue::TALKIE_BC_LOCAL && socket.getLinkType() == LinkType::TALKIE_UP_BRIDGED)) {
+		if (broadcast == BroadcastValue::TALKIE_BC_REMOTE || (broadcast == BroadcastValue::TALKIE_BC_LOCAL && socket.getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED)) {
 			switch (talker_match) {
 
 				case TalkerMatch::TALKIE_MATCH_ANY:
@@ -294,7 +319,7 @@ public:
 						_downlinked_sockets[socket_j]->socketSend(original_message);
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_UP_BRIDGED) {
+						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
 							_uplinked_sockets[socket_j]->socketSend(original_message);
 						}
 					}
@@ -303,7 +328,7 @@ public:
 						_downlinked_sockets[socket_j]->socketSend(message);
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_UP_BRIDGED) {
+						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
 							_uplinked_sockets[socket_j]->socketSend(message);
 						}
 					}
@@ -480,7 +505,7 @@ public:
 					}
 				}
 				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-					if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_UP_BRIDGED) {
+					if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
 						_uplinked_sockets[socket_j]->socketSend(message);
 					}
 				}

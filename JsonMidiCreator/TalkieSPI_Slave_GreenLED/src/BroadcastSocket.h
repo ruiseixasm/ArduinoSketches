@@ -15,7 +15,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define BROADCAST_SOCKET_H
 
 #include <Arduino.h>    // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
-#include "JsonTalker.h"
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
 
@@ -59,7 +58,7 @@ public:
 protected:
 
 	MessageRepeater* _message_repeater = nullptr;
-	LinkType _link_type = LinkType::TALKIE_UP_LINKED;
+	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
     char _received_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
     char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
@@ -326,8 +325,8 @@ public:
     
 
     void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
-    uint8_t get_max_delay() { return _max_delay_ms; }
-    uint16_t get_drops_count() { return _drops_count; }
+    uint8_t get_max_delay() const { return _max_delay_ms; }
+    uint16_t get_drops_count() const { return _drops_count; }
 
 };
 

@@ -18,6 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkerManifesto.hpp"
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
+#include "BroadcastSocket.h"
 
 
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
@@ -48,7 +49,7 @@ class JsonTalker {
 protected:
     
 	MessageRepeater* _message_repeater = nullptr;
-	LinkType _link_type = LinkType::TALKIE_DOWN_LINKED;
+	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
@@ -78,10 +79,10 @@ public:
 		}
     }
 
-    virtual const char* class_name() const { return "JsonTalker"; }
+    const char* class_name() const { return "JsonTalker"; }
 
 
-    virtual void loop() {
+    void loop() {
         if (_manifesto) {
             _manifesto->loop(this);
         }
@@ -105,11 +106,11 @@ public:
 
 	const char* socket_class_name();
 
-    const char* get_name() { return _name; }
-    const char* get_desc() { return _desc; }
+    const char* get_name() const { return _name; }
+    const char* get_desc() const { return _desc; }
     void set_channel(uint8_t channel) { _channel = channel; }
-    uint8_t get_channel() { return _channel; }
-    Original& get_original() { return _original_message; }
+    uint8_t get_channel() const { return _channel; }
+    const Original& get_original() const { return _original_message; }
     
     JsonTalker& mute() {    // It does NOT make a copy!
         _muted_calls = true;
@@ -121,12 +122,7 @@ public:
         return *this;
     }
 
-    bool muted() { return _muted_calls; }
-
-    void set_delay(uint8_t delay);
-    uint8_t get_delay();
-    uint16_t get_drops();
-	
+    bool muted() const { return _muted_calls; }
 
 
 	bool prepareMessage(JsonMessage& json_message) {
@@ -193,9 +189,13 @@ public:
 
 	bool transmitToRepeater(JsonMessage& json_message);
 
+	bool transmitSockets(JsonMessage& json_message);
+	bool transmitDrops(JsonMessage& json_message);
+	bool transmitDelays(JsonMessage& json_message);
+	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
 
     
-    virtual TalkerMatch talkerReceive(JsonMessage& json_message) {
+    TalkerMatch talkerReceive(JsonMessage& json_message) {
 
         TalkerMatch talker_match = TalkerMatch::TALKIE_MATCH_NONE;
 
@@ -300,10 +300,13 @@ public:
 							json_message.set_nth_value_string(2, action->desc);
 							transmitToRepeater(json_message);	// Many-to-One
 						}
-					}
-					if (!action_index) {
-						json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
-						transmitToRepeater(json_message);	// One-to-One
+						if (!action_index) {
+							json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
+							transmitToRepeater(json_message);	// One-to-One
+						}
+					} else {
+						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+						transmitToRepeater(json_message);		// One-to-One
 					}
 				}
 				break;
@@ -336,15 +339,43 @@ public:
 							}
 							break;
 
-						case InfoValue::TALKIE_INFO_TALKER:
-							json_message.set_nth_value_string(0, class_name());
+						case InfoValue::TALKIE_INFO_DROPS:
+							if (!transmitDrops(json_message)) {
+								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+							} else {
+        						return talker_match;	// Avoids extra transmissions sends
+							}
+							break;
+
+						case InfoValue::TALKIE_INFO_DELAY:
+							if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER && json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
+								if (!setSocketDelay((uint8_t)json_message.get_nth_value_number(0), (uint8_t)json_message.get_nth_value_number(1))) {
+									json_message.remove_nth_value(0);
+									json_message.remove_nth_value(1);
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
+								}
+							} else {
+								if (!transmitDelays(json_message)) {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								} else {
+									return talker_match;	// Avoids extra transmissions sends
+								}
+							}
+							break;
+
+						case InfoValue::TALKIE_INFO_SOCKET:
+							if (!transmitSockets(json_message)) {
+								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+							} else {
+        						return talker_match;	// Avoids extra transmissions sends
+							}
 							break;
 
 						case InfoValue::TALKIE_INFO_MANIFESTO:
 							if (_manifesto) {
 								json_message.set_nth_value_string(0, _manifesto->class_name());
 							} else {
-								json_message.set_nth_value_string(0, "none");
+								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							}
 							break;
 
@@ -380,6 +411,12 @@ public:
 			case MessageValue::TALKIE_MSG_ERROR:
 				if (_manifesto) {
 					_manifesto->error(*this, json_message);
+				}
+				break;
+			
+			case MessageValue::TALKIE_MSG_NOISE:
+				if (_manifesto) {
+					_manifesto->noise(*this, json_message);
 				}
 				break;
 			

@@ -120,6 +120,11 @@ public:
         (void)json_message;	// Silence unused parameter warning
     }
 
+    virtual void noise(JsonTalker& talker, JsonMessage& json_message) {
+        (void)talker;		// Silence unused parameter warning
+        (void)json_message;	// Silence unused parameter warning
+    }
+
 };
 
 
