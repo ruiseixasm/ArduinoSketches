@@ -11,6 +11,28 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+/**
+ * @file JsonMessage.hpp
+ * @brief JSON message handling for Talkie communication protocol
+ * 
+ * This class provides efficient, memory-safe JSON message manipulation 
+ * for embedded systems with constrained resources. It implements a 
+ * schema-driven JSON protocol optimized for Arduino environments.
+ * 
+ * @warning This class does not use dynamic memory allocation.
+ *          All operations are performed on fixed-size buffers.
+ * 
+ * @section constraints Memory Constraints
+ * - Maximum buffer size: BROADCAST_SOCKET_BUFFER_SIZE (default: 128 bytes)
+ * - Maximum name length: NAME_LEN (default: 16 bytes including null terminator)
+ * - Maximum string length: MAX_LEN (default: 64 bytes including null terminator)
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-01
+ * @version 1.0.0
+ */
+
 #ifndef JSON_MESSAGE_HPP
 #define JSON_MESSAGE_HPP
 
@@ -24,35 +46,38 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
-#define BROADCAST_SOCKET_BUFFER_SIZE 128
+#define BROADCAST_SOCKET_BUFFER_SIZE 128	    ///< Default buffer size for JSON message
 #endif
 #ifndef NAME_LEN
-#define NAME_LEN 16
+#define NAME_LEN 16								///< Default maximum length for name fields
 #endif
 #ifndef MAX_LEN
-#define MAX_LEN 64
+#define MAX_LEN 64								///< Default maximum length for string fields
 #endif
 
 
-
+using ValueType = TalkieCodes::ValueType;
 using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using RogerValue = TalkieCodes::RogerValue;
 using SystemValue = TalkieCodes::SystemValue;
 using TalkerMatch = TalkieCodes::TalkerMatch;
 
+// Forward declaration
 class BroadcastSocket;
 
+/**
+ * @class JsonMessage
+ * @brief JSON message container and manipulator for Talkie protocol
+ * 
+ * This class manages JSON-formatted messages with a fixed schema:
+ * - Mandatory fields: m (message), b (broadcast), i (identity), f (from)
+ * - Optional fields: t (to), r (roger), s (system), a (action), 0-9 (values)
+ * 
+ * @note All string operations are bounds-checked to prevent buffer overflows.
+ */
 class JsonMessage {
 public:
-	
-	enum ValueType : uint8_t {
-		TALKIE_VT_STRING,
-		TALKIE_VT_INTEGER,
-		TALKIE_VT_OTHER,
-		TALKIE_VT_VOID
-	};
-
 
 	// READ ONLY METHODS
 
@@ -129,23 +154,23 @@ public:
 			if (json_payload[json_i] == '"') {
 				for (json_i++; json_i < json_length && json_payload[json_i] != '"'; json_i++) {}
 				if (json_i == json_length) {
-					return TALKIE_VT_VOID;
+					return ValueType::TALKIE_VT_VOID;
 				}
-				return TALKIE_VT_STRING;
+				return ValueType::TALKIE_VT_STRING;
 			} else {
 				while (json_i < json_length && json_payload[json_i] != ',' && json_payload[json_i] != '}') {
 					if (json_payload[json_i] > '9' || json_payload[json_i] < '0') {
-						return TALKIE_VT_OTHER;
+						return ValueType::TALKIE_VT_OTHER;
 					}
 					json_i++;
 				}
 				if (json_i == json_length) {
-					return TALKIE_VT_VOID;
+					return ValueType::TALKIE_VT_VOID;
 				}
-				return TALKIE_VT_INTEGER;
+				return ValueType::TALKIE_VT_INTEGER;
 			}
 		}
-		return TALKIE_VT_VOID;
+		return ValueType::TALKIE_VT_VOID;
 	}
 
 
@@ -399,7 +424,7 @@ public:
 					case 'm':
 					{
 						ValueType value_type = get_value_type('m', _json_payload, _json_length, json_i);
-						if (value_type == TALKIE_VT_INTEGER) {
+						if (value_type == ValueType::TALKIE_VT_INTEGER) {
 							if (_json_payload[json_i + 2] == ',' || _json_payload[json_i + 2] == '}') {
 								if (found_b && found_i && found_f) return true;
 								found_m = true;
@@ -415,7 +440,7 @@ public:
 					case 'b':
 					{
 						ValueType value_type = get_value_type('b', _json_payload, _json_length, json_i);
-						if (value_type == TALKIE_VT_INTEGER) {
+						if (value_type == ValueType::TALKIE_VT_INTEGER) {
 							if (_json_payload[json_i + 2] == ',' || _json_payload[json_i + 2] == '}') {
 								if (found_m && found_i && found_f) return true;
 								found_b = true;
@@ -431,7 +456,7 @@ public:
 					case 'i':
 					{
 						ValueType value_type = get_value_type('i', _json_payload, _json_length, json_i);
-						if (value_type == TALKIE_VT_INTEGER) {
+						if (value_type == ValueType::TALKIE_VT_INTEGER) {
 							if (found_m && found_b && found_f) return true;
 							found_i = true;
 						} else {
@@ -443,7 +468,7 @@ public:
 					case 'f':
 					{
 						ValueType value_type = get_value_type('f', _json_payload, _json_length, json_i);
-						if (value_type == TALKIE_VT_STRING) {
+						if (value_type == ValueType::TALKIE_VT_STRING) {
 							if (found_m && found_b && found_i) return true;
 							found_f = true;
 						} else {
@@ -495,7 +520,7 @@ public:
 			ValueType value_type = get_value_type('t', _json_payload, _json_length, colon_position);
 			switch (value_type) {
 
-				case TALKIE_VT_STRING:
+				case ValueType::TALKIE_VT_STRING:
 					{
 						char message_to[NAME_LEN] = {'\0'};
 						get_value_string('t', message_to, colon_position, _json_payload, _json_length);
@@ -503,7 +528,7 @@ public:
 					}
 				break;
 				
-				case TALKIE_VT_INTEGER:
+				case ValueType::TALKIE_VT_INTEGER:
 					{
 						uint32_t number = get_value_number('t', _json_payload, _json_length, colon_position);
 						return number == channel;
