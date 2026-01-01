@@ -38,7 +38,7 @@ using SystemValue = TalkieCodes::SystemValue;
 using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
 using Original = TalkerManifesto::Original;
-using ValueType = JsonMessage::ValueType;
+using ValueType = TalkieCodes::ValueType;
 
 
 class MessageRepeater;
