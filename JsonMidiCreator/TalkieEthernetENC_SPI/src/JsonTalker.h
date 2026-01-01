@@ -55,7 +55,6 @@ protected:
     const char* _desc;      // Description of the Device
 	TalkerManifesto* _manifesto = nullptr;
     uint8_t _channel = 0;
-	MessageValue _received_message = MessageValue::TALKIE_MSG_NOISE;
 	Original _original_message = {0, MessageValue::TALKIE_MSG_NOISE};
     bool _muted_calls = false;
 
@@ -134,14 +133,6 @@ public:
 			json_message.set_from_name(_name);
 		}
 
-		// _muted_calls mutes CALL echoes only
-		if (_muted_calls && _received_message == MessageValue::TALKIE_MSG_CALL) {
-			_received_message = MessageValue::TALKIE_MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
-			return false;
-		} else {
-			_received_message = MessageValue::TALKIE_MSG_NOISE;	// Avoids false mutes for self generated messages (safe code)
-		}
-
 		MessageValue received_message_value = json_message.get_message_value();
 		if (received_message_value < MessageValue::TALKIE_MSG_ECHO) {
 
@@ -202,7 +193,6 @@ public:
 
 		// Doesn't apply to ECHO nor TALKIE_SB_ERROR
 		if (received_message_value < MessageValue::TALKIE_MSG_ECHO) {
-			_received_message = received_message_value;
 			json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 		}
 
@@ -243,9 +233,9 @@ public:
 					} else {
 						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 					}
+					// In the end sends back the processed message (single message, one-to-one)
+					if (!_muted_calls) transmitToRepeater(json_message);
 				}
-				// In the end sends back the processed message (single message, one-to-one)
-				transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::TALKIE_MSG_TALK:
