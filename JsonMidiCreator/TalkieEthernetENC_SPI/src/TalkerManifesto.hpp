@@ -32,7 +32,8 @@ class TalkerManifesto {
 
 public:
 
-    virtual const char* class_name() const { return "TalkerManifesto"; }
+	// The subclass must have the class name defined (pure virtual)
+    virtual const char* class_name() const = 0;
 
     TalkerManifesto(const TalkerManifesto&) = delete;
     TalkerManifesto& operator=(const TalkerManifesto&) = delete;

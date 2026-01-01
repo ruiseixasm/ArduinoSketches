@@ -43,8 +43,6 @@ protected:
 
 public:
 
-    virtual const char* class_name() const { return "MessageRepeater"; }
-
     // Constructor
     MessageRepeater(
 			BroadcastSocket* const* const uplinked_sockets, uint8_t uplinked_sockets_count,

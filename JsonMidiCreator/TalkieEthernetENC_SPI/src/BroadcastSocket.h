@@ -272,7 +272,8 @@ public:
     BroadcastSocket(BroadcastSocket&&) = delete;
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
 
-    virtual const char* class_name() const { return "BroadcastSocket"; }
+	// The subclass must have the class name defined (pure virtual)
+    virtual const char* class_name() const = 0;
 
     virtual void loop() {
         receive();

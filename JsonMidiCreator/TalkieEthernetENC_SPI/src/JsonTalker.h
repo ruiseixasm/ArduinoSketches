@@ -68,9 +68,8 @@ public:
         : _name(name), _desc(desc), _manifesto(manifesto) {
 		// AVOIDS EVERY TALKER WITH THE SAME CHANNEL
 		// XOR is great for 8-bit mixing
-		_channel ^= strlen(this->class_name()) << 1;    // Shift before XOR
-		_channel ^= strlen(_name) << 2;
-		_channel ^= strlen(_desc) << 3;
+		_channel ^= strlen(_name) << 1;
+		_channel ^= strlen(_desc) << 2;
 		// Add microsecond LSB for entropy
 		_channel ^= micros() & 0xFF;
 		if (_manifesto) {	// Safe code
@@ -78,9 +77,6 @@ public:
 			_channel = _manifesto->getChannel(_channel, this);
 		}
     }
-
-    const char* class_name() const { return "JsonTalker"; }
-
 
     void loop() {
         if (_manifesto) {

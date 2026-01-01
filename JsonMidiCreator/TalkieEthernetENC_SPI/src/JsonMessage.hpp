@@ -325,8 +325,6 @@ protected:
 
 public:
 
-    virtual const char* class_name() const { return "JsonMessage"; }
-
 	JsonMessage() {
 		reset(_json_payload, &_json_length);	// Initiate with the minimum
 	}
