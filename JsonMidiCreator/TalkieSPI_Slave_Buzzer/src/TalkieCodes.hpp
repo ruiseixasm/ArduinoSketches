@@ -51,21 +51,21 @@ struct TalkieCodes {
         TALKIE_MSG_PING,
         TALKIE_MSG_CALL,
         TALKIE_MSG_LIST,
-        TALKIE_MSG_INFO,
+        TALKIE_MSG_SYSTEM,
         TALKIE_MSG_ECHO,
         TALKIE_MSG_ERROR,
         TALKIE_MSG_NOISE
     };
 
 
-    enum InfoValue : uint8_t {
-        TALKIE_INFO_BOARD,
-        TALKIE_INFO_MUTE,
-        TALKIE_INFO_DROPS,
-        TALKIE_INFO_DELAY,
-        TALKIE_INFO_SOCKET,
-        TALKIE_INFO_MANIFESTO,
-        TALKIE_INFO_UNDEFINED
+    enum SystemValue : uint8_t {
+        TALKIE_SYS_BOARD,
+        TALKIE_SYS_MUTE,
+        TALKIE_SYS_DROPS,
+        TALKIE_SYS_DELAY,
+        TALKIE_SYS_SOCKET,
+        TALKIE_SYS_MANIFESTO,
+        TALKIE_SYS_UNDEFINED
     };
 
 

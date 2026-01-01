@@ -35,7 +35,7 @@ https://github.com/ruiseixasm/JsonTalkie
 using LinkType = TalkieCodes::LinkType;
 using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
-using InfoValue = TalkieCodes::InfoValue;
+using SystemValue = TalkieCodes::SystemValue;
 using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
 using ValueType = JsonMessage::ValueType;

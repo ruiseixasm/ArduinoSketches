@@ -34,7 +34,7 @@ https://github.com/ruiseixasm/JsonTalkie
 using LinkType = TalkieCodes::LinkType;
 using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
-using InfoValue = TalkieCodes::InfoValue;
+using SystemValue = TalkieCodes::SystemValue;
 using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
 using Original = TalkerManifesto::Original;
@@ -293,19 +293,19 @@ public:
 				}
 				break;
 			
-			case MessageValue::TALKIE_MSG_INFO:
+			case MessageValue::TALKIE_MSG_SYSTEM:
 				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
-				if (json_message.has_info()) {
+				if (json_message.has_system()) {
 
-					InfoValue system_code = json_message.get_info_value();
+					SystemValue system_value = json_message.get_system_value();
 
-					switch (system_code) {
+					switch (system_value) {
 
-						case InfoValue::TALKIE_INFO_BOARD:
+						case SystemValue::TALKIE_SYS_BOARD:
 							json_message.set_nth_value_string(0, board_description());
 							break;
 
-						case InfoValue::TALKIE_INFO_MUTE:
+						case SystemValue::TALKIE_SYS_MUTE:
 							if (json_message.has_nth_value_number(0)) {
 								uint8_t mute = (uint8_t)json_message.get_nth_value_number(0);
 								if (mute) {
@@ -322,7 +322,7 @@ public:
 							}
 							break;
 
-						case InfoValue::TALKIE_INFO_DROPS:
+						case SystemValue::TALKIE_SYS_DROPS:
 							if (!transmitDrops(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
@@ -330,7 +330,7 @@ public:
 							}
 							break;
 
-						case InfoValue::TALKIE_INFO_DELAY:
+						case SystemValue::TALKIE_SYS_DELAY:
 							if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER && json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
 								if (!setSocketDelay((uint8_t)json_message.get_nth_value_number(0), (uint8_t)json_message.get_nth_value_number(1))) {
 									json_message.remove_nth_value(0);
@@ -346,7 +346,7 @@ public:
 							}
 							break;
 
-						case InfoValue::TALKIE_INFO_SOCKET:
+						case SystemValue::TALKIE_SYS_SOCKET:
 							if (!transmitSockets(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
@@ -354,7 +354,7 @@ public:
 							}
 							break;
 
-						case InfoValue::TALKIE_INFO_MANIFESTO:
+						case SystemValue::TALKIE_SYS_MANIFESTO:
 							if (_manifesto) {
 								json_message.set_nth_value_string(0, _manifesto->class_name());
 							} else {

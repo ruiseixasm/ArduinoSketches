@@ -38,7 +38,7 @@ https://github.com/ruiseixasm/JsonTalkie
 using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using RogerValue = TalkieCodes::RogerValue;
-using InfoValue = TalkieCodes::InfoValue;
+using SystemValue = TalkieCodes::SystemValue;
 using TalkerMatch = TalkieCodes::TalkerMatch;
 
 class BroadcastSocket;
@@ -559,7 +559,7 @@ public:
 			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER;
 	}
 
-	bool has_info() const {
+	bool has_system() const {
 		return get_colon_position('s', _json_payload, _json_length) > 0;
 	}
 
@@ -673,15 +673,15 @@ public:
 		return RogerValue::TALKIE_RGR_NIL;
 	}
 
-	InfoValue get_info_value() const {
+	SystemValue get_system_value() const {
 		size_t colon_position = get_colon_position('s', _json_payload, _json_length);
 		if (colon_position) {
 			uint8_t info_number = (uint8_t)get_value_number('s', _json_payload, _json_length, colon_position);
-			if (info_number < static_cast<uint8_t>( InfoValue::TALKIE_INFO_UNDEFINED )) {
-				return static_cast<InfoValue>( info_number );
+			if (info_number < static_cast<uint8_t>( SystemValue::TALKIE_SYS_UNDEFINED )) {
+				return static_cast<SystemValue>( info_number );
 			}
 		}
-		return InfoValue::TALKIE_INFO_UNDEFINED;
+		return SystemValue::TALKIE_SYS_UNDEFINED;
 	}
 
     // New method using internal temporary buffer (_temp_string)
@@ -887,7 +887,7 @@ public:
 		return set_number('r', static_cast<uint8_t>(roger_value), _json_payload, &_json_length);
 	}
 
-	bool set_info_value(InfoValue info_value) {
+	bool set_system_value(SystemValue info_value) {
 		size_t value_position = get_value_position('s', _json_payload, _json_length);
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(info_value);
