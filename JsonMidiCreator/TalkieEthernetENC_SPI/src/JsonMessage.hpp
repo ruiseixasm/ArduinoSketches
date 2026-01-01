@@ -1337,14 +1337,32 @@ public:
 		return set_number('t', channel, _json_payload, &_json_length);
 	}
 
+
+    /**
+     * @brief Set action name
+     * @param name Action name string
+     * @return true if successful
+     */
 	bool set_action_name(const char* name) {
 		return set_string('a', name, _json_payload, &_json_length);
 	}
 
+
+    /**
+     * @brief Set action number
+     * @param number Action number
+     * @return true if successful
+     */
 	bool set_action_number(uint8_t number) {
 		return set_number('a', number, _json_payload, &_json_length);
 	}
 
+
+    /**
+     * @brief Set broadcast type
+     * @param broadcast_value Broadcast type enum
+     * @return true if successful
+     */
 	bool set_broadcast_value(BroadcastValue broadcast_value) {
 		size_t value_position = get_value_position('b', _json_payload, _json_length);
 		if (value_position) {
@@ -1354,6 +1372,12 @@ public:
 		return set_number('b', static_cast<uint8_t>(broadcast_value), _json_payload, &_json_length);
 	}
 
+
+    /**
+     * @brief Set roger/acknowledgment type
+     * @param roger_value Roger type enum
+     * @return true if successful
+     */
 	bool set_roger_value(RogerValue roger_value) {
 		size_t value_position = get_value_position('r', _json_payload, _json_length);
 		if (value_position) {
@@ -1363,6 +1387,12 @@ public:
 		return set_number('r', static_cast<uint8_t>(roger_value), _json_payload, &_json_length);
 	}
 
+
+    /**
+     * @brief Set system information type
+     * @param info_value System type enum
+     * @return true if successful
+     */
 	bool set_system_value(SystemValue info_value) {
 		size_t value_position = get_value_position('s', _json_payload, _json_length);
 		if (value_position) {
@@ -1372,6 +1402,13 @@ public:
 		return set_number('s', static_cast<uint8_t>(info_value), _json_payload, &_json_length);
 	}
 
+
+    /**
+     * @brief Set nth value as number
+     * @param nth Index 0-9
+     * @param number Numeric value
+     * @return true if successful
+     */
 	bool set_nth_value_number(uint8_t nth, uint32_t number) {
 		if (nth < 10) {
 			return set_number('0' + nth, number, _json_payload, &_json_length);
@@ -1379,6 +1416,13 @@ public:
 		return false;
 	}
 
+
+    /**
+     * @brief Set nth value as string
+     * @param nth Index 0-9
+     * @param in_string String value
+     * @return true if successful
+     */
 	bool set_nth_value_string(uint8_t nth, const char* in_string) {
 		if (nth < 10) {
 			return set_string('0' + nth, in_string, _json_payload, &_json_length);
@@ -1386,6 +1430,14 @@ public:
 		return false;
 	}
 
+
+    /**
+     * @brief Swap 'from' and 'to' fields
+     * @return true if 'from' field exists
+     * 
+     * @note Useful for creating replies. If 'to' doesn't exist,
+     *       'from' becomes 'to' and 'from' is thus removed.
+     */
 	bool swap_from_with_to() {
 		size_t key_from_position = get_key_position('f', _json_payload, _json_length);
 		size_t key_to_position = get_key_position('t', _json_payload, _json_length);
