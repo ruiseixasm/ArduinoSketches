@@ -192,6 +192,7 @@ public:
 	bool transmitSockets(JsonMessage& json_message);
 	bool transmitDrops(JsonMessage& json_message);
 	bool transmitDelays(JsonMessage& json_message);
+	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value);
 
     
     TalkerMatch talkerReceive(JsonMessage& json_message) {
@@ -352,10 +353,18 @@ public:
 							break;
 
 						case InfoValue::TALKIE_INFO_DELAY:
-							if (!transmitDelays(json_message)) {
-								json_message.set_nth_value_string(0, "none");
+							if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER && json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
+								if (!setSocketDelay(json_message.get_nth_value_number(0), json_message.get_nth_value_number(0))) {
+									json_message.remove_nth_value(0);
+									json_message.remove_nth_value(1);
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
+								}
 							} else {
-        						return talker_match;	// Avoids extra transmissions sends
+								if (!transmitDelays(json_message)) {
+									json_message.set_nth_value_string(0, "none");
+								} else {
+									return talker_match;	// Avoids extra transmissions sends
+								}
 							}
 							break;
 

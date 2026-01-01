@@ -88,3 +88,13 @@ bool JsonTalker::transmitDelays(JsonMessage& json_message) {
 	return false;
 }
 
+
+bool JsonTalker::setSocketDelay(uint8_t socket_index, uint8_t delay_value) {
+	if (_message_repeater) {
+		BroadcastSocket* socket = _message_repeater->accessSocket(socket_index);
+		socket->set_max_delay(delay_value);
+		return true;
+	}
+	return false;
+}
+

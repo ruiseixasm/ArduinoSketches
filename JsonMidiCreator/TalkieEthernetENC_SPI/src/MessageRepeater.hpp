@@ -103,6 +103,14 @@ public:
         }
         return nullptr;
     }
+
+
+	BroadcastSocket* accessSocket(u_int8_t socket_index) const {
+		if (socket_index < _uplinked_sockets_count) {
+			return _uplinked_sockets[socket_index];
+		}
+		return nullptr;
+	}
     
 
 	bool socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
