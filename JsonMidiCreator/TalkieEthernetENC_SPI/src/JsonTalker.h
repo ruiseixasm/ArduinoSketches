@@ -167,7 +167,7 @@ public:
 
     /**
      * @brief Set the Talker as muted or not muted
-     * @param muted If true it muted the call's echoes
+     * @param muted If true it mutes the call's echoes
      * 
      * @note This only mutes the echoes from the calls
      */

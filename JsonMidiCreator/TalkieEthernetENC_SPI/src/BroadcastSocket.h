@@ -280,16 +280,70 @@ public:
         receive();
     }
 
+
+    // ============================================
+    // GETTERS - FIELD VALUES
+    // ============================================
+	
+    /**
+     * @brief Get the Link Type with the Message Repeater
+     * @return Returns the Link Type (ex. UP_LINKED)
+     */
+	LinkType getLinkType() const { return _link_type; }
+
+	
+    /**
+     * @brief Get the maximum amount of delay a message can have before being dropped
+     * @return Returns the delay in microseconds
+     * 
+     * @note A max delay of `0` means no message will be dropped,
+	 *       this only applies to `CALL` messages value
+     */
+    uint8_t get_max_delay() const { return _max_delay_ms; }
+
+
+    /**
+     * @brief Get the total amount of call messages already dropped
+     * @return Returns the number of dropped call messages
+     */
+    uint16_t get_drops_count() const { return _drops_count; }
+
+
+    // ============================================
+    // SETTERS - FIELD MODIFICATION
+    // ============================================
+
+    /**
+     * @brief Intended to be used by the Message Repeater only
+     * @param message_repeater The Message Repeater pointer
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note This method is used by the Message Repeater to set up the Socket
+     */
 	void setLink(MessageRepeater* message_repeater, LinkType link_type);
 
-	void setLinkType(LinkType link_type) {
-		_link_type = link_type;
-	}
 
-	LinkType getLinkType() const {
-		return _link_type;
-	}
+    /**
+     * @brief Sets the Link Type of the Talker directly
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note Only usefull if intended to be bridged (ex. UP_BRIDGED)
+     */
+	void setLinkType(LinkType link_type) { _link_type = link_type; }
 
+
+    /**
+     * @brief Sets the maximum amount of delay a message can have before being dropped
+     * @param max_delay_ms The maximum amount of delay in milliseconds
+     * 
+     * @note A max delay of `0` means no message will be dropped,
+	 *       this only applies to `CALL` messages value
+     */
+    void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
+	
+
+
+	
 	bool deserialize_buffer(JsonMessage& json_message) const {
 		return json_message.deserialize_buffer(_received_buffer, _received_length);
 	}
@@ -330,11 +384,6 @@ public:
 		return false;
     }
     
-
-    void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
-    uint8_t get_max_delay() const { return _max_delay_ms; }
-    uint16_t get_drops_count() const { return _drops_count; }
-
 };
 
 
