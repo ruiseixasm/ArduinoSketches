@@ -90,7 +90,7 @@ public:
     }
 
 	
-	virtual void iterateSocketsReset() {
+	void iterateSocketsReset() {
 		socketsIterIdx = 0;
 	}
 
