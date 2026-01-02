@@ -167,7 +167,7 @@ protected:
     static uint8_t _max_delay_ms;
 
 
-    static size_t triggerTalkers(size_t length) {
+    static size_t handleTransmission(size_t length) {
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("T: "));

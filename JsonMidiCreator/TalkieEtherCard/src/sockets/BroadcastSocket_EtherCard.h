@@ -84,7 +84,7 @@ protected:
 			#endif
 
 			BroadcastSocket::receive();  // Makes sure it's the Ethernet reading that sets it! (always returns 0)
-			BroadcastSocket::triggerTalkers();
+			BroadcastSocket::handleTransmission();
 			_received_length = 0;
 			return _data_length;
 		}

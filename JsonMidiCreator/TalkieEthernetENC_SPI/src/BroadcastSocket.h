@@ -95,13 +95,13 @@ protected:
 	bool transmitToRepeater(JsonMessage& json_message);
 
     
-    bool triggerTalkers() {
+    bool handleTransmission() {
 
 		size_t colon_position = JsonMessage::get_colon_position('c', _received_buffer, _received_length);
 		uint16_t received_checksum = JsonMessage::get_value_number('c', _received_buffer, _received_length, colon_position);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
-		Serial.print(F("\ttriggerTalkers0.1: "));
+		Serial.print(F("\thandleTransmission0.1: "));
         Serial.write(_received_buffer, _received_length);
 		Serial.print(" | ");
 		Serial.println(received_checksum);
@@ -111,7 +111,7 @@ protected:
 		uint16_t checksum = generateChecksum(_received_buffer, _received_length);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
-		Serial.print(F("\ttriggerTalkers0.2: "));
+		Serial.print(F("\thandleTransmission0.2: "));
         Serial.write(_received_buffer, _received_length);
 		Serial.print(" | ");
 		Serial.println(checksum);
@@ -122,7 +122,7 @@ protected:
 			JsonMessage json_message(_received_buffer, _received_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("\ttriggerTalkers1.1: "));
+			Serial.print(F("\thandleTransmission1.1: "));
 			json_message.write_to(Serial);
 			Serial.print(" | ");
 			Serial.println(json_message.validate_fields());
@@ -134,12 +134,12 @@ protected:
 				uint16_t message_timestamp = json_message.get_timestamp();
 				
 				#ifdef BROADCASTSOCKET_DEBUG
-				Serial.print(F("triggerTalkers3: Remote time: "));
+				Serial.print(F("handleTransmission3: Remote time: "));
 				Serial.println(message_timestamp);
 				#endif
 
 				#ifdef BROADCASTSOCKET_DEBUG
-				Serial.print(F("triggerTalkers4: Validated Checksum of "));
+				Serial.print(F("handleTransmission4: Validated Checksum of "));
 				Serial.println(checksum);
 				#endif
 
@@ -148,7 +148,7 @@ protected:
 					if (message_code == MessageValue::TALKIE_MSG_CALL) {	// Only does time control on Calls (drops)
 
 						#ifdef BROADCASTSOCKET_DEBUG
-						Serial.print(F("triggerTalkers6: Message code requires delay check: "));
+						Serial.print(F("handleTransmission6: Message code requires delay check: "));
 						Serial.println(message_code_int);
 						#endif
 
@@ -162,12 +162,12 @@ protected:
 								const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
 								const uint16_t local_delay = local_time - _last_local_time;
 								#ifdef BROADCASTSOCKET_DEBUG
-								Serial.print(F("triggerTalkers7: Local delay: "));
+								Serial.print(F("handleTransmission7: Local delay: "));
 								Serial.println(local_delay);
 								#endif
 								if (remote_delay > allowed_delay || local_delay > allowed_delay) {
 									#ifdef BROADCASTSOCKET_DEBUG
-									Serial.print(F("triggerTalkers8: Out of time package (remote delay): "));
+									Serial.print(F("handleTransmission8: Out of time package (remote delay): "));
 									Serial.println(remote_delay);
 									#endif
 									_drops_count++;
@@ -201,7 +201,7 @@ protected:
 
 			} else {
 				#ifdef BROADCASTSOCKET_DEBUG
-				Serial.print(F("triggerTalkers9: Validation of Checksum FAILED: "));
+				Serial.print(F("handleTransmission9: Validation of Checksum FAILED: "));
 				Serial.println(checksum);
 				#endif
 			}

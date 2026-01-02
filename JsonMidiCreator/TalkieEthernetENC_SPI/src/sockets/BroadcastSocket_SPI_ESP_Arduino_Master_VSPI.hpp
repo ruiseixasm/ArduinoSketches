@@ -467,7 +467,7 @@ public:
 				if (length > 0) {
 					_actual_ss_pin = _ss_pins[ss_pin_i];
 					_received_length = length;
-					triggerTalkers();
+					handleTransmission();
 				}
 			}
 			// Makes sure the _received_buffer is deleted with 0

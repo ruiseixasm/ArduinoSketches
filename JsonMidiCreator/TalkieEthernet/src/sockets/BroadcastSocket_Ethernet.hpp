@@ -63,7 +63,7 @@ protected:
 				#endif
 				
 				_source_ip = _udp->remoteIP();
-				triggerTalkers();
+				handleTransmission();
 				_received_length = 0;
 				return (size_t)length;
 			}

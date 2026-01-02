@@ -120,7 +120,7 @@ public:
             #endif
             
             _source_ip = _udp->remoteIP();
-            return triggerTalkers(static_cast<size_t>(length));
+            return handleTransmission(static_cast<size_t>(length));
         }
         return 0;   // nothing received
     }

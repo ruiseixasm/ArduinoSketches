@@ -210,7 +210,7 @@ public:
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
 
 		if (_received_data) {
-			length = BroadcastSocket::triggerTalkers(_receiving_index);
+			length = BroadcastSocket::handleTransmission(_receiving_index);
 			deleteReceived();
 		}
 
