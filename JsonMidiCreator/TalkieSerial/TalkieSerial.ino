@@ -13,35 +13,24 @@ https://github.com/ruiseixasm/JsonTalkie
 */
 
 
-// GREEN_LED is already defined by ESP32 platform
-// Typically GPIO2 for most ESP32 boards
-#ifndef GREEN_LED
-  #define GREEN_LED 2  // Fallback definition if not already defined
-#endif
-
-#ifndef YELLOW_LED_PIN
-#define YELLOW_LED_PIN 19   // A5
-#endif
-
-
 
 // COMPILE WITH ARDUINO BOARD
-#include "src/manifestos/GreenManifesto.hpp"
 #include "src/JsonTalker.h"
-#include "src/sockets/SPI_ESP_Arduino_Slave.h"
 #include "src/MessageRepeater.hpp"
+#include "src/manifestos/SerialManifesto.hpp"
+#include "src/sockets/SocketSerial.hpp"
 
 
-const char talker_name[] = "green";
-const char talker_desc[] = "I'm a green talker";
-GreenManifesto green_manifesto;
-JsonTalker talker = JsonTalker(talker_name, talker_desc, &green_manifesto);
+const char talker_name[] = "serial";
+const char talker_desc[] = "I'm a serial talker";
+SerialManifesto serial_manifesto;
+JsonTalker talker = JsonTalker(talker_name, talker_desc, &serial_manifesto);
 
 // Singleton requires the & (to get a reference variable)
-auto& spi_socket = SPI_ESP_Arduino_Slave::instance();
+auto& serial_socket = SocketSerial::instance();
 
 // SETTING THE REPEATER
-BroadcastSocket* uplinked_sockets[] = { &spi_socket };
+BroadcastSocket* uplinked_sockets[] = { &serial_socket };
 JsonTalker* downlinked_talkers[] = { &talker };
 MessageRepeater message_repeater(
 		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),
@@ -51,43 +40,28 @@ MessageRepeater message_repeater(
 
 void setup() {
     // Initialize pins FIRST before anything else
-    pinMode(GREEN_LED, OUTPUT);
-    digitalWrite(GREEN_LED, LOW); // Start with LED off
-	pinMode(YELLOW_LED_PIN, OUTPUT);
-	digitalWrite(YELLOW_LED_PIN, LOW);
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW); // Start with LED off
 
     // Then start Serial
     Serial.begin(115200);
-    digitalWrite(YELLOW_LED_PIN, HIGH);
-    delay(1000); // Important: Give time for serial to initialize
-    digitalWrite(YELLOW_LED_PIN, LOW);
-    Serial.println("\n\n=== Arduino with SPI STARTING ===");
+    delay(250); // Important: Give time for serial to initialize
+    Serial.println("\n\n=== Arduino with SERIAL ===");
 
     // Add a small LED blink to confirm code is running
-    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(LED_BUILTIN, HIGH);
     delay(100);
-    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(LED_BUILTIN, LOW);
     delay(100);
-    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(LED_BUILTIN, HIGH);
     delay(100);
-    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(LED_BUILTIN, LOW);
     
-    Serial.println("Pins initialized successfully");
-
-
-
-    // STEP 1: Initialize SPI only
-    // Defines the CS pin by Talker name here
-	
-    Serial.println("Step 1: Starting SPI...");
-	spi_socket.setLinkType(LinkType::TALKIE_LT_UP_BRIDGED);	// Makes sure it accepts LOCAL messages too
-    Serial.println("SPI started successfully");
-    delay(1000);
 
     // Final startup indication
-    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(LED_BUILTIN, HIGH);
     delay(500);
-    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(LED_BUILTIN, LOW);
 
     Serial.println("Setup completed - Ready for JSON communication!");
 }
