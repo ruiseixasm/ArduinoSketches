@@ -22,8 +22,16 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // #define MESSAGE_REPEATER_DEBUG
 
-using LinkType = TalkieCodes::LinkType;
-using TalkerMatch = TalkieCodes::TalkerMatch;
+using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
+using BroadcastValue 	= TalkieCodes::BroadcastValue;
+using MessageValue 		= TalkieCodes::MessageValue;
+using SystemValue 		= TalkieCodes::SystemValue;
+using RogerValue 		= TalkieCodes::RogerValue;
+using ErrorValue 		= TalkieCodes::ErrorValue;
+using ValueType 		= TalkieCodes::ValueType;
+using Original 			= JsonMessage::Original;
+
 
 class MessageRepeater {
 protected:
@@ -89,8 +97,25 @@ public:
 		}
     }
 
+
+	bool transmitErrorToChannel(BroadcastSocket &socket, JsonMessage &message) const {
+		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
+		message.swap_from_with_to();
+		message.set_from_name("255");	// Channel error means 255
+		return socket.finishTransmission(message);
+	}
 	
-	virtual void iterateSocketsReset() {
+	bool transmitErrorToChannel(JsonTalker &talker, JsonMessage &message) {
+		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
+		message.swap_from_with_to();
+		message.set_from_name("255");	// Channel error means 255
+		talker.handleTransmission(message);
+	}
+	
+
+	void iterateSocketsReset() {
 		socketsIterIdx = 0;
 	}
 
@@ -155,6 +180,12 @@ public:
 				break;
 				
 				case TalkerMatch::TALKIE_MATCH_BY_NAME:
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				Serial.print(" | ");
+				Serial.print(millis() - message._reference_time);
+				#endif
+				
 				{
 					char message_to_name[NAME_LEN];
 					strcpy(message_to_name, message.get_to_name());
@@ -166,12 +197,28 @@ public:
 					}
 				}
 				break;
-				
+
+				case TalkerMatch::TALKIE_MATCH_FAIL:
+					transmitErrorToChannel(socket, message);
+					return false;
+
 				default: return false;
 			}
+			
+			#ifdef MESSAGE_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - message._reference_time);
+			#endif
+				
 			for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
 				_downlinked_sockets[socket_j]->finishTransmission(message);
 			}
+			
+			#ifdef MESSAGE_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - message._reference_time);
+			#endif
+				
 			return true;
 		} else {
 			return broadcast == BroadcastValue::TALKIE_BC_NONE;
@@ -240,6 +287,10 @@ public:
 						}
 						break;
 						
+						case TalkerMatch::TALKIE_MATCH_FAIL:
+							transmitErrorToChannel(talker, message);
+							return false;
+
 						default: return false;
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
@@ -308,6 +359,10 @@ public:
 						}
 						break;
 						
+						case TalkerMatch::TALKIE_MATCH_FAIL:
+							transmitErrorToChannel(talker, message);
+							return false;
+
 						default: return false;
 					}
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
@@ -366,6 +421,10 @@ public:
 					}
 					break;
 					
+					case TalkerMatch::TALKIE_MATCH_FAIL:
+						transmitErrorToChannel(talker, message);
+						return false;
+
 					default: return false;
 				}
 			}
@@ -422,6 +481,12 @@ public:
 					break;
 					
 					case TalkerMatch::TALKIE_MATCH_BY_NAME:
+					
+					#ifdef MESSAGE_DEBUG_TIMING
+					Serial.print(" | ");
+					Serial.print(millis() - message._reference_time);
+					#endif
+				
 					{
 						char message_to_name[NAME_LEN];
 						strcpy(message_to_name, message.get_to_name());
@@ -434,11 +499,27 @@ public:
 					}
 					break;
 					
+					case TalkerMatch::TALKIE_MATCH_FAIL:
+						transmitErrorToChannel(socket, message);
+						return false;
+
 					default: return false;
 				}
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				Serial.print(" | ");
+				Serial.print(millis() - message._reference_time);
+				#endif
+				
 				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 					_uplinked_sockets[socket_j]->finishTransmission(message);
 				}
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				Serial.print(" | ");
+				Serial.print(millis() - message._reference_time);
+				#endif
+				
 				return true;
 			}
 			break;
@@ -487,6 +568,10 @@ public:
 					}
 					break;
 					
+					case TalkerMatch::TALKIE_MATCH_FAIL:
+						transmitErrorToChannel(socket, message);
+						return false;
+
 					default: return false;
 				}
 				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
@@ -572,6 +657,10 @@ public:
 						}
 						break;
 						
+						case TalkerMatch::TALKIE_MATCH_FAIL:
+							transmitErrorToChannel(talker, message);
+							return false;
+
 						default: return false;
 					}
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {

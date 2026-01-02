@@ -18,13 +18,15 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
 
-using LinkType = TalkieCodes::LinkType;
-using BroadcastValue = TalkieCodes::BroadcastValue;
-using MessageValue = TalkieCodes::MessageValue;
-using SystemValue = TalkieCodes::SystemValue;
-using RogerValue = TalkieCodes::RogerValue;
-using ErrorValue = TalkieCodes::ErrorValue;
-using ValueType = TalkieCodes::ValueType;
+using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
+using BroadcastValue 	= TalkieCodes::BroadcastValue;
+using MessageValue 		= TalkieCodes::MessageValue;
+using SystemValue 		= TalkieCodes::SystemValue;
+using RogerValue 		= TalkieCodes::RogerValue;
+using ErrorValue 		= TalkieCodes::ErrorValue;
+using ValueType 		= TalkieCodes::ValueType;
+using Original 			= JsonMessage::Original;
 
 class JsonTalker;
 
@@ -49,11 +51,6 @@ public:
         const char* desc;
     };
 
-	struct Original {
-		uint16_t identity;
-		MessageValue message_value;
-	};
-
 
 protected:
 	
@@ -67,12 +64,6 @@ protected:
 
 
 public:
-
-	virtual uint8_t getChannel(uint8_t channel, JsonTalker* talker) {
-        (void)talker;		// Silence unused parameter warning
-		return channel;
-	}
-
 
     virtual void loop(JsonTalker* talker) {	// Also defined, not a pure virtual one
         (void)talker;		// Silence unused parameter warning

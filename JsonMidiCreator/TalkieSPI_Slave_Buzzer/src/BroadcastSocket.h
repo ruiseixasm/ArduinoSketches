@@ -32,13 +32,15 @@ https://github.com/ruiseixasm/JsonTalkie
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
-using ValueType = TalkieCodes::ValueType;
-using LinkType = TalkieCodes::LinkType;
-using BroadcastValue = TalkieCodes::BroadcastValue;
-using MessageValue = TalkieCodes::MessageValue;
-using SystemValue = TalkieCodes::SystemValue;
-using RogerValue = TalkieCodes::RogerValue;
-using ErrorValue = TalkieCodes::ErrorValue;
+using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
+using BroadcastValue 	= TalkieCodes::BroadcastValue;
+using MessageValue 		= TalkieCodes::MessageValue;
+using SystemValue 		= TalkieCodes::SystemValue;
+using RogerValue 		= TalkieCodes::RogerValue;
+using ErrorValue 		= TalkieCodes::ErrorValue;
+using ValueType 		= TalkieCodes::ValueType;
+using Original 			= JsonMessage::Original;
 
 class MessageRepeater;
 
@@ -125,6 +127,12 @@ protected:
 
 		if (received_checksum == checksum) {
 
+			#ifdef MESSAGE_DEBUG_TIMING
+			Serial.print("\n\t");
+			Serial.print(class_name());
+			Serial.print(": ");
+			#endif
+				
 			JsonMessage json_message(_received_buffer, _received_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
@@ -187,8 +195,12 @@ protected:
 					}
 				}
 
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				Serial.print(millis() - json_message._reference_time);
+				#endif
+				
 				// Gives a chance to show it one time
-
 				if (!receivedJsonMessage(json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
@@ -204,6 +216,12 @@ protected:
 				}
 
 				transmitToRepeater(json_message);
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				Serial.print(" | ");
+				Serial.print(millis() - json_message._reference_time);
+				#endif
+				
 
 			} else {
 				#ifdef BROADCASTSOCKET_DEBUG
@@ -280,16 +298,74 @@ public:
         receive();
     }
 
+
+    // ============================================
+    // GETTERS - FIELD VALUES
+    // ============================================
+	
+    /**
+     * @brief Get the Link Type with the Message Repeater
+     * @return Returns the Link Type (ex. UP_LINKED)
+	 * 
+     * @note Usefull if intended to be bridged (ex. UP_BRIDGED),
+	 *       where the `LOCAL` messages are also broadcasted
+     */
+	LinkType getLinkType() const { return _link_type; }
+
+	
+    /**
+     * @brief Get the maximum amount of delay a message can have before being dropped
+     * @return Returns the delay in microseconds
+     * 
+     * @note A max delay of `0` means no message will be dropped,
+	 *       this only applies to `CALL` messages value
+     */
+    uint8_t get_max_delay() const { return _max_delay_ms; }
+
+
+    /**
+     * @brief Get the total amount of call messages already dropped
+     * @return Returns the number of dropped call messages
+     */
+    uint16_t get_drops_count() const { return _drops_count; }
+
+
+    // ============================================
+    // SETTERS - FIELD MODIFICATION
+    // ============================================
+
+    /**
+     * @brief Intended to be used by the Message Repeater only
+     * @param message_repeater The Message Repeater pointer
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note This method is used by the Message Repeater to set up the Socket
+     */
 	void setLink(MessageRepeater* message_repeater, LinkType link_type);
 
-	void setLinkType(LinkType link_type) {
-		_link_type = link_type;
-	}
 
-	LinkType getLinkType() const {
-		return _link_type;
-	}
+    /**
+     * @brief Sets the Link Type of the Talker directly
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note Only usefull if intended to be bridged (ex. UP_BRIDGED),
+	 *       where the `LOCAL` messages are also broadcasted
+     */
+	void setLinkType(LinkType link_type) { _link_type = link_type; }
 
+
+    /**
+     * @brief Sets the maximum amount of delay a message can have before being dropped
+     * @param max_delay_ms The maximum amount of delay in milliseconds
+     * 
+     * @note A max delay of `0` means no message will be dropped,
+	 *       this only applies to `CALL` messages value
+     */
+    void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
+	
+
+
+	
 	bool deserialize_buffer(JsonMessage& json_message) const {
 		return json_message.deserialize_buffer(_received_buffer, _received_length);
 	}
@@ -323,18 +399,27 @@ public:
 			Serial.println(_sending_length);
 			#endif
 
+			#ifdef MESSAGE_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - json_message._reference_time);
+			#endif
+				
 			if (_sending_length) {
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				bool send_result = send(json_message);
+				Serial.print(" | ");
+				Serial.print(millis() - json_message._reference_time);
+				return send_result;
+				#else
 				return send(json_message);
+				#endif
+				
 			}
 		}
 		return false;
     }
     
-
-    void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
-    uint8_t get_max_delay() const { return _max_delay_ms; }
-    uint16_t get_drops_count() const { return _drops_count; }
-
 };
 
 

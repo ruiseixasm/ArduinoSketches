@@ -43,7 +43,7 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 }
 
 
-bool JsonTalker::transmitSockets(JsonMessage& json_message) {
+bool JsonTalker::transmissionSockets(JsonMessage& json_message) {
 	if (_message_repeater) {
 		uint8_t socket_index = 0;
 		const BroadcastSocket* socket;
@@ -59,7 +59,7 @@ bool JsonTalker::transmitSockets(JsonMessage& json_message) {
 }
 
 
-bool JsonTalker::transmitDrops(JsonMessage& json_message) {
+bool JsonTalker::transmissionDrops(JsonMessage& json_message) {
 	if (_message_repeater) {
 		uint8_t socket_index = 0;
 		const BroadcastSocket* socket;
@@ -75,7 +75,7 @@ bool JsonTalker::transmitDrops(JsonMessage& json_message) {
 }
 
 
-bool JsonTalker::transmitDelays(JsonMessage& json_message) {
+bool JsonTalker::transmissionDelays(JsonMessage& json_message) {
 	if (_message_repeater) {
 		uint8_t socket_index = 0;
 		const BroadcastSocket* socket;

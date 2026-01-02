@@ -31,14 +31,15 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define JSON_TALKER_DEBUG
 // #define JSON_TALKER_DEBUG_NEW
 
-using LinkType = TalkieCodes::LinkType;
-using BroadcastValue = TalkieCodes::BroadcastValue;
-using MessageValue = TalkieCodes::MessageValue;
-using SystemValue = TalkieCodes::SystemValue;
-using RogerValue = TalkieCodes::RogerValue;
-using ErrorValue = TalkieCodes::ErrorValue;
-using Original = TalkerManifesto::Original;
-using ValueType = TalkieCodes::ValueType;
+using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
+using BroadcastValue 	= TalkieCodes::BroadcastValue;
+using MessageValue 		= TalkieCodes::MessageValue;
+using SystemValue 		= TalkieCodes::SystemValue;
+using RogerValue 		= TalkieCodes::RogerValue;
+using ErrorValue 		= TalkieCodes::ErrorValue;
+using ValueType 		= TalkieCodes::ValueType;
+using Original 			= JsonMessage::Original;
 
 
 class MessageRepeater;
@@ -54,28 +55,17 @@ protected:
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
 	TalkerManifesto* _manifesto = nullptr;
-    uint8_t _channel = 0;
+    uint8_t _channel = 255;	// Channel 255 means NO channel response
 	Original _original_message = {0, MessageValue::TALKIE_MSG_NOISE};
     bool _muted_calls = false;
 
 public:
 
-    // Explicit default constructor
+    // Explicitly disabled the default constructor
     JsonTalker() = delete;
         
-    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr)
-        : _name(name), _desc(desc), _manifesto(manifesto) {
-		// AVOIDS EVERY TALKER WITH THE SAME CHANNEL
-		// XOR is great for 8-bit mixing
-		_channel ^= strlen(_name) << 1;
-		_channel ^= strlen(_desc) << 2;
-		// Add microsecond LSB for entropy
-		_channel ^= micros() & 0xFF;
-		if (_manifesto) {	// Safe code
-			_channel ^= strlen(_manifesto->class_name()) << 4;
-			_channel = _manifesto->getChannel(_channel, this);
-		}
-    }
+    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr, uint8_t channel = 255)
+        : _name(name), _desc(desc), _manifesto(manifesto), _channel(channel) {}
 
     void loop() {
         if (_manifesto) {
@@ -83,26 +73,95 @@ public:
         }
     }
 
-	// Getter and setters
 
-	void setLink(MessageRepeater* message_repeater, LinkType link_type);
+	
+    // ============================================
+    // GETTERS - FIELD VALUES
+    // ============================================
+	
+    /**
+	 * @brief Get the name of the Talker
+     * @return A pointer to the Talker name string
+     */
+	const char* get_name() const { return _name; }
+	
+	
+    /**
+	 * @brief Get the description of the Talker
+	 * @return A pointer to the Talker description string
+     */
+	const char* get_desc() const { return _desc; }
 
-	void setLinkType(LinkType link_type) {
-		_link_type = link_type;
-	}
+	
+    /**
+     * @brief Get the channel of the Talker
+     * @return The channel number of the Talker
+     */
+	uint8_t get_channel() const { return _channel; }
+	
+	
+    /**
+     * @brief Get the muted state of the Talker
+     * @return Returns true if muted (muted calls)
+     * 
+     * @note This only mutes the echoes from the calls
+     */
+	bool get_muted() const { return _muted_calls; }
 
-	LinkType getLinkType() const {
-		return _link_type;
-	}
 
+    /**
+     * @brief Get the Link Type with the Message Repeater
+     * @return Returns the Link Type (ex. DOWN_LINKED)
+     */
+	LinkType getLinkType() const { return _link_type; }
 
-    const char* get_name() const { return _name; }
-    const char* get_desc() const { return _desc; }
-    void set_channel(uint8_t channel) { _channel = channel; }
-    uint8_t get_channel() const { return _channel; }
-    void set_mute(bool muted) { _muted_calls = muted; }
-    bool get_muted() const { return _muted_calls; }
+	
+    /**
+     * @brief Get the last, non echo message (original)
+     * @return Returns Original with the message id and value
+     * 
+     * @note This is used to pair the message id with its echo
+     */
     const Original& get_original() const { return _original_message; }
+
+
+    // ============================================
+    // SETTERS - FIELD MODIFICATION
+    // ============================================
+
+    /**
+     * @brief Set channel number
+     * @param channel Channel number for which the Talker will respond
+     */
+    void set_channel(uint8_t channel) { _channel = channel; }
+
+
+    /**
+     * @brief Intended to be used by the Message Repeater only
+     * @param message_repeater The Message Repeater pointer
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note This method is used by the Message Repeater to set up the Talker
+     */
+	void setLink(MessageRepeater* message_repeater, LinkType link_type);
+	
+
+    /**
+     * @brief Sets the Link Type of the Talker directly
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note Only usefull if intended to be disabled (ex. NONE)
+     */
+	void setLinkType(LinkType link_type) { _link_type = link_type; }
+	
+
+    /**
+     * @brief Set the Talker as muted or not muted
+     * @param muted If true it mutes the call's echoes
+     * 
+     * @note This only mutes the echoes from the calls
+     */
+    void set_mute(bool muted) { _muted_calls = muted; }
 
 
 	bool prepareMessage(JsonMessage& json_message) {
@@ -159,9 +218,9 @@ public:
 
 	
 	bool transmitToRepeater(JsonMessage& json_message);
-	bool transmitSockets(JsonMessage& json_message);
-	bool transmitDrops(JsonMessage& json_message);
-	bool transmitDelays(JsonMessage& json_message);
+	bool transmissionSockets(JsonMessage& json_message);
+	bool transmissionDrops(JsonMessage& json_message);
+	bool transmissionDelays(JsonMessage& json_message);
 	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
 
     
@@ -308,7 +367,7 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_DROPS:
-							if (!transmitDrops(json_message)) {
+							if (!transmissionDrops(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
         						return true;	// Avoids extra transmissions sends
@@ -323,7 +382,7 @@ public:
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
 								}
 							} else {
-								if (!transmitDelays(json_message)) {
+								if (!transmissionDelays(json_message)) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
 									return true;	// Avoids extra transmissions sends
@@ -332,7 +391,7 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_SOCKET:
-							if (!transmitSockets(json_message)) {
+							if (!transmissionSockets(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
         						return true;	// Avoids extra transmissions sends

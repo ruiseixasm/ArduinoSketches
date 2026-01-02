@@ -87,14 +87,16 @@ struct TalkieCodes {
 
 
     enum ErrorValue : uint8_t {
-        TALKIE_ERR_FROM,
-        TALKIE_ERR_FIELD,
         TALKIE_ERR_CHECKSUM,
         TALKIE_ERR_MESSAGE,
         TALKIE_ERR_IDENTITY,
-        TALKIE_ERR_ERR_DELAY,
-        TALKIE_ERR_ERR_KEY,
-        TALKIE_ERR_ERR_DATA
+        TALKIE_ERR_FIELD,
+        TALKIE_ERR_FROM,
+        TALKIE_ERR_TO,
+        TALKIE_ERR_DELAY,
+        TALKIE_ERR_KEY,
+        TALKIE_ERR_VALUE,
+        TALKIE_ERR_UNDEFINED
     };
 };
 

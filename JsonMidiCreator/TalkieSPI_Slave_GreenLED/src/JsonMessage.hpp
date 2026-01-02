@@ -45,6 +45,8 @@ https://github.com/ruiseixasm/JsonTalkie
 // 		d (description) → 64 bytes (63 + '\0')
 
 
+// #define MESSAGE_DEBUG_TIMING
+
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128	    ///< Default buffer size for JSON message
 #endif
@@ -56,12 +58,14 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 
-using ValueType = TalkieCodes::ValueType;
-using BroadcastValue = TalkieCodes::BroadcastValue;
-using MessageValue = TalkieCodes::MessageValue;
-using RogerValue = TalkieCodes::RogerValue;
-using SystemValue = TalkieCodes::SystemValue;
-using TalkerMatch = TalkieCodes::TalkerMatch;
+using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
+using BroadcastValue 	= TalkieCodes::BroadcastValue;
+using MessageValue 		= TalkieCodes::MessageValue;
+using SystemValue 		= TalkieCodes::SystemValue;
+using RogerValue 		= TalkieCodes::RogerValue;
+using ErrorValue 		= TalkieCodes::ErrorValue;
+using ValueType 		= TalkieCodes::ValueType;
 
 // Forward declaration
 class BroadcastSocket;
@@ -78,6 +82,17 @@ class BroadcastSocket;
  */
 class JsonMessage {
 public:
+
+	struct Original {
+		uint16_t identity;
+		MessageValue message_value;
+	};
+
+
+	#ifdef MESSAGE_DEBUG_TIMING
+	unsigned long _reference_time = millis();
+	#endif
+
 
     // ============================================
     // STATIC METHODS (Parsing utilities)
@@ -1024,15 +1039,31 @@ public:
 	SystemValue get_system_value() const {
 		size_t colon_position = get_colon_position('s', _json_payload, _json_length);
 		if (colon_position) {
-			uint8_t info_number = (uint8_t)get_value_number('s', _json_payload, _json_length, colon_position);
-			if (info_number < static_cast<uint8_t>( SystemValue::TALKIE_SYS_UNDEFINED )) {
-				return static_cast<SystemValue>( info_number );
+			uint8_t system_number = (uint8_t)get_value_number('s', _json_payload, _json_length, colon_position);
+			if (system_number < static_cast<uint8_t>( SystemValue::TALKIE_SYS_UNDEFINED )) {
+				return static_cast<SystemValue>( system_number );
 			}
 		}
 		return SystemValue::TALKIE_SYS_UNDEFINED;
 	}
 
+
+    /**
+     * @brief Get error type
+     * @return ErrorValue enum, or TALKIE_ERR_UNDEFINED if invalid
+     */
+	ErrorValue get_error_value() const {
+		size_t colon_position = get_colon_position('e', _json_payload, _json_length);
+		if (colon_position) {
+			uint8_t error_number = (uint8_t)get_value_number('e', _json_payload, _json_length, colon_position);
+			if (error_number < static_cast<uint8_t>( ErrorValue::TALKIE_ERR_UNDEFINED )) {
+				return static_cast<ErrorValue>( error_number );
+			}
+		}
+		return ErrorValue::TALKIE_ERR_UNDEFINED;
+	}
 	
+
     /**
      * @brief Get sender name
      * @return Pointer to sender name string, or nullptr if not found
@@ -1091,10 +1122,19 @@ public:
      * Determines if message is for specific name, channel, broadcast, or invalid.
      */
 	TalkerMatch get_talker_match() const {
-		if (has_to()) {
-			ValueType value_type = get_to_type();
+		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
+		if (colon_position) {
+			ValueType value_type = get_value_type('t', _json_payload, _json_length, colon_position);
 			switch (value_type) {
-				case ValueType::TALKIE_VT_INTEGER: return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
+				case ValueType::TALKIE_VT_INTEGER:
+				{
+					uint8_t channel = get_value_number('t', _json_payload, _json_length, colon_position);
+					if (channel < 255) {
+						return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
+					} else {	// 255 is a NO response channel
+						return TalkerMatch::TALKIE_MATCH_FAIL;
+					}
+				}
 				case ValueType::TALKIE_VT_STRING: return TalkerMatch::TALKIE_MATCH_BY_NAME;
 				default: break;
 			}
@@ -1231,7 +1271,7 @@ public:
 
 
 	/** @brief Remove system field */
-	bool remove_info_value() {
+	bool remove_system_value() {
 		return remove('s', _json_payload, &_json_length);
 	}
 
@@ -1390,16 +1430,31 @@ public:
 
     /**
      * @brief Set system information type
-     * @param info_value System type enum
+     * @param system_value System type enum
      * @return true if successful
      */
-	bool set_system_value(SystemValue info_value) {
+	bool set_system_value(SystemValue system_value) {
 		size_t value_position = get_value_position('s', _json_payload, _json_length);
 		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(info_value);
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(system_value);
 			return true;
 		}
-		return set_number('s', static_cast<uint8_t>(info_value), _json_payload, &_json_length);
+		return set_number('s', static_cast<uint8_t>(system_value), _json_payload, &_json_length);
+	}
+
+
+    /**
+     * @brief Set error type
+     * @param error_value Error type
+     * @return true if successful
+     */
+	bool set_error_value(ErrorValue error_value) {
+		size_t value_position = get_value_position('e', _json_payload, _json_length);
+		if (value_position) {
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(error_value);
+			return true;
+		}
+		return set_number('e', static_cast<uint8_t>(error_value), _json_payload, &_json_length);
 	}
 
 
