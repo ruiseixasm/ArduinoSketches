@@ -22,6 +22,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
 // #define BROADCAST_SPI_DEBUG_NEW
+#define BROADCAST_SPI_DEBUG_TIMING
 
 
 #define ENABLE_DIRECT_ADDRESSING
@@ -110,6 +111,10 @@ protected:
     uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
 	NameTable _named_pins_table;
+
+	#ifdef BROADCAST_SPI_DEBUG_TIMING
+	unsigned long _reference_time = millis();
+	#endif
 
 
     // Constructor
@@ -508,6 +513,10 @@ protected:
 
 		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 			
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			_reference_time = millis();
+			#endif
+
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
 			Serial.write(_sending_buffer, _sending_length);
@@ -532,6 +541,9 @@ protected:
 				#endif
 			}
 
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			Serial.println(millis() - _reference_time);
+			#endif
 
 			if (as_reply) {
 				sendSPI(_sending_length, _actual_ss_pin);
@@ -556,6 +568,10 @@ protected:
 				sendSPI(_sending_length, _ss_pins[ss_pin_i]);
 			}
 
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			Serial.println(millis() - _reference_time);
+			#endif
+
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
 			#endif
@@ -574,6 +590,10 @@ protected:
     size_t receive() override {
 
 		if (_initiated) {
+
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			_reference_time = millis();
+			#endif
 
 			// Need to call homologous method in super class first
 			uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
@@ -594,6 +614,10 @@ protected:
 					Serial.println(_ss_pins[ss_pin_i]);
 					#endif
 
+					#ifdef BROADCAST_SPI_DEBUG_TIMING
+					Serial.println(millis() - _reference_time);
+					#endif
+
 					_actual_ss_pin = static_cast<uint8_t>(_ss_pins[ss_pin_i]);
 					_received_length = length;
 					startTransmission();
@@ -601,6 +625,7 @@ protected:
 			}
 			// Makes sure the _received_buffer is deleted with 0
 			_received_length = 0;
+			
 		}
         return 0;   // Receives are all called internally in this method
     }
