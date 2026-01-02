@@ -32,13 +32,13 @@ https://github.com/ruiseixasm/JsonTalkie
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
+using ValueType = TalkieCodes::ValueType;
 using LinkType = TalkieCodes::LinkType;
 using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using SystemValue = TalkieCodes::SystemValue;
 using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
-using ValueType = JsonMessage::ValueType;
 
 class MessageRepeater;
 

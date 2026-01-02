@@ -24,7 +24,7 @@ using MessageValue = TalkieCodes::MessageValue;
 using SystemValue = TalkieCodes::SystemValue;
 using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
-using ValueType = JsonMessage::ValueType;
+using ValueType = TalkieCodes::ValueType;
 
 class JsonTalker;
 

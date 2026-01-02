@@ -20,6 +20,14 @@ https://github.com/ruiseixasm/JsonTalkie
 // PREFIXED VERSION - 100% safe across all boards
 struct TalkieCodes {
 
+	enum ValueType : uint8_t {
+		TALKIE_VT_STRING,
+		TALKIE_VT_INTEGER,
+		TALKIE_VT_OTHER,
+		TALKIE_VT_VOID
+	};
+
+	
 	enum LinkType : uint8_t {
 		TALKIE_LT_NONE,
 		TALKIE_LT_DOWN_LINKED,

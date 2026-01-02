@@ -131,7 +131,7 @@ public:
 				case TalkerMatch::TALKIE_MATCH_ANY:
 				{
 					for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
-						_downlinked_talkers[talker_i++]->talkerReceive(message);
+						_downlinked_talkers[talker_i++]->handleTransmission(message);
 						if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
 							socket.deserialize_buffer(message);
 						}
@@ -145,7 +145,7 @@ public:
 					for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 						uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 						if (talker_channel == message_channel) {
-							_downlinked_talkers[talker_i]->talkerReceive(message);
+							_downlinked_talkers[talker_i]->handleTransmission(message);
 							if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
 								socket.deserialize_buffer(message);
 							}
@@ -161,7 +161,7 @@ public:
 					for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 						const char* talker_name = _downlinked_talkers[talker_i]->get_name();
 						if (strcmp(talker_name, message_to_name) == 0) {
-							return _downlinked_talkers[talker_i]->talkerReceive(message);
+							return _downlinked_talkers[talker_i]->handleTransmission(message);
 						}
 					}
 				}
@@ -204,7 +204,7 @@ public:
 						case TalkerMatch::TALKIE_MATCH_ANY:
 						{
 							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
-								_uplinked_talkers[talker_i++]->talkerReceive(message);
+								_uplinked_talkers[talker_i++]->handleTransmission(message);
 								if (talker_i < _uplinked_talkers_count) {
 									message = original_message;
 								}
@@ -218,7 +218,7 @@ public:
 							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
 								uint8_t talker_channel = _uplinked_talkers[talker_i]->get_channel();
 								if (talker_channel == message_channel) {
-									_uplinked_talkers[talker_i]->talkerReceive(message);
+									_uplinked_talkers[talker_i]->handleTransmission(message);
 									if (talker_i < _uplinked_talkers_count) {
 										message = original_message;
 									}
@@ -234,7 +234,7 @@ public:
 							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
 								const char* talker_name = _uplinked_talkers[talker_i]->get_name();
 								if (strcmp(talker_name, message_to_name) == 0) {
-									return _uplinked_talkers[talker_i]->talkerReceive(message);
+									return _uplinked_talkers[talker_i]->handleTransmission(message);
 								}
 							}
 						}
@@ -267,7 +267,7 @@ public:
 						{
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								if (_downlinked_talkers[talker_i] != &talker) {
-									_downlinked_talkers[talker_i]->talkerReceive(message);
+									_downlinked_talkers[talker_i]->handleTransmission(message);
 									if (talker_i + 1 < _downlinked_talkers_count) {
 										message = original_message;
 									}
@@ -283,7 +283,7 @@ public:
 								if (_downlinked_talkers[talker_i] != &talker) {
 									uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 									if (talker_channel == message_channel) {
-										_downlinked_talkers[talker_i]->talkerReceive(message);
+										_downlinked_talkers[talker_i]->handleTransmission(message);
 										if (talker_i + 1 < _downlinked_talkers_count) {
 											message = original_message;
 										}
@@ -301,7 +301,7 @@ public:
 								if (_downlinked_talkers[talker_i] != &talker) {
 									const char* talker_name = _downlinked_talkers[talker_i]->get_name();
 									if (strcmp(talker_name, message_to_name) == 0) {
-										return _downlinked_talkers[talker_i]->talkerReceive(message);
+										return _downlinked_talkers[talker_i]->handleTransmission(message);
 									}
 								}
 							}
@@ -340,7 +340,7 @@ public:
 
 					case TalkerMatch::TALKIE_MATCH_ANY:
 					{
-						return talker.talkerReceive(message);
+						return talker.handleTransmission(message);
 					}
 					break;
 					
@@ -349,7 +349,7 @@ public:
 						uint8_t message_channel = message.get_to_channel();
 						uint8_t talker_channel = talker.get_channel();
 						if (talker_channel == message_channel) {
-							return talker.talkerReceive(message);
+							return talker.handleTransmission(message);
 						}
 					}
 					break;
@@ -361,7 +361,7 @@ public:
 						
 						const char* talker_name = talker.get_name();
 						if (strcmp(talker_name, message_to_name) == 0) {
-							return talker.talkerReceive(message);
+							return talker.handleTransmission(message);
 						}
 					}
 					break;
@@ -398,7 +398,7 @@ public:
 					case TalkerMatch::TALKIE_MATCH_ANY:
 					{
 						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
-							_uplinked_talkers[talker_i++]->talkerReceive(message);
+							_uplinked_talkers[talker_i++]->handleTransmission(message);
 							if (talker_i < _uplinked_talkers_count || _uplinked_sockets_count) {
 								socket.deserialize_buffer(message);
 							}
@@ -412,7 +412,7 @@ public:
 						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
 							uint8_t talker_channel = _uplinked_talkers[talker_i]->get_channel();
 							if (talker_channel == message_channel) {
-								_uplinked_talkers[talker_i]->talkerReceive(message);
+								_uplinked_talkers[talker_i]->handleTransmission(message);
 								if (talker_i + 1 < _uplinked_talkers_count || _uplinked_sockets_count) {
 									socket.deserialize_buffer(message);
 								}
@@ -428,7 +428,7 @@ public:
 						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
 							const char* talker_name = _uplinked_talkers[talker_i]->get_name();
 							if (strcmp(talker_name, message_to_name) == 0) {
-								return _uplinked_talkers[talker_i]->talkerReceive(message);
+								return _uplinked_talkers[talker_i]->handleTransmission(message);
 							}
 						}
 					}
@@ -451,7 +451,7 @@ public:
 					case TalkerMatch::TALKIE_MATCH_ANY:
 					{
 						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
-							_downlinked_talkers[talker_i++]->talkerReceive(message);
+							_downlinked_talkers[talker_i++]->handleTransmission(message);
 							if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
 								socket.deserialize_buffer(message);
 							}
@@ -465,7 +465,7 @@ public:
 						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 							uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 							if (talker_channel == message_channel) {
-								_downlinked_talkers[talker_i]->talkerReceive(message);
+								_downlinked_talkers[talker_i]->handleTransmission(message);
 								if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
 									socket.deserialize_buffer(message);
 								}
@@ -481,7 +481,7 @@ public:
 						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 							const char* talker_name = _downlinked_talkers[talker_i]->get_name();
 							if (strcmp(talker_name, message_to_name) == 0) {
-								return _downlinked_talkers[talker_i]->talkerReceive(message);
+								return _downlinked_talkers[talker_i]->handleTransmission(message);
 							}
 						}
 					}
@@ -536,7 +536,7 @@ public:
 						case TalkerMatch::TALKIE_MATCH_ANY:
 						{
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
-								_downlinked_talkers[talker_i++]->talkerReceive(message);
+								_downlinked_talkers[talker_i++]->handleTransmission(message);
 								if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
 									message = original_message;
 								}
@@ -550,7 +550,7 @@ public:
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 								if (talker_channel == message_channel) {
-									_downlinked_talkers[talker_i]->talkerReceive(message);
+									_downlinked_talkers[talker_i]->handleTransmission(message);
 									if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
 										message = original_message;
 									}
@@ -566,7 +566,7 @@ public:
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								const char* talker_name = _downlinked_talkers[talker_i]->get_name();
 								if (strcmp(talker_name, message_to_name) == 0) {
-									return _downlinked_talkers[talker_i]->talkerReceive(message);
+									return _downlinked_talkers[talker_i]->handleTransmission(message);
 								}
 							}
 						}

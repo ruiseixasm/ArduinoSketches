@@ -38,7 +38,7 @@ using SystemValue = TalkieCodes::SystemValue;
 using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
 using Original = TalkerManifesto::Original;
-using ValueType = JsonMessage::ValueType;
+using ValueType = TalkieCodes::ValueType;
 
 
 class MessageRepeater;
@@ -180,12 +180,12 @@ public:
 	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
 
     
-    bool talkerReceive(JsonMessage& json_message) {
+    bool handleTransmission(JsonMessage& json_message) {
 
 		MessageValue message_value = json_message.get_message_value();
 
 		#ifdef JSON_TALKER_DEBUG_NEW
-		Serial.print(F("\t\ttalkerReceive1: "));
+		Serial.print(F("\t\thandleTransmission1: "));
 		json_message.write_to(Serial);
 		Serial.print(" | ");
 		Serial.println(static_cast<int>( message_value ));
@@ -377,7 +377,7 @@ public:
 					uint16_t message_id = json_message.get_identity();
 
 					#ifdef JSON_TALKER_DEBUG_NEW
-					Serial.print(F("\t\ttalkerReceive1: "));
+					Serial.print(F("\t\thandleTransmission1: "));
 					json_message.write_to(Serial);
 					Serial.print(" | ");
 					Serial.print(message_id);
