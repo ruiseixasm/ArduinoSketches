@@ -19,6 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonMessage.hpp"
 
 using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
 using BroadcastValue 	= TalkieCodes::BroadcastValue;
 using MessageValue 		= TalkieCodes::MessageValue;
 using SystemValue 		= TalkieCodes::SystemValue;

@@ -22,8 +22,16 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // #define MESSAGE_REPEATER_DEBUG
 
-using LinkType = TalkieCodes::LinkType;
-using TalkerMatch = TalkieCodes::TalkerMatch;
+using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
+using BroadcastValue 	= TalkieCodes::BroadcastValue;
+using MessageValue 		= TalkieCodes::MessageValue;
+using SystemValue 		= TalkieCodes::SystemValue;
+using RogerValue 		= TalkieCodes::RogerValue;
+using ErrorValue 		= TalkieCodes::ErrorValue;
+using ValueType 		= TalkieCodes::ValueType;
+using Original 			= JsonMessage::Original;
+
 
 class MessageRepeater {
 protected:

@@ -56,12 +56,14 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 
-using ValueType = TalkieCodes::ValueType;
-using BroadcastValue = TalkieCodes::BroadcastValue;
-using MessageValue = TalkieCodes::MessageValue;
-using RogerValue = TalkieCodes::RogerValue;
-using SystemValue = TalkieCodes::SystemValue;
-using TalkerMatch = TalkieCodes::TalkerMatch;
+using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
+using BroadcastValue 	= TalkieCodes::BroadcastValue;
+using MessageValue 		= TalkieCodes::MessageValue;
+using SystemValue 		= TalkieCodes::SystemValue;
+using RogerValue 		= TalkieCodes::RogerValue;
+using ErrorValue 		= TalkieCodes::ErrorValue;
+using ValueType 		= TalkieCodes::ValueType;
 
 // Forward declaration
 class BroadcastSocket;

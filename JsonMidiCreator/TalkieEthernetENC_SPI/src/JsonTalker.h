@@ -32,6 +32,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define JSON_TALKER_DEBUG_NEW
 
 using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
 using BroadcastValue 	= TalkieCodes::BroadcastValue;
 using MessageValue 		= TalkieCodes::MessageValue;
 using SystemValue 		= TalkieCodes::SystemValue;
