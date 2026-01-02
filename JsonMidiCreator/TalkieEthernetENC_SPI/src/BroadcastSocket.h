@@ -288,6 +288,9 @@ public:
     /**
      * @brief Get the Link Type with the Message Repeater
      * @return Returns the Link Type (ex. UP_LINKED)
+	 * 
+     * @note Usefull if intended to be bridged (ex. UP_BRIDGED),
+	 *       where the `LOCAL` messages are also broadcasted
      */
 	LinkType getLinkType() const { return _link_type; }
 
@@ -327,7 +330,8 @@ public:
      * @brief Sets the Link Type of the Talker directly
      * @param link_type The Link Type with the Message Repeater
      * 
-     * @note Only usefull if intended to be bridged (ex. UP_BRIDGED)
+     * @note Only usefull if intended to be bridged (ex. UP_BRIDGED),
+	 *       where the `LOCAL` messages are also broadcasted
      */
 	void setLinkType(LinkType link_type) { _link_type = link_type; }
 
