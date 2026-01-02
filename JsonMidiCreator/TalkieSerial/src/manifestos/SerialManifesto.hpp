@@ -11,34 +11,29 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef GREEN_MANIFESTO_HPP
-#define GREEN_MANIFESTO_HPP
+#ifndef SERIAL_MANIFESTO_HPP
+#define SERIAL_MANIFESTO_HPP
 
 #include "../TalkerManifesto.hpp"
 
 // #define GREEN_TALKER_DEBUG
 
 
-class GreenManifesto : public TalkerManifesto {
+class SerialManifesto : public TalkerManifesto {
 public:
 
-    const char* class_name() const override { return "GreenManifesto"; }
+    const char* class_name() const override { return "SerialManifesto"; }
 
-    GreenManifesto() : TalkerManifesto() {}	// Constructor
+    SerialManifesto() : TalkerManifesto() {}	// Constructor
 
 
 protected:
 
     bool _is_led_on = false;  // keep track of state yourself, by default it's off
-    uint16_t _bpm_10 = 1200;
-    uint16_t _total_calls = 0;
 
-
-    Action calls[4] = {
+    Action calls[2] = {
 		{"on", "Turns led ON"},
-		{"off", "Turns led OFF"},
-		{"bpm_10", "Sets the Tempo in BPM x 10"},
-		{"bpm_10", "Gets the Tempo in BPM x 10"}
+		{"off", "Turns led OFF"}
     };
     
     const Action* getActionsArray() const override { return calls; }
@@ -65,19 +60,18 @@ public:
 				#endif
 		
 				if (!_is_led_on) {
-				#ifdef GREEN_LED
+				#ifdef LED_BUILTIN
 					#ifdef GREEN_MANIFESTO_DEBUG
-						Serial.print(F("\tGREEN_LED IS DEFINED as: "));
-						Serial.println(GREEN_LED);
+						Serial.print(F("\tLED_BUILTIN IS DEFINED as: "));
+						Serial.println(LED_BUILTIN);
 					#endif
-					digitalWrite(GREEN_LED, HIGH);
+					digitalWrite(LED_BUILTIN, HIGH);
 				#else
 					#ifdef GREEN_MANIFESTO_DEBUG
-						Serial.println(F("\tGREEN_LED IS NOT DEFINED in this context!"));
+						Serial.println(F("\tLED_BUILTIN IS NOT DEFINED in this context!"));
 					#endif
 				#endif
 					_is_led_on = true;
-					_total_calls++;
 					return true;
 				} else {
 					json_message.set_nth_value_string(0, "Already On!");
@@ -93,11 +87,10 @@ public:
 				#endif
 		
 				if (_is_led_on) {
-				#ifdef GREEN_LED
-					digitalWrite(GREEN_LED, LOW);
+				#ifdef LED_BUILTIN
+					digitalWrite(LED_BUILTIN, LOW);
 				#endif
 					_is_led_on = false;
-					_total_calls++;
 				} else {
 					json_message.set_nth_value_string(0, "Already Off!");
 					return false;
@@ -106,13 +99,7 @@ public:
 			}
 			break;
 			
-            case 2:
-                _bpm_10 = json_message.get_nth_value_number(0);
-                return true;
-                break;
-				
-            // case 3:
-			// 	return _bpm_10;
+            default: return false;
 		}
 		return false;
 	}
@@ -120,4 +107,4 @@ public:
 };
 
 
-#endif // GREEN_MANIFESTO_HPP
+#endif // SERIAL_MANIFESTO_HPP
