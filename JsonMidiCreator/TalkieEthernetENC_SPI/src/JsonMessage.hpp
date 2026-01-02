@@ -1030,15 +1030,27 @@ public:
 	SystemValue get_system_value() const {
 		size_t colon_position = get_colon_position('s', _json_payload, _json_length);
 		if (colon_position) {
-			uint8_t info_number = (uint8_t)get_value_number('s', _json_payload, _json_length, colon_position);
-			if (info_number < static_cast<uint8_t>( SystemValue::TALKIE_SYS_UNDEFINED )) {
-				return static_cast<SystemValue>( info_number );
+			uint8_t system_number = (uint8_t)get_value_number('s', _json_payload, _json_length, colon_position);
+			if (system_number < static_cast<uint8_t>( SystemValue::TALKIE_SYS_UNDEFINED )) {
+				return static_cast<SystemValue>( system_number );
 			}
 		}
 		return SystemValue::TALKIE_SYS_UNDEFINED;
 	}
 
+
+	ErrorValue get_error_value() const {
+		size_t colon_position = get_colon_position('e', _json_payload, _json_length);
+		if (colon_position) {
+			uint8_t error_number = (uint8_t)get_value_number('e', _json_payload, _json_length, colon_position);
+			if (error_number < static_cast<uint8_t>( ErrorValue::TALKIE_ERR_UNDEFINED )) {
+				return static_cast<ErrorValue>( error_number );
+			}
+		}
+		return ErrorValue::TALKIE_ERR_UNDEFINED;
+	}
 	
+
     /**
      * @brief Get sender name
      * @return Pointer to sender name string, or nullptr if not found
@@ -1415,6 +1427,16 @@ public:
 			return true;
 		}
 		return set_number('s', static_cast<uint8_t>(info_value), _json_payload, &_json_length);
+	}
+
+
+	bool set_error_value(ErrorValue error_value) {
+		size_t value_position = get_value_position('e', _json_payload, _json_length);
+		if (value_position) {
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(error_value);
+			return true;
+		}
+		return set_number('e', static_cast<uint8_t>(error_value), _json_payload, &_json_length);
 	}
 
 
