@@ -96,13 +96,67 @@ public:
 	}
 
 
+    // ============================================
+    // GETTERS - FIELD VALUES
+    // ============================================
+
+    /**
+     * @brief Get the name of the Talker
+     * @return A pointer to the Talker name string
+     */
     const char* get_name() const { return _name; }
+
+	
+    /**
+     * @brief Get the description of the Talker
+     * @return A pointer to the Talker description string
+     */
     const char* get_desc() const { return _desc; }
-    void set_channel(uint8_t channel) { _channel = channel; }
+
+	
+    /**
+     * @brief Get the channel of the Talker
+     * @return The channel number of the Talker
+     */
     uint8_t get_channel() const { return _channel; }
-    void set_mute(bool muted) { _muted_calls = muted; }
+
+	
+    /**
+     * @brief Get the muted state of the Talker
+     * @return Returns true if muted (muted calls)
+     * 
+     * @note This only mutes the echoes from the calls
+     */
     bool get_muted() const { return _muted_calls; }
+
+	
+    /**
+     * @brief Get the last, non echo message (original)
+     * @return Returns Original with the message id and value
+     * 
+     * @note This is used to pair the message id with its echo
+     */
     const Original& get_original() const { return _original_message; }
+
+
+    // ============================================
+    // SETTERS - FIELD MODIFICATION
+    // ============================================
+
+    /**
+     * @brief Set channel number
+     * @param channel Channel number for which the Talker will respond
+     */
+    void set_channel(uint8_t channel) { _channel = channel; }
+
+
+    /**
+     * @brief Set the Talker as muted or not muted
+     * @param muted If true it muted the call's echoes
+     * 
+     * @note This only mutes the echoes from the calls
+     */
+    void set_mute(bool muted) { _muted_calls = muted; }
 
 
 	bool prepareMessage(JsonMessage& json_message) {
