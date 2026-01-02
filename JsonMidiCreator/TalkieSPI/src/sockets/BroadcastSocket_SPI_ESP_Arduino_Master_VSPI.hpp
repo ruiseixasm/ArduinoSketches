@@ -397,7 +397,7 @@ public:
 				length = receiveString(_talkers_ss_pins[ss_pin_i]);
 				if (length > 0) {
 					_actual_ss_pin = _talkers_ss_pins[ss_pin_i];
-					BroadcastSocket::handleTransmission(length);
+					BroadcastSocket::startTransmission(length);
 				}
 			}
 			// Makes sure the _receiving_buffer is reset with '\0'

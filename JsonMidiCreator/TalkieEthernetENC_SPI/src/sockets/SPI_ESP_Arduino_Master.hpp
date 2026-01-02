@@ -596,7 +596,7 @@ protected:
 
 					_actual_ss_pin = static_cast<uint8_t>(_ss_pins[ss_pin_i]);
 					_received_length = length;
-					handleTransmission();
+					startTransmission();
 				}
 			}
 			// Makes sure the _received_buffer is deleted with 0

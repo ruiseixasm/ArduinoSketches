@@ -107,7 +107,7 @@ protected:
             _source_ip = _udp->remoteIP();
 			// Makes sure the _received_length is set
 			_received_length = (size_t)length;
-			handleTransmission();
+			startTransmission();
 			// Makes sure the _received_buffer is deleted with 0
 			_received_length = 0;
 			return (size_t)length;
