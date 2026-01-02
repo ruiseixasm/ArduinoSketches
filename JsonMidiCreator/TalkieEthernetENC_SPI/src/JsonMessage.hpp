@@ -45,7 +45,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // 		d (description) → 64 bytes (63 + '\0')
 
 
-#define MESSAGE_DEBUG_TIMING
+// #define MESSAGE_DEBUG_TIMING
 
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128	    ///< Default buffer size for JSON message

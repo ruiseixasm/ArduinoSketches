@@ -399,8 +399,22 @@ public:
 			Serial.println(_sending_length);
 			#endif
 
+			#ifdef MESSAGE_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - json_message._reference_time);
+			#endif
+				
 			if (_sending_length) {
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				bool send_result = send(json_message);
+				Serial.print(" | ");
+				Serial.print(millis() - json_message._reference_time);
+				return send_result;
+				#else
 				return send(json_message);
+				#endif
+				
 			}
 		}
 		return false;
