@@ -96,28 +96,13 @@ public:
 	}
 
 
-    void setSocket(BroadcastSocket* socket);
-    BroadcastSocket& getSocket();
-
-	const char* socket_class_name();
-
     const char* get_name() const { return _name; }
     const char* get_desc() const { return _desc; }
     void set_channel(uint8_t channel) { _channel = channel; }
     uint8_t get_channel() const { return _channel; }
+    void set_mute(bool muted) { _muted_calls = muted; }
+    bool get_muted() const { return _muted_calls; }
     const Original& get_original() const { return _original_message; }
-    
-    JsonTalker& mute() {    // It does NOT make a copy!
-        _muted_calls = true;
-        return *this;
-    }
-
-    JsonTalker& unmute() {
-        _muted_calls = false;
-        return *this;
-    }
-
-    bool muted() const { return _muted_calls; }
 
 
 	bool prepareMessage(JsonMessage& json_message) {
