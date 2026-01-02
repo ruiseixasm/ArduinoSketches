@@ -1041,6 +1041,10 @@ public:
 	}
 
 
+    /**
+     * @brief Get error type
+     * @return ErrorValue enum, or TALKIE_ERR_UNDEFINED if invalid
+     */
 	ErrorValue get_error_value() const {
 		size_t colon_position = get_colon_position('e', _json_payload, _json_length);
 		if (colon_position) {
@@ -1260,7 +1264,7 @@ public:
 
 
 	/** @brief Remove system field */
-	bool remove_info_value() {
+	bool remove_system_value() {
 		return remove('s', _json_payload, &_json_length);
 	}
 
@@ -1419,19 +1423,24 @@ public:
 
     /**
      * @brief Set system information type
-     * @param info_value System type enum
+     * @param system_value System type enum
      * @return true if successful
      */
-	bool set_system_value(SystemValue info_value) {
+	bool set_system_value(SystemValue system_value) {
 		size_t value_position = get_value_position('s', _json_payload, _json_length);
 		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(info_value);
+			_json_payload[value_position] = '0' + static_cast<uint8_t>(system_value);
 			return true;
 		}
-		return set_number('s', static_cast<uint8_t>(info_value), _json_payload, &_json_length);
+		return set_number('s', static_cast<uint8_t>(system_value), _json_payload, &_json_length);
 	}
 
 
+    /**
+     * @brief Set error type
+     * @param error_value Error type
+     * @return true if successful
+     */
 	bool set_error_value(ErrorValue error_value) {
 		size_t value_position = get_value_position('e', _json_payload, _json_length);
 		if (value_position) {
