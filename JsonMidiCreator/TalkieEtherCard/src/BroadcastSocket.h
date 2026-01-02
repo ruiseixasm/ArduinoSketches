@@ -77,6 +77,12 @@ protected:
     uint16_t _last_message_timestamp = 0;
     uint16_t _drops_count = 0;
 
+	
+    // Constructor
+    BroadcastSocket() {
+		// Does nothing here
+	}
+
 
 	// Allows the overriding class to peek at the received JSON message
 	virtual bool receivedJsonMessage(const JsonMessage& json_message) {
@@ -209,11 +215,6 @@ protected:
 		_received_length = 0;	// Enables new receiving
         return true;
     }
-
-    // Constructor
-    BroadcastSocket() {
-		// Does nothing here
-	}
 
 
 	virtual bool availableReceivingBuffer(uint8_t wait_seconds = 3) {

@@ -32,13 +32,13 @@ https://github.com/ruiseixasm/JsonTalkie
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
+using ValueType = TalkieCodes::ValueType;
 using LinkType = TalkieCodes::LinkType;
 using BroadcastValue = TalkieCodes::BroadcastValue;
 using MessageValue = TalkieCodes::MessageValue;
 using SystemValue = TalkieCodes::SystemValue;
 using RogerValue = TalkieCodes::RogerValue;
 using ErrorValue = TalkieCodes::ErrorValue;
-using ValueType = JsonMessage::ValueType;
 
 class MessageRepeater;
 
@@ -76,6 +76,12 @@ protected:
     uint16_t _last_local_time = 0;
     uint16_t _last_message_timestamp = 0;
     uint16_t _drops_count = 0;
+
+	
+    // Constructor
+    BroadcastSocket() {
+		// Does nothing here
+	}
 
 
 	// Allows the overriding class to peek at the received JSON message
@@ -209,11 +215,6 @@ protected:
 		_received_length = 0;	// Enables new receiving
         return true;
     }
-
-    // Constructor
-    BroadcastSocket() {
-		// Does nothing here
-	}
 
 
 	virtual bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
