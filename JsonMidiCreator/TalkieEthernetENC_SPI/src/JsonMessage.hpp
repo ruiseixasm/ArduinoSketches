@@ -1091,10 +1091,17 @@ public:
      * Determines if message is for specific name, channel, broadcast, or invalid.
      */
 	TalkerMatch get_talker_match() const {
-		if (has_to()) {
-			ValueType value_type = get_to_type();
+		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
+		if (colon_position) {
+			ValueType value_type = get_value_type('t', _json_payload, _json_length, colon_position);
 			switch (value_type) {
-				case ValueType::TALKIE_VT_INTEGER: return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
+				case ValueType::TALKIE_VT_INTEGER:
+				{
+					uint8_t channel = get_value_number('t', _json_payload, _json_length, colon_position);
+					if (channel < 255) {	// 255 is a NO response channel
+						return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
+					}
+				}
 				case ValueType::TALKIE_VT_STRING: return TalkerMatch::TALKIE_MATCH_BY_NAME;
 				default: break;
 			}

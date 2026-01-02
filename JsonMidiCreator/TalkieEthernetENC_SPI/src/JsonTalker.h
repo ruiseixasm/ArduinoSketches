@@ -54,28 +54,17 @@ protected:
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
 	TalkerManifesto* _manifesto = nullptr;
-    uint8_t _channel = 0;
+    uint8_t _channel = 255;	// Channel 255 means NO channel response
 	Original _original_message = {0, MessageValue::TALKIE_MSG_NOISE};
     bool _muted_calls = false;
 
 public:
 
-    // Explicit default constructor
+    // Explicitly disabled the default constructor
     JsonTalker() = delete;
         
-    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr)
-        : _name(name), _desc(desc), _manifesto(manifesto) {
-		// AVOIDS EVERY TALKER WITH THE SAME CHANNEL
-		// XOR is great for 8-bit mixing
-		_channel ^= strlen(_name) << 1;
-		_channel ^= strlen(_desc) << 2;
-		// Add microsecond LSB for entropy
-		_channel ^= micros() & 0xFF;
-		if (_manifesto) {	// Safe code
-			_channel ^= strlen(_manifesto->class_name()) << 4;
-			_channel = _manifesto->getChannel(_channel, this);
-		}
-    }
+    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr, uint8_t channel = 255)
+        : _name(name), _desc(desc), _manifesto(manifesto), _channel(channel) {}
 
     void loop() {
         if (_manifesto) {
