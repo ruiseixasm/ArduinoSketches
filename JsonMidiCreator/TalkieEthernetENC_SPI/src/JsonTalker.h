@@ -83,43 +83,32 @@ public:
         }
     }
 
-	// Getter and setters
 
-	void setLink(MessageRepeater* message_repeater, LinkType link_type);
-
-	void setLinkType(LinkType link_type) {
-		_link_type = link_type;
-	}
-
-	LinkType getLinkType() const {
-		return _link_type;
-	}
-
-
+	
     // ============================================
     // GETTERS - FIELD VALUES
     // ============================================
-
-    /**
-     * @brief Get the name of the Talker
-     * @return A pointer to the Talker name string
-     */
-    const char* get_name() const { return _name; }
-
 	
     /**
-     * @brief Get the description of the Talker
-     * @return A pointer to the Talker description string
+	 * @brief Get the name of the Talker
+     * @return A pointer to the Talker name string
      */
-    const char* get_desc() const { return _desc; }
+	const char* get_name() const { return _name; }
+	
+	
+    /**
+	 * @brief Get the description of the Talker
+	 * @return A pointer to the Talker description string
+     */
+	const char* get_desc() const { return _desc; }
 
 	
     /**
      * @brief Get the channel of the Talker
      * @return The channel number of the Talker
      */
-    uint8_t get_channel() const { return _channel; }
-
+	uint8_t get_channel() const { return _channel; }
+	
 	
     /**
      * @brief Get the muted state of the Talker
@@ -127,7 +116,14 @@ public:
      * 
      * @note This only mutes the echoes from the calls
      */
-    bool get_muted() const { return _muted_calls; }
+	bool get_muted() const { return _muted_calls; }
+
+
+    /**
+     * @brief Get the Link Type with the Message Repeater
+     * @return Returns the Link Type (ex. DOWN_LINKED)
+     */
+	LinkType getLinkType() const { return _link_type; }
 
 	
     /**
@@ -149,6 +145,25 @@ public:
      */
     void set_channel(uint8_t channel) { _channel = channel; }
 
+
+    /**
+     * @brief Intended to be used by the Message Repeater only
+     * @param message_repeater The Message Repeater pointer
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note This method is used by the Message Repeater to set up the Talker
+     */
+	void setLink(MessageRepeater* message_repeater, LinkType link_type);
+	
+
+    /**
+     * @brief Sets the Link Type of the Talker directly
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note Only usefull if intended to be disabled (ex. NONE)
+     */
+	void setLinkType(LinkType link_type) { _link_type = link_type; }
+	
 
     /**
      * @brief Set the Talker as muted or not muted
