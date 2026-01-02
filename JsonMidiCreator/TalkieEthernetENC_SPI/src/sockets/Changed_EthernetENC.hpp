@@ -42,8 +42,7 @@ protected:
     uint16_t _port = 5005;
     IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     EthernetUDP* _udp = nullptr;
-	char _new_from_name[NAME_LEN] = {'\0'};
-	String _from_name = "";
+	char _from_name[NAME_LEN] = {'\0'};
 
     // ===== [SELF IP] cache our own IP =====
     IPAddress _local_ip;
@@ -121,13 +120,13 @@ protected:
 	bool receivedJsonMessage(const JsonMessage& json_message) override {
 
 		if (BroadcastSocket::receivedJsonMessage(json_message)) {
-			strcpy(_new_from_name, json_message.get_from_name());
+			strcpy(_from_name, json_message.get_from_name());
 			
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
 			Serial.print(F("receivedJsonMessage1: "));
 			json_message.write_to(Serial);
 			Serial.print(" | ");
-			Serial.println(_new_from_name);
+			Serial.println(_from_name);
 			#endif
 
 			return true;
@@ -144,7 +143,7 @@ protected:
 
             #ifdef ENABLE_DIRECT_ADDRESSING
 
-			bool as_reply = json_message.is_to_name(_new_from_name);
+			bool as_reply = json_message.is_to_name(_from_name);
 
 			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
 			Serial.print(F("\t\t\t\t\tsend orgn: "));

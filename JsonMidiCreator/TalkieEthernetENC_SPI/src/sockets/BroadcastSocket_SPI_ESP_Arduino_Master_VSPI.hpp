@@ -66,7 +66,7 @@ protected:
     int* _ss_pins;
     uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = VSPI_SS;
-	String _from_name = "";
+	char _new_from_name[NAME_LEN] = {'\0'};
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
@@ -374,7 +374,7 @@ protected:
 	bool receivedJsonMessage(const JsonMessage& json_message) override {
 
 		if (BroadcastSocket::receivedJsonMessage(json_message)) {
-			_from_name = json_message.get_from_name();
+			strcpy(_new_from_name, json_message.get_to_name());
 			return true;
 		}
 		return false;
@@ -386,7 +386,7 @@ protected:
 
 		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 
-			bool as_reply = json_message.is_to_name(_from_name.c_str());
+			bool as_reply = json_message.is_to_name(_new_from_name);
 
 			#ifdef ENABLE_DIRECT_ADDRESSING
 			if (as_reply) {
