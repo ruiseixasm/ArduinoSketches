@@ -102,7 +102,7 @@ public:
 		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
 		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
 		message.swap_from_with_to();
-		message.set_from_name("255");	// Channel means 255
+		message.set_from_name("255");	// Channel error means 255
 		return socket.finishTransmission(message);
 	}
 	
@@ -110,7 +110,7 @@ public:
 		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
 		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
 		message.swap_from_with_to();
-		message.set_from_name("255");	// Channel means 255
+		message.set_from_name("255");	// Channel error means 255
 		talker.handleTransmission(message);
 	}
 	
