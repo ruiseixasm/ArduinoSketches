@@ -514,6 +514,10 @@ protected:
 		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 			
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			Serial.print("\n\tsend: ");
+			#endif
+				
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			_reference_time = millis();
 			#endif
 
@@ -542,8 +546,8 @@ protected:
 			}
 
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			Serial.print("\t\t");
-			Serial.println(millis() - _reference_time);
+			Serial.print(" | ");
+			Serial.print(millis() - _reference_time);
 			#endif
 
 			if (as_reply) {
@@ -568,16 +572,14 @@ protected:
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 				sendSPI(_sending_length, _ss_pins[ss_pin_i]);
 			}
-
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			Serial.print("\t\t");
-			Serial.println(millis() - _reference_time);
-			#endif
-
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
 			#endif
+			#endif
 
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - _reference_time);
 			#endif
 
 			_sending_length = 0;	// Marks sending buffer available
@@ -604,6 +606,11 @@ protected:
 				length = receiveSPI(_ss_pins[ss_pin_i]);
 				if (length > 0) {
 					
+					#ifdef BROADCAST_SPI_DEBUG_TIMING
+					Serial.print("\n\treceive: ");
+					Serial.print(millis() - _reference_time);
+					#endif
+						
 					#ifdef BROADCAST_SPI_DEBUG
 					Serial.print(F("\treceive1: Received message: "));
 					Serial.write(_received_buffer, length);
@@ -616,13 +623,15 @@ protected:
 					Serial.println(_ss_pins[ss_pin_i]);
 					#endif
 
-					#ifdef BROADCAST_SPI_DEBUG_TIMING
-					Serial.println(millis() - _reference_time);
-					#endif
-
 					_actual_ss_pin = static_cast<uint8_t>(_ss_pins[ss_pin_i]);
 					_received_length = length;
 					startTransmission();
+					
+					#ifdef BROADCAST_SPI_DEBUG_TIMING
+					Serial.print(" | ");
+					Serial.print(millis() - _reference_time);
+					#endif
+
 				}
 			}
 			// Makes sure the _received_buffer is deleted with 0
