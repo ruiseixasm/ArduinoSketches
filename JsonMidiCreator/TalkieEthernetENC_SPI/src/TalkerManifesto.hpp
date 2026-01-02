@@ -49,11 +49,6 @@ public:
         const char* desc;
     };
 
-	struct Original {
-		uint16_t identity;
-		MessageValue message_value;
-	};
-
 
 protected:
 	

@@ -24,10 +24,16 @@ public:
 
     const char* class_name() const override { return "Spy"; }
 
-    Spy() : TalkerManifesto() {}	// Constructor
+	// Constructor
+    Spy() : TalkerManifesto() {}
 
 
 protected:
+
+	struct Original {
+		uint16_t identity;
+		MessageValue message_value;
+	};
 
 	String _original_talker = "";
 	Original _original_message = {0, MessageValue::TALKIE_MSG_NOISE};
