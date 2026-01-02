@@ -217,9 +217,9 @@ public:
 
 	
 	bool transmitToRepeater(JsonMessage& json_message);
-	bool transmitSockets(JsonMessage& json_message);
-	bool transmitDrops(JsonMessage& json_message);
-	bool transmitDelays(JsonMessage& json_message);
+	bool transmissionSockets(JsonMessage& json_message);
+	bool transmissionDrops(JsonMessage& json_message);
+	bool transmissionDelays(JsonMessage& json_message);
 	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
 
     
@@ -366,7 +366,7 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_DROPS:
-							if (!transmitDrops(json_message)) {
+							if (!transmissionDrops(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
         						return true;	// Avoids extra transmissions sends
@@ -381,7 +381,7 @@ public:
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
 								}
 							} else {
-								if (!transmitDelays(json_message)) {
+								if (!transmissionDelays(json_message)) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
 									return true;	// Avoids extra transmissions sends
@@ -390,7 +390,7 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_SOCKET:
-							if (!transmitSockets(json_message)) {
+							if (!transmissionSockets(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
         						return true;	// Avoids extra transmissions sends
