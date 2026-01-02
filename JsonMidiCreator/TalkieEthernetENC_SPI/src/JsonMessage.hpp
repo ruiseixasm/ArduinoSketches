@@ -84,7 +84,7 @@ public:
 		MessageValue message_value;
 	};
 
-	
+
     // ============================================
     // STATIC METHODS (Parsing utilities)
     // ============================================
@@ -1104,8 +1104,10 @@ public:
 				case ValueType::TALKIE_VT_INTEGER:
 				{
 					uint8_t channel = get_value_number('t', _json_payload, _json_length, colon_position);
-					if (channel < 255) {	// 255 is a NO response channel
+					if (channel < 255) {
 						return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
+					} else {	// 255 is a NO response channel
+						return TalkerMatch::TALKIE_MATCH_FAIL;
 					}
 				}
 				case ValueType::TALKIE_VT_STRING: return TalkerMatch::TALKIE_MATCH_BY_NAME;
