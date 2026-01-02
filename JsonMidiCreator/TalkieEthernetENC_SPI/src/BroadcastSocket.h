@@ -189,8 +189,13 @@ protected:
 					}
 				}
 
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				Serial.print("\t");
+				Serial.println(millis() - json_message._reference_time);
+				#endif
+				
 				// Gives a chance to show it one time
-
 				if (!receivedJsonMessage(json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
@@ -206,6 +211,12 @@ protected:
 				}
 
 				transmitToRepeater(json_message);
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				Serial.print("\t");
+				Serial.println(millis() - json_message._reference_time);
+				#endif
+				
 
 			} else {
 				#ifdef BROADCASTSOCKET_DEBUG

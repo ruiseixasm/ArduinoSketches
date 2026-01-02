@@ -22,7 +22,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG_1
 // #define BROADCAST_SPI_DEBUG_2
 // #define BROADCAST_SPI_DEBUG_NEW
-#define BROADCAST_SPI_DEBUG_TIMING
+// #define BROADCAST_SPI_DEBUG_TIMING
 
 
 #define ENABLE_DIRECT_ADDRESSING
@@ -542,6 +542,7 @@ protected:
 			}
 
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			Serial.print("\t\t");
 			Serial.println(millis() - _reference_time);
 			#endif
 
@@ -569,6 +570,7 @@ protected:
 			}
 
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			Serial.print("\t\t");
 			Serial.println(millis() - _reference_time);
 			#endif
 
