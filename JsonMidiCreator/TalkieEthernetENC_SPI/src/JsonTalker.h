@@ -31,14 +31,14 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define JSON_TALKER_DEBUG
 // #define JSON_TALKER_DEBUG_NEW
 
-using LinkType = TalkieCodes::LinkType;
-using BroadcastValue = TalkieCodes::BroadcastValue;
-using MessageValue = TalkieCodes::MessageValue;
-using SystemValue = TalkieCodes::SystemValue;
-using RogerValue = TalkieCodes::RogerValue;
-using ErrorValue = TalkieCodes::ErrorValue;
-using Original = TalkerManifesto::Original;
-using ValueType = TalkieCodes::ValueType;
+using LinkType			= TalkieCodes::LinkType;
+using BroadcastValue 	= TalkieCodes::BroadcastValue;
+using MessageValue 		= TalkieCodes::MessageValue;
+using SystemValue 		= TalkieCodes::SystemValue;
+using RogerValue 		= TalkieCodes::RogerValue;
+using ErrorValue 		= TalkieCodes::ErrorValue;
+using ValueType 		= TalkieCodes::ValueType;
+using Original 			= JsonMessage::Original;
 
 
 class MessageRepeater;

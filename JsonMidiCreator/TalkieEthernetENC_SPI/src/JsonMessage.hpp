@@ -79,6 +79,12 @@ class BroadcastSocket;
 class JsonMessage {
 public:
 
+	struct Original {
+		uint16_t identity;
+		MessageValue message_value;
+	};
+
+	
     // ============================================
     // STATIC METHODS (Parsing utilities)
     // ============================================
