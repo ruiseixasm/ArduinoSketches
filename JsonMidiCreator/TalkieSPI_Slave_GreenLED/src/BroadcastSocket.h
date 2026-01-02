@@ -198,7 +198,7 @@ protected:
 						if (!json_message.has_identity()) {
 							json_message.set_identity();
 						}
-						socketSend(json_message);	// Includes reply swap
+						finishTransmission(json_message);	// Includes reply swap
 					}
 					return false;
 				}
@@ -295,7 +295,7 @@ public:
 	}
 
 
-    bool socketSend(const JsonMessage& json_message) {
+    bool finishTransmission(const JsonMessage& json_message) {
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
 		Serial.print(F("socketSend1: "));

@@ -170,7 +170,7 @@ public:
 				default: return false;
 			}
 			for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-				_downlinked_sockets[socket_j]->socketSend(message);
+				_downlinked_sockets[socket_j]->finishTransmission(message);
 			}
 			return true;
 		} else {
@@ -243,11 +243,11 @@ public:
 						default: return false;
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						_uplinked_sockets[socket_j]->socketSend(original_message);
+						_uplinked_sockets[socket_j]->finishTransmission(original_message);
 					}
 				} else {
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						_uplinked_sockets[socket_j]->socketSend(message);
+						_uplinked_sockets[socket_j]->finishTransmission(message);
 					}
 				}
 				return true;
@@ -311,20 +311,20 @@ public:
 						default: return false;
 					}
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						_downlinked_sockets[socket_j]->socketSend(original_message);
+						_downlinked_sockets[socket_j]->finishTransmission(original_message);
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-							_uplinked_sockets[socket_j]->socketSend(original_message);
+							_uplinked_sockets[socket_j]->finishTransmission(original_message);
 						}
 					}
 				} else {
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						_downlinked_sockets[socket_j]->socketSend(message);
+						_downlinked_sockets[socket_j]->finishTransmission(message);
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-							_uplinked_sockets[socket_j]->socketSend(message);
+							_uplinked_sockets[socket_j]->finishTransmission(message);
 						}
 					}
 				}
@@ -437,7 +437,7 @@ public:
 					default: return false;
 				}
 				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-					_uplinked_sockets[socket_j]->socketSend(message);
+					_uplinked_sockets[socket_j]->finishTransmission(message);
 				}
 				return true;
 			}
@@ -491,12 +491,12 @@ public:
 				}
 				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
 					if (_downlinked_sockets[socket_j] != &socket) {	// Shouldn't locally Uplink to itself
-						_downlinked_sockets[socket_j]->socketSend(message);
+						_downlinked_sockets[socket_j]->finishTransmission(message);
 					}
 				}
 				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 					if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-						_uplinked_sockets[socket_j]->socketSend(message);
+						_uplinked_sockets[socket_j]->finishTransmission(message);
 					}
 				}
 				return true;
@@ -575,11 +575,11 @@ public:
 						default: return false;
 					}
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						_downlinked_sockets[socket_j]->socketSend(original_message);
+						_downlinked_sockets[socket_j]->finishTransmission(original_message);
 					}
 				} else {
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						_downlinked_sockets[socket_j]->socketSend(message);
+						_downlinked_sockets[socket_j]->finishTransmission(message);
 					}
 				}
 				return true;
