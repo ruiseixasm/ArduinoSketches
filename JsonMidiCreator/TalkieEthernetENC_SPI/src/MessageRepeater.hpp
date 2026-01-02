@@ -180,6 +180,12 @@ public:
 				break;
 				
 				case TalkerMatch::TALKIE_MATCH_BY_NAME:
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				Serial.print(" | ");
+				Serial.print(millis() - message._reference_time);
+				#endif
+				
 				{
 					char message_to_name[NAME_LEN];
 					strcpy(message_to_name, message.get_to_name());
@@ -198,9 +204,21 @@ public:
 
 				default: return false;
 			}
+			
+			#ifdef MESSAGE_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - message._reference_time);
+			#endif
+				
 			for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
 				_downlinked_sockets[socket_j]->finishTransmission(message);
 			}
+			
+			#ifdef MESSAGE_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - message._reference_time);
+			#endif
+				
 			return true;
 		} else {
 			return broadcast == BroadcastValue::TALKIE_BC_NONE;
@@ -463,6 +481,12 @@ public:
 					break;
 					
 					case TalkerMatch::TALKIE_MATCH_BY_NAME:
+					
+					#ifdef MESSAGE_DEBUG_TIMING
+					Serial.print(" | ");
+					Serial.print(millis() - message._reference_time);
+					#endif
+				
 					{
 						char message_to_name[NAME_LEN];
 						strcpy(message_to_name, message.get_to_name());
@@ -481,9 +505,21 @@ public:
 
 					default: return false;
 				}
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				Serial.print(" | ");
+				Serial.print(millis() - message._reference_time);
+				#endif
+				
 				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 					_uplinked_sockets[socket_j]->finishTransmission(message);
 				}
+				
+				#ifdef MESSAGE_DEBUG_TIMING
+				Serial.print(" | ");
+				Serial.print(millis() - message._reference_time);
+				#endif
+				
 				return true;
 			}
 			break;

@@ -127,6 +127,12 @@ protected:
 
 		if (received_checksum == checksum) {
 
+			#ifdef MESSAGE_DEBUG_TIMING
+			Serial.print("\n\t");
+			Serial.print(class_name());
+			Serial.print(": ");
+			#endif
+				
 			JsonMessage json_message(_received_buffer, _received_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
@@ -191,8 +197,7 @@ protected:
 
 				
 				#ifdef MESSAGE_DEBUG_TIMING
-				Serial.print("\t");
-				Serial.println(millis() - json_message._reference_time);
+				Serial.print(millis() - json_message._reference_time);
 				#endif
 				
 				// Gives a chance to show it one time
@@ -213,8 +218,8 @@ protected:
 				transmitToRepeater(json_message);
 				
 				#ifdef MESSAGE_DEBUG_TIMING
-				Serial.print("\t");
-				Serial.println(millis() - json_message._reference_time);
+				Serial.print(" | ");
+				Serial.print(millis() - json_message._reference_time);
 				#endif
 				
 
