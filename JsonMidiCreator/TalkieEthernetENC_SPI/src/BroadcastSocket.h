@@ -123,6 +123,8 @@ protected:
 		}	
 
 		size_t colon_position = JsonMessage::get_colon_position('c', _received_buffer, _received_length);
+		if (!colon_position) return false;
+
 		uint16_t received_checksum = JsonMessage::get_value_number('c', _received_buffer, _received_length, colon_position);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
