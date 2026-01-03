@@ -74,8 +74,6 @@ protected:
 		_reference_time = millis();
 		#endif
 
-		_received_length = 0; // Reset to start writing
-		
 		while (Serial.available()) {
 			char c = Serial.read();
 
@@ -83,7 +81,7 @@ protected:
 				if (_received_length < BROADCAST_SOCKET_BUFFER_SIZE) {
 					if (c == '}') {
 						_reading_serial = false;
-						
+
 						#ifdef SOCKET_SERIAL_DEBUG_TIMING
 						Serial.print(millis() - _reference_time);
 						#endif
@@ -107,6 +105,7 @@ protected:
 				Serial.print(": ");
 				#endif
 
+				_received_length = 0; // Reset to start writing
 				_received_buffer[_received_length++] = '{';
 			}
 		}
