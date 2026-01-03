@@ -105,11 +105,6 @@ protected:
     
     bool startTransmission() {
 
-		if (_received_buffer[0] != '{') {
-			_received_length = 0;
-			return false;	
-		}	
-
 		// Trim trailing newline and carriage return characters or any other that isn't '}'
 		while (_received_length && _received_buffer[_received_length - 1] != '}') {
 			_received_length--;	// Note that literals add the '\0'!
@@ -120,6 +115,11 @@ protected:
 			_received_length = 0;
 			return false;
 		}
+
+		if (_received_buffer[0] != '{') {
+			_received_length = 0;
+			return false;	
+		}	
 
 		size_t colon_position = JsonMessage::get_colon_position('c', _received_buffer, _received_length);
 		uint16_t received_checksum = JsonMessage::get_value_number('c', _received_buffer, _received_length, colon_position);
