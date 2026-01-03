@@ -49,11 +49,6 @@ protected:
 		_received_length =
 			static_cast<size_t>(Serial.readBytes(_received_buffer, BROADCAST_SOCKET_BUFFER_SIZE));
 
-		// Trim trailing newline and carriage return characters or any other that isn't '}'
-		while (_received_length && _received_buffer[_received_length - 1] != '}') {
-			_received_length--;
-		}
-
 		if (_received_length) {
 			
 			#ifdef SOCKET_SERIAL_DEBUG
