@@ -12,6 +12,7 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
+
 /**
  * @file JsonMessage.hpp
  * @brief JSON message handling for Talkie communication protocol

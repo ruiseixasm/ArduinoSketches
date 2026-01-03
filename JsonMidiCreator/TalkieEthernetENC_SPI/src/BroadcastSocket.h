@@ -11,6 +11,27 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+
+/**
+ * @file BroadcastSocket.h
+ * @brief Broadcast Socket interface for Talkie communication protocol
+ * 
+ * This class provides efficient, memory-safe input and output for the
+ * JSONmessages which processing is started and finished by it.
+ * 
+ * @warning This class does not use dynamic memory allocation.
+ *          All operations are performed on fixed-size buffers.
+ * 
+ * @section constraints Memory Constraints
+ * - Maximum buffer size: BROADCAST_SOCKET_BUFFER_SIZE (default: 128 bytes)
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-03
+ * @version 1.0.0
+ */
+
+
 #ifndef BROADCAST_SOCKET_H
 #define BROADCAST_SOCKET_H
 
