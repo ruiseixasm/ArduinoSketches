@@ -11,6 +11,18 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+
+/**
+ * @file MessageRepeater.hpp
+ * @brief This is the central class by which all JsonMessages are routed
+ *        between Talkers and Sockets.
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-03
+ * @version 1.0.0
+ */
+
 #ifndef MESSAGE_REPEATER_HPP
 #define MESSAGE_REPEATER_HPP
 

@@ -11,6 +11,18 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+
+/**
+ * @file TalkerManifesto.hpp
+ * @brief This is an Interface for the class that defines exactly the
+ *        activity of the Talker, namely to its named and numbered actions.
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-03
+ * @version 1.0.0
+ */
+
 #ifndef I_MANIFESTO_HPP
 #define I_MANIFESTO_HPP
 
