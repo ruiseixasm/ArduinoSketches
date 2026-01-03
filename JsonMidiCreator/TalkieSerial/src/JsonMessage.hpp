@@ -595,7 +595,6 @@ public:
      * @return true if all mandatory fields are present and valid
      * 
      * Mandatory fields: m, b, i, f
-     * Minimum length: 27 characters
      */
 	bool validate_fields() const {
 		bool found_m = false;
