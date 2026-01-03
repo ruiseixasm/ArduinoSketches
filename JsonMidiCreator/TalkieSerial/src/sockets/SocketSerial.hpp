@@ -92,6 +92,8 @@ protected:
 					} else {
 						_received_buffer[_received_length++] = c;
 					}
+				} else {
+					_received_length = 0; // Reset to start writing
 				}
 			} else if (c == '{') {
 
