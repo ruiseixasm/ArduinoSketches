@@ -105,6 +105,23 @@ protected:
     
     bool startTransmission() {
 
+		// Trim trailing newline and carriage return characters or any other that isn't '}'
+		while (_received_length > 26 
+			&& (_received_buffer[_received_length - 1] != '}' || _received_buffer[_received_length - 2] == '\\')) {
+			_received_length--;	// Note that literals add the '\0'!
+		}
+
+		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
+		if (_received_length < 27) {
+			_received_length = 0;
+			return false;
+		}
+
+		if (_received_buffer[0] != '{') {
+			_received_length = 0;
+			return false;	
+		}	
+
 		size_t colon_position = JsonMessage::get_colon_position('c', _received_buffer, _received_length);
 		uint16_t received_checksum = JsonMessage::get_value_number('c', _received_buffer, _received_length, colon_position);
 

@@ -595,13 +595,8 @@ public:
      * @return true if all mandatory fields are present and valid
      * 
      * Mandatory fields: m, b, i, f
-     * Minimum length: 27 characters
      */
 	bool validate_fields() const {
-		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
-		if (_json_length < 27) return false;
-		if (_json_payload[0] != '{' || _json_payload[_json_length - 1] != '}') return false;	// Note that literals add the '\0'!
-
 		bool found_m = false;
 		bool found_b = false;
 		bool found_i = false;
