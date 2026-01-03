@@ -18,11 +18,16 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define SOCKET_SERIAL_DEBUG
+#define SOCKET_SERIAL_DEBUG_TIMING
 
 class SocketSerial : public BroadcastSocket {
 public:
 
     const char* class_name() const override { return "SocketSerial"; }
+
+	#ifdef SOCKET_SERIAL_DEBUG_TIMING
+	unsigned long _reference_time = millis();
+	#endif
 
 
 protected:
@@ -34,8 +39,25 @@ protected:
     bool send(const JsonMessage& json_message) override {
         (void)json_message;	// Silence unused parameter warning
 
+		#ifdef SOCKET_SERIAL_DEBUG_TIMING
+		Serial.print(" | ");
+		Serial.print(millis() - _reference_time);
+		#endif
+
 		if (_sending_length) {
+			
+			#ifdef SOCKET_SERIAL_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - _reference_time);
+			#endif
+
 			if (Serial.write(_sending_buffer, _sending_length) == _sending_length) {
+				
+				#ifdef SOCKET_SERIAL_DEBUG_TIMING
+				Serial.print(" | ");
+				Serial.print(millis() - _reference_time);
+				#endif
+
 				_sending_length = 0;
 				return true;
 			}
@@ -46,11 +68,27 @@ protected:
 
 
     size_t receive() override {
+		
+		#ifdef SOCKET_SERIAL_DEBUG_TIMING
+		_reference_time = millis();
+		#endif
+
 		_received_length =
 			static_cast<size_t>(Serial.readBytes(_received_buffer, BROADCAST_SOCKET_BUFFER_SIZE));
 
 		if (_received_length) {
 			
+			#ifdef SOCKET_SERIAL_DEBUG_TIMING
+			Serial.print("\n");
+			Serial.print(class_name());
+			Serial.print(": ");
+			#endif
+				
+			#ifdef SOCKET_SERIAL_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - _reference_time);
+			#endif
+
 			#ifdef SOCKET_SERIAL_DEBUG
 			Serial.print(F("\treceive1: Sent message: "));
 			Serial.write(_received_buffer, _received_length);
@@ -60,6 +98,12 @@ protected:
 			#endif
 
 			BroadcastSocket::startTransmission();
+
+			#ifdef SOCKET_SERIAL_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - _reference_time);
+			#endif
+
 		}
         return _received_length;
     }

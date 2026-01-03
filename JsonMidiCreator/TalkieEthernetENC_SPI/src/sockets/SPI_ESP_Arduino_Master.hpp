@@ -103,6 +103,10 @@ public:
     };
 
 
+	#ifdef BROADCAST_SPI_DEBUG_TIMING
+	unsigned long _reference_time = millis();
+	#endif
+
 protected:
 
 	SPIClass* _spi_instance;  // Pointer to SPI instance
@@ -111,10 +115,6 @@ protected:
     uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
 	NameTable _named_pins_table;
-
-	#ifdef BROADCAST_SPI_DEBUG_TIMING
-	unsigned long _reference_time = millis();
-	#endif
 
 
     // Constructor
