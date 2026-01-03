@@ -35,6 +35,7 @@ protected:
     // Singleton accessor
     SocketSerial() : BroadcastSocket() {}
 
+	bool _reading_serial = false;
     
     bool send(const JsonMessage& json_message) override {
         (void)json_message;	// Silence unused parameter warning
@@ -78,9 +79,10 @@ protected:
 		while (Serial.available()) {
 			char c = Serial.read();
 
-			if (_received_length) {
+			if (_reading_serial) {
 				if (_received_length < BROADCAST_SOCKET_BUFFER_SIZE) {
 					if (c == '}') {
+						_reading_serial = false;
 						
 						#ifdef SOCKET_SERIAL_DEBUG_TIMING
 						Serial.print(millis() - _reference_time);
@@ -93,9 +95,11 @@ protected:
 						_received_buffer[_received_length++] = c;
 					}
 				} else {
+					_reading_serial = false;
 					_received_length = 0; // Reset to start writing
 				}
 			} else if (c == '{') {
+				_reading_serial = true;
 
 				#ifdef SOCKET_SERIAL_DEBUG_TIMING
 				Serial.print("\n");
