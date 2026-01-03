@@ -85,7 +85,6 @@ protected:
 			#endif
 				
 			#ifdef SOCKET_SERIAL_DEBUG_TIMING
-			Serial.print(" | ");
 			Serial.print(millis() - _reference_time);
 			#endif
 
