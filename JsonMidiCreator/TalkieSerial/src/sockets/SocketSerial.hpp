@@ -68,43 +68,43 @@ protected:
 
 
     size_t receive() override {
-		
+    
 		#ifdef SOCKET_SERIAL_DEBUG_TIMING
 		_reference_time = millis();
 		#endif
 
-		_received_length =
-			static_cast<size_t>(Serial.readBytes(_received_buffer, BROADCAST_SOCKET_BUFFER_SIZE));
+		_received_length = 0; // Reset to start writing
+		
+		while (Serial.available()) {
+			char c = Serial.read();
 
-		if (_received_length) {
-			
-			#ifdef SOCKET_SERIAL_DEBUG_TIMING
-			Serial.print("\n");
-			Serial.print(class_name());
-			Serial.print(": ");
-			#endif
-				
-			#ifdef SOCKET_SERIAL_DEBUG_TIMING
-			Serial.print(millis() - _reference_time);
-			#endif
+			if (_received_length) {
+				if (_received_length < BROADCAST_SOCKET_BUFFER_SIZE) {
+					if (c == '}') {
+						
+						#ifdef SOCKET_SERIAL_DEBUG_TIMING
+						Serial.print(millis() - _reference_time);
+						#endif
 
-			#ifdef SOCKET_SERIAL_DEBUG
-			Serial.print(F("\treceive1: Sent message: "));
-			Serial.write(_received_buffer, _received_length);
-			Serial.println();
-			Serial.print(F("\treceive2: Sent length: "));
-			Serial.println(_received_length);
-			#endif
+						_received_buffer[_received_length++] = '}';
+						startTransmission();
+						return _received_length;
+					} else {
+						_received_buffer[_received_length++] = c;
+					}
+				}
+			} else if (c == '{') {
 
-			BroadcastSocket::startTransmission();
+				#ifdef SOCKET_SERIAL_DEBUG_TIMING
+				Serial.print("\n");
+				Serial.print(class_name());
+				Serial.print(": ");
+				#endif
 
-			#ifdef SOCKET_SERIAL_DEBUG_TIMING
-			Serial.print(" | ");
-			Serial.print(millis() - _reference_time);
-			#endif
-
+				_received_buffer[_received_length++] = '{';
+			}
 		}
-        return _received_length;
+		return 0;
     }
 
 
