@@ -106,7 +106,8 @@ protected:
     bool startTransmission() {
 
 		// Trim trailing newline and carriage return characters or any other that isn't '}'
-		while (_received_length && _received_buffer[_received_length - 1] != '}') {
+		while (_received_length > 26 
+			&& (_received_buffer[_received_length - 1] != '}' || _received_buffer[_received_length - 2] == '\\')) {
 			_received_length--;	// Note that literals add the '\0'!
 		}
 
