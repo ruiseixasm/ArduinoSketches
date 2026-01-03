@@ -11,6 +11,25 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+
+/**
+ * @file JsonTalker.h
+ * @brief JSON message handler for Talkie communication protocol.
+ *        This class acts on the received JsonMessage accordingly
+ *        to its manifesto.
+ * 
+ * This class provides efficient, memory-safe JSON message manipulation 
+ * for embedded systems with constrained resources. It implements a 
+ * schema-driven JSON protocol optimized for Arduino environments.
+ * 
+ * @warning This class uses messages of the type JsonMessage.
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-03
+ * @version 1.0.0
+ */
+
 #ifndef JSON_TALKER_H
 #define JSON_TALKER_H
 
