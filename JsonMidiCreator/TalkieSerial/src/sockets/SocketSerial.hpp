@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define SOCKET_SERIAL_DEBUG
-#define SOCKET_SERIAL_DEBUG_TIMING
+// #define SOCKET_SERIAL_DEBUG_TIMING
 
 class SocketSerial : public BroadcastSocket {
 public:
