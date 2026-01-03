@@ -79,7 +79,7 @@ protected:
 
 			if (_reading_serial) {
 				if (_received_length < BROADCAST_SOCKET_BUFFER_SIZE) {
-					if (c == '}') {
+					if (c == '}' && _received_length && _received_buffer[_received_length - 1] != '\\') {
 						_reading_serial = false;
 
 						#ifdef SOCKET_SERIAL_DEBUG_TIMING
