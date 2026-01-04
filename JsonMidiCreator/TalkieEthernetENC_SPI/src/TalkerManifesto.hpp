@@ -77,7 +77,7 @@ protected:
 
 public:
 
-    virtual void loop(JsonTalker* talker) {	// Also defined, not a pure virtual one
+    virtual void _loop(JsonTalker* talker) {	// Also defined, not a pure virtual one
         (void)talker;		// Silence unused parameter warning
 	}
 

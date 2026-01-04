@@ -128,7 +128,7 @@ public:
 
     void _loop() {
         if (_manifesto) {
-            _manifesto->loop(this);
+            _manifesto->_loop(this);
         }
     }
 
