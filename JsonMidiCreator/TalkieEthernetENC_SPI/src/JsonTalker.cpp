@@ -22,7 +22,7 @@ void JsonTalker::setLink(MessageRepeater* message_repeater, LinkType link_type) 
 }
 
 
-bool JsonTalker::_transmitToRepeater(JsonMessage& json_message) {
+bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 
 	#ifdef JSON_TALKER_DEBUG_NEW
 	Serial.print(F("\t\t\t_transmitToRepeater(Talker): "));
@@ -51,7 +51,7 @@ bool JsonTalker::transmissionSockets(JsonMessage& json_message) {
 		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
 			json_message.set_nth_value_number(0, socket_index++);
 			json_message.set_nth_value_string(1, socket->class_name());
-			_transmitToRepeater(json_message);	// Many-to-One
+			transmitToRepeater(json_message);	// Many-to-One
 		}
 		return socket_index > 0;
 	}
@@ -67,7 +67,7 @@ bool JsonTalker::transmissionDrops(JsonMessage& json_message) {
 		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
 			json_message.set_nth_value_number(0, socket_index++);
 			json_message.set_nth_value_number(1, socket->get_drops_count());
-			_transmitToRepeater(json_message);	// Many-to-One
+			transmitToRepeater(json_message);	// Many-to-One
 		}
 		return socket_index > 0;
 	}
@@ -83,7 +83,7 @@ bool JsonTalker::transmissionDelays(JsonMessage& json_message) {
 		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
 			json_message.set_nth_value_number(0, socket_index++);
 			json_message.set_nth_value_number(1, socket->get_max_delay());
-			_transmitToRepeater(json_message);	// Many-to-One
+			transmitToRepeater(json_message);	// Many-to-One
 		}
 		return socket_index > 0;
 	}
