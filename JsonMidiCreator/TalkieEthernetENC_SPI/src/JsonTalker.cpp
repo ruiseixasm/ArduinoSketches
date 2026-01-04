@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "MessageRepeater.hpp"
 
 
-void JsonTalker::setLink(MessageRepeater* message_repeater, LinkType link_type) {
+void JsonTalker::_setLink(MessageRepeater* message_repeater, LinkType link_type) {
 	_message_repeater = message_repeater;
 	_link_type = link_type;
 }

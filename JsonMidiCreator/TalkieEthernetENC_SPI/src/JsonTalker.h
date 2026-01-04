@@ -202,7 +202,7 @@ public:
      * 
      * @note This method is used by the Message Repeater to set up the Talker
      */
-	void setLink(MessageRepeater* message_repeater, LinkType link_type);
+	void _setLink(MessageRepeater* message_repeater, LinkType link_type);
 	
 
     /**

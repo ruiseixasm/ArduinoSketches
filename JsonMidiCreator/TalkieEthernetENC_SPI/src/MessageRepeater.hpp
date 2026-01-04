@@ -93,16 +93,16 @@ public:
         _uplinked_talkers(uplinked_talkers), _uplinked_talkers_count(uplinked_talkers_count)
     {
 		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-			_uplinked_sockets[socket_j]->setLink(this, LinkType::TALKIE_LT_UP_LINKED);
+			_uplinked_sockets[socket_j]->_setLink(this, LinkType::TALKIE_LT_UP_LINKED);
 		}
 		for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
-			_downlinked_talkers[talker_i]->setLink(this, LinkType::TALKIE_LT_DOWN_LINKED);
+			_downlinked_talkers[talker_i]->_setLink(this, LinkType::TALKIE_LT_DOWN_LINKED);
 		}
 		for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-			_downlinked_sockets[socket_j]->setLink(this, LinkType::TALKIE_LT_DOWN_LINKED);
+			_downlinked_sockets[socket_j]->_setLink(this, LinkType::TALKIE_LT_DOWN_LINKED);
 		}
 		for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
-			_uplinked_talkers[talker_i]->setLink(this, LinkType::TALKIE_LT_UP_LINKED);
+			_uplinked_talkers[talker_i]->_setLink(this, LinkType::TALKIE_LT_UP_LINKED);
 		}
 	}
 
