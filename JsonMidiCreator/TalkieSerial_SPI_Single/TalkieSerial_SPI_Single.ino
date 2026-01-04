@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/MessageRepeater.hpp"
 #include "src/manifestos/SerialManifesto.hpp"
 #include "src/sockets/SocketSerial.hpp"
-#include "src/sockets/SPI_Arduino_Arduino_Master.hpp"
+#include "src/sockets/SPI_Arduino_Arduino_Master_Single.hpp"
 
 
 const char talker_name[] = "serial";
@@ -28,7 +28,7 @@ JsonTalker talker = JsonTalker(talker_name, talker_desc, &serial_manifesto);
 
 // Singleton requires the & (to get a reference variable)
 auto& serial_socket = SocketSerial::instance();
-auto& spi_socket = SPI_Arduino_Arduino_Master::instance(SS);
+auto& spi_socket = SPI_Arduino_Arduino_Master_Single::instance(SS);
 
 // SETTING THE REPEATER
 BroadcastSocket* uplinked_sockets[] = { &serial_socket };
