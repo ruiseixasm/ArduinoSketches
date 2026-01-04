@@ -68,12 +68,25 @@ protected:
 	SPIClass* _spi_instance;  // Pointer to SPI instance
 	bool _initiated = false;
     int _ss_pin = 10;
+	// Just create a pointer to the existing SPI object
+	SPIClass* _spi_instance = &SPI;  // Alias pointer
 
 
     // Constructor
     SPI_Arduino_Arduino_Master(int ss_pin) : BroadcastSocket() {
-            
+		
 			_ss_pin = ss_pin;
+			if (_spi_instance) {
+				// Initialize SPI
+				_spi_instance->begin();
+				_spi_instance->setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
+				_spi_instance->setDataMode(SPI_MODE0);
+				_spi_instance->setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
+				// Enable the SS pin
+				pinMode(_ss_pin, OUTPUT);
+				digitalWrite(_ss_pin, HIGH);
+				// Sets the class SS pin
+			}
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
         }
 
@@ -594,21 +607,6 @@ protected:
     }
 
 
-	bool initiate() {
-		
-		// Initialize SPI
-		SPI.begin();
-		SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
-		SPI.setDataMode(SPI_MODE0);
-		SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
-		// Enable the SS pin
-		pinMode(_ss_pin, OUTPUT);
-		digitalWrite(_ss_pin, HIGH);
-		// Sets the class SS pin
-
-		return true;
-	}
-
 public:
 
     // Move ONLY the singleton instance method to subclass
@@ -620,12 +618,6 @@ public:
 
     const char* class_name() const override { return "SPI_Arduino_Arduino_Master"; }
 
-
-    virtual void begin(SPIClass* spi_instance) {
-		
-		_spi_instance = spi_instance;
-		initiate();
-    }
 };
 
 
