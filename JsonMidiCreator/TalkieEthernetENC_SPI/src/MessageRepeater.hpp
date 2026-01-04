@@ -61,6 +61,23 @@ protected:
     uint8_t socketsIterIdx = 0;
 
 
+	bool transmitErrorToChannel(BroadcastSocket &socket, JsonMessage &message) const {
+		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
+		message.swap_from_with_to();
+		message.set_from_name("255");	// Channel error means 255
+		return socket.finishTransmission(message);
+	}
+	
+	bool transmitErrorToChannel(JsonTalker &talker, JsonMessage &message) {
+		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
+		message.swap_from_with_to();
+		message.set_from_name("255");	// Channel error means 255
+		talker.handleTransmission(message);
+	}
+	
+
 public:
 
     // Constructor
@@ -110,22 +127,6 @@ public:
     }
 
 
-	bool transmitErrorToChannel(BroadcastSocket &socket, JsonMessage &message) const {
-		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
-		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-		message.swap_from_with_to();
-		message.set_from_name("255");	// Channel error means 255
-		return socket.finishTransmission(message);
-	}
-	
-	bool transmitErrorToChannel(JsonTalker &talker, JsonMessage &message) {
-		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
-		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-		message.swap_from_with_to();
-		message.set_from_name("255");	// Channel error means 255
-		talker.handleTransmission(message);
-	}
-	
 
 	void iterateSocketsReset() {
 		socketsIterIdx = 0;
@@ -148,12 +149,12 @@ public:
 	}
     
 
-	bool socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
+	bool _socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch talker_match = message.get_talker_match();
 
 		#ifdef MESSAGE_REPEATER_DEBUG
-		Serial.print(F("\t\tsocketDownlink1: "));
+		Serial.print(F("\t\t_socketDownlink1: "));
 		message.write_to(Serial);
 		Serial.print(" | ");
 		Serial.print((int)broadcast);
@@ -237,13 +238,13 @@ public:
 		}
 	}
 
-	bool talkerUplink(JsonTalker &talker, JsonMessage &message) {
+	bool _talkerUplink(JsonTalker &talker, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 
 		TalkerMatch match = TalkerMatch::TALKIE_MATCH_NONE;
 
 		#ifdef MESSAGE_REPEATER_DEBUG
-		Serial.print(F("\t\ttalkerUplink1: "));
+		Serial.print(F("\t\t_talkerUplink1: "));
 		message.write_to(Serial);
 		Serial.print(" | ");
 		Serial.println((int)broadcast);
@@ -449,7 +450,7 @@ public:
 		return false;
 	}
 
-	bool socketUplink(BroadcastSocket &socket, JsonMessage &message) {
+	bool _socketUplink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch talker_match = message.get_talker_match();
 
@@ -607,7 +608,7 @@ public:
 		return false;
 	}
 
-	bool talkerDownlink(JsonTalker &talker, JsonMessage &message) {
+	bool _talkerDownlink(JsonTalker &talker, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 
 		TalkerMatch match = TalkerMatch::TALKIE_MATCH_NONE;

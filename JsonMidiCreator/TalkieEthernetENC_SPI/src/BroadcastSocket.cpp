@@ -37,9 +37,9 @@ bool BroadcastSocket::_transmitToRepeater(JsonMessage& json_message) {
 		switch (_link_type) {
 			case LinkType::TALKIE_LT_UP_LINKED:
 			case LinkType::TALKIE_LT_UP_BRIDGED:
-				return _message_repeater->socketDownlink(*this, json_message);
+				return _message_repeater->_socketDownlink(*this, json_message);
 			case LinkType::TALKIE_LT_DOWN_LINKED:
-				return _message_repeater->socketUplink(*this, json_message);
+				return _message_repeater->_socketUplink(*this, json_message);
 			default: return false;
 		}
 	}	
