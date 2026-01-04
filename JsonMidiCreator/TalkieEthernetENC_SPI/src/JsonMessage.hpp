@@ -1081,7 +1081,7 @@ public:
      * @brief Get target name
      * @return Pointer to target name, or nullptr if not a string
      */
-    char* get_to_name() const {
+    const char* get_to_name() const {
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		if (colon_position && get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING) {
 			if (get_value_string('t', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length, colon_position)) {

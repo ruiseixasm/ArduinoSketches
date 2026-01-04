@@ -447,8 +447,7 @@ protected:
 			Serial.println(json_message.get_from_name());
 			#endif
 
-			// It only makes sense to check for names if more than one device (pin)
-			if (_ss_pins_count > 1 && _names[_actual_ss_pin_i][0] == '\0') {
+			if (_names[_actual_ss_pin_i][0] == '\0') {
 				strcpy(_names[_actual_ss_pin_i], json_message.get_from_name());
 				
 				#ifdef BROADCAST_SPI_DEBUG
@@ -490,39 +489,32 @@ protected:
 			#ifdef ENABLE_DIRECT_ADDRESSING
 
 			bool as_reply = false;
-			if (_ss_pins_count > 1) {	// It only makes sense to check for names if more than one device (pin)
-				if (json_message.has_to_name()) {
+			const char* to_name = json_message.get_to_name();
+			if (to_name) {
 
-					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println(F("\t\t\t\t\tsend3: json_message TO is a String"));
-					#endif
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.println(F("\t\t\t\t\tsend3: json_message TO is a String"));
+				Serial.print(F("\t\t\t\t\tsend4: Message name TO: "));
+				Serial.println(to_name);
+				#endif
 
-					char to_name[TALKIE_NAME_LEN];
-					strcpy(to_name, json_message.get_to_name());
+				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count && ss_pin_i < TALKIE_MAX_NAMES; ++ss_pin_i) {
 					
 					#ifdef BROADCAST_SPI_DEBUG
-					Serial.print(F("\t\t\t\t\tsend4: Message name TO: "));
-					Serial.println(to_name);
+					Serial.print(F("\t\t\t\t\tsend5: Comparing to the name: "));
+					Serial.println(_names[ss_pin_i]);
 					#endif
 
-					for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count && ss_pin_i < TALKIE_MAX_NAMES; ++ss_pin_i) {
-						
-						#ifdef BROADCAST_SPI_DEBUG
-						Serial.print(F("\t\t\t\t\tsend5: Comparing to the name: "));
-						Serial.println(_names[ss_pin_i]);
-						#endif
-
-						if (strcmp(to_name, _names[ss_pin_i]) == 0) {
-							as_reply = true;
-							_actual_ss_pin_i = ss_pin_i;
-							break;
-						}
+					if (strcmp(to_name, _names[ss_pin_i]) == 0) {
+						as_reply = true;
+						_actual_ss_pin_i = ss_pin_i;
+						break;
 					}
-				} else {
-					#ifdef BROADCAST_SPI_DEBUG
-					Serial.println(F("\t\t\t\t\tsend3: json_message TO is NOT a String or doesn't exist"));
-					#endif
 				}
+			} else {
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.println(F("\t\t\t\t\tsend3: json_message TO is NOT a String or doesn't exist"));
+				#endif
 			}
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print(" | ");
