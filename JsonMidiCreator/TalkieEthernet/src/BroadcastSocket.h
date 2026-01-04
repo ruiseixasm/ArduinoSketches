@@ -40,7 +40,7 @@ class MessageRepeater;
 class BroadcastSocket {
 public:
 
-    static uint16_t generateChecksum(const char* buffer, size_t length) {	// 16-bit word and XORing
+    static uint16_t _generateChecksum(const char* buffer, size_t length) {	// 16-bit word and XORing
         uint16_t checksum = 0;
 		if (length <= TALKIE_BUFFER_SIZE) {
 			for (size_t i = 0; i < length; i += 2) {
@@ -126,7 +126,7 @@ protected:
 		#endif
 
 		if (!JsonMessage::_remove('c', _received_buffer, &_received_length, colon_position)) return false;
-		uint16_t checksum = generateChecksum(_received_buffer, _received_length);
+		uint16_t checksum = _generateChecksum(_received_buffer, _received_length);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
 		Serial.print(F("\thandleTransmission0.2: "));
@@ -399,7 +399,7 @@ public:
 			#endif
 
 			_sending_length = json_message.serialize_json(_sending_buffer, TALKIE_BUFFER_SIZE);
-			uint16_t checksum = generateChecksum(_sending_buffer, _sending_length);
+			uint16_t checksum = _generateChecksum(_sending_buffer, _sending_length);
 			JsonMessage::_set_number('c', checksum, _sending_buffer, &_sending_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW

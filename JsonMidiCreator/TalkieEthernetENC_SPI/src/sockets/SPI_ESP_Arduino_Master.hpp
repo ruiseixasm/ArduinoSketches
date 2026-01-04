@@ -603,7 +603,7 @@ protected:
 
 						_actual_ss_pin_i = ss_pin_i;
 						_received_length = length;
-						startTransmission();
+						_startTransmission();
 						
 						#ifdef BROADCAST_SPI_DEBUG_TIMING
 						Serial.print(" | ");

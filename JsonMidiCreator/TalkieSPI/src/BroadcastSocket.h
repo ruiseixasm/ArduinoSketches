@@ -37,7 +37,7 @@ private:
     static uint16_t _drops_count;
 
 
-    static uint16_t generateChecksum(const char* net_data, const size_t len) {
+    static uint16_t _generateChecksum(const char* net_data, const size_t len) {
         // 16-bit word and XORing
         uint16_t checksum = 0;
         for (size_t i = 0; i < len; i += 2) {
@@ -115,7 +115,7 @@ private:
 
     static size_t insertChecksum(size_t length) {
 
-        uint16_t checksum = generateChecksum(_sending_buffer, length);
+        uint16_t checksum = _generateChecksum(_sending_buffer, length);
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("I: Checksum is: "));
@@ -185,7 +185,7 @@ protected:
             int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
             uint32_t remote_time = 0;
             uint16_t received_checksum = extractChecksum(&length, &message_code_int, &remote_time);
-            uint16_t checksum = generateChecksum(_receiving_buffer, length);
+            uint16_t checksum = _generateChecksum(_receiving_buffer, length);
             
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.print(F("C: Remote time: "));
