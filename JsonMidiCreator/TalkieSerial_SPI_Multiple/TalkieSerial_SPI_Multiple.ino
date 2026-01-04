@@ -28,7 +28,8 @@ JsonTalker talker = JsonTalker(talker_name, talker_desc, &serial_manifesto);
 
 // Singleton requires the & (to get a reference variable)
 auto& serial_socket = SocketSerial::instance();
-auto& spi_socket = SPI_Arduino_Arduino_Master_Multiple::instance(SS);
+int spi_pins[] = {SS};
+auto& spi_socket = SPI_Arduino_Arduino_Master_Multiple::instance(spi_pins, sizeof(spi_pins)/sizeof(int));
 
 // SETTING THE REPEATER
 BroadcastSocket* uplinked_sockets[] = { &serial_socket };
@@ -60,7 +61,6 @@ void setup() {
     delay(100);
     digitalWrite(LED_BUILTIN, LOW);
     
-
     // Final startup indication
     digitalWrite(LED_BUILTIN, HIGH);
     delay(500);

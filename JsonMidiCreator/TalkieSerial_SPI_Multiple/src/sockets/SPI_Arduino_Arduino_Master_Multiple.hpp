@@ -109,7 +109,7 @@ public:
 
 protected:
 
-	SPIClass* _spi_instance;  // Pointer to SPI instance
+	SPIClass* const _spi_instance = &SPI;  // Alias pointer (Arduino SPI)
 	bool _initiated = false;
     int* _ss_pins;
     uint8_t _ss_pins_count = 0;
@@ -122,6 +122,29 @@ protected:
             
         	_ss_pins = ss_pins;
         	_ss_pins_count = ss_pins_count;
+			if (_spi_instance) {
+				// Initialize SPI
+				_spi_instance->begin();
+				_spi_instance->setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
+				_spi_instance->setDataMode(SPI_MODE0);
+				_spi_instance->setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
+
+				// ================== CONFIGURE SS PINS ==================
+				// CRITICAL: Configure all SS pins as outputs and set HIGH
+				for (uint8_t i = 0; i < _ss_pins_count; i++) {
+					pinMode(_ss_pins[i], OUTPUT);
+					digitalWrite(_ss_pins[i], HIGH);
+					delayMicroseconds(10); // Small delay between pins
+				}
+
+				_initiated = true;
+				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+					if (!acknowledgeSPI(_ss_pins[ss_pin_i])) {
+						_initiated = false;
+						break;
+					}
+				}
+			}
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
         }
 
@@ -642,56 +665,6 @@ protected:
     }
 
 
-	bool initiate() {
-		
-		if (_spi_instance) {
-
-			// Configure SPI settings
-			_spi_instance->setDataMode(SPI_MODE0);
-			_spi_instance->setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
-			_spi_instance->setFrequency(4000000); 	// 4MHz if needed (optional)
-			// ====================================================
-			
-			// ================== CONFIGURE SS PINS ==================
-			// CRITICAL: Configure all SS pins as outputs and set HIGH
-			for (uint8_t i = 0; i < _ss_pins_count; i++) {
-				pinMode(_ss_pins[i], OUTPUT);
-				digitalWrite(_ss_pins[i], HIGH);
-				delayMicroseconds(10); // Small delay between pins
-			}
-
-			_initiated = true;
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				if (!acknowledgeSPI(_ss_pins[ss_pin_i])) {
-					_initiated = false;
-					break;
-				}
-			}
-		}
-
-		#ifdef BROADCAST_SPI_DEBUG
-		if (_initiated) {
-			Serial.print(class_name());
-			Serial.println(": initiate1: Socket initiated!");
-
-			Serial.print(F("\tinitiate2: Total SS pins connected: "));
-			Serial.println(_ss_pins_count);
-			Serial.print(F("\t\tinitiate3: SS pins: "));
-			
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				Serial.print(_ss_pins[ss_pin_i]);
-				Serial.print(F(", "));
-			}
-			Serial.println();
-		} else {
-			Serial.println("initiate1: Socket NOT initiated!");
-		}
-	
-		#endif
-
-		return _initiated;
-	}
-
 public:
 
     // Move ONLY the singleton instance method to subclass
@@ -703,12 +676,6 @@ public:
 
     const char* class_name() const override { return "SPI_Arduino_Arduino_Master_Multiple"; }
 
-
-    virtual void begin(SPIClass* spi_instance) {
-		
-		_spi_instance = spi_instance;
-		initiate();
-    }
 };
 
 
