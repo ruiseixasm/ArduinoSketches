@@ -30,55 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #define send_delay_us 10
 #define receive_delay_us 10
-
-
 #define TALKIE_MAX_NAMES 8
-#define TALKIE_NAME_LEN  16   // includes '\0'
-
-
-struct NameEntry {
-    char name[TALKIE_NAME_LEN];
-    uint8_t value;
-};
-
-class NameTable {
-private:
-    NameEntry _entries[TALKIE_MAX_NAMES];
-    uint8_t _count = 0;
-
-public:
-    bool add(const char* name, uint8_t value) {
-        if (_count >= TALKIE_MAX_NAMES)
-            return false;
-
-        // Reject too-long names
-        size_t len = strlen(name);
-        if (len >= TALKIE_NAME_LEN)
-            return false;
-
-        // Prevent duplicates
-        for (uint8_t i = 0; i < _count; ++i) {
-            if (strcmp(_entries[i].name, name) == 0)
-                return false;
-        }
-
-        strcpy(_entries[_count].name, name);
-        _entries[_count].value = value;
-        ++_count;
-        return true;
-    }
-
-    bool get_pin(const char* name, uint8_t& pin) const {
-        for (uint8_t i = 0; i < _count; ++i) {
-            if (strcmp(_entries[i].name, name) == 0) {
-                pin = _entries[i].value;
-                return true;
-            }
-        }
-        return false;
-    }
-
-};
 
 
 class SPI_Arduino_Arduino_Master_Multiple : public BroadcastSocket {
@@ -113,8 +65,8 @@ protected:
 	bool _initiated = false;
     int* _ss_pins;
     uint8_t _ss_pins_count = 0;
-    uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
-	NameTable _named_pins_table;
+	char _names[TALKIE_MAX_NAMES][TALKIE_NAME_LEN];
+	uint8_t _actual_ss_pin_i = 0;
 
 
     // Constructor
@@ -122,6 +74,9 @@ protected:
             
         	_ss_pins = ss_pins;
         	_ss_pins_count = ss_pins_count;
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count && ss_pin_i < TALKIE_MAX_NAMES; ++ss_pin_i) {
+				_names[ss_pin_i][0] = '\0';
+			}
 			if (_spi_instance) {
 				// Initialize SPI
 				_spi_instance->begin();
@@ -514,17 +469,21 @@ protected:
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
 			Serial.println(json_message.get_from_name());
-			Serial.print(F("\tcheckJsonMessage2: Saved actual named pin: "));
-			Serial.println(_actual_ss_pin);
 			#endif
 
-			_named_pins_table.add(json_message.get_from_name(), _actual_ss_pin);
+			if (_names[_actual_ss_pin_i][0] == '\0') {
+				strcpy(_names[_actual_ss_pin_i], json_message.get_from_name());
+				
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.print(F("\tcheckJsonMessage2: Saved actual named pin index i: "));
+				Serial.println(_actual_ss_pin_i);
+				Serial.print(F("\tcheckJsonMessage4: Saved name: "));
+				Serial.println(_names[_actual_ss_pin_i]);
+				Serial.print(F("\tcheckJsonMessage5: Concerning actual pin: "));
+				Serial.println(_ss_pins[_actual_ss_pin_i]);
+				#endif
 
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tcheckJsonMessage3: Confirmed actual named pin: "));
-			// Serial.println(_named_pins[from_name].as<uint8_t>());
-			#endif
-
+			}
 			return true;
 		}
 		return false;
@@ -547,38 +506,51 @@ protected:
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
 			Serial.write(_sending_buffer, _sending_length);
-			Serial.println();
-			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
+			Serial.print(F("\n\t\t\t\t\tsend2: Sent length: "));
 			Serial.println(_sending_length);
 			#endif
 			
 			#ifdef ENABLE_DIRECT_ADDRESSING
 
-			bool as_reply = json_message.has_to_name();
-			if (as_reply) {
+			bool as_reply = false;
+			const char* to_name = json_message.get_to_name();
+			if (to_name) {
 
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("\t\t\t\t\tsend3: json_message TO is a String"));
+				Serial.print(F("\t\t\t\t\tsend4: Message name TO: "));
+				Serial.println(to_name);
 				#endif
 
-				as_reply = _named_pins_table.get_pin(json_message.get_to_name(), _actual_ss_pin);
+				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count && ss_pin_i < TALKIE_MAX_NAMES; ++ss_pin_i) {
+					
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.print(F("\t\t\t\t\tsend5: Comparing to the name: "));
+					Serial.println(_names[ss_pin_i]);
+					#endif
+
+					if (strcmp(to_name, _names[ss_pin_i]) == 0) {
+						as_reply = true;
+						_actual_ss_pin_i = ss_pin_i;
+						break;
+					}
+				}
 			} else {
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("\t\t\t\t\tsend3: json_message TO is NOT a String or doesn't exist"));
 				#endif
 			}
-
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print(" | ");
 			Serial.print(millis() - _reference_time);
 			#endif
 
 			if (as_reply) {
-				sendSPI(_sending_length, _actual_ss_pin);
+				sendSPI(_sending_length, _ss_pins[_actual_ss_pin_i]);
 
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.print(F("\t\t\t\t\tsend4: --> Directly sent for the received pin --> "));
-				Serial.println(_actual_ss_pin);
+				Serial.println(_actual_ss_pin_i);
 				#endif
 
 			} else {    // Broadcast mode
@@ -616,50 +588,57 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     size_t receive() override {
 
-		if (_initiated) {
+		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
+		static uint16_t timeout = (uint16_t)micros();
 
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			_reference_time = millis();
-			#endif
+		if (micros() - timeout > 500) {
+			timeout = (uint16_t)micros();
 
-			// Need to call homologous method in super class first
-			uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+			if (_initiated) {
 
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				length = receiveSPI(_ss_pins[ss_pin_i]);
-				if (length > 0) {
-					
-					#ifdef BROADCAST_SPI_DEBUG_TIMING
-					Serial.print("\n\treceive: ");
-					Serial.print(millis() - _reference_time);
-					#endif
+				#ifdef BROADCAST_SPI_DEBUG_TIMING
+				_reference_time = millis();
+				#endif
+
+				// Need to call homologous method in super class first
+				uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+
+				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+					length = receiveSPI(_ss_pins[ss_pin_i]);
+					if (length > 0) {
 						
-					#ifdef BROADCAST_SPI_DEBUG
-					Serial.print(F("\treceive1: Received message: "));
-					Serial.write(_received_buffer, length);
-					Serial.println();
-					Serial.print(F("\treceive2: Received length: "));
-					Serial.println(length);
-					Serial.print(F("\t\t"));
-					Serial.print(class_name());
-					Serial.print(F(" is triggering the talkers with the received message from the SS pin: "));
-					Serial.println(_ss_pins[ss_pin_i]);
-					#endif
+						#ifdef BROADCAST_SPI_DEBUG_TIMING
+						Serial.print("\n\treceive: ");
+						Serial.print(millis() - _reference_time);
+						#endif
+							
+						#ifdef BROADCAST_SPI_DEBUG
+						Serial.print(F("\treceive1: Received message: "));
+						Serial.write(_received_buffer, length);
+						Serial.println();
+						Serial.print(F("\treceive2: Received length: "));
+						Serial.println(length);
+						Serial.print(F("\t\t"));
+						Serial.print(class_name());
+						Serial.print(F(" is triggering the talkers with the received message from the SS pin: "));
+						Serial.println(_ss_pins[ss_pin_i]);
+						#endif
 
-					_actual_ss_pin = static_cast<uint8_t>(_ss_pins[ss_pin_i]);
-					_received_length = length;
-					startTransmission();
-					
-					#ifdef BROADCAST_SPI_DEBUG_TIMING
-					Serial.print(" | ");
-					Serial.print(millis() - _reference_time);
-					#endif
+						_actual_ss_pin_i = ss_pin_i;
+						_received_length = length;
+						startTransmission();
+						
+						#ifdef BROADCAST_SPI_DEBUG_TIMING
+						Serial.print(" | ");
+						Serial.print(millis() - _reference_time);
+						#endif
 
+					}
 				}
+				// Makes sure the _received_buffer is deleted with 0
+				_received_length = 0;
+				
 			}
-			// Makes sure the _received_buffer is deleted with 0
-			_received_length = 0;
-			
 		}
         return 0;   // Receives are all called internally in this method
     }
