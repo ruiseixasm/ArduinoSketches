@@ -426,7 +426,7 @@ public:
 
 			_sending_length = json_message.serialize_json(_sending_buffer, TALKIE_BUFFER_SIZE);
 			uint16_t checksum = generateChecksum(_sending_buffer, _sending_length);
-			JsonMessage::set_number('c', checksum, _sending_buffer, &_sending_length);
+			JsonMessage::_set_number('c', checksum, _sending_buffer, &_sending_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("socketSend3: "));

@@ -352,7 +352,7 @@ public:
      * 
      * @note If key exists, it's replaced. Otherwise, it's added before closing brace.
      */
-	static bool set_number(char key, uint32_t number, char* json_payload, size_t *json_length, size_t colon_position = 4) {
+	static bool _set_number(char key, uint32_t number, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, json_payload, *json_length, colon_position);
 		if (colon_position) {
 			if (!_remove(key, json_payload, json_length, colon_position)) return false;
@@ -404,7 +404,7 @@ public:
      * @param colon_position Optional hint for colon position
      * @return true if successful, false if buffer too small or string empty
      */
-	static bool set_string(char key, const char* in_string, char* json_payload, size_t *json_length, size_t colon_position = 4) {
+	static bool _set_string(char key, const char* in_string, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		if (in_string) {
 			size_t length = 0;
 			for (size_t char_j = 0; in_string[char_j] != '\0' && char_j < TALKIE_BUFFER_SIZE; char_j++) {
@@ -1304,7 +1304,7 @@ public:
      * @return true if successful
      */
 	bool set_identity(uint16_t identity) {
-		return set_number('i', identity, _json_payload, &_json_length);
+		return _set_number('i', identity, _json_payload, &_json_length);
 	}
 
 
@@ -1314,7 +1314,7 @@ public:
      */
 	bool set_identity() {
 		uint16_t identity = (uint16_t)millis();
-		return set_number('i', identity, _json_payload, &_json_length);
+		return _set_number('i', identity, _json_payload, &_json_length);
 	}
 
 
@@ -1324,7 +1324,7 @@ public:
      * @return true if successful
      */
 	bool set_timestamp(uint16_t timestamp) {
-		return set_number('i', timestamp, _json_payload, &_json_length);
+		return _set_number('i', timestamp, _json_payload, &_json_length);
 	}
 
 
@@ -1343,7 +1343,7 @@ public:
      * @return true if successful
      */
 	bool set_from_name(const char* name) {
-		return set_string('f', name, _json_payload, &_json_length);
+		return _set_string('f', name, _json_payload, &_json_length);
 	}
 
 
@@ -1353,7 +1353,7 @@ public:
      * @return true if successful
      */
 	bool set_to_name(const char* name) {
-		return set_string('t', name, _json_payload, &_json_length);
+		return _set_string('t', name, _json_payload, &_json_length);
 	}
 
 
@@ -1363,7 +1363,7 @@ public:
      * @return true if successful
      */
 	bool set_to_channel(uint8_t channel) {
-		return set_number('t', channel, _json_payload, &_json_length);
+		return _set_number('t', channel, _json_payload, &_json_length);
 	}
 
 
@@ -1373,7 +1373,7 @@ public:
      * @return true if successful
      */
 	bool set_action_name(const char* name) {
-		return set_string('a', name, _json_payload, &_json_length);
+		return _set_string('a', name, _json_payload, &_json_length);
 	}
 
 
@@ -1383,7 +1383,7 @@ public:
      * @return true if successful
      */
 	bool set_action_number(uint8_t number) {
-		return set_number('a', number, _json_payload, &_json_length);
+		return _set_number('a', number, _json_payload, &_json_length);
 	}
 
 
@@ -1398,7 +1398,7 @@ public:
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(broadcast_value);
 			return true;
 		}
-		return set_number('b', static_cast<uint8_t>(broadcast_value), _json_payload, &_json_length);
+		return _set_number('b', static_cast<uint8_t>(broadcast_value), _json_payload, &_json_length);
 	}
 
 
@@ -1413,7 +1413,7 @@ public:
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(roger_value);
 			return true;
 		}
-		return set_number('r', static_cast<uint8_t>(roger_value), _json_payload, &_json_length);
+		return _set_number('r', static_cast<uint8_t>(roger_value), _json_payload, &_json_length);
 	}
 
 
@@ -1428,7 +1428,7 @@ public:
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(system_value);
 			return true;
 		}
-		return set_number('s', static_cast<uint8_t>(system_value), _json_payload, &_json_length);
+		return _set_number('s', static_cast<uint8_t>(system_value), _json_payload, &_json_length);
 	}
 
 
@@ -1443,7 +1443,7 @@ public:
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(error_value);
 			return true;
 		}
-		return set_number('e', static_cast<uint8_t>(error_value), _json_payload, &_json_length);
+		return _set_number('e', static_cast<uint8_t>(error_value), _json_payload, &_json_length);
 	}
 
 
@@ -1455,7 +1455,7 @@ public:
      */
 	bool set_nth_value_number(uint8_t nth, uint32_t number) {
 		if (nth < 10) {
-			return set_number('0' + nth, number, _json_payload, &_json_length);
+			return _set_number('0' + nth, number, _json_payload, &_json_length);
 		}
 		return false;
 	}
@@ -1469,7 +1469,7 @@ public:
      */
 	bool set_nth_value_string(uint8_t nth, const char* in_string) {
 		if (nth < 10) {
-			return set_string('0' + nth, in_string, _json_payload, &_json_length);
+			return _set_string('0' + nth, in_string, _json_payload, &_json_length);
 		}
 		return false;
 	}
