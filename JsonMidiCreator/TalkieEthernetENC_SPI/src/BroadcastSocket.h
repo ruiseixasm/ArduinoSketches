@@ -39,10 +39,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
 
-#ifndef TALKIE_BUFFER_SIZE
-#define TALKIE_BUFFER_SIZE 128
-#endif
-
 
 // #define BROADCASTSOCKET_DEBUG
 // #define BROADCASTSOCKET_DEBUG_NEW

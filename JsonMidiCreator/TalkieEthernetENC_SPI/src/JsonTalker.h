@@ -40,10 +40,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.h"
 
 
-#ifndef TALKIE_BUFFER_SIZE
-#define TALKIE_BUFFER_SIZE 128
-#endif
-
 // #define JSON_TALKER_DEBUG
 // #define JSON_TALKER_DEBUG_NEW
 
