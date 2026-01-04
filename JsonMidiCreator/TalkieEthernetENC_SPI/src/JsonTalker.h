@@ -118,6 +118,65 @@ protected:
 	}
 
 
+	bool prepareMessage(JsonMessage& json_message) {
+
+		if (json_message.has_from()) {
+			if (strcmp(json_message.get_from_name(), _name) != 0) {
+				// FROM is different from _name, must be swapped (replaces "f" with "t")
+				json_message.swap_from_with_to();
+				json_message.set_from_name(_name);
+			}
+		} else {
+			// FROM doesn't even exist (must have)
+			json_message.set_from_name(_name);
+		}
+
+		MessageValue message_value = json_message.get_message_value();
+		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("socketSend1: Setting a new identifier (i) for :"));
+			json_message.write_to(Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			uint16_t message_id = (uint16_t)millis();
+			if (message_value < MessageValue::TALKIE_MSG_ECHO) {
+				_original_message.identity = message_id;
+				_original_message.message_value = message_value;
+			}
+			json_message.set_identity(message_id);
+		} else if (!json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("socketSend1: Response message with a wrong or without an identifier, now being set (i): "));
+			json_message.write_to(Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+			json_message.set_identity();
+			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::TALKIE_ERR_IDENTITY));
+
+		} else {
+			
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("socketSend1: Keeping the same identifier (i): "));
+			json_message.write_to(Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+		}
+		return true;
+	}
+
+	
+	bool transmissionSockets(JsonMessage& json_message);
+	bool transmissionDrops(JsonMessage& json_message);
+	bool transmissionDelays(JsonMessage& json_message);
+	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
+
+
 public:
 
     // Explicitly disabled the default constructor
@@ -133,7 +192,6 @@ public:
     }
 
 
-	
     // ============================================
     // GETTERS - FIELD VALUES
     // ============================================
@@ -223,65 +281,8 @@ public:
     void set_mute(bool muted) { _muted_calls = muted; }
 
 
-	bool prepareMessage(JsonMessage& json_message) {
-
-		if (json_message.has_from()) {
-			if (strcmp(json_message.get_from_name(), _name) != 0) {
-				// FROM is different from _name, must be swapped (replaces "f" with "t")
-				json_message.swap_from_with_to();
-				json_message.set_from_name(_name);
-			}
-		} else {
-			// FROM doesn't even exist (must have)
-			json_message.set_from_name(_name);
-		}
-
-		MessageValue message_value = json_message.get_message_value();
-		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
-
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("socketSend1: Setting a new identifier (i) for :"));
-			json_message.write_to(Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-			uint16_t message_id = (uint16_t)millis();
-			if (message_value < MessageValue::TALKIE_MSG_ECHO) {
-				_original_message.identity = message_id;
-				_original_message.message_value = message_value;
-			}
-			json_message.set_identity(message_id);
-		} else if (!json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
-
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("socketSend1: Response message with a wrong or without an identifier, now being set (i): "));
-			json_message.write_to(Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-			json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
-			json_message.set_identity();
-			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::TALKIE_ERR_IDENTITY));
-
-		} else {
-			
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("socketSend1: Keeping the same identifier (i): "));
-			json_message.write_to(Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-		}
-		return true;
-	}
-
-	
 	bool transmitToRepeater(JsonMessage& json_message);
-	bool transmissionSockets(JsonMessage& json_message);
-	bool transmissionDrops(JsonMessage& json_message);
-	bool transmissionDelays(JsonMessage& json_message);
-	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
-
+	
     
     bool _handleTransmission(JsonMessage& json_message) {
 
