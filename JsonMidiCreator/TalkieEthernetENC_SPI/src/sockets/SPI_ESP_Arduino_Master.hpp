@@ -85,21 +85,21 @@ class SPI_ESP_Arduino_Master : public BroadcastSocket {
 public:
 
     enum StatusByte : uint8_t {
-        ACK     = 0xF0, // Acknowledge
-        NACK    = 0xF1, // Not acknowledged
-        READY   = 0xF2, // Slave is ready
-        BUSY    = 0xF3, // Tells the Master to wait a little
-        RECEIVE = 0xF4, // Asks the receiver to start receiving
-        SEND    = 0xF5, // Asks the receiver to start sending
-        NONE    = 0xF6, // Means nothing to send
-        START   = 0xF7, // Start of transmission
-        END     = 0xF8, // End of transmission
-		LAST	= 0xF9,	// Asks for the last char
-		DONE	= 0xFA,	// Marks the action as DONE
-        ERROR   = 0xFB, // Error frame
-        FULL    = 0xFC, // Signals the buffer as full
+        TALKIE_SB_ACK		= 0xF0, // Acknowledge
+        TALKIE_SB_NACK		= 0xF1, // Not acknowledged
+        TALKIE_SB_READY   	= 0xF2, // Slave is ready
+        TALKIE_SB_BUSY   	= 0xF3, // Tells the Master to wait a little
+        TALKIE_SB_RECEIVE	= 0xF4, // Asks the receiver to start receiving
+        TALKIE_SB_SEND    	= 0xF5, // Asks the receiver to start sending
+        TALKIE_SB_NONE    	= 0xF6, // Means nothing to send
+        TALKIE_SB_START   	= 0xF7, // Start of transmission
+        TALKIE_SB_END     	= 0xF8, // End of transmission
+		TALKIE_SB_LAST		= 0xF9,	// Asks for the last char
+		TALKIE_SB_DONE		= 0xFA,	// Marks the action as DONE
+        TALKIE_SB_ERROR   	= 0xFB, // Error frame
+        TALKIE_SB_FULL    	= 0xFC, // Signals the buffer as full
         
-        VOID    = 0xFF  // MISO floating (0xFF) → no slave responding
+        TALKIE_SB_VOID    	= 0xFF  // MISO floating (0xFF) → no slave responding
     };
 
 
@@ -156,14 +156,14 @@ protected:
 				delayMicroseconds(5);
 
 				// Asks the Slave to start receiving
-				c = _spi_instance->transfer(RECEIVE);
+				c = _spi_instance->transfer(TALKIE_SB_RECEIVE);
 
-				if (c != VOID) {
+				if (c != TALKIE_SB_VOID) {
 
 					delayMicroseconds(12);	// Makes sure it's processed by the slave (12us) (critical path)
 					c = _spi_instance->transfer(_sending_buffer[0]);
 
-					if (c == READY) {	// Makes sure the Slave it's ready first
+					if (c == TALKIE_SB_READY) {	// Makes sure the Slave it's ready first
 					
 						for (uint8_t i = 1; i < length; i++) {
 							delayMicroseconds(send_delay_us);
@@ -177,7 +177,7 @@ protected:
 									#endif
 									break;
 								}
-							} else if (c == FULL) {
+							} else if (c == TALKIE_SB_FULL) {
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.println(F("\t\tERROR: Slave buffer overflow"));
 								#endif
@@ -191,16 +191,16 @@ protected:
 						}
 						// Checks the last 2 chars still to be checked
 						delayMicroseconds(12);    // Makes sure the Status Byte is sent
-						c = _spi_instance->transfer(LAST);
+						c = _spi_instance->transfer(TALKIE_SB_LAST);
 						if (c == _sending_buffer[length - 2]) {
 							delayMicroseconds(12);    // Makes sure the Status Byte is sent
-							c = _spi_instance->transfer(END);
+							c = _spi_instance->transfer(TALKIE_SB_END);
 							if (c == _sending_buffer[length - 1]) {	// Last char
 								size = length + 1;	// Just for error catch
 								// Makes sure Slave does the respective sets
-								for (uint8_t end_r = 0; c != DONE && end_r < 3; end_r++) {	// Makes sure the receiving buffer of the Slave is deleted, for sure!
+								for (uint8_t end_r = 0; c != TALKIE_SB_DONE && end_r < 3; end_r++) {	// Makes sure the receiving buffer of the Slave is deleted, for sure!
 									delayMicroseconds(10);
-									c = _spi_instance->transfer(END);
+									c = _spi_instance->transfer(TALKIE_SB_END);
 								}
 								#ifdef BROADCAST_SPI_DEBUG_1
 								Serial.println(F("\t\tSend completed"));
@@ -217,18 +217,18 @@ protected:
 							Serial.println(length - 2);
 							#endif
 						}
-					} else if (c == BUSY) {
+					} else if (c == TALKIE_SB_BUSY) {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tBUSY: Slave is busy, waiting a little."));
 						#endif
 						if (s < 2) {
 							delay(2);	// Waiting 2ms
 						}
-					} else if (c == ERROR) {
+					} else if (c == TALKIE_SB_ERROR) {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Slave sent a transmission ERROR"));
 						#endif
-					} else if (c == RECEIVE) {
+					} else if (c == TALKIE_SB_RECEIVE) {
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tERROR: Received RECEIVE back, need to retry"));
 						#endif
@@ -249,7 +249,7 @@ protected:
 
 				if (size == 0) {
 					delayMicroseconds(12);    // Makes sure the Status Byte is sent
-					_spi_instance->transfer(ERROR);
+					_spi_instance->transfer(TALKIE_SB_ERROR);
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\t\tSent ERROR back to the Slave"));
 					#endif
@@ -303,14 +303,14 @@ protected:
             delayMicroseconds(5);
 
             // Asks the Slave to start receiving
-            c = _spi_instance->transfer(SEND);
+            c = _spi_instance->transfer(TALKIE_SB_SEND);
 			
-			if (c != VOID) {
+			if (c != TALKIE_SB_VOID) {
 
 				delayMicroseconds(12);	// Makes sure it's processed by the slave (12us) (critical path)
 				c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
 
-				if (c == READY) {	// Makes sure the Slave it's ready first
+				if (c == TALKIE_SB_READY) {	// Makes sure the Slave it's ready first
 					
 					delayMicroseconds(receive_delay_us);
 					c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
@@ -323,18 +323,18 @@ protected:
 						_received_buffer[i] = c;
 						size = i;
 					}
-					if (c == LAST) {
+					if (c == TALKIE_SB_LAST) {
 						delayMicroseconds(receive_delay_us);    // Makes sure the Status Byte is sent
 						c = _spi_instance->transfer(_received_buffer[size]);  // Replies the last char to trigger END in return
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tReceived LAST"));
 						#endif
-						if (c == END) {
+						if (c == TALKIE_SB_END) {
 							delayMicroseconds(10);	// Makes sure the Status Byte is sent
-							c = _spi_instance->transfer(END);	// Replies the END to confirm reception and thus Slave buffer deletion
-							for (uint8_t end_s = 0; c != DONE && end_s < 3; end_s++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
+							c = _spi_instance->transfer(TALKIE_SB_END);	// Replies the END to confirm reception and thus Slave buffer deletion
+							for (uint8_t end_s = 0; c != TALKIE_SB_DONE && end_s < 3; end_s++) {	// Makes sure the sending buffer of the Slave is deleted, for sure!
 								delayMicroseconds(10);
-								c = _spi_instance->transfer(END);
+								c = _spi_instance->transfer(TALKIE_SB_END);
 							}
 							#ifdef BROADCAST_SPI_DEBUG_1
 							Serial.println(F("\t\tReceive completed"));
@@ -348,7 +348,7 @@ protected:
 						}
 					} else if (size == BROADCAST_SOCKET_BUFFER_SIZE) {
 						delayMicroseconds(12);    // Makes sure the Status Byte is sent
-						_spi_instance->transfer(FULL);
+						_spi_instance->transfer(TALKIE_SB_FULL);
 						size = 1;	// Try no more
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tFULL: Master buffer overflow"));
@@ -359,20 +359,20 @@ protected:
 						Serial.println(F("\t\tERROR: Receiving sequence wasn't followed"));
 						#endif
 					}
-				} else if (c == NONE) {
+				} else if (c == TALKIE_SB_NONE) {
 					size = 1; // Nothing received
 					#ifdef BROADCAST_SPI_DEBUG_2
 					Serial.println(F("\t\tThere is nothing to be received"));
 					#endif
-				} else if (c == ERROR) {
+				} else if (c == TALKIE_SB_ERROR) {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tERROR: Transmission ERROR received from Slave"));
 					#endif
-				} else if (c == SEND) {
+				} else if (c == TALKIE_SB_SEND) {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tERROR: Received SEND back, need to retry"));
 					#endif
-				} else if (c == FULL) {
+				} else if (c == TALKIE_SB_FULL) {
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\tERROR: Slave buffer overflow"));
 					#endif
@@ -386,7 +386,7 @@ protected:
 
 				if (size == 0) {
 					delayMicroseconds(12);    // Makes sure the Status Byte is sent
-					_spi_instance->transfer(ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
+					_spi_instance->transfer(TALKIE_SB_ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
 					#ifdef BROADCAST_SPI_DEBUG_1
 					Serial.println(F("\t\t\tSent ERROR back to the Slave"));
 					#endif
@@ -442,14 +442,14 @@ protected:
             delayMicroseconds(5);
 
             // Asks the Slave to acknowledge readiness
-            c = _spi_instance->transfer(ACK);
+            c = _spi_instance->transfer(TALKIE_SB_ACK);
 
-			if (c != VOID) {
+			if (c != TALKIE_SB_VOID) {
 
 				delayMicroseconds(12);
-				c = _spi_instance->transfer(ACK);  // When the response is collected
+				c = _spi_instance->transfer(TALKIE_SB_ACK);  // When the response is collected
 				
-				if (c == ACK) {
+				if (c == TALKIE_SB_ACK) {
                 	#ifdef BROADCAST_SPI_DEBUG_1
                 	Serial.println(F("\t\tAcknowledged"));
 					#endif
