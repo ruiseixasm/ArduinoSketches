@@ -25,7 +25,7 @@ https://github.com/ruiseixasm/JsonTalkie
  *          All operations are performed on fixed-size buffers.
  * 
  * @section constraints Memory Constraints
- * - Maximum buffer size: BROADCAST_SOCKET_BUFFER_SIZE (default: 128 bytes)
+ * - Maximum buffer size: TALKIE_BUFFER_SIZE (default: 128 bytes)
  * - Maximum name length: TALKIE_NAME_LEN (default: 16 bytes including null terminator)
  * - Maximum string length: MAX_LEN (default: 64 bytes including null terminator)
  * 
@@ -48,8 +48,8 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // #define MESSAGE_DEBUG_TIMING
 
-#ifndef BROADCAST_SOCKET_BUFFER_SIZE
-#define BROADCAST_SOCKET_BUFFER_SIZE 128	    ///< Default buffer size for JSON message
+#ifndef TALKIE_BUFFER_SIZE
+#define TALKIE_BUFFER_SIZE 128	    ///< Default buffer size for JSON message
 #endif
 #define TALKIE_NAME_LEN 16								///< Default maximum length for name fields
 #ifndef MAX_LEN
@@ -306,7 +306,7 @@ public:
 		// Only static guarantees it won't live on the stack!
 		static const char default_payload[] = "{\"m\":0,\"b\":0,\"i\":0,\"f\":\"\"}";
 		size_t default_length = sizeof(default_payload) - 1;
-		if (default_length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+		if (default_length <= TALKIE_BUFFER_SIZE) {
 			for (size_t char_j = 0; char_j < default_length; char_j++) {
 				json_payload[char_j] = default_payload[char_j];
 			}
@@ -365,7 +365,7 @@ public:
 		// At this time there is no field key for sure, so, one can just add it right before the '}'
 		size_t number_size = number_of_digits(number);
 		size_t new_length = *json_length + number_size + 4 + 1;	// the usual key 4 plus the + 1 due to the ',' needed to be added
-		if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+		if (new_length > TALKIE_BUFFER_SIZE) {
 			return false;
 		}
 		// Sets the key json data
@@ -412,7 +412,7 @@ public:
 	static bool set_string(char key, const char* in_string, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		if (in_string) {
 			size_t length = 0;
-			for (size_t char_j = 0; in_string[char_j] != '\0' && char_j < BROADCAST_SOCKET_BUFFER_SIZE; char_j++) {
+			for (size_t char_j = 0; in_string[char_j] != '\0' && char_j < TALKIE_BUFFER_SIZE; char_j++) {
 				length++;
 			}
 			if (length) {
@@ -422,7 +422,7 @@ public:
 				}
 				// the usual key + 4 plus + 2 for both '"' and the + 1 due to the heading ',' needed to be added
 				size_t new_length = *json_length + length + 4 + 2 + 1;
-				if (new_length > BROADCAST_SOCKET_BUFFER_SIZE) {
+				if (new_length > TALKIE_BUFFER_SIZE) {
 					return false;
 				}
 				// Sets the key json data
@@ -464,7 +464,7 @@ public:
 
 protected:
 
-	char _json_payload[BROADCAST_SOCKET_BUFFER_SIZE];	///< Internal JSON buffer
+	char _json_payload[TALKIE_BUFFER_SIZE];	///< Internal JSON buffer
 	size_t _json_length = 0;							///< Current length of JSON string
     mutable char _temp_string[MAX_LEN];					///< Temporary buffer for string operations
 
@@ -679,7 +679,7 @@ public:
      * @warning Does not validate JSON structure
      */
 	bool deserialize_buffer(const char* buffer, size_t length) {
-		if (buffer && length && length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+		if (buffer && length && length <= TALKIE_BUFFER_SIZE) {
 			for (size_t char_j = 0; char_j < length; ++char_j) {
 				_json_payload[char_j] = buffer[char_j];
 			}

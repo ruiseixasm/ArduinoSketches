@@ -51,7 +51,7 @@ private:
         Serial.println(length);
         #endif
 
-        if (length && length < BROADCAST_SOCKET_BUFFER_SIZE) {
+        if (length && length < TALKIE_BUFFER_SIZE) {
             memcpy(_ptr_received_buffer, data, length);
             memcpy(_source_ip, src_ip, 4);
             _data_length = length;	// Where is marked as received (> 0)

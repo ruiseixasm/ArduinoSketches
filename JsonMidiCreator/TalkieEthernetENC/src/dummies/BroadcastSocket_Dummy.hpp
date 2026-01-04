@@ -49,7 +49,7 @@ private:
 
     uint16_t setChecksum(JsonObject message) {
         message["c"] = 0;   // makes _buffer a net_data buffer
-        size_t len = serializeJson(message, _buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        size_t len = serializeJson(message, _buffer, TALKIE_BUFFER_SIZE);
         uint16_t checksum = getChecksum(_buffer, len);
         message["c"] = checksum;
         return checksum;

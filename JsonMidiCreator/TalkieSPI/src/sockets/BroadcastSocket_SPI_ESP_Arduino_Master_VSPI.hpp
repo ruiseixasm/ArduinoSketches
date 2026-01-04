@@ -103,7 +103,7 @@ protected:
 
 					if (c == ACK) {
 					
-						for (uint8_t i = 1; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) {
+						for (uint8_t i = 1; i < TALKIE_BUFFER_SIZE; i++) {
 							delayMicroseconds(send_delay_us);
 							c = SPI.transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
 							if (c != _sending_buffer[i - 1]) {    // Includes NACK situation
@@ -205,7 +205,7 @@ protected:
 				if (c == ACK) { // Makes sure there is an Acknowledge first
 					
 					// Starts to receive all chars here
-					for (uint8_t i = 0; i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
+					for (uint8_t i = 0; i < TALKIE_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						if (i > 0) {    // The first response is discarded because it's unrelated (offset by 1 communication)
 							c = SPI.transfer(_receiving_buffer[length]);    // length == i - 1

@@ -104,7 +104,7 @@ public:
         if (packetSize > 0) {
 
             // Avoids overflow
-            if (packetSize > BROADCAST_SOCKET_BUFFER_SIZE) return 0;
+            if (packetSize > TALKIE_BUFFER_SIZE) return 0;
 
             int length = _udp->read(_receiving_buffer, static_cast<size_t>(packetSize));
             if (length <= 0) return 0;  // Your requested check - handles all error cases

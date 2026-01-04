@@ -18,8 +18,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "TalkieCodes.hpp"
 #include "JsonMessage.hpp"
 
-#ifndef BROADCAST_SOCKET_BUFFER_SIZE
-#define BROADCAST_SOCKET_BUFFER_SIZE 128
+#ifndef TALKIE_BUFFER_SIZE
+#define TALKIE_BUFFER_SIZE 128
 #endif
 
 
@@ -46,7 +46,7 @@ public:
 
     static uint16_t generateChecksum(const char* buffer, size_t length) {	// 16-bit word and XORing
         uint16_t checksum = 0;
-		if (length <= BROADCAST_SOCKET_BUFFER_SIZE) {
+		if (length <= TALKIE_BUFFER_SIZE) {
 			for (size_t i = 0; i < length; i += 2) {
 				uint16_t chunk = buffer[i] << 8;
 				if (i + 1 < length) {
@@ -64,8 +64,8 @@ protected:
 	MessageRepeater* _message_repeater = nullptr;
 	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
-    char _received_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-    char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    char _received_buffer[TALKIE_BUFFER_SIZE];
+    char _sending_buffer[TALKIE_BUFFER_SIZE];
 	size_t _received_length = 0;
 	size_t _sending_length = 0;
 
@@ -402,7 +402,7 @@ public:
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
-			_sending_length = json_message.serialize_json(_sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+			_sending_length = json_message.serialize_json(_sending_buffer, TALKIE_BUFFER_SIZE);
 			uint16_t checksum = generateChecksum(_sending_buffer, _sending_length);
 			JsonMessage::set_number('c', checksum, _sending_buffer, &_sending_length);
 

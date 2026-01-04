@@ -205,7 +205,7 @@ public:
 
             switch (_transmission_mode) {
                 case TALKIE_SB_RECEIVE:
-                    if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
+                    if (_receiving_index < TALKIE_BUFFER_SIZE) {
                         _ptr_received_buffer[_receiving_index] = c;
 						if (_receiving_index > 0) {
 							SPDR = _ptr_received_buffer[_receiving_index - 1];	// Char sent with an offset to guarantee matching
@@ -273,7 +273,7 @@ public:
                 case TALKIE_SB_SEND:
                     if (_ptr_sending_buffer) {
                         if (_sending_length_spi) {
-							if (_sending_length_spi > BROADCAST_SOCKET_BUFFER_SIZE) {
+							if (_sending_length_spi > TALKIE_BUFFER_SIZE) {
 								_sending_length_spi = 0;
 								SPDR = TALKIE_SB_FULL;
 							} else {

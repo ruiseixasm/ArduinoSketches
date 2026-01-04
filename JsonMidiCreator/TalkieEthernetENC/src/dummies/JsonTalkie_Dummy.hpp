@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // Readjust if absolutely necessary
-#define BROADCAST_SOCKET_BUFFER_SIZE 128
+#define TALKIE_BUFFER_SIZE 128
 
 #define JSONTALKIE_DEBUG
 
@@ -111,7 +111,7 @@ private:
     BroadcastSocket* _socket = nullptr;
     Manifesto* _manifesto = nullptr;
 
-    char _buffer[BROADCAST_SOCKET_BUFFER_SIZE] = {1};   // {1} instead of {'\0'} to catch badly terminated buffer
+    char _buffer[TALKIE_BUFFER_SIZE] = {1};   // {1} instead of {'\0'} to catch badly terminated buffer
     unsigned long _lastTime = 0;
 
 public:
@@ -167,9 +167,9 @@ public:
 
     void listen(bool receive = true) {
         if (_socket == nullptr) return;
-        size_t len = _socket->receive(_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        size_t len = _socket->receive(_buffer, TALKIE_BUFFER_SIZE);
         if (len > 0) {
-            if (len >= BROADCAST_SOCKET_BUFFER_SIZE || _buffer[len] != '\0')
+            if (len >= TALKIE_BUFFER_SIZE || _buffer[len] != '\0')
                 Serial.println("Socket returned wrong len value");
             Serial.print("DUMMY LISTENED: ");
             Serial.write(_buffer, len);

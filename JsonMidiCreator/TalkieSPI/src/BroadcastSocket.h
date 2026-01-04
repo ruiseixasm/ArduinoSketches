@@ -21,7 +21,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCASTSOCKET_DEBUG
 
 // Readjust if absolutely necessary
-#define BROADCAST_SOCKET_BUFFER_SIZE 128
+#define TALKIE_BUFFER_SIZE 128
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
 class BroadcastSocket {
@@ -134,7 +134,7 @@ private:
             size_t data_i = length - 1;    // Old length (shorter)
             length += num_digits - 1;      // Discount the digit '0' already placed
             
-            if (length > BROADCAST_SOCKET_BUFFER_SIZE)
+            if (length > TALKIE_BUFFER_SIZE)
                 return length;  // buffer overflow
 
             bool at_c = false;
@@ -162,8 +162,8 @@ private:
     
 protected:
 
-    static char _receiving_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
-    static char _sending_buffer[BROADCAST_SOCKET_BUFFER_SIZE];
+    static char _receiving_buffer[TALKIE_BUFFER_SIZE];
+    static char _sending_buffer[TALKIE_BUFFER_SIZE];
     static uint8_t _max_delay_ms;
 
 
@@ -259,7 +259,7 @@ protected:
                     #if ARDUINOJSON_VERSION_MAJOR >= 7
                     JsonDocument message_doc;
                     #else
-                    StaticJsonDocument<BROADCAST_SOCKET_BUFFER_SIZE> message_doc;
+                    StaticJsonDocument<TALKIE_BUFFER_SIZE> message_doc;
                     #endif
 
                     DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
@@ -320,7 +320,7 @@ protected:
 
         length = insertChecksum(length);
         
-        if (length > BROADCAST_SOCKET_BUFFER_SIZE) {
+        if (length > TALKIE_BUFFER_SIZE) {
 
             #ifdef BROADCASTSOCKET_DEBUG
             Serial.println(F("Error: Message too big"));
@@ -379,7 +379,7 @@ public:
 
         json_message["c"] = 0;  // Makes sure `c` is set
 
-        size_t length = serializeJson(json_message, _sending_buffer, BROADCAST_SOCKET_BUFFER_SIZE);
+        size_t length = serializeJson(json_message, _sending_buffer, TALKIE_BUFFER_SIZE);
 
         #ifdef BROADCASTSOCKET_DEBUG
         Serial.print(F("R: "));

@@ -78,7 +78,7 @@ protected:
 			char c = Serial.read();
 
 			if (_reading_serial) {
-				if (_received_length < BROADCAST_SOCKET_BUFFER_SIZE) {
+				if (_received_length < TALKIE_BUFFER_SIZE) {
 					if (c == '}' && _received_length && _received_buffer[_received_length - 1] != '\\') {
 						_reading_serial = false;
 

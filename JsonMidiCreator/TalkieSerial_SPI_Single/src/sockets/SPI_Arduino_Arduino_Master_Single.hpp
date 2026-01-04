@@ -95,10 +95,10 @@ protected:
 		Serial.println(ss_pin);
 		#endif
 
-		if (length > BROADCAST_SOCKET_BUFFER_SIZE) {
+		if (length > TALKIE_BUFFER_SIZE) {
 			
 			#ifdef BROADCAST_SPI_DEBUG_1
-			Serial.println(F("\tlength > BROADCAST_SOCKET_BUFFER_SIZE"));
+			Serial.println(F("\tlength > TALKIE_BUFFER_SIZE"));
 			#endif
 
 			return false;
@@ -275,7 +275,7 @@ protected:
 					_received_buffer[0] = c;
 
 					// Starts to receive all chars here
-					for (uint8_t i = 1; c < 128 && i < BROADCAST_SOCKET_BUFFER_SIZE; i++) { // First i isn't a char byte
+					for (uint8_t i = 1; c < 128 && i < TALKIE_BUFFER_SIZE; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						c = _spi_instance->transfer(_received_buffer[i - 1]);
 						_received_buffer[i] = c;
@@ -304,7 +304,7 @@ protected:
 							Serial.println(F("\t\tERROR: END NOT received"));
 							#endif
 						}
-					} else if (size == BROADCAST_SOCKET_BUFFER_SIZE) {
+					} else if (size == TALKIE_BUFFER_SIZE) {
 						delayMicroseconds(12);    // Makes sure the Status Byte is sent
 						_spi_instance->transfer(TALKIE_SB_FULL);
 						size = 1;	// Try no more

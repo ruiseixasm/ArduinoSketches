@@ -112,7 +112,7 @@ public:
 
             switch (_transmission_mode) {
                 case RECEIVE:
-                    if (_receiving_index < BROADCAST_SOCKET_BUFFER_SIZE) {
+                    if (_receiving_index < TALKIE_BUFFER_SIZE) {
                         // Returns same received char as receiving confirmation (no need to set SPDR)
                         _receiving_buffer[_receiving_index++] = c;
                     } else {
@@ -121,7 +121,7 @@ public:
                     }
                     break;
                 case SEND:
-					if (_sending_index < BROADCAST_SOCKET_BUFFER_SIZE) {
+					if (_sending_index < TALKIE_BUFFER_SIZE) {
 						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
 						if (_validation_index > _sending_index) {	// Less missed sends this way
 							SPDR = END;	// All chars have been checked
