@@ -25,9 +25,6 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 
-#define ENABLE_DIRECT_ADDRESSING
-
-
 #define send_delay_us 10
 #define receive_delay_us 10
 
@@ -467,8 +464,6 @@ protected:
 			Serial.println(_sending_length);
 			#endif
 			
-			#ifdef ENABLE_DIRECT_ADDRESSING
-
 			sendSPI(_sending_length, _ss_pin);
 
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
