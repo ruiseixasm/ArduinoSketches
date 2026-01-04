@@ -114,7 +114,7 @@ protected:
 	}
 
 	
-	bool transmitToRepeater(JsonMessage& json_message);
+	bool _transmitToRepeater(JsonMessage& json_message);
 
     
     bool startTransmission() {
@@ -251,7 +251,7 @@ protected:
 					return false;
 				}
 
-				transmitToRepeater(json_message);
+				_transmitToRepeater(json_message);
 				
 				#ifdef MESSAGE_DEBUG_TIMING
 				Serial.print(" | ");
@@ -330,7 +330,7 @@ public:
 	// The subclass must have the class name defined (pure virtual)
     virtual const char* class_name() const = 0;
 
-    virtual void loop() {
+    virtual void _loop() {
         receive();
     }
 

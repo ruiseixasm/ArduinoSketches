@@ -25,10 +25,10 @@ void BroadcastSocket::setLink(MessageRepeater* message_repeater, LinkType link_t
 }
 
 
-bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
+bool BroadcastSocket::_transmitToRepeater(JsonMessage& json_message) {
 
 	#ifdef MESSAGE_REPEATER_DEBUG
-	Serial.print(F("\t\ttransmitToRepeater(Socket): "));
+	Serial.print(F("\t\t_transmitToRepeater(Socket): "));
 	json_message.write_to(Serial);
 	Serial.println();  // optional: just to add a newline after the JSON
 	#endif

@@ -134,7 +134,7 @@ void Spy::echo(JsonTalker& talker, JsonMessage& json_message) {
 	// It's already an ECHO message, it's because of that that entered here
 	// Finally answers to the REMOTE caller by repeating all other json fields
 	json_message.set_broadcast_value(BroadcastValue::TALKIE_BC_REMOTE);
-	talker.transmitToRepeater(json_message);
+	talker._transmitToRepeater(json_message);
 }
 
 

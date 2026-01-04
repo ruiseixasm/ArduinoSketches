@@ -96,16 +96,16 @@ public:
 
     void loop() {
 		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-			_uplinked_sockets[socket_j]->loop();
+			_uplinked_sockets[socket_j]->_loop();
 		}
 		for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
-			_downlinked_talkers[talker_i]->loop();
+			_downlinked_talkers[talker_i]->_loop();
 		}
 		for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-			_downlinked_sockets[socket_j]->loop();
+			_downlinked_sockets[socket_j]->_loop();
 		}
 		for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
-			_uplinked_talkers[talker_i]->loop();
+			_uplinked_talkers[talker_i]->_loop();
 		}
     }
 

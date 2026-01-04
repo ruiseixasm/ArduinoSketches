@@ -79,7 +79,7 @@ public:
     JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr, uint8_t channel = 255)
         : _name(name), _desc(desc), _manifesto(manifesto), _channel(channel) {}
 
-    void loop() {
+    void _loop() {
         if (_manifesto) {
             _manifesto->loop(this);
         }
@@ -229,7 +229,7 @@ public:
 	}
 
 	
-	bool transmitToRepeater(JsonMessage& json_message);
+	bool _transmitToRepeater(JsonMessage& json_message);
 	bool transmissionSockets(JsonMessage& json_message);
 	bool transmissionDrops(JsonMessage& json_message);
 	bool transmissionDelays(JsonMessage& json_message);
@@ -286,7 +286,7 @@ public:
 						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 					}
 					// In the end sends back the processed message (single message, one-to-one)
-					if (!_muted_calls) transmitToRepeater(json_message);
+					if (!_muted_calls) _transmitToRepeater(json_message);
 				}
 				break;
 			
@@ -294,7 +294,7 @@ public:
 				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				json_message.set_nth_value_string(0, _desc);
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitToRepeater(json_message);
+				_transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::TALKIE_MSG_CHANNEL:
@@ -310,13 +310,13 @@ public:
 				}
 				json_message.set_nth_value_number(0, _channel);
 				// In the end sends back the processed message (single message, one-to-one)
-				transmitToRepeater(json_message);
+				_transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::TALKIE_MSG_PING:
 				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				// Talker name already set in FROM (ready to transmit)
-				transmitToRepeater(json_message);
+				_transmitToRepeater(json_message);
 				break;
 			
 			case MessageValue::TALKIE_MSG_LIST:
@@ -336,15 +336,15 @@ public:
 							json_message.set_nth_value_number(0, action_index++);
 							json_message.set_nth_value_string(1, action->name);
 							json_message.set_nth_value_string(2, action->desc);
-							transmitToRepeater(json_message);	// Many-to-One
+							_transmitToRepeater(json_message);	// Many-to-One
 						}
 						if (!action_index) {
 							json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
-							transmitToRepeater(json_message);	// One-to-One
+							_transmitToRepeater(json_message);	// One-to-One
 						}
 					} else {
 						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
-						transmitToRepeater(json_message);		// One-to-One
+						_transmitToRepeater(json_message);		// One-to-One
 					}
 				}
 				break;
@@ -422,7 +422,7 @@ public:
 					}
 
 					// In the end sends back the processed message (single message, one-to-one)
-					transmitToRepeater(json_message);
+					_transmitToRepeater(json_message);
 				}
 				break;
 			
