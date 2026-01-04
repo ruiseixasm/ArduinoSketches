@@ -71,6 +71,53 @@ protected:
 	Original _original_message = {0, MessageValue::TALKIE_MSG_NOISE};
     bool _muted_calls = false;
 
+
+	static const char* _board_description() {
+		
+		#ifdef __AVR__
+			#if (RAMEND - RAMSTART + 1) == 2048
+				return "Arduino Uno/Nano (ATmega328P)";
+			#elif (RAMEND - RAMSTART + 1) == 8192
+				return "Arduino Mega (ATmega2560)";
+			#else
+				return "Unknown AVR Board";
+			#endif
+			
+		#elif defined(ESP8266)
+			static char buffer[50];
+			snprintf(buffer, sizeof(buffer), "ESP8266 (Chip ID: %u)", ESP.getChipId());
+			return buffer;
+			
+		#elif defined(ESP32)
+			static char buffer[50];
+			snprintf(buffer, sizeof(buffer), "ESP32 (Rev: %d)", ESP.getChipRevision());
+			return buffer;
+			
+		#elif defined(TEENSYDUINO)
+			#if defined(__IMXRT1062__)
+				return "Teensy 4.0/4.1 (i.MX RT1062)";
+			#elif defined(__MK66FX1M0__)
+				return "Teensy 3.6 (MK66FX1M0)";
+			#elif defined(__MK64FX512__)
+				return "Teensy 3.5 (MK64FX512)";
+			#elif defined(__MK20DX256__)
+				return "Teensy 3.2/3.1 (MK20DX256)";
+			#elif defined(__MKL26Z64__)
+				return "Teensy LC (MKL26Z64)";
+			#else
+				return "Unknown Teensy Board";
+			#endif
+
+		#elif defined(__arm__)
+			return "ARM-based Board";
+
+		#else
+			return "Unknown Board";
+
+		#endif
+	}
+
+
 public:
 
     // Explicitly disabled the default constructor
@@ -358,7 +405,7 @@ public:
 					switch (system_value) {
 
 						case SystemValue::TALKIE_SYS_BOARD:
-							json_message.set_nth_value_string(0, board_description());
+							json_message.set_nth_value_string(0, _board_description());
 							break;
 
 						case SystemValue::TALKIE_SYS_MUTE:
@@ -463,52 +510,6 @@ public:
         }
         return true;
     }
-
-
-	static const char* board_description() {
-		
-		#ifdef __AVR__
-			#if (RAMEND - RAMSTART + 1) == 2048
-				return "Arduino Uno/Nano (ATmega328P)";
-			#elif (RAMEND - RAMSTART + 1) == 8192
-				return "Arduino Mega (ATmega2560)";
-			#else
-				return "Unknown AVR Board";
-			#endif
-			
-		#elif defined(ESP8266)
-			static char buffer[50];
-			snprintf(buffer, sizeof(buffer), "ESP8266 (Chip ID: %u)", ESP.getChipId());
-			return buffer;
-			
-		#elif defined(ESP32)
-			static char buffer[50];
-			snprintf(buffer, sizeof(buffer), "ESP32 (Rev: %d)", ESP.getChipRevision());
-			return buffer;
-			
-		#elif defined(TEENSYDUINO)
-			#if defined(__IMXRT1062__)
-				return "Teensy 4.0/4.1 (i.MX RT1062)";
-			#elif defined(__MK66FX1M0__)
-				return "Teensy 3.6 (MK66FX1M0)";
-			#elif defined(__MK64FX512__)
-				return "Teensy 3.5 (MK64FX512)";
-			#elif defined(__MK20DX256__)
-				return "Teensy 3.2/3.1 (MK20DX256)";
-			#elif defined(__MKL26Z64__)
-				return "Teensy LC (MKL26Z64)";
-			#else
-				return "Unknown Teensy Board";
-			#endif
-
-		#elif defined(__arm__)
-			return "ARM-based Board";
-
-		#else
-			return "Unknown Board";
-
-		#endif
-	}
 
 
 };
