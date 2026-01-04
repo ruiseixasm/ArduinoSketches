@@ -66,7 +66,7 @@ protected:
     int* _ss_pins;
     uint8_t _ss_pins_count = 0;
     uint8_t _actual_ss_pin = VSPI_SS;
-	char _new_from_name[NAME_LEN] = {'\0'};
+	char _new_from_name[TALKIE_NAME_LEN] = {'\0'};
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor

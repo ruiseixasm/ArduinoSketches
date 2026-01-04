@@ -42,7 +42,7 @@ protected:
     uint16_t _port = 5005;
     IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     EthernetUDP* _udp = nullptr;
-	char _from_name[NAME_LEN] = {'\0'};
+	char _from_name[TALKIE_NAME_LEN] = {'\0'};
 
     // ===== [SELF IP] cache our own IP =====
     IPAddress _local_ip;

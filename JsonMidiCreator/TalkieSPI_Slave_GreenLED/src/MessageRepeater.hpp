@@ -187,7 +187,7 @@ public:
 				#endif
 				
 				{
-					char message_to_name[NAME_LEN];
+					char message_to_name[TALKIE_NAME_LEN];
 					strcpy(message_to_name, message.get_to_name());
 					for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 						const char* talker_name = _downlinked_talkers[talker_i]->get_name();
@@ -276,7 +276,7 @@ public:
 						
 						case TalkerMatch::TALKIE_MATCH_BY_NAME:
 						{
-							char message_to_name[NAME_LEN];
+							char message_to_name[TALKIE_NAME_LEN];
 							strcpy(message_to_name, message.get_to_name());
 							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
 								const char* talker_name = _uplinked_talkers[talker_i]->get_name();
@@ -346,7 +346,7 @@ public:
 						
 						case TalkerMatch::TALKIE_MATCH_BY_NAME:
 						{
-							char message_to_name[NAME_LEN];
+							char message_to_name[TALKIE_NAME_LEN];
 							strcpy(message_to_name, message.get_to_name());
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								if (_downlinked_talkers[talker_i] != &talker) {
@@ -411,7 +411,7 @@ public:
 					
 					case TalkerMatch::TALKIE_MATCH_BY_NAME:
 					{
-						char message_to_name[NAME_LEN];
+						char message_to_name[TALKIE_NAME_LEN];
 						strcpy(message_to_name, message.get_to_name());
 						
 						const char* talker_name = talker.get_name();
@@ -488,7 +488,7 @@ public:
 					#endif
 				
 					{
-						char message_to_name[NAME_LEN];
+						char message_to_name[TALKIE_NAME_LEN];
 						strcpy(message_to_name, message.get_to_name());
 						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
 							const char* talker_name = _uplinked_talkers[talker_i]->get_name();
@@ -557,7 +557,7 @@ public:
 					
 					case TalkerMatch::TALKIE_MATCH_BY_NAME:
 					{
-						char message_to_name[NAME_LEN];
+						char message_to_name[TALKIE_NAME_LEN];
 						strcpy(message_to_name, message.get_to_name());
 						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 							const char* talker_name = _downlinked_talkers[talker_i]->get_name();
@@ -646,7 +646,7 @@ public:
 						
 						case TalkerMatch::TALKIE_MATCH_BY_NAME:
 						{
-							char message_to_name[NAME_LEN];
+							char message_to_name[TALKIE_NAME_LEN];
 							strcpy(message_to_name, message.get_to_name());
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								const char* talker_name = _downlinked_talkers[talker_i]->get_name();

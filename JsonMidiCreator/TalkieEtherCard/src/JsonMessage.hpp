@@ -25,7 +25,7 @@ https://github.com/ruiseixasm/JsonTalkie
  * 
  * @section constraints Memory Constraints
  * - Maximum buffer size: BROADCAST_SOCKET_BUFFER_SIZE (default: 128 bytes)
- * - Maximum name length: NAME_LEN (default: 16 bytes including null terminator)
+ * - Maximum name length: TALKIE_NAME_LEN (default: 16 bytes including null terminator)
  * - Maximum string length: MAX_LEN (default: 64 bytes including null terminator)
  * 
  * @author Rui Seixas Monteiro
@@ -50,9 +50,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128	    ///< Default buffer size for JSON message
 #endif
-#ifndef NAME_LEN
-#define NAME_LEN 16								///< Default maximum length for name fields
-#endif
+#define TALKIE_NAME_LEN 16								///< Default maximum length for name fields
 #ifndef MAX_LEN
 #define MAX_LEN 64								///< Default maximum length for string fields
 #endif
@@ -744,7 +742,7 @@ public:
 
 				case ValueType::TALKIE_VT_STRING:
 					{
-						char message_to[NAME_LEN] = {'\0'};
+						char message_to[TALKIE_NAME_LEN] = {'\0'};
 						get_value_string('t', message_to, colon_position, _json_payload, _json_length);
 						return strcmp(message_to, name) == 0;
 					}
@@ -914,7 +912,7 @@ public:
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		if (colon_position) {
 			ValueType value_type = get_value_type('t', _json_payload, _json_length, colon_position);
-			if (value_type == ValueType::TALKIE_VT_STRING && get_value_string('t', _temp_string, NAME_LEN, _json_payload, _json_length, colon_position)) {
+			if (value_type == ValueType::TALKIE_VT_STRING && get_value_string('t', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length, colon_position)) {
 				return strcmp(_temp_string, name) == 0;
 			}
 		}
@@ -1066,7 +1064,7 @@ public:
      * @warning Returned pointer is to internal buffer. Copy if needed.
      */
     char* get_from_name() const {
-        if (get_value_string('f', _temp_string, NAME_LEN, _json_payload, _json_length)) {
+        if (get_value_string('f', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length)) {
             return _temp_string;  // safe C string
         }
         return nullptr;  // failed
@@ -1089,7 +1087,7 @@ public:
     char* get_to_name() const {
 		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
 		if (colon_position && get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING) {
-			if (get_value_string('t', _temp_string, NAME_LEN, _json_payload, _json_length, colon_position)) {
+			if (get_value_string('t', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length, colon_position)) {
 				return _temp_string;
 			}
 		}
@@ -1203,7 +1201,7 @@ public:
      * @return Pointer to action string, or nullptr if not string
      */
 	char* get_action_string() const {
-		if (get_value_string('a', _temp_string, NAME_LEN, _json_payload, _json_length)) {
+		if (get_value_string('a', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length)) {
 			return _temp_string;  // safe C string
 		}
 		return nullptr;  // failed

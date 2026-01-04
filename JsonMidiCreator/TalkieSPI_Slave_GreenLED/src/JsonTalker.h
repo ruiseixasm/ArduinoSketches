@@ -24,9 +24,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef BROADCAST_SOCKET_BUFFER_SIZE
 #define BROADCAST_SOCKET_BUFFER_SIZE 128
 #endif
-#ifndef NAME_LEN
-#define NAME_LEN 16
-#endif
 
 // #define JSON_TALKER_DEBUG
 // #define JSON_TALKER_DEBUG_NEW

@@ -32,28 +32,28 @@ https://github.com/ruiseixasm/JsonTalkie
 #define receive_delay_us 10
 
 
-#define MAX_NAMES 8
-#define NAME_LEN  16   // includes '\0'
+#define TALKIE_MAX_NAMES 8
+#define TALKIE_NAME_LEN  16   // includes '\0'
 
 
 struct NameEntry {
-    char name[NAME_LEN];
+    char name[TALKIE_NAME_LEN];
     uint8_t value;
 };
 
 class NameTable {
 private:
-    NameEntry _entries[MAX_NAMES];
+    NameEntry _entries[TALKIE_MAX_NAMES];
     uint8_t _count = 0;
 
 public:
     bool add(const char* name, uint8_t value) {
-        if (_count >= MAX_NAMES)
+        if (_count >= TALKIE_MAX_NAMES)
             return false;
 
         // Reject too-long names
         size_t len = strlen(name);
-        if (len >= NAME_LEN)
+        if (len >= TALKIE_NAME_LEN)
             return false;
 
         // Prevent duplicates

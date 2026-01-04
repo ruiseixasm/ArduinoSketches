@@ -29,9 +29,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define receive_delay_us 10
 
 
-#define MAX_NAMES 8
-#define NAME_LEN  16   // includes '\0'
-
+#define TALKIE_MAX_NAMES 8
 
 
 class SPI_Arduino_Arduino_Master_Single : public BroadcastSocket {
