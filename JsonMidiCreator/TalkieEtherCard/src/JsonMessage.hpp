@@ -320,7 +320,7 @@ public:
      * 
      * @note Also removes leading or trailing commas as needed
      */
-	static bool remove(char key, char* json_payload, size_t *json_length, size_t colon_position = 4) {
+	static bool _remove(char key, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, json_payload, *json_length, colon_position);
 		if (colon_position) {
 			size_t field_position = colon_position - 3;	// All keys occupy 3 '"k":' chars to the left of the colon
@@ -355,7 +355,7 @@ public:
 	static bool set_number(char key, uint32_t number, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		colon_position = get_colon_position(key, json_payload, *json_length, colon_position);
 		if (colon_position) {
-			if (!remove(key, json_payload, json_length, colon_position)) return false;
+			if (!_remove(key, json_payload, json_length, colon_position)) return false;
 		}
 		// At this time there is no field key for sure, so, one can just add it right before the '}'
 		size_t number_size = number_of_digits(number);
@@ -413,7 +413,7 @@ public:
 			if (length) {
 				colon_position = get_colon_position(key, json_payload, *json_length, colon_position);
 				if (colon_position) {
-					if (!remove(key, json_payload, json_length, colon_position)) return false;
+					if (!_remove(key, json_payload, json_length, colon_position)) return false;
 				}
 				// the usual key + 4 plus + 2 for both '"' and the + 1 due to the heading ',' needed to be added
 				size_t new_length = *json_length + length + 4 + 2 + 1;
@@ -1219,49 +1219,49 @@ public:
 
     /** @brief Remove message field */
 	bool remove_message() {
-		return remove('m', _json_payload, &_json_length);
+		return _remove('m', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove from field */
 	bool remove_from() {
-		return remove('f', _json_payload, &_json_length);
+		return _remove('f', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove to field */
 	bool remove_to() {
-		return remove('t', _json_payload, &_json_length);
+		return _remove('t', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove identity field */
 	bool remove_identity() {
-		return remove('i', _json_payload, &_json_length);
+		return _remove('i', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove timestamp field */
 	bool remove_timestamp() {
-		return remove('i', _json_payload, &_json_length);
+		return _remove('i', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove broadcast field */
 	bool remove_broadcast_value() {
-		return remove('b', _json_payload, &_json_length);
+		return _remove('b', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove roger field */
 	bool remove_roger_value() {
-		return remove('r', _json_payload, &_json_length);
+		return _remove('r', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove system field */
 	bool remove_system_value() {
-		return remove('s', _json_payload, &_json_length);
+		return _remove('s', _json_payload, &_json_length);
 	}
 
 
@@ -1273,7 +1273,7 @@ public:
 	bool remove_nth_value(uint8_t nth) {
 		if (nth < 10) {
 			char value_key = '0' + nth;
-			return remove(value_key, _json_payload, &_json_length);
+			return _remove(value_key, _json_payload, &_json_length);
 		}
 		return false;
 	}

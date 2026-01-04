@@ -151,7 +151,7 @@ protected:
 		Serial.println(received_checksum);
 		#endif
 
-		if (!JsonMessage::remove('c', _received_buffer, &_received_length, colon_position)) return false;
+		if (!JsonMessage::_remove('c', _received_buffer, &_received_length, colon_position)) return false;
 		uint16_t checksum = generateChecksum(_received_buffer, _received_length);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
