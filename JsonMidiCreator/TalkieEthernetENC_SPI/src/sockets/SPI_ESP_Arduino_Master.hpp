@@ -564,50 +564,57 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     size_t receive() override {
 
-		if (_initiated) {
+		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
+		static uint16_t timeout = (uint16_t)micros();
 
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			_reference_time = millis();
-			#endif
+		if (micros() - timeout > 500) {
+			timeout = (uint16_t)micros();
 
-			// Need to call homologous method in super class first
-			uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+			if (_initiated) {
 
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				length = receiveSPI(_ss_pins[ss_pin_i]);
-				if (length > 0) {
-					
-					#ifdef BROADCAST_SPI_DEBUG_TIMING
-					Serial.print("\n\treceive: ");
-					Serial.print(millis() - _reference_time);
-					#endif
+				#ifdef BROADCAST_SPI_DEBUG_TIMING
+				_reference_time = millis();
+				#endif
+
+				// Need to call homologous method in super class first
+				uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+
+				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+					length = receiveSPI(_ss_pins[ss_pin_i]);
+					if (length > 0) {
 						
-					#ifdef BROADCAST_SPI_DEBUG
-					Serial.print(F("\treceive1: Received message: "));
-					Serial.write(_received_buffer, length);
-					Serial.println();
-					Serial.print(F("\treceive2: Received length: "));
-					Serial.println(length);
-					Serial.print(F("\t\t"));
-					Serial.print(class_name());
-					Serial.print(F(" is triggering the talkers with the received message from the SS pin: "));
-					Serial.println(_ss_pins[ss_pin_i]);
-					#endif
+						#ifdef BROADCAST_SPI_DEBUG_TIMING
+						Serial.print("\n\treceive: ");
+						Serial.print(millis() - _reference_time);
+						#endif
+							
+						#ifdef BROADCAST_SPI_DEBUG
+						Serial.print(F("\treceive1: Received message: "));
+						Serial.write(_received_buffer, length);
+						Serial.println();
+						Serial.print(F("\treceive2: Received length: "));
+						Serial.println(length);
+						Serial.print(F("\t\t"));
+						Serial.print(class_name());
+						Serial.print(F(" is triggering the talkers with the received message from the SS pin: "));
+						Serial.println(_ss_pins[ss_pin_i]);
+						#endif
 
-					_actual_ss_pin_i = ss_pin_i;
-					_received_length = length;
-					startTransmission();
-					
-					#ifdef BROADCAST_SPI_DEBUG_TIMING
-					Serial.print(" | ");
-					Serial.print(millis() - _reference_time);
-					#endif
+						_actual_ss_pin_i = ss_pin_i;
+						_received_length = length;
+						startTransmission();
+						
+						#ifdef BROADCAST_SPI_DEBUG_TIMING
+						Serial.print(" | ");
+						Serial.print(millis() - _reference_time);
+						#endif
 
+					}
 				}
+				// Makes sure the _received_buffer is deleted with 0
+				_received_length = 0;
+				
 			}
-			// Makes sure the _received_buffer is deleted with 0
-			_received_length = 0;
-			
 		}
         return 0;   // Receives are all called internally in this method
     }
