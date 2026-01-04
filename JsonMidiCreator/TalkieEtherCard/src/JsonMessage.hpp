@@ -26,7 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
  * @section constraints Memory Constraints
  * - Maximum buffer size: TALKIE_BUFFER_SIZE (default: 128 bytes)
  * - Maximum name length: TALKIE_NAME_LEN (default: 16 bytes including null terminator)
- * - Maximum string length: MAX_LEN (default: 64 bytes including null terminator)
+ * - Maximum string length: TALKIE_MAX_LEN (default: 64 bytes including null terminator)
  * 
  * @author Rui Seixas Monteiro
  * @date Created: 2026-01-01
@@ -47,13 +47,9 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // #define MESSAGE_DEBUG_TIMING
 
-#ifndef TALKIE_BUFFER_SIZE
 #define TALKIE_BUFFER_SIZE 128	    ///< Default buffer size for JSON message
-#endif
-#define TALKIE_NAME_LEN 16								///< Default maximum length for name fields
-#ifndef MAX_LEN
-#define MAX_LEN 64								///< Default maximum length for string fields
-#endif
+#define TALKIE_NAME_LEN 16			///< Default maximum length for name fields
+#define TALKIE_MAX_LEN 64					///< Default maximum length for string fields
 
 
 using LinkType			= TalkieCodes::LinkType;
@@ -465,7 +461,7 @@ protected:
 
 	char _json_payload[TALKIE_BUFFER_SIZE];	///< Internal JSON buffer
 	size_t _json_length = 0;							///< Current length of JSON string
-    mutable char _temp_string[MAX_LEN];					///< Temporary buffer for string operations
+    mutable char _temp_string[TALKIE_MAX_LEN];					///< Temporary buffer for string operations
 
 
 public:
@@ -1166,7 +1162,7 @@ public:
      * @return Pointer to string value, or nullptr if not string/invalid
      */
 	char* get_nth_value_string(uint8_t nth) const {
-		if (nth < 10 && get_value_string('0' + nth, _temp_string, MAX_LEN, _json_payload, _json_length)) {
+		if (nth < 10 && get_value_string('0' + nth, _temp_string, TALKIE_MAX_LEN, _json_payload, _json_length)) {
 			return _temp_string;  // safe C string
 		}
 		return nullptr;  // failed
