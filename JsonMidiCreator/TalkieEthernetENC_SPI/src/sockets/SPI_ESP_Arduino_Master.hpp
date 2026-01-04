@@ -30,59 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #define send_delay_us 10
 #define receive_delay_us 10
-
-
 #define TALKIE_MAX_NAMES 8
-#define TALKIE_NAME_LEN  16   // includes '\0'
-
-
-
-
-
-struct NameEntry {
-    char name[TALKIE_NAME_LEN];
-    uint8_t ss_pin;
-};
-
-class NameTable {
-private:
-    NameEntry _entries[TALKIE_MAX_NAMES];
-    uint8_t _count = 0;
-
-public:
-    bool add(const char* name, uint8_t ss_pin) {
-        if (_count < TALKIE_MAX_NAMES) {
-		
-			// Reject too-long names
-			size_t len = strlen(name);
-			if (len < TALKIE_NAME_LEN) {
-				// Prevent duplicates
-				for (uint8_t i = 0; i < _count; ++i) {
-					if (strcmp(_entries[i].name, name) == 0)
-					return false;
-				}
-				
-				strcpy(_entries[_count].name, name);
-				_entries[_count].ss_pin = ss_pin;
-				++_count;
-				return true;
-			}
-		}
-		return false;
-    }
-
-    bool get_pin(const char* name, uint8_t& pin) const {
-        for (uint8_t i = 0; i < _count; ++i) {
-            if (strcmp(_entries[i].name, name) == 0) {
-                pin = _entries[i].ss_pin;
-                return true;
-            }
-        }
-        return false;
-    }
-
-};
-
 
 class SPI_ESP_Arduino_Master : public BroadcastSocket {
 public:
@@ -118,7 +66,6 @@ protected:
     uint8_t _ss_pins_count = 0;
 	char _names[TALKIE_MAX_NAMES][TALKIE_NAME_LEN];
 	uint8_t _actual_ss_pin_i = 0;
-	NameTable _named_pins_table;
 
 
     // Constructor
@@ -498,19 +445,22 @@ protected:
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
 			Serial.println(json_message.get_from_name());
-			Serial.print(F("\tcheckJsonMessage2: Saved actual named pin: "));
-			Serial.println(_actual_ss_pin_i);
 			#endif
 
-			if (_names[_actual_ss_pin_i][0] == '\0') {
+			// It only makes sense to check for names if more than one device (pin)
+			if (_ss_pins_count > 1 && _names[_actual_ss_pin_i][0] == '\0') {
 				strcpy(_names[_actual_ss_pin_i], json_message.get_from_name());
+				
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.print(F("\tcheckJsonMessage2: Saved actual named pin index i: "));
+				Serial.println(_actual_ss_pin_i);
+				Serial.print(F("\tcheckJsonMessage4: Saved name: "));
+				Serial.println(_names[_actual_ss_pin_i]);
+				Serial.print(F("\tcheckJsonMessage5: Concerning actual pin: "));
+				Serial.println(_ss_pins[_actual_ss_pin_i]);
+				#endif
+
 			}
-
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tcheckJsonMessage3: Confirmed actual named pin: "));
-			// Serial.println(_named_pins[from_name].as<uint8_t>());
-			#endif
-
 			return true;
 		}
 		return false;
@@ -533,34 +483,47 @@ protected:
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
 			Serial.write(_sending_buffer, _sending_length);
-			Serial.println();
-			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
+			Serial.print(F("\n\t\t\t\t\tsend2: Sent length: "));
 			Serial.println(_sending_length);
 			#endif
 			
 			#ifdef ENABLE_DIRECT_ADDRESSING
 
-			bool as_reply = json_message.has_to_name();
-			if (as_reply) {
+			bool as_reply = false;
+			if (_ss_pins_count > 1) {	// It only makes sense to check for names if more than one device (pin)
+				if (json_message.has_to_name()) {
 
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\t\t\t\t\tsend3: json_message TO is a String"));
-				#endif
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println(F("\t\t\t\t\tsend3: json_message TO is a String"));
+					#endif
 
-				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count && ss_pin_i < TALKIE_MAX_NAMES; ++ss_pin_i) {
-					if (strcmp(json_message.get_to_name(), _names[ss_pin_i]) == 0) {
-						as_reply = true;
-						_actual_ss_pin_i = ss_pin_i;
-					} else {
-						as_reply = false;
+					char to_name[TALKIE_NAME_LEN];
+					strcpy(to_name, json_message.get_to_name());
+					
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.print(F("\t\t\t\t\tsend4: Message name TO: "));
+					Serial.println(to_name);
+					#endif
+
+					for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count && ss_pin_i < TALKIE_MAX_NAMES; ++ss_pin_i) {
+						
+						#ifdef BROADCAST_SPI_DEBUG
+						Serial.print(F("\t\t\t\t\tsend5: Comparing to the name: "));
+						Serial.println(_names[ss_pin_i]);
+						#endif
+
+						if (strcmp(to_name, _names[ss_pin_i]) == 0) {
+							as_reply = true;
+							_actual_ss_pin_i = ss_pin_i;
+							break;
+						}
 					}
+				} else {
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.println(F("\t\t\t\t\tsend3: json_message TO is NOT a String or doesn't exist"));
+					#endif
 				}
-			} else {
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\t\t\t\t\tsend3: json_message TO is NOT a String or doesn't exist"));
-				#endif
 			}
-
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print(" | ");
 			Serial.print(millis() - _reference_time);
