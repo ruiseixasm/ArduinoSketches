@@ -36,50 +36,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define NAME_LEN  16   // includes '\0'
 
 
-struct NameEntry {
-    char name[NAME_LEN];
-    uint8_t value;
-};
-
-class NameTable {
-private:
-    NameEntry _entries[MAX_NAMES];
-    uint8_t _count = 0;
-
-public:
-    bool add(const char* name, uint8_t value) {
-        if (_count >= MAX_NAMES)
-            return false;
-
-        // Reject too-long names
-        size_t len = strlen(name);
-        if (len >= NAME_LEN)
-            return false;
-
-        // Prevent duplicates
-        for (uint8_t i = 0; i < _count; ++i) {
-            if (strcmp(_entries[i].name, name) == 0)
-                return false;
-        }
-
-        strcpy(_entries[_count].name, name);
-        _entries[_count].value = value;
-        ++_count;
-        return true;
-    }
-
-    bool get_pin(const char* name, uint8_t& pin) const {
-        for (uint8_t i = 0; i < _count; ++i) {
-            if (strcmp(_entries[i].name, name) == 0) {
-                pin = _entries[i].value;
-                return true;
-            }
-        }
-        return false;
-    }
-
-};
-
 
 class SPI_Arduino_Arduino_Master : public BroadcastSocket {
 public:
@@ -111,17 +67,13 @@ protected:
 
 	SPIClass* _spi_instance;  // Pointer to SPI instance
 	bool _initiated = false;
-    int* _ss_pins;
-    uint8_t _ss_pins_count = 0;
-    uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
-	NameTable _named_pins_table;
+    int _ss_pin = 10;
 
 
     // Constructor
-    SPI_Arduino_Arduino_Master(int* ss_pins, uint8_t ss_pins_count) : BroadcastSocket() {
+    SPI_Arduino_Arduino_Master(int ss_pin) : BroadcastSocket() {
             
-        	_ss_pins = ss_pins;
-        	_ss_pins_count = ss_pins_count;
+			_ss_pin = ss_pin;
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
         }
 
@@ -644,59 +596,24 @@ protected:
 
 	bool initiate() {
 		
-		if (_spi_instance) {
+		// Initialize SPI
+		SPI.begin();
+		SPI.setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
+		SPI.setDataMode(SPI_MODE0);
+		SPI.setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
+		// Enable the SS pin
+		pinMode(_ss_pin, OUTPUT);
+		digitalWrite(_ss_pin, HIGH);
+		// Sets the class SS pin
 
-			// Configure SPI settings
-			_spi_instance->setDataMode(SPI_MODE0);
-			_spi_instance->setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
-			_spi_instance->setFrequency(4000000); 	// 4MHz if needed (optional)
-			// ====================================================
-			
-			// ================== CONFIGURE SS PINS ==================
-			// CRITICAL: Configure all SS pins as outputs and set HIGH
-			for (uint8_t i = 0; i < _ss_pins_count; i++) {
-				pinMode(_ss_pins[i], OUTPUT);
-				digitalWrite(_ss_pins[i], HIGH);
-				delayMicroseconds(10); // Small delay between pins
-			}
-
-			_initiated = true;
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				if (!acknowledgeSPI(_ss_pins[ss_pin_i])) {
-					_initiated = false;
-					break;
-				}
-			}
-		}
-
-		#ifdef BROADCAST_SPI_DEBUG
-		if (_initiated) {
-			Serial.print(class_name());
-			Serial.println(": initiate1: Socket initiated!");
-
-			Serial.print(F("\tinitiate2: Total SS pins connected: "));
-			Serial.println(_ss_pins_count);
-			Serial.print(F("\t\tinitiate3: SS pins: "));
-			
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				Serial.print(_ss_pins[ss_pin_i]);
-				Serial.print(F(", "));
-			}
-			Serial.println();
-		} else {
-			Serial.println("initiate1: Socket NOT initiated!");
-		}
-	
-		#endif
-
-		return _initiated;
+		return true;
 	}
 
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static SPI_Arduino_Arduino_Master& instance(int* ss_pins, uint8_t ss_pins_count) {
-        static SPI_Arduino_Arduino_Master instance(ss_pins, ss_pins_count);
+    static SPI_Arduino_Arduino_Master& instance(int ss_pin) {
+        static SPI_Arduino_Arduino_Master instance(ss_pin);
 
         return instance;
     }
