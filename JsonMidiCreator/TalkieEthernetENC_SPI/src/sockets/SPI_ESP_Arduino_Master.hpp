@@ -36,9 +36,12 @@ https://github.com/ruiseixasm/JsonTalkie
 #define TALKIE_NAME_LEN  16   // includes '\0'
 
 
+
+
+
 struct NameEntry {
     char name[TALKIE_NAME_LEN];
-    uint8_t value;
+    uint8_t ss_pin;
 };
 
 class NameTable {
@@ -47,31 +50,31 @@ private:
     uint8_t _count = 0;
 
 public:
-    bool add(const char* name, uint8_t value) {
-        if (_count >= TALKIE_MAX_NAMES)
-            return false;
-
-        // Reject too-long names
-        size_t len = strlen(name);
-        if (len >= TALKIE_NAME_LEN)
-            return false;
-
-        // Prevent duplicates
-        for (uint8_t i = 0; i < _count; ++i) {
-            if (strcmp(_entries[i].name, name) == 0)
-                return false;
-        }
-
-        strcpy(_entries[_count].name, name);
-        _entries[_count].value = value;
-        ++_count;
-        return true;
+    bool add(const char* name, uint8_t ss_pin) {
+        if (_count < TALKIE_MAX_NAMES) {
+		
+			// Reject too-long names
+			size_t len = strlen(name);
+			if (len < TALKIE_NAME_LEN) {
+				// Prevent duplicates
+				for (uint8_t i = 0; i < _count; ++i) {
+					if (strcmp(_entries[i].name, name) == 0)
+					return false;
+				}
+				
+				strcpy(_entries[_count].name, name);
+				_entries[_count].ss_pin = ss_pin;
+				++_count;
+				return true;
+			}
+		}
+		return false;
     }
 
     bool get_pin(const char* name, uint8_t& pin) const {
         for (uint8_t i = 0; i < _count; ++i) {
             if (strcmp(_entries[i].name, name) == 0) {
-                pin = _entries[i].value;
+                pin = _entries[i].ss_pin;
                 return true;
             }
         }
@@ -113,7 +116,8 @@ protected:
 	bool _initiated = false;
     int* _ss_pins;
     uint8_t _ss_pins_count = 0;
-    uint8_t _actual_ss_pin = 15;	// GPIO15 for HSPI SCK
+	char _names[TALKIE_MAX_NAMES][TALKIE_NAME_LEN];
+	uint8_t _actual_ss_pin_i = 0;
 	NameTable _named_pins_table;
 
 
@@ -122,6 +126,9 @@ protected:
             
         	_ss_pins = ss_pins;
         	_ss_pins_count = ss_pins_count;
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count && ss_pin_i < TALKIE_MAX_NAMES; ++ss_pin_i) {
+				_names[ss_pin_i][0] = '\0';
+			}
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
         }
 
@@ -492,10 +499,12 @@ protected:
 			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
 			Serial.println(json_message.get_from_name());
 			Serial.print(F("\tcheckJsonMessage2: Saved actual named pin: "));
-			Serial.println(_actual_ss_pin);
+			Serial.println(_actual_ss_pin_i);
 			#endif
 
-			_named_pins_table.add(json_message.get_from_name(), _actual_ss_pin);
+			if (_names[_actual_ss_pin_i][0] == '\0') {
+				strcpy(_names[_actual_ss_pin_i], json_message.get_from_name());
+			}
 
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tcheckJsonMessage3: Confirmed actual named pin: "));
@@ -538,7 +547,14 @@ protected:
 				Serial.println(F("\t\t\t\t\tsend3: json_message TO is a String"));
 				#endif
 
-				as_reply = _named_pins_table.get_pin(json_message.get_to_name(), _actual_ss_pin);
+				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count && ss_pin_i < TALKIE_MAX_NAMES; ++ss_pin_i) {
+					if (strcmp(json_message.get_to_name(), _names[ss_pin_i]) == 0) {
+						as_reply = true;
+						_actual_ss_pin_i = ss_pin_i;
+					} else {
+						as_reply = false;
+					}
+				}
 			} else {
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.println(F("\t\t\t\t\tsend3: json_message TO is NOT a String or doesn't exist"));
@@ -551,11 +567,11 @@ protected:
 			#endif
 
 			if (as_reply) {
-				sendSPI(_sending_length, _actual_ss_pin);
+				sendSPI(_sending_length, _ss_pins[_actual_ss_pin_i]);
 
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.print(F("\t\t\t\t\tsend4: --> Directly sent for the received pin --> "));
-				Serial.println(_actual_ss_pin);
+				Serial.println(_actual_ss_pin_i);
 				#endif
 
 			} else {    // Broadcast mode
@@ -623,7 +639,7 @@ protected:
 					Serial.println(_ss_pins[ss_pin_i]);
 					#endif
 
-					_actual_ss_pin = static_cast<uint8_t>(_ss_pins[ss_pin_i]);
+					_actual_ss_pin_i = ss_pin_i;
 					_received_length = length;
 					startTransmission();
 					
