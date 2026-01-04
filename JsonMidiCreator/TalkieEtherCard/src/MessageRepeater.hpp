@@ -158,7 +158,7 @@ public:
 					for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
 						_downlinked_talkers[talker_i++]->handleTransmission(message);
 						if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
-							socket.deserialize_buffer(message);
+							socket._deserialize_buffer(message);
 						}
 					}
 				}
@@ -172,7 +172,7 @@ public:
 						if (talker_channel == message_channel) {
 							_downlinked_talkers[talker_i]->handleTransmission(message);
 							if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
-								socket.deserialize_buffer(message);
+								socket._deserialize_buffer(message);
 							}
 						}
 					}
@@ -459,7 +459,7 @@ public:
 						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
 							_uplinked_talkers[talker_i++]->handleTransmission(message);
 							if (talker_i < _uplinked_talkers_count || _uplinked_sockets_count) {
-								socket.deserialize_buffer(message);
+								socket._deserialize_buffer(message);
 							}
 						}
 					}
@@ -473,7 +473,7 @@ public:
 							if (talker_channel == message_channel) {
 								_uplinked_talkers[talker_i]->handleTransmission(message);
 								if (talker_i + 1 < _uplinked_talkers_count || _uplinked_sockets_count) {
-									socket.deserialize_buffer(message);
+									socket._deserialize_buffer(message);
 								}
 							}
 						}
@@ -534,7 +534,7 @@ public:
 						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
 							_downlinked_talkers[talker_i++]->handleTransmission(message);
 							if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
-								socket.deserialize_buffer(message);
+								socket._deserialize_buffer(message);
 							}
 						}
 					}
@@ -548,7 +548,7 @@ public:
 							if (talker_channel == message_channel) {
 								_downlinked_talkers[talker_i]->handleTransmission(message);
 								if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
-									socket.deserialize_buffer(message);
+									socket._deserialize_buffer(message);
 								}
 							}
 						}

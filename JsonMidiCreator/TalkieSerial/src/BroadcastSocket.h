@@ -376,7 +376,7 @@ public:
 
 
 	
-	bool deserialize_buffer(JsonMessage& json_message) const {
+	bool _deserialize_buffer(JsonMessage& json_message) const {
 		return json_message.deserialize_buffer(_received_buffer, _received_length);
 	}
 
