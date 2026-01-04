@@ -65,11 +65,9 @@ public:
 
 protected:
 
-	SPIClass* _spi_instance;  // Pointer to SPI instance
-	bool _initiated = false;
+	SPIClass* const _spi_instance = &SPI;  // Alias pointer
     int _ss_pin = 10;
 	// Just create a pointer to the existing SPI object
-	SPIClass* _spi_instance = &SPI;  // Alias pointer
 
 
     // Constructor
@@ -447,36 +445,11 @@ protected:
         return acknowledge;
     }
 
-
-	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(const JsonMessage& json_message) override {
-
-		if (BroadcastSocket::receivedJsonMessage(json_message)) {
-
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
-			Serial.println(json_message.get_from_name());
-			Serial.print(F("\tcheckJsonMessage2: Saved actual named pin: "));
-			Serial.println(_actual_ss_pin);
-			#endif
-
-			_named_pins_table.add(json_message.get_from_name(), _actual_ss_pin);
-
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tcheckJsonMessage3: Confirmed actual named pin: "));
-			// Serial.println(_named_pins[from_name].as<uint8_t>());
-			#endif
-
-			return true;
-		}
-		return false;
-	}
-
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     bool send(const JsonMessage& json_message) override {
 
-		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
+		if (_spi_instance && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
 			
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print("\n\tsend: ");
@@ -496,51 +469,7 @@ protected:
 			
 			#ifdef ENABLE_DIRECT_ADDRESSING
 
-			bool as_reply = json_message.has_to_name();
-			if (as_reply) {
-
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\t\t\t\t\tsend3: json_message TO is a String"));
-				#endif
-
-				as_reply = _named_pins_table.get_pin(json_message.get_to_name(), _actual_ss_pin);
-			} else {
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\t\t\t\t\tsend3: json_message TO is NOT a String or doesn't exist"));
-				#endif
-			}
-
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			Serial.print(" | ");
-			Serial.print(millis() - _reference_time);
-			#endif
-
-			if (as_reply) {
-				sendSPI(_sending_length, _actual_ss_pin);
-
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.print(F("\t\t\t\t\tsend4: --> Directly sent for the received pin --> "));
-				Serial.println(_actual_ss_pin);
-				#endif
-
-			} else {    // Broadcast mode
-				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-					sendSPI(_sending_length, _ss_pins[ss_pin_i]);
-				}
-				
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
-				#endif
-
-			}
-			#else
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				sendSPI(_sending_length, _ss_pins[ss_pin_i]);
-			}
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
-			#endif
-			#endif
+			sendSPI(_sending_length, _ss_pin);
 
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print(" | ");
@@ -558,7 +487,7 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     size_t receive() override {
 
-		if (_initiated) {
+		if (_spi_instance) {
 
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			_reference_time = millis();
@@ -566,38 +495,35 @@ protected:
 
 			// Need to call homologous method in super class first
 			uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
+			length = receiveSPI(_ss_pin);
 
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				length = receiveSPI(_ss_pins[ss_pin_i]);
-				if (length > 0) {
+			if (length > 0) {
+				
+				#ifdef BROADCAST_SPI_DEBUG_TIMING
+				Serial.print("\n\treceive: ");
+				Serial.print(millis() - _reference_time);
+				#endif
 					
-					#ifdef BROADCAST_SPI_DEBUG_TIMING
-					Serial.print("\n\treceive: ");
-					Serial.print(millis() - _reference_time);
-					#endif
-						
-					#ifdef BROADCAST_SPI_DEBUG
-					Serial.print(F("\treceive1: Received message: "));
-					Serial.write(_received_buffer, length);
-					Serial.println();
-					Serial.print(F("\treceive2: Received length: "));
-					Serial.println(length);
-					Serial.print(F("\t\t"));
-					Serial.print(class_name());
-					Serial.print(F(" is triggering the talkers with the received message from the SS pin: "));
-					Serial.println(_ss_pins[ss_pin_i]);
-					#endif
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.print(F("\treceive1: Received message: "));
+				Serial.write(_received_buffer, length);
+				Serial.println();
+				Serial.print(F("\treceive2: Received length: "));
+				Serial.println(length);
+				Serial.print(F("\t\t"));
+				Serial.print(class_name());
+				Serial.print(F(" is triggering the talkers with the received message from the SS pin: "));
+				Serial.println(_ss_pins[ss_pin_i]);
+				#endif
 
-					_actual_ss_pin = static_cast<uint8_t>(_ss_pins[ss_pin_i]);
-					_received_length = length;
-					startTransmission();
-					
-					#ifdef BROADCAST_SPI_DEBUG_TIMING
-					Serial.print(" | ");
-					Serial.print(millis() - _reference_time);
-					#endif
+				_received_length = length;
+				startTransmission();
+				
+				#ifdef BROADCAST_SPI_DEBUG_TIMING
+				Serial.print(" | ");
+				Serial.print(millis() - _reference_time);
+				#endif
 
-				}
 			}
 			// Makes sure the _received_buffer is deleted with 0
 			_received_length = 0;
