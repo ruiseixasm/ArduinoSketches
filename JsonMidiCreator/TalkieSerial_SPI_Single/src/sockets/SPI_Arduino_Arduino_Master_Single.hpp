@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef SPI_ARDUINO_ARDUINO_MASTER_HPP
-#define SPI_ARDUINO_ARDUINO_MASTER_HPP
+#ifndef SPI_ARDUINO_ARDUINO_MASTER_SINGLE_HPP
+#define SPI_ARDUINO_ARDUINO_MASTER_SINGLE_HPP
 
 
 #include <SPI.h>
@@ -34,7 +34,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
-class SPI_Arduino_Arduino_Master : public BroadcastSocket {
+class SPI_Arduino_Arduino_Master_Single : public BroadcastSocket {
 public:
 
     enum StatusByte : uint8_t {
@@ -68,7 +68,7 @@ protected:
 
 
     // Constructor
-    SPI_Arduino_Arduino_Master(int ss_pin) : BroadcastSocket() {
+    SPI_Arduino_Arduino_Master_Single(int ss_pin) : BroadcastSocket() {
 		
 			_ss_pin = ss_pin;
 			if (_spi_instance) {
@@ -531,16 +531,16 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static SPI_Arduino_Arduino_Master& instance(int ss_pin) {
-        static SPI_Arduino_Arduino_Master instance(ss_pin);
+    static SPI_Arduino_Arduino_Master_Single& instance(int ss_pin) {
+        static SPI_Arduino_Arduino_Master_Single instance(ss_pin);
 
         return instance;
     }
 
-    const char* class_name() const override { return "SPI_Arduino_Arduino_Master"; }
+    const char* class_name() const override { return "SPI_Arduino_Arduino_Master_Single"; }
 
 };
 
 
 
-#endif // SPI_ARDUINO_ARDUINO_MASTER_HPP
+#endif // SPI_ARDUINO_ARDUINO_MASTER_SINGLE_HPP
