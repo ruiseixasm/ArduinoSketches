@@ -61,23 +61,6 @@ protected:
     uint8_t socketsIterIdx = 0;
 
 
-	bool transmitErrorToChannel(BroadcastSocket &socket, JsonMessage &message) const {
-		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
-		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-		message.swap_from_with_to();
-		message.set_from_name("255");	// Channel error means 255
-		return socket._finishTransmission(message);
-	}
-	
-	bool transmitErrorToChannel(JsonTalker &talker, JsonMessage &message, TalkerMatch talker_match) {
-		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
-		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-		message.swap_from_with_to();
-		message.set_from_name("255");	// Channel error means 255
-		talker._handleTransmission(message, talker_match);
-	}
-	
-
 public:
 
     // Constructor
@@ -212,7 +195,8 @@ public:
 				break;
 
 				case TalkerMatch::TALKIE_MATCH_FAIL:
-					transmitErrorToChannel(socket, message);
+					message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+					message.set_error_value(ErrorValue::TALKIE_ERR_TO);
 					return false;
 
 				default: return false;
@@ -301,7 +285,8 @@ public:
 						break;
 						
 						case TalkerMatch::TALKIE_MATCH_FAIL:
-							transmitErrorToChannel(talker, message, talker_match);
+							message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+							message.set_error_value(ErrorValue::TALKIE_ERR_TO);
 							return false;
 
 						default: return false;
@@ -373,7 +358,8 @@ public:
 						break;
 						
 						case TalkerMatch::TALKIE_MATCH_FAIL:
-							transmitErrorToChannel(talker, message, talker_match);
+							message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+							message.set_error_value(ErrorValue::TALKIE_ERR_TO);
 							return false;
 
 						default: return false;
@@ -435,7 +421,8 @@ public:
 					break;
 					
 					case TalkerMatch::TALKIE_MATCH_FAIL:
-						transmitErrorToChannel(talker, message, talker_match);
+						message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+						message.set_error_value(ErrorValue::TALKIE_ERR_TO);
 						return false;
 
 					default: return false;
@@ -513,7 +500,8 @@ public:
 					break;
 					
 					case TalkerMatch::TALKIE_MATCH_FAIL:
-						transmitErrorToChannel(socket, message);
+						message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+						message.set_error_value(ErrorValue::TALKIE_ERR_TO);
 						return false;
 
 					default: return false;
@@ -582,7 +570,8 @@ public:
 					break;
 					
 					case TalkerMatch::TALKIE_MATCH_FAIL:
-						transmitErrorToChannel(socket, message);
+						message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+						message.set_error_value(ErrorValue::TALKIE_ERR_TO);
 						return false;
 
 					default: return false;
@@ -671,7 +660,8 @@ public:
 						break;
 						
 						case TalkerMatch::TALKIE_MATCH_FAIL:
-							transmitErrorToChannel(talker, message, talker_match);
+							message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+							message.set_error_value(ErrorValue::TALKIE_ERR_TO);
 							return false;
 
 						default: return false;
