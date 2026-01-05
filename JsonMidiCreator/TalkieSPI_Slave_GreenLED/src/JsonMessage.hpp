@@ -297,7 +297,7 @@ public:
      * 
      * Default message: `{"m":0,"b":0,"i":0,"f":""}`
      */
-	static void reset(char* json_payload, size_t *json_length) {
+	static void _reset(char* json_payload, size_t *json_length) {
 		// Only static guarantees it won't live on the stack!
 		static const char default_payload[] = "{\"m\":0,\"b\":0,\"i\":0,\"f\":\"\"}";
 		size_t default_length = sizeof(default_payload) - 1;
@@ -376,7 +376,7 @@ public:
 				json_payload[*json_length - 1 + char_j - 1] = json_key[char_j];
 			}
 		} else {
-			reset(json_payload, json_length);	// Something very wrong, needs to be reset
+			_reset(json_payload, json_length);	// Something very wrong, needs to be reset
 			return false;
 		}
 		if (number) {
@@ -436,7 +436,7 @@ public:
 						json_payload[*json_length - 1 + char_j - 1] = json_key[char_j];
 					}
 				} else {
-					reset(json_payload, json_length);	// Something very wrong, needs to be reset
+					_reset(json_payload, json_length);	// Something very wrong, needs to be reset
 					return false;
 				}
 				// Adds the first char '"'
@@ -475,7 +475,7 @@ public:
      * Initializes with default message: `{"m":0,"b":0,"i":0,"f":""}`
      */
 	JsonMessage() {
-		reset(_json_payload, &_json_length);	// Initiate with the bare minimum
+		_reset(_json_payload, &_json_length);	// Initiate with the bare minimum
 	}
 
 
@@ -488,7 +488,7 @@ public:
      */
 	JsonMessage(const char* buffer, size_t length) {
 		if (!deserialize_buffer(buffer, length)) {
-			reset(_json_payload, &_json_length);
+			_reset(_json_payload, &_json_length);
 		}
 	}
 
@@ -580,7 +580,7 @@ public:
      * Resets to: `{"m":0,"b":0,"i":0,"f":""}`
      */
 	void reset() {
-		reset(_json_payload, &_json_length);
+		_reset(_json_payload, &_json_length);
 	}
 
 

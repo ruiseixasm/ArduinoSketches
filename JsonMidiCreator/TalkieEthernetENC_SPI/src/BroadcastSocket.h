@@ -263,6 +263,12 @@ protected:
 				Serial.println(checksum);
 				#endif
 			}
+		// Has to report an error
+		} else {
+			JsonMessage error_message;
+			error_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+			error_message.set_identity();
+
 		}
 		_received_length = 0;	// Enables new receiving
         return true;
