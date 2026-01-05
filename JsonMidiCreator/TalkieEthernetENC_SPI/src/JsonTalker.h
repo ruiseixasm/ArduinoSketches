@@ -284,7 +284,7 @@ public:
 	bool transmitToRepeater(JsonMessage& json_message);
 	
     
-    bool _handleTransmission(JsonMessage& json_message, TalkerMatch talker_match = TalkerMatch::TALKIE_MATCH_ANY) {
+    bool _handleTransmission(JsonMessage& json_message, TalkerMatch talker_match) {
 
 		MessageValue message_value = json_message.get_message_value();
 

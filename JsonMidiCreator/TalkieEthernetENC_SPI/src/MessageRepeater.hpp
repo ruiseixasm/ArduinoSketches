@@ -69,12 +69,12 @@ protected:
 		return socket._finishTransmission(message);
 	}
 	
-	bool transmitErrorToChannel(JsonTalker &talker, JsonMessage &message) {
+	bool transmitErrorToChannel(JsonTalker &talker, JsonMessage &message, TalkerMatch talker_match) {
 		message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
 		message.set_error_value(ErrorValue::TALKIE_ERR_TO);
 		message.swap_from_with_to();
 		message.set_from_name("255");	// Channel error means 255
-		talker._handleTransmission(message);
+		talker._handleTransmission(message, talker_match);
 	}
 	
 
@@ -301,7 +301,7 @@ public:
 						break;
 						
 						case TalkerMatch::TALKIE_MATCH_FAIL:
-							transmitErrorToChannel(talker, message);
+							transmitErrorToChannel(talker, message, talker_match);
 							return false;
 
 						default: return false;
@@ -373,7 +373,7 @@ public:
 						break;
 						
 						case TalkerMatch::TALKIE_MATCH_FAIL:
-							transmitErrorToChannel(talker, message);
+							transmitErrorToChannel(talker, message, talker_match);
 							return false;
 
 						default: return false;
@@ -435,7 +435,7 @@ public:
 					break;
 					
 					case TalkerMatch::TALKIE_MATCH_FAIL:
-						transmitErrorToChannel(talker, message);
+						transmitErrorToChannel(talker, message, talker_match);
 						return false;
 
 					default: return false;
@@ -671,7 +671,7 @@ public:
 						break;
 						
 						case TalkerMatch::TALKIE_MATCH_FAIL:
-							transmitErrorToChannel(talker, message);
+							transmitErrorToChannel(talker, message, talker_match);
 							return false;
 
 						default: return false;
