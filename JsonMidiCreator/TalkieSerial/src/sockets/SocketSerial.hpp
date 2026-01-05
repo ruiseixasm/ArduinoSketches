@@ -87,7 +87,7 @@ protected:
 						#endif
 
 						_received_buffer[_received_length++] = '}';
-						startTransmission();
+						_startTransmission();
 						return _received_length;
 					} else {
 						_received_buffer[_received_length++] = c;

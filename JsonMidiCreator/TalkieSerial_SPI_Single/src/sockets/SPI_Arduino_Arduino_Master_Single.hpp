@@ -510,7 +510,7 @@ protected:
 				#endif
 
 				_received_length = length;
-				startTransmission();
+				_startTransmission();
 				
 				#ifdef BROADCAST_SPI_DEBUG_TIMING
 				Serial.print(" | ");
