@@ -265,10 +265,31 @@ protected:
 			}
 		// Has to report an error
 		} else {
-			JsonMessage error_message;
-			error_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
-			error_message.set_identity();
+			size_t identity_colon_position = JsonMessage::_get_colon_position('i', _received_buffer, _received_length);
+			size_t from_colon_position = JsonMessage::_get_colon_position('f', _received_buffer, _received_length);
+			size_t to_colon_position = JsonMessage::_get_colon_position('t', _received_buffer, _received_length);
+			if (identity_colon_position && from_colon_position && to_colon_position) {
+				ValueType identity_value_type = JsonMessage::_get_value_type('i', _received_buffer, _received_length, identity_colon_position);
+				ValueType from_value_type = JsonMessage::_get_value_type('f', _received_buffer, _received_length, from_colon_position);
+				ValueType to_value_type = JsonMessage::_get_value_type('t', _received_buffer, _received_length, to_colon_position);
+				if (identity_value_type == ValueType::TALKIE_VT_INTEGER && from_value_type == ValueType::TALKIE_VT_STRING && to_value_type == from_value_type) {
+					uint16_t identity = JsonMessage::_get_value_number('i', _received_buffer, _received_length, identity_colon_position);
+					char from[TALKIE_NAME_LEN];
+					char to[TALKIE_NAME_LEN];
+					if (JsonMessage::_get_value_string('f', from, TALKIE_NAME_LEN, _received_buffer, _received_length, from_colon_position) &&
+						JsonMessage::_get_value_string('t', to, TALKIE_NAME_LEN, _received_buffer, _received_length, from_colon_position)) {
 
+						JsonMessage error_message;
+						error_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+						error_message.set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
+						error_message.set_identity(identity);
+						error_message.set_to_name(from);
+						error_message.set_from_name(to);
+						_finishTransmission(error_message);
+					}
+				}
+			}
+			return false;
 		}
 		_received_length = 0;	// Enables new receiving
         return true;
