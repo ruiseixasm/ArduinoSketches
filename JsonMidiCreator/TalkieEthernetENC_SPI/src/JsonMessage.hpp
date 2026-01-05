@@ -1280,6 +1280,19 @@ public:
 	}
 
 
+    /**
+     * @brief Remove all the nth values
+     * @return true if removed at least one value
+     */
+	bool remove_all_nth_values() {
+		bool removed_values = false;
+		for (uint8_t nth = 0; nth < 10; ++nth) {
+			if (remove_nth_value(nth)) removed_values = true;
+		}
+		return removed_values;
+	}
+
+
     // ============================================
     // SETTERS - FIELD MODIFICATION
     // ============================================
