@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "MessageRepeater.hpp"
 
 
-void JsonTalker::setLink(MessageRepeater* message_repeater, LinkType link_type) {
+void JsonTalker::_setLink(MessageRepeater* message_repeater, LinkType link_type) {
 	_message_repeater = message_repeater;
 	_link_type = link_type;
 }
@@ -25,7 +25,7 @@ void JsonTalker::setLink(MessageRepeater* message_repeater, LinkType link_type) 
 bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 
 	#ifdef JSON_TALKER_DEBUG_NEW
-	Serial.print(F("\t\t\ttransmitToRepeater(Talker): "));
+	Serial.print(F("\t\t\t_transmitToRepeater(Talker): "));
 	json_message.write_to(Serial);
 	Serial.println();  // optional: just to add a newline after the JSON
 	#endif
@@ -34,9 +34,9 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 		switch (_link_type) {
 			case LinkType::TALKIE_LT_UP_LINKED:
 			case LinkType::TALKIE_LT_UP_BRIDGED:
-				return _message_repeater->talkerDownlink(*this, json_message);
+				return _message_repeater->_talkerDownlink(*this, json_message);
 			case LinkType::TALKIE_LT_DOWN_LINKED:
-				return _message_repeater->talkerUplink(*this, json_message);
+				return _message_repeater->_talkerUplink(*this, json_message);
 			default: return false;
 		}
 	}

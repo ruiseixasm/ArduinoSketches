@@ -11,6 +11,27 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+
+/**
+ * @file BroadcastSocket.h
+ * @brief Broadcast Socket interface for Talkie communication protocol
+ * 
+ * This class provides efficient, memory-safe input and output for the
+ * JSONmessages which processing is started and finished by it.
+ * 
+ * @warning This class does not use dynamic memory allocation.
+ *          All operations are performed on fixed-size buffers.
+ * 
+ * @section constraints Memory Constraints
+ * - Maximum buffer size: TALKIE_BUFFER_SIZE (default: 128 bytes)
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-03
+ * @version 1.0.0
+ */
+
+
 #ifndef BROADCAST_SOCKET_H
 #define BROADCAST_SOCKET_H
 
@@ -38,23 +59,6 @@ using Original 			= JsonMessage::Original;
 class MessageRepeater;
 
 class BroadcastSocket {
-public:
-
-    static uint16_t _generateChecksum(const char* buffer, size_t length) {	// 16-bit word and XORing
-        uint16_t checksum = 0;
-		if (length <= TALKIE_BUFFER_SIZE) {
-			for (size_t i = 0; i < length; i += 2) {
-				uint16_t chunk = buffer[i] << 8;
-				if (i + 1 < length) {
-					chunk |= buffer[i + 1];
-				}
-				checksum ^= chunk;
-			}
-		}
-        return checksum;
-    }
-
-
 protected:
 
 	MessageRepeater* _message_repeater = nullptr;
@@ -79,6 +83,21 @@ protected:
 	}
 
 
+    static uint16_t _generateChecksum(const char* buffer, size_t length) {	// 16-bit word and XORing
+        uint16_t checksum = 0;
+		if (length <= TALKIE_BUFFER_SIZE) {
+			for (size_t i = 0; i < length; i += 2) {
+				uint16_t chunk = buffer[i] << 8;
+				if (i + 1 < length) {
+					chunk |= buffer[i + 1];
+				}
+				checksum ^= chunk;
+			}
+		}
+        return checksum;
+    }
+
+
 	// Allows the overriding class to peek at the received JSON message
 	virtual bool receivedJsonMessage(const JsonMessage& json_message) {
 		
@@ -93,10 +112,10 @@ protected:
 	}
 
 	
-	bool transmitToRepeater(JsonMessage& json_message);
+	bool _transmitToRepeater(JsonMessage& json_message);
 
     
-    bool startTransmission() {
+    bool _startTransmission() {
 
 		// Trim trailing newline and carriage return characters or any other that isn't '}'
 		while (_received_length > 26 
@@ -113,10 +132,15 @@ protected:
 		if (_received_buffer[0] != '{') {
 			_received_length = 0;
 			return false;	
-		}	
+		}
 
-		size_t colon_position = JsonMessage::get_colon_position('c', _received_buffer, _received_length);
-		uint16_t received_checksum = JsonMessage::get_value_number('c', _received_buffer, _received_length, colon_position);
+		size_t colon_position = JsonMessage::_get_colon_position('c', _received_buffer, _received_length);
+		if (!colon_position) {
+			_received_length = 0;
+			return false;	
+		}
+
+		uint16_t received_checksum = JsonMessage::_get_value_number('c', _received_buffer, _received_length, colon_position);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
 		Serial.print(F("\thandleTransmission0.1: "));
@@ -220,12 +244,12 @@ protected:
 						if (!json_message.has_identity()) {
 							json_message.set_identity();
 						}
-						finishTransmission(json_message);	// Includes reply swap
+						_finishTransmission(json_message);	// Includes reply swap
 					}
 					return false;
 				}
 
-				transmitToRepeater(json_message);
+				_transmitToRepeater(json_message);
 				
 				#ifdef MESSAGE_DEBUG_TIMING
 				Serial.print(" | ");
@@ -239,6 +263,13 @@ protected:
 				Serial.println(checksum);
 				#endif
 			}
+		// Has to report an error
+		} else {
+			// Mark error message as noise and dispatch it to be processed by the respective Talker
+			JsonMessage noisy_message(_received_buffer, _received_length);
+			noisy_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+			noisy_message.set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
+			return _transmitToRepeater(noisy_message);
 		}
 		_received_length = 0;	// Enables new receiving
         return true;
@@ -304,7 +335,7 @@ public:
 	// The subclass must have the class name defined (pure virtual)
     virtual const char* class_name() const = 0;
 
-    virtual void loop() {
+    virtual void _loop() {
         receive();
     }
 
@@ -351,7 +382,7 @@ public:
      * 
      * @note This method is used by the Message Repeater to set up the Socket
      */
-	void setLink(MessageRepeater* message_repeater, LinkType link_type);
+	void _setLink(MessageRepeater* message_repeater, LinkType link_type);
 
 
     /**
@@ -381,7 +412,7 @@ public:
 	}
 
 
-    bool finishTransmission(const JsonMessage& json_message) {
+    bool _finishTransmission(const JsonMessage& json_message) {
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
 		Serial.print(F("socketSend1: "));

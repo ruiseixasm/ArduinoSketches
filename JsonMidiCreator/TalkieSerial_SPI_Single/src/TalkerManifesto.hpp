@@ -11,6 +11,18 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+
+/**
+ * @file TalkerManifesto.hpp
+ * @brief This is an Interface for the class that defines exactly the
+ *        activity of the Talker, namely to its named and numbered actions.
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-03
+ * @version 1.0.0
+ */
+
 #ifndef I_MANIFESTO_HPP
 #define I_MANIFESTO_HPP
 
@@ -65,7 +77,7 @@ protected:
 
 public:
 
-    virtual void loop(JsonTalker* talker) {	// Also defined, not a pure virtual one
+    virtual void _loop(JsonTalker* talker) {	// Also defined, not a pure virtual one
         (void)talker;		// Silence unused parameter warning
 	}
 
@@ -98,28 +110,32 @@ public:
     }
     
     // Action implementations - MUST be implemented by derived
-    virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message) {
+    virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)index;		// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
+        (void)talker_match;	// Silence unused parameter warning
         return false;
 	}
 
 
-    virtual void echo(JsonTalker& talker, JsonMessage& json_message) {
+    virtual void echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
+        (void)talker_match;	// Silence unused parameter warning
     }
 
 
-    virtual void error(JsonTalker& talker, JsonMessage& json_message) {
+    virtual void error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
+        (void)talker_match;	// Silence unused parameter warning
     }
 
-    virtual void noise(JsonTalker& talker, JsonMessage& json_message) {
+    virtual void noise(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
+        (void)talker_match;	// Silence unused parameter warning
     }
 
 };

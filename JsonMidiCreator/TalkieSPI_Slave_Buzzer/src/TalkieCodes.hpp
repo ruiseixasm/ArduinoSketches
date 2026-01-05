@@ -11,6 +11,17 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+
+/**
+ * @file TalkieCodes.hpp
+ * @brief All JSON message field codes including Linkage ones
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-03
+ * @version 1.0.0
+ */
+
 #ifndef TALKIE_CODES_HPP
 #define TALKIE_CODES_HPP
 

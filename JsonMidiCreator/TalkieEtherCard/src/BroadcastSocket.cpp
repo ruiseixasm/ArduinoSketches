@@ -19,16 +19,16 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define MESSAGE_REPEATER_DEBUG
 
 
-void BroadcastSocket::setLink(MessageRepeater* message_repeater, LinkType link_type) {
+void BroadcastSocket::_setLink(MessageRepeater* message_repeater, LinkType link_type) {
 	_message_repeater = message_repeater;
 	_link_type = link_type;
 }
 
 
-bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
+bool BroadcastSocket::_transmitToRepeater(JsonMessage& json_message) {
 
 	#ifdef MESSAGE_REPEATER_DEBUG
-	Serial.print(F("\t\ttransmitToRepeater(Socket): "));
+	Serial.print(F("\t\t_transmitToRepeater(Socket): "));
 	json_message.write_to(Serial);
 	Serial.println();  // optional: just to add a newline after the JSON
 	#endif
@@ -37,9 +37,9 @@ bool BroadcastSocket::transmitToRepeater(JsonMessage& json_message) {
 		switch (_link_type) {
 			case LinkType::TALKIE_LT_UP_LINKED:
 			case LinkType::TALKIE_LT_UP_BRIDGED:
-				return _message_repeater->socketDownlink(*this, json_message);
+				return _message_repeater->_socketDownlink(*this, json_message);
 			case LinkType::TALKIE_LT_DOWN_LINKED:
-				return _message_repeater->socketUplink(*this, json_message);
+				return _message_repeater->_socketUplink(*this, json_message);
 			default: return false;
 		}
 	}	

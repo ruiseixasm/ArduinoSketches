@@ -11,6 +11,25 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+
+/**
+ * @file JsonTalker.h
+ * @brief JSON message handler for Talkie communication protocol.
+ *        This class acts on the received JsonMessage accordingly
+ *        to its manifesto.
+ * 
+ * This class provides efficient, memory-safe JSON message manipulation 
+ * for embedded systems with constrained resources. It implements a 
+ * schema-driven JSON protocol optimized for Arduino environments.
+ * 
+ * @warning This class uses messages of the type JsonMessage.
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-03
+ * @version 1.0.0
+ */
+
 #ifndef JSON_TALKER_H
 #define JSON_TALKER_H
 
@@ -52,6 +71,112 @@ protected:
 	Original _original_message = {0, MessageValue::TALKIE_MSG_NOISE};
     bool _muted_calls = false;
 
+
+	static const char* _board_description() {
+		
+		#ifdef __AVR__
+			#if (RAMEND - RAMSTART + 1) == 2048
+				return "Arduino Uno/Nano (ATmega328P)";
+			#elif (RAMEND - RAMSTART + 1) == 8192
+				return "Arduino Mega (ATmega2560)";
+			#else
+				return "Unknown AVR Board";
+			#endif
+			
+		#elif defined(ESP8266)
+			static char buffer[50];
+			snprintf(buffer, sizeof(buffer), "ESP8266 (Chip ID: %u)", ESP.getChipId());
+			return buffer;
+			
+		#elif defined(ESP32)
+			static char buffer[50];
+			snprintf(buffer, sizeof(buffer), "ESP32 (Rev: %d)", ESP.getChipRevision());
+			return buffer;
+			
+		#elif defined(TEENSYDUINO)
+			#if defined(__IMXRT1062__)
+				return "Teensy 4.0/4.1 (i.MX RT1062)";
+			#elif defined(__MK66FX1M0__)
+				return "Teensy 3.6 (MK66FX1M0)";
+			#elif defined(__MK64FX512__)
+				return "Teensy 3.5 (MK64FX512)";
+			#elif defined(__MK20DX256__)
+				return "Teensy 3.2/3.1 (MK20DX256)";
+			#elif defined(__MKL26Z64__)
+				return "Teensy LC (MKL26Z64)";
+			#else
+				return "Unknown Teensy Board";
+			#endif
+
+		#elif defined(__arm__)
+			return "ARM-based Board";
+
+		#else
+			return "Unknown Board";
+
+		#endif
+	}
+
+
+	bool prepareMessage(JsonMessage& json_message) {
+
+		if (json_message.has_from()) {
+			if (strcmp(json_message.get_from_name(), _name) != 0) {
+				// FROM is different from _name, must be swapped (replaces "f" with "t")
+				json_message.swap_from_with_to();
+				json_message.set_from_name(_name);
+			}
+		} else {
+			// FROM doesn't even exist (must have)
+			json_message.set_from_name(_name);
+		}
+
+		MessageValue message_value = json_message.get_message_value();
+		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("socketSend1: Setting a new identifier (i) for :"));
+			json_message.write_to(Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			uint16_t message_id = (uint16_t)millis();
+			if (message_value < MessageValue::TALKIE_MSG_ECHO) {
+				_original_message.identity = message_id;
+				_original_message.message_value = message_value;
+			}
+			json_message.set_identity(message_id);
+		} else if (!json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("socketSend1: Response message with a wrong or without an identifier, now being set (i): "));
+			json_message.write_to(Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+			json_message.set_identity();
+			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::TALKIE_ERR_IDENTITY));
+
+		} else {
+			
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("socketSend1: Keeping the same identifier (i): "));
+			json_message.write_to(Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+		}
+		return true;
+	}
+
+	
+	bool transmissionSockets(JsonMessage& json_message);
+	bool transmissionDrops(JsonMessage& json_message);
+	bool transmissionDelays(JsonMessage& json_message);
+	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
+
+
 public:
 
     // Explicitly disabled the default constructor
@@ -60,14 +185,13 @@ public:
     JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr, uint8_t channel = 255)
         : _name(name), _desc(desc), _manifesto(manifesto), _channel(channel) {}
 
-    void loop() {
+    void _loop() {
         if (_manifesto) {
-            _manifesto->loop(this);
+            _manifesto->_loop(this);
         }
     }
 
 
-	
     // ============================================
     // GETTERS - FIELD VALUES
     // ============================================
@@ -136,7 +260,7 @@ public:
      * 
      * @note This method is used by the Message Repeater to set up the Talker
      */
-	void setLink(MessageRepeater* message_repeater, LinkType link_type);
+	void _setLink(MessageRepeater* message_repeater, LinkType link_type);
 	
 
     /**
@@ -157,67 +281,10 @@ public:
     void set_mute(bool muted) { _muted_calls = muted; }
 
 
-	bool prepareMessage(JsonMessage& json_message) {
-
-		if (json_message.has_from()) {
-			if (strcmp(json_message.get_from_name(), _name) != 0) {
-				// FROM is different from _name, must be swapped (replaces "f" with "t")
-				json_message.swap_from_with_to();
-				json_message.set_from_name(_name);
-			}
-		} else {
-			// FROM doesn't even exist (must have)
-			json_message.set_from_name(_name);
-		}
-
-		MessageValue message_value = json_message.get_message_value();
-		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
-
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("socketSend1: Setting a new identifier (i) for :"));
-			json_message.write_to(Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-			uint16_t message_id = (uint16_t)millis();
-			if (message_value < MessageValue::TALKIE_MSG_ECHO) {
-				_original_message.identity = message_id;
-				_original_message.message_value = message_value;
-			}
-			json_message.set_identity(message_id);
-		} else if (!json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
-
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("socketSend1: Response message with a wrong or without an identifier, now being set (i): "));
-			json_message.write_to(Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-			json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
-			json_message.set_identity();
-			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::TALKIE_ERR_IDENTITY));
-
-		} else {
-			
-			#ifdef JSON_TALKER_DEBUG
-			Serial.print(F("socketSend1: Keeping the same identifier (i): "));
-			json_message.write_to(Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-		}
-		return true;
-	}
-
-	
 	bool transmitToRepeater(JsonMessage& json_message);
-	bool transmissionSockets(JsonMessage& json_message);
-	bool transmissionDrops(JsonMessage& json_message);
-	bool transmissionDelays(JsonMessage& json_message);
-	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
-
+	
     
-    bool handleTransmission(JsonMessage& json_message) {
+    bool _handleTransmission(JsonMessage& json_message, TalkerMatch talker_match) {
 
 		MessageValue message_value = json_message.get_message_value();
 
@@ -257,7 +324,7 @@ public:
 							#endif
 
 							// ROGER should be implicit for CALL to spare json string size for more data index value nth
-							if (!_manifesto->actionByIndex(index_found_i, *this, json_message)) {
+							if (!_manifesto->actionByIndex(index_found_i, *this, json_message, talker_match)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
 							}
 						} else {
@@ -339,7 +406,7 @@ public:
 					switch (system_value) {
 
 						case SystemValue::TALKIE_SYS_BOARD:
-							json_message.set_nth_value_string(0, board_description());
+							json_message.set_nth_value_string(0, _board_description());
 							break;
 
 						case SystemValue::TALKIE_SYS_MUTE:
@@ -423,20 +490,27 @@ public:
 					#endif
 
 					if (message_id == _original_message.identity) {
-						_manifesto->echo(*this, json_message);
+						_manifesto->echo(*this, json_message, talker_match);
 					}
 				}
 				break;
 			
 			case MessageValue::TALKIE_MSG_ERROR:
 				if (_manifesto) {
-					_manifesto->error(*this, json_message);
+					_manifesto->error(*this, json_message, talker_match);
 				}
 				break;
 			
 			case MessageValue::TALKIE_MSG_NOISE:
-				if (_manifesto) {
-					_manifesto->noise(*this, json_message);
+				if (json_message.has_error() && talker_match == TalkerMatch::TALKIE_MATCH_BY_NAME) {
+					json_message.remove_all_nth_values();	// Keeps it small and clean of bad chars
+					json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+					if (!json_message.has_identity()) {
+						json_message.set_identity();
+					}
+					transmitToRepeater(json_message);
+				} else if (_manifesto) {
+					_manifesto->noise(*this, json_message, talker_match);
 				}
 				break;
 			
@@ -444,52 +518,6 @@ public:
         }
         return true;
     }
-
-
-	static const char* board_description() {
-		
-		#ifdef __AVR__
-			#if (RAMEND - RAMSTART + 1) == 2048
-				return "Arduino Uno/Nano (ATmega328P)";
-			#elif (RAMEND - RAMSTART + 1) == 8192
-				return "Arduino Mega (ATmega2560)";
-			#else
-				return "Unknown AVR Board";
-			#endif
-			
-		#elif defined(ESP8266)
-			static char buffer[50];
-			snprintf(buffer, sizeof(buffer), "ESP8266 (Chip ID: %u)", ESP.getChipId());
-			return buffer;
-			
-		#elif defined(ESP32)
-			static char buffer[50];
-			snprintf(buffer, sizeof(buffer), "ESP32 (Rev: %d)", ESP.getChipRevision());
-			return buffer;
-			
-		#elif defined(TEENSYDUINO)
-			#if defined(__IMXRT1062__)
-				return "Teensy 4.0/4.1 (i.MX RT1062)";
-			#elif defined(__MK66FX1M0__)
-				return "Teensy 3.6 (MK66FX1M0)";
-			#elif defined(__MK64FX512__)
-				return "Teensy 3.5 (MK64FX512)";
-			#elif defined(__MK20DX256__)
-				return "Teensy 3.2/3.1 (MK20DX256)";
-			#elif defined(__MKL26Z64__)
-				return "Teensy LC (MKL26Z64)";
-			#else
-				return "Unknown Teensy Board";
-			#endif
-
-		#elif defined(__arm__)
-			return "ARM-based Board";
-
-		#else
-			return "Unknown Board";
-
-		#endif
-	}
 
 
 };

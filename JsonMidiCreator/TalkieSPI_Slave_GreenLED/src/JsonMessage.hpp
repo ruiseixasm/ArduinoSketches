@@ -12,6 +12,7 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
+
 /**
  * @file JsonMessage.hpp
  * @brief JSON message handling for Talkie communication protocol
@@ -99,7 +100,7 @@ public:
      * 
      * @note Handles numbers from 0 to 4,294,967,295
      */
-	static size_t number_of_digits(uint32_t number) {
+	static size_t _number_of_digits(uint32_t number) {
 		size_t length = 1;	// 0 has 1 digit
 		while (number > 9) {
 			number /= 10;
@@ -119,7 +120,7 @@ public:
      * 
      * @note Searches for pattern: `"key":`
      */
-	static size_t get_colon_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
+	static size_t _get_colon_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		for (size_t json_i = colon_position; json_i < json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
 			if (json_payload[json_i] == ':' && json_payload[json_i - 2] == key && json_payload[json_i - 3] == '"' && json_payload[json_i - 1] == '"') {
 				return json_i;
@@ -137,8 +138,8 @@ public:
      * @param colon_position Optional hint for colon position
      * @return Position of first character after colon, or 0 if not found
      */
-	static size_t get_value_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
-		colon_position = get_colon_position(key, json_payload, json_length, colon_position);
+	static size_t _get_value_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
+		colon_position = _get_colon_position(key, json_payload, json_length, colon_position);
 		if (colon_position) {			//     01
 			return colon_position + 1;	// {"k":x}
 		}
@@ -154,8 +155,8 @@ public:
      * @param colon_position Optional hint for colon position
      * @return Position of key character, or 0 if not found
      */
-	static size_t get_key_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
-		colon_position = get_colon_position(key, json_payload, json_length, colon_position);
+	static size_t _get_key_position(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
+		colon_position = _get_colon_position(key, json_payload, json_length, colon_position);
 		if (colon_position) {			//   210
 			return colon_position - 2;	// {"k":x}
 		}
@@ -171,12 +172,12 @@ public:
      * @param colon_position Optional hint for colon position
      * @return Total characters occupied by field (including quotes, colon, commas)
      */
-	static size_t get_field_length(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
+	static size_t _get_field_length(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		size_t field_length = 0;
-		size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
+		size_t json_i = _get_value_position(key, json_payload, json_length, colon_position);
 		if (json_i) {
 			field_length = 4;	// All keys occupy 4 '"k":' chars
-			ValueType value_type = get_value_type(key, json_payload, json_length, json_i - 1);
+			ValueType value_type = _get_value_type(key, json_payload, json_length, json_i - 1);
 			switch (value_type) {
 
 				case ValueType::TALKIE_VT_STRING:
@@ -207,8 +208,8 @@ public:
      * @param colon_position Optional hint for colon position
      * @return ValueType enum indicating the type of value
      */
-	static ValueType get_value_type(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
-		size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
+	static ValueType _get_value_type(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
+		size_t json_i = _get_value_position(key, json_payload, json_length, colon_position);
 		if (json_i) {
 			if (json_payload[json_i] == '"') {
 				for (json_i++; json_i < json_length && json_payload[json_i] != '"'; json_i++) {}
@@ -245,9 +246,9 @@ public:
      * 
      * @warning Buffer size must include space for null terminator
      */
-	static bool get_value_string(char key, char* buffer, size_t size, const char* json_payload, size_t json_length, size_t colon_position = 4) {
+	static bool _get_value_string(char key, char* buffer, size_t size, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		if (buffer && size) {
-			size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
+			size_t json_i = _get_value_position(key, json_payload, json_length, colon_position);
 			if (json_i && json_payload[json_i++] == '"' && buffer && size) {	// Safe code
 				size_t char_j = 0;
 				while (json_payload[json_i] != '"' && json_i < json_length && char_j < size) {
@@ -273,9 +274,9 @@ public:
      * @param colon_position Optional hint for colon position
      * @return Extracted number, or 0 if key not found or not a number
      */
-	static uint32_t get_value_number(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
+	static uint32_t _get_value_number(char key, const char* json_payload, size_t json_length, size_t colon_position = 4) {
 		uint32_t json_number = 0;
-		size_t json_i = get_value_position(key, json_payload, json_length, colon_position);
+		size_t json_i = _get_value_position(key, json_payload, json_length, colon_position);
 		if (json_i) {
 			while (json_i < json_length && !(json_payload[json_i] > '9' || json_payload[json_i] < '0')) {
 				json_number *= 10;
@@ -321,10 +322,10 @@ public:
      * @note Also removes leading or trailing commas as needed
      */
 	static bool _remove(char key, char* json_payload, size_t *json_length, size_t colon_position = 4) {
-		colon_position = get_colon_position(key, json_payload, *json_length, colon_position);
+		colon_position = _get_colon_position(key, json_payload, *json_length, colon_position);
 		if (colon_position) {
 			size_t field_position = colon_position - 3;	// All keys occupy 3 '"k":' chars to the left of the colon
-			size_t field_length = get_field_length(key, json_payload, *json_length, colon_position);	// Excludes possible heading ',' separation comma
+			size_t field_length = _get_field_length(key, json_payload, *json_length, colon_position);	// Excludes possible heading ',' separation comma
 			if (json_payload[field_position - 1] == ',') {	// the heading ',' has to be removed too
 				field_position--;
 				field_length++;
@@ -353,12 +354,12 @@ public:
      * @note If key exists, it's replaced. Otherwise, it's added before closing brace.
      */
 	static bool _set_number(char key, uint32_t number, char* json_payload, size_t *json_length, size_t colon_position = 4) {
-		colon_position = get_colon_position(key, json_payload, *json_length, colon_position);
+		colon_position = _get_colon_position(key, json_payload, *json_length, colon_position);
 		if (colon_position) {
 			if (!_remove(key, json_payload, json_length, colon_position)) return false;
 		}
 		// At this time there is no field key for sure, so, one can just add it right before the '}'
-		size_t number_size = number_of_digits(number);
+		size_t number_size = _number_of_digits(number);
 		size_t new_length = *json_length + number_size + 4 + 1;	// the usual key 4 plus the + 1 due to the ',' needed to be added
 		if (new_length > TALKIE_BUFFER_SIZE) {
 			return false;
@@ -411,7 +412,7 @@ public:
 				length++;
 			}
 			if (length) {
-				colon_position = get_colon_position(key, json_payload, *json_length, colon_position);
+				colon_position = _get_colon_position(key, json_payload, *json_length, colon_position);
 				if (colon_position) {
 					if (!_remove(key, json_payload, json_length, colon_position)) return false;
 				}
@@ -602,7 +603,7 @@ public:
 
 					case 'm':
 					{
-						ValueType value_type = get_value_type('m', _json_payload, _json_length, json_i);
+						ValueType value_type = _get_value_type('m', _json_payload, _json_length, json_i);
 						if (value_type == ValueType::TALKIE_VT_INTEGER) {
 							if (_json_payload[json_i + 2] == ',' || _json_payload[json_i + 2] == '}') {
 								if (found_b && found_i && found_f) return true;
@@ -618,7 +619,7 @@ public:
 					
 					case 'b':
 					{
-						ValueType value_type = get_value_type('b', _json_payload, _json_length, json_i);
+						ValueType value_type = _get_value_type('b', _json_payload, _json_length, json_i);
 						if (value_type == ValueType::TALKIE_VT_INTEGER) {
 							if (_json_payload[json_i + 2] == ',' || _json_payload[json_i + 2] == '}') {
 								if (found_m && found_i && found_f) return true;
@@ -634,7 +635,7 @@ public:
 					
 					case 'i':
 					{
-						ValueType value_type = get_value_type('i', _json_payload, _json_length, json_i);
+						ValueType value_type = _get_value_type('i', _json_payload, _json_length, json_i);
 						if (value_type == ValueType::TALKIE_VT_INTEGER) {
 							if (found_m && found_b && found_f) return true;
 							found_i = true;
@@ -646,7 +647,7 @@ public:
 					
 					case 'f':
 					{
-						ValueType value_type = get_value_type('f', _json_payload, _json_length, json_i);
+						ValueType value_type = _get_value_type('f', _json_payload, _json_length, json_i);
 						if (value_type == ValueType::TALKIE_VT_STRING) {
 							if (found_m && found_b && found_i) return true;
 							found_f = true;
@@ -731,22 +732,22 @@ public:
      * - No 't' field: broadcast message (true for all)
      */
 	bool for_me(const char* name, uint8_t channel) const {
-		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('t', _json_payload, _json_length);
 		if (colon_position) {
-			ValueType value_type = get_value_type('t', _json_payload, _json_length, colon_position);
+			ValueType value_type = _get_value_type('t', _json_payload, _json_length, colon_position);
 			switch (value_type) {
 
 				case ValueType::TALKIE_VT_STRING:
 					{
 						char message_to[TALKIE_NAME_LEN] = {'\0'};
-						get_value_string('t', message_to, colon_position, _json_payload, _json_length);
+						_get_value_string('t', message_to, colon_position, _json_payload, _json_length);
 						return strcmp(message_to, name) == 0;
 					}
 				break;
 				
 				case ValueType::TALKIE_VT_INTEGER:
 					{
-						uint32_t number = get_value_number('t', _json_payload, _json_length, colon_position);
+						uint32_t number = _get_value_number('t', _json_payload, _json_length, colon_position);
 						return number == channel;
 					}
 				break;
@@ -788,48 +789,65 @@ public:
      * @return true if key exists in JSON
      */
 	bool has_key(char key, size_t colon_position = 4) const {
-		size_t json_i = get_colon_position(key, _json_payload, _json_length, colon_position);
+		size_t json_i = _get_colon_position(key, _json_payload, _json_length, colon_position);
 		return json_i > 0;
 	}
 
 
 	/** @brief Check if identity field exists */ 
 	bool has_identity() const {
-		return get_colon_position('i', _json_payload, _json_length) > 0;
+		return _get_colon_position('i', _json_payload, _json_length) > 0;
+	}
+
+
+	/** @brief Check if broadcast value field exists */ 
+	bool has_broadcast_value() const {
+		size_t colon_position = _get_colon_position('b', _json_payload, _json_length);
+		if (colon_position) {
+			BroadcastValue broadcast_value = static_cast<BroadcastValue>(_get_value_number('b', _json_payload, _json_length, colon_position));
+			return broadcast_value <= BroadcastValue::TALKIE_BC_NONE;
+		}
+		return false;
 	}
 
 
 	/** @brief Check if 'from' field exists */
 	bool has_from() const {
-		return get_colon_position('f', _json_payload, _json_length) > 0;
+		return _get_colon_position('f', _json_payload, _json_length) > 0;
 	}
 
 
 	/** @brief Check if 'to' field exists */
 	bool has_to() const {
-		return get_colon_position('t', _json_payload, _json_length) > 0;
+		return _get_colon_position('t', _json_payload, _json_length) > 0;
 	}
 
 
 	/** @brief Check if 'to' field is a string (name) */
 	bool has_to_name() const {
-		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('t', _json_payload, _json_length);
 		return colon_position 
-			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING;
+			&& _get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING;
 	}
 
 
 	/** @brief Check if 'to' field is a number (channel) */
 	bool has_to_channel() const {
-		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('t', _json_payload, _json_length);
 		return colon_position 
-			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER;
+			&& _get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER;
 	}
 
 
 	/** @brief Check if system field exists */
 	bool has_system() const {
-		return get_colon_position('s', _json_payload, _json_length) > 0;
+		return _get_colon_position('s', _json_payload, _json_length) > 0;
+	}
+
+
+	/** @brief Check if error field exists */
+	bool has_error() const {
+		return _get_colon_position('e', _json_payload, _json_length) > 0;
 	}
 
 
@@ -841,7 +859,7 @@ public:
 	bool has_nth_value(uint8_t nth) const {
 		if (nth < 10) {
 			char value_key = '0' + nth;
-			return get_colon_position(value_key, _json_payload, _json_length) > 0;
+			return _get_colon_position(value_key, _json_payload, _json_length) > 0;
 		}
 		return false;
 	}
@@ -855,9 +873,9 @@ public:
 	bool has_nth_value_string(uint8_t nth) const {
 		if (nth < 10) {
 			char value_key = '0' + nth;
-			size_t colon_position = get_colon_position(value_key, _json_payload, _json_length);
+			size_t colon_position = _get_colon_position(value_key, _json_payload, _json_length);
 			if (colon_position) {
-				return get_value_type(value_key, _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING;
+				return _get_value_type(value_key, _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING;
 			}
 		}
 		return false;
@@ -872,9 +890,9 @@ public:
 	bool has_nth_value_number(uint8_t nth) const {
 		if (nth < 10) {
 			char value_key = '0' + nth;
-			size_t colon_position = get_colon_position(value_key, _json_payload, _json_length);
+			size_t colon_position = _get_colon_position(value_key, _json_payload, _json_length);
 			if (colon_position) {
-				return get_value_type(value_key, _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER;
+				return _get_value_type(value_key, _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER;
 			}
 		}
 		return false;
@@ -905,10 +923,10 @@ public:
      * @return true if 'to' field is string and matches
      */
 	bool is_to_name(const char* name) const {
-		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('t', _json_payload, _json_length);
 		if (colon_position) {
-			ValueType value_type = get_value_type('t', _json_payload, _json_length, colon_position);
-			if (value_type == ValueType::TALKIE_VT_STRING && get_value_string('t', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length, colon_position)) {
+			ValueType value_type = _get_value_type('t', _json_payload, _json_length, colon_position);
+			if (value_type == ValueType::TALKIE_VT_STRING && _get_value_string('t', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length, colon_position)) {
 				return strcmp(_temp_string, name) == 0;
 			}
 		}
@@ -924,10 +942,10 @@ public:
      * @note Returns false for channel 255 (reserved)
      */
 	bool is_to_channel(uint8_t channel) const {
-		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('t', _json_payload, _json_length);
 		return colon_position 
-			&& get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER
-			&& get_value_number('t', _json_payload, _json_length, colon_position) == channel;
+			&& _get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER
+			&& _get_value_number('t', _json_payload, _json_length, colon_position) == channel;
 	}
 
 
@@ -940,8 +958,8 @@ public:
      * @param key Key to check
      * @return ValueType enum
      */
-	ValueType get_value_type(char key) const {
-		return get_value_type(key, _json_payload, _json_length);
+	ValueType _get_value_type(char key) const {
+		return _get_value_type(key, _json_payload, _json_length);
 	}
 
 
@@ -950,8 +968,8 @@ public:
      * @param key Key to read
      * @return Numeric value, or 0 if not found/not number
      */
-	uint32_t get_value_number(char key) const {
-		return get_value_number(key, _json_payload, _json_length);
+	uint32_t _get_value_number(char key) const {
+		return _get_value_number(key, _json_payload, _json_length);
 	}
 
 
@@ -960,9 +978,9 @@ public:
      * @return MessageValue enum, or TALKIE_MSG_NOISE if invalid
      */
 	MessageValue get_message_value() const {
-		size_t colon_position = get_colon_position('m', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('m', _json_payload, _json_length);
 		if (colon_position) {
-			uint8_t message_number = get_value_number('m', _json_payload, _json_length, colon_position);
+			uint8_t message_number = _get_value_number('m', _json_payload, _json_length, colon_position);
 			if (message_number < static_cast<uint8_t>( MessageValue::TALKIE_MSG_NOISE )) {
 				return static_cast<MessageValue>( message_number );
 			}
@@ -976,7 +994,7 @@ public:
      * @return Identity value (0-65535)
      */
 	uint16_t get_identity() {
-		return static_cast<uint16_t>(get_value_number('i', _json_payload, _json_length));
+		return static_cast<uint16_t>(_get_value_number('i', _json_payload, _json_length));
 	}
 
 
@@ -994,9 +1012,9 @@ public:
      * @return BroadcastValue enum, or TALKIE_BC_NONE if invalid
      */
 	BroadcastValue get_broadcast_value() const {
-		size_t colon_position = get_colon_position('b', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('b', _json_payload, _json_length);
 		if (colon_position) {
-			BroadcastValue broadcast_value = static_cast<BroadcastValue>( get_value_number('b', _json_payload, _json_length, colon_position) );
+			BroadcastValue broadcast_value = static_cast<BroadcastValue>( _get_value_number('b', _json_payload, _json_length, colon_position) );
 			if (broadcast_value < BroadcastValue::TALKIE_BC_NONE) {
 				return broadcast_value;
 			}
@@ -1010,9 +1028,9 @@ public:
      * @return RogerValue enum, or TALKIE_RGR_NIL if invalid
      */
 	RogerValue get_roger_value() const {
-		size_t colon_position = get_colon_position('r', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('r', _json_payload, _json_length);
 		if (colon_position) {
-			uint8_t roger_number = (uint8_t)get_value_number('r', _json_payload, _json_length, colon_position);
+			uint8_t roger_number = (uint8_t)_get_value_number('r', _json_payload, _json_length, colon_position);
 			if (roger_number < static_cast<uint8_t>( RogerValue::TALKIE_RGR_NIL )) {
 				return static_cast<RogerValue>( roger_number );
 			}
@@ -1026,9 +1044,9 @@ public:
      * @return SystemValue enum, or TALKIE_SYS_UNDEFINED if invalid
      */
 	SystemValue get_system_value() const {
-		size_t colon_position = get_colon_position('s', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('s', _json_payload, _json_length);
 		if (colon_position) {
-			uint8_t system_number = (uint8_t)get_value_number('s', _json_payload, _json_length, colon_position);
+			uint8_t system_number = (uint8_t)_get_value_number('s', _json_payload, _json_length, colon_position);
 			if (system_number < static_cast<uint8_t>( SystemValue::TALKIE_SYS_UNDEFINED )) {
 				return static_cast<SystemValue>( system_number );
 			}
@@ -1042,9 +1060,9 @@ public:
      * @return ErrorValue enum, or TALKIE_ERR_UNDEFINED if invalid
      */
 	ErrorValue get_error_value() const {
-		size_t colon_position = get_colon_position('e', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('e', _json_payload, _json_length);
 		if (colon_position) {
-			uint8_t error_number = (uint8_t)get_value_number('e', _json_payload, _json_length, colon_position);
+			uint8_t error_number = (uint8_t)_get_value_number('e', _json_payload, _json_length, colon_position);
 			if (error_number < static_cast<uint8_t>( ErrorValue::TALKIE_ERR_UNDEFINED )) {
 				return static_cast<ErrorValue>( error_number );
 			}
@@ -1060,7 +1078,7 @@ public:
      * @warning Returned pointer is to internal buffer. Copy if needed.
      */
     char* get_from_name() const {
-        if (get_value_string('f', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length)) {
+        if (_get_value_string('f', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length)) {
             return _temp_string;  // safe C string
         }
         return nullptr;  // failed
@@ -1072,7 +1090,7 @@ public:
      * @return ValueType of 't' field
      */
 	ValueType get_to_type() const {
-		return get_value_type('t', _json_payload, _json_length);
+		return _get_value_type('t', _json_payload, _json_length);
 	}
 
 
@@ -1080,10 +1098,10 @@ public:
      * @brief Get target name
      * @return Pointer to target name, or nullptr if not a string
      */
-    char* get_to_name() const {
-		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
-		if (colon_position && get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING) {
-			if (get_value_string('t', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length, colon_position)) {
+    const char* get_to_name() const {
+		size_t colon_position = _get_colon_position('t', _json_payload, _json_length);
+		if (colon_position && _get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_STRING) {
+			if (_get_value_string('t', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length, colon_position)) {
 				return _temp_string;
 			}
 		}
@@ -1096,9 +1114,9 @@ public:
      * @return Channel number (0-254)
      */
 	uint8_t get_to_channel() const {
-		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
-		if (colon_position && get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER) {
-			return (uint8_t)get_value_number('t', _json_payload, _json_length, colon_position);
+		size_t colon_position = _get_colon_position('t', _json_payload, _json_length);
+		if (colon_position && _get_value_type('t', _json_payload, _json_length, colon_position) == ValueType::TALKIE_VT_INTEGER) {
+			return (uint8_t)_get_value_number('t', _json_payload, _json_length, colon_position);
 		}
 		return 255;	// Means, no chanel
 	}
@@ -1111,13 +1129,13 @@ public:
      * Determines if message is for specific name, channel, broadcast, or invalid.
      */
 	TalkerMatch get_talker_match() const {
-		size_t colon_position = get_colon_position('t', _json_payload, _json_length);
+		size_t colon_position = _get_colon_position('t', _json_payload, _json_length);
 		if (colon_position) {
-			ValueType value_type = get_value_type('t', _json_payload, _json_length, colon_position);
+			ValueType value_type = _get_value_type('t', _json_payload, _json_length, colon_position);
 			switch (value_type) {
 				case ValueType::TALKIE_VT_INTEGER:
 				{
-					uint8_t channel = get_value_number('t', _json_payload, _json_length, colon_position);
+					uint8_t channel = _get_value_number('t', _json_payload, _json_length, colon_position);
 					if (channel < 255) {
 						return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
 					} else {	// 255 is a NO response channel
@@ -1150,7 +1168,7 @@ public:
 	ValueType get_nth_value_type(uint8_t nth) {
 		if (nth < 10) {
 			char value_key = '0' + nth;
-			return get_value_type(value_key, _json_payload, _json_length);
+			return _get_value_type(value_key, _json_payload, _json_length);
 		}
 		return ValueType::TALKIE_VT_VOID;
 	}
@@ -1162,7 +1180,7 @@ public:
      * @return Pointer to string value, or nullptr if not string/invalid
      */
 	char* get_nth_value_string(uint8_t nth) const {
-		if (nth < 10 && get_value_string('0' + nth, _temp_string, TALKIE_MAX_LEN, _json_payload, _json_length)) {
+		if (nth < 10 && _get_value_string('0' + nth, _temp_string, TALKIE_MAX_LEN, _json_payload, _json_length)) {
 			return _temp_string;  // safe C string
 		}
 		return nullptr;  // failed
@@ -1177,7 +1195,7 @@ public:
 	uint32_t get_nth_value_number(uint8_t nth) const {
 		if (nth < 10) {
 			char value_key = '0' + nth;
-			return get_value_number(value_key, _json_payload, _json_length);
+			return _get_value_number(value_key, _json_payload, _json_length);
 		}
 		return false;
 	}
@@ -1188,7 +1206,7 @@ public:
      * @return ValueType of 'a' field
      */
 	ValueType get_action_type() const {
-		return get_value_type('a', _json_payload, _json_length);
+		return _get_value_type('a', _json_payload, _json_length);
 	}
 
 
@@ -1197,7 +1215,7 @@ public:
      * @return Pointer to action string, or nullptr if not string
      */
 	char* get_action_string() const {
-		if (get_value_string('a', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length)) {
+		if (_get_value_string('a', _temp_string, TALKIE_NAME_LEN, _json_payload, _json_length)) {
 			return _temp_string;  // safe C string
 		}
 		return nullptr;  // failed
@@ -1209,7 +1227,7 @@ public:
      * @return Numeric action value, or 0 if not number
      */
 	uint32_t get_action_number() const {
-		return get_value_number('a', _json_payload, _json_length);
+		return _get_value_number('a', _json_payload, _json_length);
 	}
 
 
@@ -1279,6 +1297,19 @@ public:
 	}
 
 
+    /**
+     * @brief Remove all the nth values
+     * @return true if removed at least one value
+     */
+	bool remove_all_nth_values() {
+		bool removed_values = false;
+		for (uint8_t nth = 0; nth < 10; ++nth) {
+			if (remove_nth_value(nth)) removed_values = true;
+		}
+		return removed_values;
+	}
+
+
     // ============================================
     // SETTERS - FIELD MODIFICATION
     // ============================================
@@ -1289,7 +1320,7 @@ public:
      * @return true if field exists and was updated
      */
 	bool set_message_value(MessageValue message_value) {
-		size_t value_position = get_value_position('m', _json_payload, _json_length);
+		size_t value_position = _get_value_position('m', _json_payload, _json_length);
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(message_value);
 			return true;
@@ -1393,7 +1424,7 @@ public:
      * @return true if successful
      */
 	bool set_broadcast_value(BroadcastValue broadcast_value) {
-		size_t value_position = get_value_position('b', _json_payload, _json_length);
+		size_t value_position = _get_value_position('b', _json_payload, _json_length);
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(broadcast_value);
 			return true;
@@ -1408,7 +1439,7 @@ public:
      * @return true if successful
      */
 	bool set_roger_value(RogerValue roger_value) {
-		size_t value_position = get_value_position('r', _json_payload, _json_length);
+		size_t value_position = _get_value_position('r', _json_payload, _json_length);
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(roger_value);
 			return true;
@@ -1423,7 +1454,7 @@ public:
      * @return true if successful
      */
 	bool set_system_value(SystemValue system_value) {
-		size_t value_position = get_value_position('s', _json_payload, _json_length);
+		size_t value_position = _get_value_position('s', _json_payload, _json_length);
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(system_value);
 			return true;
@@ -1438,7 +1469,7 @@ public:
      * @return true if successful
      */
 	bool set_error_value(ErrorValue error_value) {
-		size_t value_position = get_value_position('e', _json_payload, _json_length);
+		size_t value_position = _get_value_position('e', _json_payload, _json_length);
 		if (value_position) {
 			_json_payload[value_position] = '0' + static_cast<uint8_t>(error_value);
 			return true;
@@ -1483,8 +1514,8 @@ public:
      *       'from' becomes 'to' and 'from' is thus removed.
      */
 	bool swap_from_with_to() {
-		size_t key_from_position = get_key_position('f', _json_payload, _json_length);
-		size_t key_to_position = get_key_position('t', _json_payload, _json_length);
+		size_t key_from_position = _get_key_position('f', _json_payload, _json_length);
+		size_t key_to_position = _get_key_position('t', _json_payload, _json_length);
 		if (key_from_position) {
 			if (key_to_position) {
 				_json_payload[key_from_position] = 't';
