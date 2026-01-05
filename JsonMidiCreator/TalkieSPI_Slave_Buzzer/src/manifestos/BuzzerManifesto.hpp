@@ -60,7 +60,7 @@ public:
 
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message) override {
+    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
 
@@ -111,7 +111,7 @@ public:
 	}
     
 
-    void echo(JsonTalker& talker, JsonMessage& json_message) override {
+    void echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
         (void)talker;		// Silence unused parameter warning
 		
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
@@ -135,7 +135,7 @@ public:
     }
 
 
-    void error(JsonTalker& talker, JsonMessage& json_message) override {
+    void error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
         (void)talker;		// Silence unused parameter warning
 		
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************

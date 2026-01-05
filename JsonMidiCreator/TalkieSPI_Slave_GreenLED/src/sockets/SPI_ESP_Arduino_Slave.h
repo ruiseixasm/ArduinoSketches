@@ -159,7 +159,7 @@ protected:
 			#endif
 			
 			_received_length = length;
-			BroadcastSocket::startTransmission();
+			BroadcastSocket::_startTransmission();
 			_received_length_spi = 0;	// Allows the device to receive more data
 			_received_length = 0;
 		}
