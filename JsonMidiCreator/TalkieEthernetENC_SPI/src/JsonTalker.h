@@ -508,9 +508,6 @@ public:
 					if (!json_message.has_identity()) {
 						json_message.set_identity();
 					}
-					if (!json_message.has_broadcast_value()) {
-						json_message.set_broadcast_value(BroadcastValue::TALKIE_BC_REMOTE);
-					}
 					transmitToRepeater(json_message);
 				} else if (_manifesto) {
 					_manifesto->noise(*this, json_message, talker_match);
