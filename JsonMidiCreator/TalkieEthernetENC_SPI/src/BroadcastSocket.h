@@ -299,7 +299,11 @@ protected:
 							BroadcastValue broadcast = static_cast<BroadcastValue>(
 								JsonMessage::_get_value_number('b', _received_buffer, _received_length, broadcast_colon_position)
 							);
-							error_message.set_broadcast_value(broadcast);
+							if (broadcast < BroadcastValue::TALKIE_BC_NONE) {
+								error_message.set_broadcast_value(broadcast);
+							} else {
+								error_message.set_broadcast_value(BroadcastValue::TALKIE_BC_REMOTE);
+							}
 						} else {
 							error_message.set_broadcast_value(BroadcastValue::TALKIE_BC_REMOTE);
 						}
