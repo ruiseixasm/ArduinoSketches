@@ -800,6 +800,12 @@ public:
 	}
 
 
+	/** @brief Check if broadcast value field exists */ 
+	bool has_broadcast_value() const {
+		return _get_colon_position('b', _json_payload, _json_length) > 0;
+	}
+
+
 	/** @brief Check if 'from' field exists */
 	bool has_from() const {
 		return _get_colon_position('f', _json_payload, _json_length) > 0;
@@ -831,6 +837,12 @@ public:
 	/** @brief Check if system field exists */
 	bool has_system() const {
 		return _get_colon_position('s', _json_payload, _json_length) > 0;
+	}
+
+
+	/** @brief Check if error field exists */
+	bool has_error() const {
+		return _get_colon_position('e', _json_payload, _json_length) > 0;
 	}
 
 
