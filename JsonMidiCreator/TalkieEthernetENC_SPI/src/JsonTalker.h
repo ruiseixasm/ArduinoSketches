@@ -284,7 +284,7 @@ public:
 	bool transmitToRepeater(JsonMessage& json_message);
 	
     
-    bool _handleTransmission(JsonMessage& json_message) {
+    bool _handleTransmission(JsonMessage& json_message, TalkerMatch talker_match = TalkerMatch::TALKIE_MATCH_ANY) {
 
 		MessageValue message_value = json_message.get_message_value();
 
@@ -502,6 +502,56 @@ public:
 				break;
 			
 			case MessageValue::TALKIE_MSG_NOISE:
+				{
+					// size_t from_colon_position = json_message.get_from_name();
+					// size_t to_colon_position = JsonMessage::_get_colon_position('t', _received_buffer, _received_length);
+					// if (from_colon_position && to_colon_position) {
+					// 	ValueType from_value_type = JsonMessage::_get_value_type('f', _received_buffer, _received_length, from_colon_position);
+					// 	ValueType to_value_type = JsonMessage::_get_value_type('t', _received_buffer, _received_length, to_colon_position);
+					// 	if (from_value_type == ValueType::TALKIE_VT_STRING && to_value_type == from_value_type) {
+					// 		char from[TALKIE_NAME_LEN];
+					// 		char to[TALKIE_NAME_LEN];
+					// 		if (JsonMessage::_get_value_string('f', from, TALKIE_NAME_LEN, _received_buffer, _received_length, from_colon_position) &&
+					// 			JsonMessage::_get_value_string('t', to, TALKIE_NAME_LEN, _received_buffer, _received_length, from_colon_position)) {
+								
+					// 			JsonMessage error_message;
+					// 			error_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+					// 			error_message.set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
+					// 			error_message.set_to_name(from);
+					// 			error_message.set_from_name(to);
+								
+					// 			size_t identity_colon_position = JsonMessage::_get_colon_position('i', _received_buffer, _received_length);
+					// 			if (identity_colon_position &&
+					// 				JsonMessage::_get_value_type('i', _received_buffer, _received_length, identity_colon_position) == ValueType::TALKIE_VT_INTEGER) {
+								
+					// 				uint16_t identity = JsonMessage::_get_value_number('i', _received_buffer, _received_length, identity_colon_position);
+					// 				error_message.set_identity(identity);
+					// 			} else {
+					// 				error_message.set_identity();
+					// 			}
+
+					// 			size_t broadcast_colon_position = JsonMessage::_get_colon_position('b', _received_buffer, _received_length);
+					// 			if (broadcast_colon_position &&
+					// 				JsonMessage::_get_value_type('b', _received_buffer, _received_length, broadcast_colon_position) == ValueType::TALKIE_VT_INTEGER) {
+								
+					// 				BroadcastValue broadcast = static_cast<BroadcastValue>(
+					// 					JsonMessage::_get_value_number('b', _received_buffer, _received_length, broadcast_colon_position)
+					// 				);
+					// 				if (broadcast < BroadcastValue::TALKIE_BC_NONE) {
+					// 					error_message.set_broadcast_value(broadcast);
+					// 				} else {
+					// 					error_message.set_broadcast_value(BroadcastValue::TALKIE_BC_REMOTE);
+					// 				}
+					// 			} else {
+					// 				error_message.set_broadcast_value(BroadcastValue::TALKIE_BC_REMOTE);
+					// 			}
+
+					// 			_finishTransmission(error_message);
+					// 		}
+					// 	}
+					// }
+				}
+
 				if (_manifesto) {
 					_manifesto->noise(*this, json_message);
 				}
