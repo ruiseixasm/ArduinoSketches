@@ -324,7 +324,7 @@ public:
 							#endif
 
 							// ROGER should be implicit for CALL to spare json string size for more data index value nth
-							if (!_manifesto->actionByIndex(index_found_i, *this, json_message)) {
+							if (!_manifesto->actionByIndex(index_found_i, *this, json_message, talker_match)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
 							}
 						} else {
@@ -490,14 +490,14 @@ public:
 					#endif
 
 					if (message_id == _original_message.identity) {
-						_manifesto->echo(*this, json_message);
+						_manifesto->echo(*this, json_message, talker_match);
 					}
 				}
 				break;
 			
 			case MessageValue::TALKIE_MSG_ERROR:
 				if (_manifesto) {
-					_manifesto->error(*this, json_message);
+					_manifesto->error(*this, json_message, talker_match);
 				}
 				break;
 			
@@ -513,7 +513,7 @@ public:
 					}
 					transmitToRepeater(json_message);
 				} else if (_manifesto) {
-					_manifesto->noise(*this, json_message);
+					_manifesto->noise(*this, json_message, talker_match);
 				}
 				break;
 			

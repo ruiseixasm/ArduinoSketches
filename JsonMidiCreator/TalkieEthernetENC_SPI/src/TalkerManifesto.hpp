@@ -110,28 +110,32 @@ public:
     }
     
     // Action implementations - MUST be implemented by derived
-    virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message) {
+    virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)index;		// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
+        (void)talker_match;	// Silence unused parameter warning
         return false;
 	}
 
 
-    virtual void echo(JsonTalker& talker, JsonMessage& json_message) {
+    virtual void echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
+        (void)talker_match;	// Silence unused parameter warning
     }
 
 
-    virtual void error(JsonTalker& talker, JsonMessage& json_message) {
+    virtual void error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
+        (void)talker_match;	// Silence unused parameter warning
     }
 
-    virtual void noise(JsonTalker& talker, JsonMessage& json_message) {
+    virtual void noise(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
+        (void)talker_match;	// Silence unused parameter warning
     }
 
 };

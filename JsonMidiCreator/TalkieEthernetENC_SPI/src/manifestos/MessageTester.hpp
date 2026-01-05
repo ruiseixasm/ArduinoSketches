@@ -68,7 +68,7 @@ protected:
 public:
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message) override {
+    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
 		
 		if (index >= sizeof(calls)/sizeof(Action)) return false;
 		
@@ -85,7 +85,7 @@ public:
 				uint8_t value_i = 0;
 				bool no_errors = true;
 				for (uint8_t test_i = 1; test_i < actionsCount(); test_i++) {
-					if (!actionByIndex(test_i, talker, json_message)) {
+					if (!actionByIndex(test_i, talker, json_message, talker_match)) {
 						failed_tests[value_i++] = test_i;
 						no_errors = false;
 					}

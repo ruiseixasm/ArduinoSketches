@@ -16,7 +16,8 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // Index-based operations (simplified examples)
-bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message) {
+bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+    (void)talker_match;	// Silence unused parameter warning
 	
 	bool ping = false;
 
@@ -110,7 +111,8 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 }
 
 
-void Spy::echo(JsonTalker& talker, JsonMessage& json_message) {
+void Spy::echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+    (void)talker_match;	// Silence unused parameter warning
 	Original original_message = talker.get_original();
 	
 	#ifdef SPY_MANIFESTO_DEBUG
@@ -138,7 +140,8 @@ void Spy::echo(JsonTalker& talker, JsonMessage& json_message) {
 }
 
 
-void Spy::error(JsonTalker& talker, JsonMessage& json_message) {
+void Spy::error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+    (void)talker_match;	// Silence unused parameter warning
 	ValueType value_type = json_message.get_nth_value_type(0);
 	switch (value_type) {
 
