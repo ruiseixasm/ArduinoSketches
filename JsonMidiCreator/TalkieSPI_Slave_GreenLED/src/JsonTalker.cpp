@@ -30,7 +30,7 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 	Serial.println();  // optional: just to add a newline after the JSON
 	#endif
 
-	if (_message_repeater && prepareMessage(json_message)) {
+	if (_message_repeater && _prepareMessage(json_message)) {
 		switch (_link_type) {
 			case LinkType::TALKIE_LT_UP_LINKED:
 			case LinkType::TALKIE_LT_UP_BRIDGED:

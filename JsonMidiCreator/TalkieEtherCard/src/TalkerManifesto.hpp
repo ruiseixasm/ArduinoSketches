@@ -69,10 +69,9 @@ protected:
     // Iterator states
     uint8_t actionsIterIdx = 0;
 
-    virtual const Action* getActionsArray() const = 0;
-
+    virtual const Action* _getActionsArray() const = 0;
     // Size methods
-    virtual uint8_t actionsCount() const = 0;
+    virtual uint8_t _actionsCount() const = 0;
 
 
 public:
@@ -81,23 +80,23 @@ public:
         (void)talker;		// Silence unused parameter warning
 	}
 
-	virtual void iterateActionsReset() {
+	virtual void _iterateActionsReset() {
 		actionsIterIdx = 0;
 	}
 
 
     // Iterator next methods - IMPLEMENTED in base class
-    virtual const Action* iterateActionNext() {
-        if (actionsIterIdx < actionsCount()) {
-            return &getActionsArray()[actionsIterIdx++];
+    virtual const Action* _iterateActionNext() {
+        if (actionsIterIdx < _actionsCount()) {
+            return &_getActionsArray()[actionsIterIdx++];
         }
         return nullptr;
     }
     
     // Name-based index search - IMPLEMENTED in base class
-    virtual uint8_t actionIndex(const char* name) const {
-        for (uint8_t i = 0; i < actionsCount(); i++) {
-            if (strcmp(getActionsArray()[i].name, name) == 0) {
+    virtual uint8_t _actionIndex(const char* name) const {
+        for (uint8_t i = 0; i < _actionsCount(); i++) {
+            if (strcmp(_getActionsArray()[i].name, name) == 0) {
                 return i;
             }
         }
@@ -105,12 +104,12 @@ public:
     }
     
     // Numeric index validation
-    virtual uint8_t actionIndex(uint8_t index) const {
-        return (index < actionsCount()) ? index : 255;
+    virtual uint8_t _actionIndex(uint8_t index) const {
+        return (index < _actionsCount()) ? index : 255;
     }
     
     // Action implementations - MUST be implemented by derived
-    virtual bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+    virtual bool _actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)index;		// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
@@ -119,20 +118,20 @@ public:
 	}
 
 
-    virtual void echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+    virtual void _echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
         (void)talker_match;	// Silence unused parameter warning
     }
 
 
-    virtual void error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+    virtual void _error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
         (void)talker_match;	// Silence unused parameter warning
     }
 
-    virtual void noise(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+    virtual void _noise(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
         (void)talker_match;	// Silence unused parameter warning

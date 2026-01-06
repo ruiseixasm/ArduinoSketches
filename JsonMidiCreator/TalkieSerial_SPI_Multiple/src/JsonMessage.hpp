@@ -802,12 +802,7 @@ public:
 
 	/** @brief Check if broadcast value field exists */ 
 	bool has_broadcast_value() const {
-		size_t colon_position = _get_colon_position('b', _json_payload, _json_length);
-		if (colon_position) {
-			BroadcastValue broadcast_value = static_cast<BroadcastValue>(_get_value_number('b', _json_payload, _json_length, colon_position));
-			return broadcast_value <= BroadcastValue::TALKIE_BC_NONE;
-		}
-		return false;
+		return _get_colon_position('b', _json_payload, _json_length) > 0;
 	}
 
 

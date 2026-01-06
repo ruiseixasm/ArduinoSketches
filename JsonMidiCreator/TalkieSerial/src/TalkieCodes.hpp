@@ -15,10 +15,13 @@ https://github.com/ruiseixasm/JsonTalkie
 
 /**
  * @file TalkieCodes.hpp
- * @brief All JSON message field codes including Linkage ones
+ * @brief This sets the multiple codes associated to the json values.
+ * 
+ * By default an inexistent key returns 0 as number, so, any first key
+ * bellow is considered the respective default key value.
  * 
  * @author Rui Seixas Monteiro
- * @date Created: 2026-01-03
+ * @date Created: 2026-01-06
  * @version 1.0.0
  */
 
@@ -32,10 +35,10 @@ https://github.com/ruiseixasm/JsonTalkie
 struct TalkieCodes {
 
 	enum ValueType : uint8_t {
-		TALKIE_VT_STRING,
-		TALKIE_VT_INTEGER,
+		TALKIE_VT_VOID,
 		TALKIE_VT_OTHER,
-		TALKIE_VT_VOID
+		TALKIE_VT_INTEGER,
+		TALKIE_VT_STRING
 	};
 
 	
@@ -57,10 +60,10 @@ struct TalkieCodes {
 
 
 	enum BroadcastValue : uint8_t {
+		TALKIE_BC_NONE,
 		TALKIE_BC_REMOTE,
 		TALKIE_BC_LOCAL,
-		TALKIE_BC_SELF,
-		TALKIE_BC_NONE
+		TALKIE_BC_SELF
 	};
 
 
@@ -78,13 +81,13 @@ struct TalkieCodes {
 
 
     enum SystemValue : uint8_t {
+        TALKIE_SYS_UNDEFINED,
         TALKIE_SYS_BOARD,
         TALKIE_SYS_MUTE,
         TALKIE_SYS_DROPS,
         TALKIE_SYS_DELAY,
         TALKIE_SYS_SOCKET,
-        TALKIE_SYS_MANIFESTO,
-        TALKIE_SYS_UNDEFINED
+        TALKIE_SYS_MANIFESTO
     };
 
 
@@ -98,6 +101,7 @@ struct TalkieCodes {
 
 
     enum ErrorValue : uint8_t {
+        TALKIE_ERR_UNDEFINED,
         TALKIE_ERR_CHECKSUM,
         TALKIE_ERR_MESSAGE,
         TALKIE_ERR_IDENTITY,
@@ -106,8 +110,7 @@ struct TalkieCodes {
         TALKIE_ERR_TO,
         TALKIE_ERR_DELAY,
         TALKIE_ERR_KEY,
-        TALKIE_ERR_VALUE,
-        TALKIE_ERR_UNDEFINED
+        TALKIE_ERR_VALUE
     };
 };
 

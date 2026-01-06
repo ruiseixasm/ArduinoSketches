@@ -99,17 +99,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool receivedJsonMessage(const JsonMessage& json_message) {
-		
-		return true;
-	}
-
-	// Allows the overriding class to peek after processing of the JSON message
-	virtual bool processedJsonMessage(const JsonMessage& json_message) {
-        (void)json_message;	// Silence unused parameter warning
-
-		return true;
-	}
+	virtual void _checkReceivedMessage(const JsonMessage& json_message) {}
 
 	
 	bool _transmitToRepeater(JsonMessage& json_message);
@@ -234,21 +224,7 @@ protected:
 				Serial.print(millis() - json_message._reference_time);
 				#endif
 				
-				// Gives a chance to show it one time
-				if (!receivedJsonMessage(json_message)) {
-					#ifdef JSON_TALKER_DEBUG
-					Serial.println(4);
-					#endif
-					if (json_message.swap_from_with_to()) {
-						json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
-						if (!json_message.has_identity()) {
-							json_message.set_identity();
-						}
-						_finishTransmission(json_message);	// Includes reply swap
-					}
-					return false;
-				}
-
+				_checkReceivedMessage(json_message); // Gives a chance to show it before transmitting
 				_transmitToRepeater(json_message);
 				
 				#ifdef MESSAGE_DEBUG_TIMING
@@ -276,7 +252,7 @@ protected:
     }
 
 
-	virtual bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
+	virtual bool _availableReceivingBuffer(uint8_t wait_seconds = 3) {
 		uint16_t start_waiting = (uint16_t)millis();
 		while (_received_length) {
 			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
@@ -286,7 +262,7 @@ protected:
 		return true;
 	}
 
-	virtual bool availableSendingBuffer(uint8_t wait_seconds = 3) {
+	virtual bool _availableSendingBuffer(uint8_t wait_seconds = 3) {
 		uint16_t start_waiting = (uint16_t)millis();
 		while (_sending_length) {
 			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
@@ -307,22 +283,8 @@ protected:
 	}
 
 
-    virtual bool send(const JsonMessage& json_message) {
-        (void)json_message;	// Silence unused parameter warning
-		
-        return true;
-    }
-
-
-    virtual size_t receive() {
-        // In theory, a UDP packet on a local area network (LAN) could survive
-        // for about 4.25 minutes (255 seconds).
-        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
-        if (_control_timing && (uint16_t)millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
-            _control_timing = false;
-        }
-        return 0;
-    }
+    virtual size_t _receive() = 0;
+    virtual bool _send(const JsonMessage& json_message) = 0;
 
 
 public:
@@ -336,7 +298,13 @@ public:
     virtual const char* class_name() const = 0;
 
     virtual void _loop() {
-        receive();
+        // In theory, a UDP packet on a local area network (LAN) could survive
+        // for about 4.25 minutes (255 seconds).
+        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
+        if (_control_timing && (uint16_t)millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
+            _control_timing = false;
+        }
+        _receive();
     }
 
 
@@ -421,7 +389,7 @@ public:
 		#endif
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (json_message.validate_fields() && processedJsonMessage(json_message) && availableSendingBuffer()) {
+		if (json_message.validate_fields() && _availableSendingBuffer()) {
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("socketSend2: "));
@@ -453,7 +421,7 @@ public:
 				Serial.print(millis() - json_message._reference_time);
 				return send_result;
 				#else
-				return send(json_message);
+				return _send(json_message);
 				#endif
 				
 			}
