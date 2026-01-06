@@ -99,15 +99,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool _receivedJsonMessage(const JsonMessage& json_message) {
-		
-		return true;
-	}
-
-	// Allows the overriding class to peek after processing of the JSON message
-	virtual bool _sendingJsonMessage(const JsonMessage& json_message) {
-        (void)json_message;	// Silence unused parameter warning
-
+	virtual bool _checkReceivedMessage(const JsonMessage& json_message) {
 		return true;
 	}
 
@@ -235,7 +227,7 @@ protected:
 				#endif
 				
 				// Gives a chance to show it one time
-				if (!_receivedJsonMessage(json_message)) {
+				if (!_checkReceivedMessage(json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
@@ -413,7 +405,7 @@ public:
 		#endif
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (json_message.validate_fields() && _sendingJsonMessage(json_message) && _availableSendingBuffer()) {
+		if (json_message.validate_fields() && _availableSendingBuffer()) {
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("socketSend2: "));
