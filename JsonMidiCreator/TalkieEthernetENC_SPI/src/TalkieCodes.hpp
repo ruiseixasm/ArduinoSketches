@@ -15,21 +15,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 /**
  * @file TalkieCodes.hpp
- * @brief All JSON message field codes including Linkage ones
- * 
- * @author Rui Seixas Monteiro
- * @date Created: 2026-01-03
- * @version 1.0.0
- */
-
-#ifndef TALKIE_CODES_HPP
-#define TALKIE_CODES_HPP
-
-#include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
-
-
-/**
- * @file TalkieCodes.hpp
  * @brief This sets the multiple codes associated to the json values.
  * 
  * By default an inexistent key returns 0 as number, so, any first key
@@ -39,6 +24,12 @@ https://github.com/ruiseixasm/JsonTalkie
  * @date Created: 2026-01-06
  * @version 1.0.0
  */
+
+#ifndef TALKIE_CODES_HPP
+#define TALKIE_CODES_HPP
+
+#include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
+
 
 // PREFIXED VERSION - 100% safe across all boards
 struct TalkieCodes {
