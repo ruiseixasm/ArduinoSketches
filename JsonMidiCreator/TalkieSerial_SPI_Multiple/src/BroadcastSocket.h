@@ -283,8 +283,8 @@ protected:
 	}
 
 
-    virtual void _receive() = 0;
-    virtual void _send(const JsonMessage& json_message) = 0;
+    virtual size_t _receive() = 0;
+    virtual bool _send(const JsonMessage& json_message) = 0;
 
 
 public:
@@ -421,7 +421,7 @@ public:
 				Serial.print(millis() - json_message._reference_time);
 				return send_result;
 				#else
-				_send(json_message);
+				return _send(json_message);
 				#endif
 				
 			}

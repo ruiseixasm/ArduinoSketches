@@ -52,65 +52,64 @@ protected:
     Changed_EthernetENC() : BroadcastSocket() {}
 
 
-    void _receive() override {
+    size_t _receive() override {
+        if (_udp == nullptr) return 0;
 
-        if (_udp == nullptr) {
-
-			// Receive packets
-			int packetSize = _udp->parsePacket();
-			if (packetSize > 0) {
+        // Receive packets
+        int packetSize = _udp->parsePacket();
+        if (packetSize > 0) {
+			
+            // ===== [SELF IP] DROP self-sent packets =====
+            if (_udp->remoteIP() == _local_ip) {
+                _udp->flush();   // discard payload
 				
-				// ===== [SELF IP] DROP self-sent packets =====
-				if (_udp->remoteIP() == _local_ip) {
-					_udp->flush();   // discard payload
-					
-					#ifdef BROADCAST_ETHERNETENC_DEBUG
-					Serial.println(F("\treceive1: Dropped packet for being sent from this socket"));
-					Serial.print(F("\t\tRemote IP: "));
-					Serial.println(_udp->remoteIP());
-					Serial.print(F("\t\tLocal IP:  "));
-					Serial.println(_local_ip);
-					#endif
-					
-					return;
-				} else {
-					
-					#ifdef BROADCAST_ETHERNETENC_DEBUG
-					Serial.println(F("\treceive1: Packet NOT sent from this socket"));
-					Serial.print(F("\t\tRemote IP: "));
-					Serial.println(_udp->remoteIP());
-					Serial.print(F("\t\tLocal IP:  "));
-					Serial.println(_local_ip);
-					#endif
-					
-				}
-
-				// Avoids overflow
-				if (packetSize > TALKIE_BUFFER_SIZE) return;
-
-				int length = _udp->read(_received_buffer, static_cast<size_t>(packetSize));
-				if (length > 0) {
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				Serial.println(F("\treceive1: Dropped packet for being sent from this socket"));
+				Serial.print(F("\t\tRemote IP: "));
+            	Serial.println(_udp->remoteIP());
+				Serial.print(F("\t\tLocal IP:  "));
+            	Serial.println(_local_ip);
+				#endif
 				
-					#ifdef BROADCAST_ETHERNETENC_DEBUG
-					Serial.print(F("\treceive1: "));
-					Serial.print(packetSize);
-					Serial.print(F("B from "));
-					Serial.print(_udp->remoteIP());
-					Serial.print(F(" to "));
-					Serial.print(_local_ip);
-					Serial.print(F(" -->      "));
-					Serial.println(_received_buffer);
-					#endif
-					
-					_source_ip = _udp->remoteIP();
-					// Makes sure the _received_length is set
-					_received_length = (size_t)length;
-					_startTransmission();
-					// Makes sure the _received_buffer is deleted with 0
-					_received_length = 0;
-				}
+                return 0;
+            } else {
+				
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				Serial.println(F("\treceive1: Packet NOT sent from this socket"));
+				Serial.print(F("\t\tRemote IP: "));
+            	Serial.println(_udp->remoteIP());
+				Serial.print(F("\t\tLocal IP:  "));
+            	Serial.println(_local_ip);
+				#endif
+				
 			}
-		}
+
+            // Avoids overflow
+            if (packetSize > TALKIE_BUFFER_SIZE) return 0;
+
+            int length = _udp->read(_received_buffer, static_cast<size_t>(packetSize));
+            if (length <= 0) return 0;  // Your requested check - handles all error cases
+            
+            #ifdef BROADCAST_ETHERNETENC_DEBUG
+            Serial.print(F("\treceive1: "));
+            Serial.print(packetSize);
+            Serial.print(F("B from "));
+            Serial.print(_udp->remoteIP());
+            Serial.print(F(" to "));
+            Serial.print(_local_ip);
+            Serial.print(F(" -->      "));
+            Serial.println(_received_buffer);
+            #endif
+            
+            _source_ip = _udp->remoteIP();
+			// Makes sure the _received_length is set
+			_received_length = (size_t)length;
+			_startTransmission();
+			// Makes sure the _received_buffer is deleted with 0
+			_received_length = 0;
+			return (size_t)length;
+        }
+        return 0;   // nothing received
     }
 
 
@@ -128,7 +127,7 @@ protected:
 	}
 
 
-    void _send(const JsonMessage& json_message) override {
+    bool _send(const JsonMessage& json_message) override {
 		
         if (_udp) {
 			
@@ -156,7 +155,7 @@ protected:
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("\tFailed to begin packet"));
                 #endif
-                return;
+                return false;
             } else {
 				
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -178,7 +177,7 @@ protected:
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("\tFailed to begin packet"));
                 #endif
-                return;
+                return false;
             } else {
 									
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -195,7 +194,7 @@ protected:
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("\n\t\tERROR: Failed to end packet"));
                 #endif
-                return;
+                return false;
             }
 
             #ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -204,7 +203,10 @@ protected:
             #endif
 
 			_sending_length = 0;	// Marks sending buffer available
+
+			return true;
         }
+        return false;
     }
 
 

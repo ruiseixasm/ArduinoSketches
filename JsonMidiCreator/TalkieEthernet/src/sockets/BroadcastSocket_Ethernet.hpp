@@ -33,42 +33,43 @@ protected:
     BroadcastSocket_Ethernet() : BroadcastSocket() {}
 
 
-    void _receive() override {
+    size_t _receive() override {
+        if (_udp == nullptr) return 0;
 
-        if (_udp) {
-			// Receive packets
-			int packetSize = _udp->parsePacket();
-			if (packetSize > 0) {
+        // Receive packets
+        int packetSize = _udp->parsePacket();
+        if (packetSize > 0) {
 
-				// Avoids overflow
-				if (packetSize > TALKIE_BUFFER_SIZE) return;
+            // Avoids overflow
+            if (packetSize > TALKIE_BUFFER_SIZE) return 0;
 
-				int length = _udp->read(_received_buffer, static_cast<size_t>(packetSize));
-				if (length > 0) {
+            int length = _udp->read(_received_buffer, static_cast<size_t>(packetSize));
+			if (length > 0) {
 
-					_received_length = (size_t)length;
-					
-					#ifdef BROADCAST_ETHERNETENC_DEBUG
-					Serial.print(packetSize);
-					Serial.print(F("B from "));
-					Serial.print(_udp->remoteIP());
-					Serial.print(F(":"));
-					Serial.print(_udp->remotePort());
-					Serial.print(F(" -> "));
-					Serial.write(_received_buffer, _received_length);
-					Serial.println();
-					#endif
-					
-					_source_ip = _udp->remoteIP();
-					_startTransmission();
-					_received_length = 0;
-				}
+				_received_length = (size_t)length;
+				
+				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				Serial.print(packetSize);
+				Serial.print(F("B from "));
+				Serial.print(_udp->remoteIP());
+				Serial.print(F(":"));
+				Serial.print(_udp->remotePort());
+				Serial.print(F(" -> "));
+				Serial.write(_received_buffer, _received_length);
+				Serial.println();
+				#endif
+				
+				_source_ip = _udp->remoteIP();
+				_startTransmission();
+				_received_length = 0;
+				return (size_t)length;
 			}
-		}
+        }
+        return 0;   // nothing received
     }
 
 
-    void _send(const JsonMessage& json_message) override {
+    bool _send(const JsonMessage& json_message) override {
 
 		if (_udp) {
 
@@ -79,14 +80,14 @@ protected:
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
 				Serial.println(F("Failed to begin packet"));
 				#endif
-				return;
+				return false;
 			}
 			#else
 			if (!_udp->beginPacket(broadcastIP, _port)) {
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
 				Serial.println(F("Failed to begin packet"));
 				#endif
-				return;
+				return false;
 			}
 			#endif
 
@@ -97,7 +98,7 @@ protected:
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
 				Serial.println(F("Failed to end packet"));
 				#endif
-				return;
+				return false;
 			}
 
 			#ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -107,7 +108,9 @@ protected:
 			#endif
 
 			_sending_length = 0;	// Marks sending buffer available
+			return true;
 		}
+		return false;
     }
 
 

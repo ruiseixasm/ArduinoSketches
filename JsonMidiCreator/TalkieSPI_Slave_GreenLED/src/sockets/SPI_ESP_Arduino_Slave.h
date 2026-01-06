@@ -123,7 +123,7 @@ protected:
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    void _send(const JsonMessage& json_message) override {
+    bool _send(const JsonMessage& json_message) override {
 
 		#ifdef BROADCAST_SPI_DEBUG
 		Serial.print(F("\tsend1: Sent message: "));
@@ -135,9 +135,11 @@ protected:
 
 		// Marks the sending buffer ready to be sent
 		_sending_length_spi = _sending_length;
+			
+        return true;
     }
 
-    void _receive() override {
+    size_t _receive() override {
 
 		uint8_t length = _received_length_spi;
 
@@ -156,6 +158,8 @@ protected:
 			_received_length_spi = 0;	// Allows the device to receive more data
 			_received_length = 0;
 		}
+
+        return length;
     }
 
 

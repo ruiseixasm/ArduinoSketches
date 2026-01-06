@@ -486,7 +486,7 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    void _send(const JsonMessage& json_message) override {
+    bool _send(const JsonMessage& json_message) override {
 
 		if (_initiated) {
 			
@@ -573,12 +573,15 @@ protected:
 			#endif
 
 			_sending_length = 0;	// Marks sending buffer available
+
+			return true;
 		}
+        return false;
     }
 
 	
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    void _receive() override {
+    size_t _receive() override {
 
 		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
 		static uint16_t timeout = (uint16_t)micros();
@@ -629,6 +632,7 @@ protected:
 				
 			}
 		}
+        return 0;   // Receives are all called internally in this method
     }
 
 
