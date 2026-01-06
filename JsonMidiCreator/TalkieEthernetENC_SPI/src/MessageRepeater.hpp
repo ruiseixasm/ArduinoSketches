@@ -279,15 +279,22 @@ public:
 						
 						default: return false;
 					}
+					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						_uplinked_sockets[socket_j]->_finishTransmission(original_message);
+						if (!_uplinked_sockets[socket_j]->_finishTransmission(original_message)) {
+							no_fails = false;
+						}
 					}
+					return no_fails;
 				} else {
+					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						_uplinked_sockets[socket_j]->_finishTransmission(message);
+						if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
+							no_fails = false;
+						}
 					}
+					return no_fails;
 				}
-				return true;
 			}
 			break;
 			
@@ -348,25 +355,36 @@ public:
 						
 						default: return false;
 					}
+					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						_downlinked_sockets[socket_j]->_finishTransmission(original_message);
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(original_message)) {
+							no_fails = false;
+						}
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-							_uplinked_sockets[socket_j]->_finishTransmission(original_message);
+							if (!_uplinked_sockets[socket_j]->_finishTransmission(original_message)) {
+								no_fails = false;
+							}
 						}
 					}
+					return no_fails;
 				} else {
+					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						_downlinked_sockets[socket_j]->_finishTransmission(message);
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
+							no_fails = false;
+						}
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-							_uplinked_sockets[socket_j]->_finishTransmission(message);
+							if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
+								no_fails = false;
+							}
 						}
 					}
+					return no_fails;
 				}
-				return true;
 			}
 			break;
 			
@@ -630,15 +648,22 @@ public:
 						
 						default: return false;
 					}
+					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						_downlinked_sockets[socket_j]->_finishTransmission(original_message);
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(original_message)) {
+							no_fails = false;
+						}
 					}
+					return no_fails;
 				} else {
+					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						_downlinked_sockets[socket_j]->_finishTransmission(message);
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
+							no_fails = false;
+						}
 					}
+					return no_fails;
 				}
-				return true;
 			}
 			break;
 			
