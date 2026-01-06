@@ -105,7 +105,7 @@ protected:
 	bool _transmitToRepeater(JsonMessage& json_message);
 
     
-    bool _startTransmission() {
+    void _startTransmission() {
 
 		// Trim trailing newline and carriage return characters or any other that isn't '}'
 		while (_received_length > 26 
@@ -116,18 +116,18 @@ protected:
 		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
 		if (_received_length < 27) {
 			_received_length = 0;
-			return false;
+			return;
 		}
 
 		if (_received_buffer[0] != '{') {
 			_received_length = 0;
-			return false;	
+			return;	
 		}
 
 		size_t colon_position = JsonMessage::_get_colon_position('c', _received_buffer, _received_length);
 		if (!colon_position) {
 			_received_length = 0;
-			return false;	
+			return;	
 		}
 
 		uint16_t received_checksum = JsonMessage::_get_value_number('c', _received_buffer, _received_length, colon_position);
@@ -139,7 +139,7 @@ protected:
 		Serial.println(received_checksum);
 		#endif
 
-		if (!JsonMessage::_remove('c', _received_buffer, &_received_length, colon_position)) return false;
+		if (!JsonMessage::_remove('c', _received_buffer, &_received_length, colon_position)) return;
 		uint16_t checksum = _generateChecksum(_received_buffer, _received_length);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
@@ -209,7 +209,7 @@ protected:
 									Serial.println(remote_delay);
 									#endif
 									_drops_count++;
-									return false;  // Out of time package (too late)
+									return;  // Out of time package (too late)
 								}
 							}
 						}
@@ -245,10 +245,9 @@ protected:
 			JsonMessage noisy_message(_received_buffer, _received_length);
 			noisy_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
 			noisy_message.set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
-			return _transmitToRepeater(noisy_message);
+			_transmitToRepeater(noisy_message);
 		}
 		_received_length = 0;	// Enables new receiving
-        return true;
     }
 
 
