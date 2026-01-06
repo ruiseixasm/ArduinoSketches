@@ -69,10 +69,10 @@ struct TalkieCodes {
 
 
 	enum BroadcastValue : uint8_t {
+		TALKIE_BC_NONE,
 		TALKIE_BC_REMOTE,
 		TALKIE_BC_LOCAL,
-		TALKIE_BC_SELF,
-		TALKIE_BC_NONE
+		TALKIE_BC_SELF
 	};
 
 
