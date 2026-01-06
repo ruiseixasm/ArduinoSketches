@@ -37,7 +37,7 @@ protected:
 
 	bool _reading_serial = false;
     
-    bool _send(const JsonMessage& json_message) override {
+    void _send(const JsonMessage& json_message) override {
         (void)json_message;	// Silence unused parameter warning
 
 		#ifdef SOCKET_SERIAL_DEBUG_TIMING
@@ -59,16 +59,13 @@ protected:
 				Serial.print(millis() - _reference_time);
 				#endif
 
-				_sending_length = 0;
-				return true;
 			}
 			_sending_length = 0;
 		}
-		return false;
     }
 
 
-    size_t _receive() override {
+    void _receive() override {
     
 		#ifdef SOCKET_SERIAL_DEBUG_TIMING
 		_reference_time = millis();
@@ -88,7 +85,7 @@ protected:
 
 						_received_buffer[_received_length++] = '}';
 						_startTransmission();
-						return _received_length;
+						return;
 					} else {
 						_received_buffer[_received_length++] = c;
 					}
@@ -109,7 +106,6 @@ protected:
 				_received_buffer[_received_length++] = '{';
 			}
 		}
-		return 0;
     }
 
 

@@ -442,7 +442,7 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool _send(const JsonMessage& json_message) override {
+    void _send(const JsonMessage& json_message) override {
 
 		if (_spi_instance) {
 			
@@ -470,15 +470,12 @@ protected:
 			#endif
 
 			_sending_length = 0;	// Marks sending buffer available
-
-			return true;
 		}
-        return false;
     }
 
 	
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t _receive() override {
+    void _receive() override {
 
 		if (_spi_instance) {
 
@@ -520,7 +517,6 @@ protected:
 			_received_length = 0;
 			
 		}
-        return 0;   // Receives are all called internally in this method
     }
 
 

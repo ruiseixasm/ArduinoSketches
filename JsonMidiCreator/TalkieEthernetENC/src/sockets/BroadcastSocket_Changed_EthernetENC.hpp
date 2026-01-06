@@ -104,33 +104,35 @@ public:
     }
 
 
-    size_t _receive() override {
-        if (_udp == nullptr) return 0;
+    void _receive() override {
 
-        // Receive packets
-        int packetSize = _udp->parsePacket();
-        if (packetSize > 0) {
+        if (_udp) {
 
-            // Avoids overflow
-            if (packetSize > TALKIE_BUFFER_SIZE) return 0;
+			// Receive packets
+			int packetSize = _udp->parsePacket();
+			if (packetSize > 0) {
 
-            int length = _udp->read(_receiving_buffer, static_cast<size_t>(packetSize));
-            if (length <= 0) return 0;  // Your requested check - handles all error cases
-            
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.print(packetSize);
-            Serial.print(F("B from "));
-            Serial.print(_udp->remoteIP());
-            Serial.print(F(":"));
-            Serial.print(_udp->remotePort());
-            Serial.print(F(" -> "));
-            Serial.println(_receiving_buffer);
-            #endif
-            
-            _source_ip = _udp->remoteIP();
-            return startTransmission(static_cast<size_t>(length));
-        }
-        return 0;   // nothing received
+				// Avoids overflow
+				if (packetSize > TALKIE_BUFFER_SIZE) return;
+
+				int length = _udp->read(_receiving_buffer, static_cast<size_t>(packetSize));
+				if (length > 0) {
+					
+					#ifdef BROADCAST_ETHERNETENC_DEBUG
+					Serial.print(packetSize);
+					Serial.print(F("B from "));
+					Serial.print(_udp->remoteIP());
+					Serial.print(F(":"));
+					Serial.print(_udp->remotePort());
+					Serial.print(F(" -> "));
+					Serial.println(_receiving_buffer);
+					#endif
+					
+					_source_ip = _udp->remoteIP();
+					startTransmission(static_cast<size_t>(length));
+				}
+			}
+		}
     }
 
     void set_udp(EthernetUDP* udp) { _udp = udp; }
