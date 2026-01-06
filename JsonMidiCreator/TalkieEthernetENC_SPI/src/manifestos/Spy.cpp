@@ -111,7 +111,7 @@ bool Spy::_actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_me
 }
 
 
-void Spy::echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+void Spy::_echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
     (void)talker_match;	// Silence unused parameter warning
 	Original original_message = talker.get_original();
 	
@@ -140,7 +140,7 @@ void Spy::echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker
 }
 
 
-void Spy::error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+void Spy::_error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
     (void)talker_match;	// Silence unused parameter warning
 	ValueType value_type = json_message.get_nth_value_type(0);
 	switch (value_type) {

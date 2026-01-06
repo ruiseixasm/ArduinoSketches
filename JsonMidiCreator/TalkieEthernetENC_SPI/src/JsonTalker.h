@@ -490,14 +490,14 @@ public:
 					#endif
 
 					if (message_id == _original_message.identity) {
-						_manifesto->echo(*this, json_message, talker_match);
+						_manifesto->_echo(*this, json_message, talker_match);
 					}
 				}
 				break;
 			
 			case MessageValue::TALKIE_MSG_ERROR:
 				if (_manifesto) {
-					_manifesto->error(*this, json_message, talker_match);
+					_manifesto->_error(*this, json_message, talker_match);
 				}
 				break;
 			
@@ -510,7 +510,7 @@ public:
 						transmitToRepeater(json_message);
 					}
 				} else if (_manifesto) {
-					_manifesto->noise(*this, json_message, talker_match);
+					_manifesto->_noise(*this, json_message, talker_match);
 				}
 				break;
 			
