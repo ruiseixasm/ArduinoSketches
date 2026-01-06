@@ -40,8 +40,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonMessage.hpp"
 
 
-#define BROADCASTSOCKET_DEBUG
-#define BROADCASTSOCKET_DEBUG_NEW
+// #define BROADCASTSOCKET_DEBUG
+// #define BROADCASTSOCKET_DEBUG_NEW
 
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds

@@ -32,7 +32,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.h"
 #include "JsonTalker.h"
 
-// #define MESSAGE_REPEATER_DEBUG
+#define MESSAGE_REPEATER_DEBUG
 
 using LinkType			= TalkieCodes::LinkType;
 using TalkerMatch 		= TalkieCodes::TalkerMatch;
@@ -419,7 +419,7 @@ public:
 		TalkerMatch talker_match = message.get_talker_match();
 
 		#ifdef MESSAGE_REPEATER_DEBUG
-		Serial.print(F("\t\tsocketUplink1: "));
+		Serial.print(F("\t\t_socketUplink1: "));
 		message.write_to(Serial);
 		Serial.print(" | ");
 		Serial.println((int)broadcast);
@@ -566,7 +566,7 @@ public:
 		TalkerMatch match = TalkerMatch::TALKIE_MATCH_NONE;
 
 		#ifdef MESSAGE_REPEATER_DEBUG
-		Serial.print(F("\t\ttalkerDownlink1: "));
+		Serial.print(F("\t\t_talkerDownlink1: "));
 		message.write_to(Serial);
 		Serial.print(" | ");
 		Serial.println((int)broadcast);
