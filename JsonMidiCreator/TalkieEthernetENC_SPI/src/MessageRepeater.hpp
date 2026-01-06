@@ -194,11 +194,6 @@ public:
 				}
 				break;
 
-				case TalkerMatch::TALKIE_MATCH_FAIL:
-					message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
-					message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-					return false;
-
 				default: return false;
 			}
 			
@@ -284,11 +279,6 @@ public:
 						}
 						break;
 						
-						case TalkerMatch::TALKIE_MATCH_FAIL:
-							message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
-							message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-							return false;
-
 						default: return false;
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
@@ -357,11 +347,6 @@ public:
 						}
 						break;
 						
-						case TalkerMatch::TALKIE_MATCH_FAIL:
-							message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
-							message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-							return false;
-
 						default: return false;
 					}
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
@@ -420,11 +405,6 @@ public:
 					}
 					break;
 					
-					case TalkerMatch::TALKIE_MATCH_FAIL:
-						message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
-						message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-						return false;
-
 					default: return false;
 				}
 			}
@@ -499,11 +479,6 @@ public:
 					}
 					break;
 					
-					case TalkerMatch::TALKIE_MATCH_FAIL:
-						message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
-						message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-						return false;
-
 					default: return false;
 				}
 				
@@ -569,11 +544,6 @@ public:
 					}
 					break;
 					
-					case TalkerMatch::TALKIE_MATCH_FAIL:
-						message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
-						message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-						return false;
-
 					default: return false;
 				}
 				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
@@ -659,11 +629,6 @@ public:
 						}
 						break;
 						
-						case TalkerMatch::TALKIE_MATCH_FAIL:
-							message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
-							message.set_error_value(ErrorValue::TALKIE_ERR_TO);
-							return false;
-
 						default: return false;
 					}
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
