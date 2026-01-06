@@ -306,11 +306,11 @@ public:
 						switch (value_type) {
 
 							case ValueType::TALKIE_VT_STRING:
-								index_found_i = _manifesto->actionIndex(json_message.get_action_string());
+								index_found_i = _manifesto->_actionIndex(json_message.get_action_string());
 								break;
 							
 							case ValueType::TALKIE_VT_INTEGER:
-								index_found_i = _manifesto->actionIndex(json_message.get_action_number());
+								index_found_i = _manifesto->_actionIndex(json_message.get_action_number());
 								break;
 							
 							default: break;
@@ -324,7 +324,7 @@ public:
 							#endif
 
 							// ROGER should be implicit for CALL to spare json string size for more data index value nth
-							if (!_manifesto->actionByIndex(index_found_i, *this, json_message, talker_match)) {
+							if (!_manifesto->_actionByIndex(index_found_i, *this, json_message, talker_match)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
 							}
 						} else {
@@ -379,8 +379,8 @@ public:
 					uint8_t action_index = 0;
 					if (_manifesto) {
 						const TalkerManifesto::Action* action;
-						_manifesto->iterateActionsReset();
-						while ((action = _manifesto->iterateActionNext()) != nullptr) {	// No boilerplate
+						_manifesto->_iterateActionsReset();
+						while ((action = _manifesto->_iterateActionNext()) != nullptr) {	// No boilerplate
 							json_message.set_nth_value_number(0, action_index++);
 							json_message.set_nth_value_string(1, action->name);
 							json_message.set_nth_value_string(2, action->desc);

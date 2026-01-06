@@ -59,16 +59,16 @@ protected:
 		{"string", "Checks if it has a value 0 as string"}
     };
     
-    const Action* getActionsArray() const override { return calls; }
+    const Action* _getActionsArray() const override { return calls; }
 
     // Size methods
-    uint8_t actionsCount() const override { return sizeof(calls)/sizeof(Action); }
+    uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
 public:
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
+    bool _actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
 		
 		if (index >= sizeof(calls)/sizeof(Action)) return false;
 		
@@ -84,8 +84,8 @@ public:
 				uint8_t failed_tests[10] = {0};
 				uint8_t value_i = 0;
 				bool no_errors = true;
-				for (uint8_t test_i = 1; test_i < actionsCount(); test_i++) {
-					if (!actionByIndex(test_i, talker, json_message, talker_match)) {
+				for (uint8_t test_i = 1; test_i < _actionsCount(); test_i++) {
+					if (!_actionByIndex(test_i, talker, json_message, talker_match)) {
 						failed_tests[value_i++] = test_i;
 						no_errors = false;
 					}

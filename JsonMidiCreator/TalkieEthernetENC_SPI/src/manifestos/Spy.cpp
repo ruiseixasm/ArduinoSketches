@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // Index-based operations (simplified examples)
-bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+bool Spy::_actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
     (void)talker_match;	// Silence unused parameter warning
 	
 	bool ping = false;
@@ -25,7 +25,7 @@ bool Spy::actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_mes
 	BroadcastValue source_data = json_message.get_broadcast_value();
 	if (source_data == BroadcastValue::TALKIE_BC_REMOTE) {
 
-		if (index < actionsCount()) {
+		if (index < _actionsCount()) {
 			// Actual implementation would do something based on index
 			switch(index) {
 

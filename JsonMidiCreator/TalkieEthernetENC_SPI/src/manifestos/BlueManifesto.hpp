@@ -49,16 +49,16 @@ protected:
 		{"actions", "Returns the number of triggered Actions"}
     };
     
-    const Action* getActionsArray() const override { return calls; }
+    const Action* _getActionsArray() const override { return calls; }
 
     // Size methods
-    uint8_t actionsCount() const override { return sizeof(calls)/sizeof(Action); }
+    uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
 public:
     
     // Index-based operations (simplified examples)
-    bool actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
+    bool _actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
         (void)talker;		// Silence unused parameter warning
     	(void)talker_match;	// Silence unused parameter warning
 		
