@@ -111,7 +111,7 @@ public:
 	}
     
 
-    void echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
+    void _echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
         (void)talker;		// Silence unused parameter warning
 		
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
@@ -135,7 +135,7 @@ public:
     }
 
 
-    void error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
+    void _error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
         (void)talker;		// Silence unused parameter warning
 		
 		// *************** PARALLEL DEVELOPMENT WITH JSONMESSAGE (DONE) ***************
