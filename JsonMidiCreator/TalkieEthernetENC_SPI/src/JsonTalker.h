@@ -502,13 +502,15 @@ public:
 				break;
 			
 			case MessageValue::TALKIE_MSG_NOISE:
-				if (json_message.has_error() && talker_match == TalkerMatch::TALKIE_MATCH_BY_NAME) {
-					json_message.remove_all_nth_values();	// Keeps it small and clean of bad chars
-					json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
-					if (!json_message.has_identity()) {
-						json_message.set_identity();
+				if (json_message.has_error()) {
+					if (talker_match == TalkerMatch::TALKIE_MATCH_BY_NAME || talker_match == TalkerMatch::TALKIE_MATCH_BY_CHANNEL) {
+						json_message.remove_all_nth_values();	// Keeps it small and clean of bad chars
+						json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+						if (!json_message.has_identity()) {
+							json_message.set_identity();
+						}
+						transmitToRepeater(json_message);
 					}
-					transmitToRepeater(json_message);
 				} else if (_manifesto) {
 					_manifesto->noise(*this, json_message, talker_match);
 				}
