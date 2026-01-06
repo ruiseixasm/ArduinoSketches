@@ -307,22 +307,8 @@ protected:
 	}
 
 
-    virtual bool send(const JsonMessage& json_message) {
-        (void)json_message;	// Silence unused parameter warning
-		
-        return true;
-    }
-
-
-    virtual size_t receive() {
-        // In theory, a UDP packet on a local area network (LAN) could survive
-        // for about 4.25 minutes (255 seconds).
-        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
-        if (_control_timing && (uint16_t)millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
-            _control_timing = false;
-        }
-        return 0;
-    }
+    virtual bool send(const JsonMessage& json_message) = 0;
+    virtual size_t receive() = 0;
 
 
 public:
@@ -336,6 +322,12 @@ public:
     virtual const char* class_name() const = 0;
 
     virtual void _loop() {
+        // In theory, a UDP packet on a local area network (LAN) could survive
+        // for about 4.25 minutes (255 seconds).
+        // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
+        if (_control_timing && (uint16_t)millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
+            _control_timing = false;
+        }
         receive();
     }
 
