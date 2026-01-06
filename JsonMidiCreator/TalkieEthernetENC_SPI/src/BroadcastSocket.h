@@ -40,8 +40,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "JsonMessage.hpp"
 
 
-// #define BROADCASTSOCKET_DEBUG
-// #define BROADCASTSOCKET_DEBUG_NEW
+#define BROADCASTSOCKET_DEBUG
+#define BROADCASTSOCKET_DEBUG_NEW
 
 // Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
@@ -184,43 +184,40 @@ protected:
 				Serial.println(checksum);
 				#endif
 
-				if (_max_delay_ms > 0) {
+				if (_max_delay_ms > 0 && message_code == MessageValue::TALKIE_MSG_CALL) {
 
-					if (message_code == MessageValue::TALKIE_MSG_CALL) {	// Only does time control on Calls (drops)
+					#ifdef BROADCASTSOCKET_DEBUG
+					Serial.print(F("handleTransmission6: Message code requires delay check: "));
+					Serial.println((int)message_code);
+					#endif
 
-						#ifdef BROADCASTSOCKET_DEBUG
-						Serial.print(F("handleTransmission6: Message code requires delay check: "));
-						Serial.println(message_code_int);
-						#endif
-
-						const uint16_t local_time = (uint16_t)millis();
+					const uint16_t local_time = (uint16_t)millis();
+					
+					if (_control_timing) {
 						
-						if (_control_timing) {
-							
-							const uint16_t remote_delay = _last_message_timestamp - message_timestamp;  // Package received after
+						const uint16_t remote_delay = _last_message_timestamp - message_timestamp;  // Package received after
 
-							if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
-								const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
-								const uint16_t local_delay = local_time - _last_local_time;
+						if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
+							const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
+							const uint16_t local_delay = local_time - _last_local_time;
+							#ifdef BROADCASTSOCKET_DEBUG
+							Serial.print(F("handleTransmission7: Local delay: "));
+							Serial.println(local_delay);
+							#endif
+							if (remote_delay > allowed_delay || local_delay > allowed_delay) {
 								#ifdef BROADCASTSOCKET_DEBUG
-								Serial.print(F("handleTransmission7: Local delay: "));
-								Serial.println(local_delay);
+								Serial.print(F("handleTransmission8: Out of time package (remote delay): "));
+								Serial.println(remote_delay);
 								#endif
-								if (remote_delay > allowed_delay || local_delay > allowed_delay) {
-									#ifdef BROADCASTSOCKET_DEBUG
-									Serial.print(F("handleTransmission8: Out of time package (remote delay): "));
-									Serial.println(remote_delay);
-									#endif
-									_drops_count++;
-									_received_length = 0;	// Enables new receiving
-									return;  // Out of time package (too late)
-								}
+								_drops_count++;
+								_received_length = 0;	// Enables new receiving
+								return;  // Out of time package (too late)
 							}
 						}
-						_last_local_time = local_time;
-						_last_message_timestamp = message_timestamp;
-						_control_timing = true;
 					}
+					_last_local_time = local_time;
+					_last_message_timestamp = message_timestamp;
+					_control_timing = true;
 				}
 
 				
@@ -235,7 +232,6 @@ protected:
 				Serial.print(" | ");
 				Serial.print(millis() - json_message._reference_time);
 				#endif
-				
 
 			} else {
 				#ifdef BROADCASTSOCKET_DEBUG
