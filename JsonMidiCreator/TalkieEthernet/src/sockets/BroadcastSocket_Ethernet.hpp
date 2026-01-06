@@ -33,7 +33,7 @@ protected:
     BroadcastSocket_Ethernet() : BroadcastSocket() {}
 
 
-    size_t receive() override {
+    size_t _receive() override {
         if (_udp == nullptr) return 0;
 
         // Need to call homologous method in super class first
@@ -72,10 +72,9 @@ protected:
     }
 
 
-    bool send(const JsonMessage& json_message) override {
-        if (_udp == nullptr) return false;
-
-        if (BroadcastSocket::send(json_message)) {	// Very important pre processing !!
+    bool _send(const JsonMessage& json_message) override {
+		
+		if (_udp) {
 
 			IPAddress broadcastIP(255, 255, 255, 255);
 
@@ -114,8 +113,7 @@ protected:
 			_sending_length = 0;	// Marks sending buffer available
 			return true;
 		}
-
-        return false;
+		return false;
     }
 
 

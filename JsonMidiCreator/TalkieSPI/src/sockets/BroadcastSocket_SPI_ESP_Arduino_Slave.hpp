@@ -204,7 +204,7 @@ public:
     }
 
 
-    size_t receive() override {
+    size_t _receive() override {
 
         // Need to call homologous method in super class first
         size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!

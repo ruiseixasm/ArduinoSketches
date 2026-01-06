@@ -37,7 +37,7 @@ protected:
 
 	bool _reading_serial = false;
     
-    bool send(const JsonMessage& json_message) override {
+    bool _send(const JsonMessage& json_message) override {
         (void)json_message;	// Silence unused parameter warning
 
 		#ifdef SOCKET_SERIAL_DEBUG_TIMING
@@ -68,7 +68,7 @@ protected:
     }
 
 
-    size_t receive() override {
+    size_t _receive() override {
     
 		#ifdef SOCKET_SERIAL_DEBUG_TIMING
 		_reference_time = millis();

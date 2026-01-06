@@ -91,7 +91,7 @@ protected:
         }
 
 
-	bool availableReceivingBuffer(uint8_t wait_seconds = 3) override {
+	bool _availableReceivingBuffer(uint8_t wait_seconds = 3) override {
 		uint16_t start_waiting = (uint16_t)millis();
 		while (_received_length_spi) {
 			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
@@ -101,7 +101,7 @@ protected:
 		return true;
 	}
 
-	bool availableSendingBuffer(uint8_t wait_seconds = 3) override {
+	bool _availableSendingBuffer(uint8_t wait_seconds = 3) override {
 		uint16_t start_waiting = (uint16_t)millis();
 		while (_sending_length_spi) {
 			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
@@ -123,30 +123,25 @@ protected:
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(const JsonMessage& json_message) override {
+    bool _send(const JsonMessage& json_message) override {
 
-		if (BroadcastSocket::send(json_message)) {	// Very important pre processing !!
-            
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tsend1: Sent message: "));
-			Serial.write(_sending_buffer, _sending_length);
-			Serial.println();
-			Serial.print(F("\tsend2: Sent length: "));
-			Serial.println(_sending_length);
-			#endif
+		#ifdef BROADCAST_SPI_DEBUG
+		Serial.print(F("\tsend1: Sent message: "));
+		Serial.write(_sending_buffer, _sending_length);
+		Serial.println();
+		Serial.print(F("\tsend2: Sent length: "));
+		Serial.println(_sending_length);
+		#endif
 
-			// Marks the sending buffer ready to be sent
-            _sending_length_spi = _sending_length;
+		// Marks the sending buffer ready to be sent
+		_sending_length_spi = _sending_length;
 			
-		}
-        return false;
+        return true;
     }
 
-    size_t receive() override {
+    size_t _receive() override {
 
-        // Need to call homologous method in super class first
-        uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
-		length = _received_length_spi;
+		uint8_t length = _received_length_spi;
 
 		if (length) {
 			

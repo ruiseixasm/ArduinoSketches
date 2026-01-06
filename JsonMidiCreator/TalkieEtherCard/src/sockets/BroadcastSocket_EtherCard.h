@@ -71,7 +71,7 @@ protected:
 	}
 
 
-    size_t receive() override {
+    size_t _receive() override {
 		_data_length = 0;	// Makes sure this is only called once per message received (it's the Ethernet reading that sets it)
 		ether.packetLoop(ether.packetReceive());	// Updates the _data_length variable
 		if (_data_length) {
@@ -92,29 +92,25 @@ protected:
     }
 
 
-    bool send(const JsonMessage& json_message) override {
+    bool _send(const JsonMessage& json_message) override {
         
-        if (BroadcastSocket::send(json_message)) {	// Very important pre processing !!
-				
-			uint8_t broadcastIp[4] = {255, 255, 255, 255};
-			
-			#ifdef BROADCAST_ETHERCARD_DEBUG
-			Serial.print(F("S: "));
-			Serial.write(_sending_buffer, _sending_length);
-			Serial.println();
-			#endif
+		uint8_t broadcastIp[4] = {255, 255, 255, 255};
+		
+		#ifdef BROADCAST_ETHERCARD_DEBUG
+		Serial.print(F("S: "));
+		Serial.write(_sending_buffer, _sending_length);
+		Serial.println();
+		#endif
 
-			#ifdef ENABLE_DIRECT_ADDRESSING
-			ether.sendUdp(_sending_buffer, _sending_length, _port, _source_ip, _port);
-			#else
-			ether.sendUdp(_sending_buffer, _sending_length, _port, broadcastIp, _port);
-			#endif
+		#ifdef ENABLE_DIRECT_ADDRESSING
+		ether.sendUdp(_sending_buffer, _sending_length, _port, _source_ip, _port);
+		#else
+		ether.sendUdp(_sending_buffer, _sending_length, _port, broadcastIp, _port);
+		#endif
 
-			_sending_length = 0;	// Marks sending buffer available
+		_sending_length = 0;	// Marks sending buffer available
 
-			return true;
-		}
-        return false;
+		return true;
     }
 
 

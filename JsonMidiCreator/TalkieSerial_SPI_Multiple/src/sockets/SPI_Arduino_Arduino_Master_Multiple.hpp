@@ -491,9 +491,9 @@ protected:
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool send(const JsonMessage& json_message) override {
+    bool _send(const JsonMessage& json_message) override {
 
-		if (_initiated && BroadcastSocket::send(json_message)) {	// Very important pre processing !!
+		if (_initiated) {
 			
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print("\n\tsend: ");
@@ -586,7 +586,7 @@ protected:
 
 	
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t receive() override {
+    size_t _receive() override {
 
 		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
 		static uint16_t timeout = (uint16_t)micros();
@@ -600,11 +600,8 @@ protected:
 				_reference_time = millis();
 				#endif
 
-				// Need to call homologous method in super class first
-				uint8_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
-
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-					length = receiveSPI(_ss_pins[ss_pin_i]);
+					uint8_t length = receiveSPI(_ss_pins[ss_pin_i]);
 					if (length > 0) {
 						
 						#ifdef BROADCAST_SPI_DEBUG_TIMING
