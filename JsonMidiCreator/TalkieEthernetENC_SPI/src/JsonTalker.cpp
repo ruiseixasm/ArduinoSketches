@@ -22,7 +22,7 @@ void JsonTalker::_setLink(MessageRepeater* message_repeater, LinkType link_type)
 }
 
 
-bool JsonTalker::transmitToRepeater(JsonMessage& json_message, TalkerMatch talker_match) {
+bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 
 	#ifdef JSON_TALKER_DEBUG_NEW
 	Serial.print(F("\t\t\t_transmitToRepeater(Talker): "));
@@ -30,7 +30,7 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message, TalkerMatch talke
 	Serial.println();  // optional: just to add a newline after the JSON
 	#endif
 
-	if (_message_repeater && _prepareMessage(json_message, talker_match)) {
+	if (_message_repeater && _prepareMessage(json_message)) {
 		switch (_link_type) {
 			case LinkType::TALKIE_LT_UP_LINKED:
 			case LinkType::TALKIE_LT_UP_BRIDGED:
@@ -43,7 +43,7 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message, TalkerMatch talke
 }
 
 
-bool JsonTalker::transmissionSockets(JsonMessage& json_message, TalkerMatch talker_match) {
+bool JsonTalker::transmissionSockets(JsonMessage& json_message) {
 	if (_message_repeater) {
 		uint8_t socket_index = 0;
 		const BroadcastSocket* socket;
@@ -51,7 +51,7 @@ bool JsonTalker::transmissionSockets(JsonMessage& json_message, TalkerMatch talk
 		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
 			json_message.set_nth_value_number(0, socket_index++);
 			json_message.set_nth_value_string(1, socket->class_name());
-			transmitToRepeater(json_message, talker_match);	// Many-to-One
+			transmitToRepeater(json_message);	// Many-to-One
 		}
 		return socket_index > 0;
 	}
@@ -59,7 +59,7 @@ bool JsonTalker::transmissionSockets(JsonMessage& json_message, TalkerMatch talk
 }
 
 
-bool JsonTalker::transmissionDrops(JsonMessage& json_message, TalkerMatch talker_match) {
+bool JsonTalker::transmissionDrops(JsonMessage& json_message) {
 	if (_message_repeater) {
 		uint8_t socket_index = 0;
 		const BroadcastSocket* socket;
@@ -67,7 +67,7 @@ bool JsonTalker::transmissionDrops(JsonMessage& json_message, TalkerMatch talker
 		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
 			json_message.set_nth_value_number(0, socket_index++);
 			json_message.set_nth_value_number(1, socket->get_drops_count());
-			transmitToRepeater(json_message, talker_match);	// Many-to-One
+			transmitToRepeater(json_message);	// Many-to-One
 		}
 		return socket_index > 0;
 	}
@@ -75,7 +75,7 @@ bool JsonTalker::transmissionDrops(JsonMessage& json_message, TalkerMatch talker
 }
 
 
-bool JsonTalker::transmissionDelays(JsonMessage& json_message, TalkerMatch talker_match) {
+bool JsonTalker::transmissionDelays(JsonMessage& json_message) {
 	if (_message_repeater) {
 		uint8_t socket_index = 0;
 		const BroadcastSocket* socket;
@@ -83,7 +83,7 @@ bool JsonTalker::transmissionDelays(JsonMessage& json_message, TalkerMatch talke
 		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
 			json_message.set_nth_value_number(0, socket_index++);
 			json_message.set_nth_value_number(1, socket->get_max_delay());
-			transmitToRepeater(json_message, talker_match);	// Many-to-One
+			transmitToRepeater(json_message);	// Many-to-One
 		}
 		return socket_index > 0;
 	}

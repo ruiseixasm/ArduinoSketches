@@ -17,6 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 // Index-based operations (simplified examples)
 bool Spy::_actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+    (void)talker_match;	// Silence unused parameter warning
 	
 	bool ping = false;
 
@@ -135,7 +136,7 @@ void Spy::_echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talke
 	// It's already an ECHO message, it's because of that that entered here
 	// Finally answers to the REMOTE caller by repeating all other json fields
 	json_message.set_broadcast_value(BroadcastValue::TALKIE_BC_REMOTE);
-	talker.transmitToRepeater(json_message, talker_match);
+	talker.transmitToRepeater(json_message);
 }
 
 
