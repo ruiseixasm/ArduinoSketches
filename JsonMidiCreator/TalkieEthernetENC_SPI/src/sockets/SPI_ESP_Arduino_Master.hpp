@@ -558,7 +558,7 @@ protected:
 
 	
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t _receive() override {
+    void _receive() override {
 
 		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
 		static uint16_t timeout = (uint16_t)micros();
@@ -606,10 +606,8 @@ protected:
 				}
 				// Makes sure the _received_buffer is deleted with 0
 				_received_length = 0;
-				
 			}
 		}
-        return 0;   // Receives are all called internally in this method
     }
 
 

@@ -386,7 +386,7 @@ public:
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t _receive() override {
+    void _receive() override {
 
 		if (_initiated) {
 
@@ -400,8 +400,6 @@ public:
 			// Makes sure the _receiving_buffer is reset with '\0'
 			_receiving_buffer[0] = '\0';
 		}
-
-        return 0;   // Receives are all called internally in this method
     }
 
 

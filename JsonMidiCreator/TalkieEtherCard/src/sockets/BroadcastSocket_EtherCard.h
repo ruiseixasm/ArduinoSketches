@@ -71,7 +71,7 @@ protected:
 	}
 
 
-    size_t _receive() override {
+    void _receive() override {
 		_data_length = 0;	// Makes sure this is only called once per message received (it's the Ethernet reading that sets it)
 		ether.packetLoop(ether.packetReceive());	// Updates the _data_length variable
 		if (_data_length) {
@@ -85,9 +85,7 @@ protected:
 
 			BroadcastSocket::_startTransmission();
 			_received_length = 0;
-			return _data_length;
 		}
-		return 0;
     }
 
 

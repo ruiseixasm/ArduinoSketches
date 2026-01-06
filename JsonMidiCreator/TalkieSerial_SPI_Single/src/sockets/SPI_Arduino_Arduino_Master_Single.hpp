@@ -478,7 +478,7 @@ protected:
 
 	
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    size_t _receive() override {
+    void _receive() override {
 
 		if (_spi_instance) {
 
@@ -520,7 +520,6 @@ protected:
 			_received_length = 0;
 			
 		}
-        return 0;   // Receives are all called internally in this method
     }
 
 

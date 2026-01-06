@@ -283,7 +283,7 @@ protected:
 	}
 
 
-    virtual size_t _receive() = 0;
+    virtual void _receive() = 0;
     virtual bool _send(const JsonMessage& json_message) = 0;
 
 

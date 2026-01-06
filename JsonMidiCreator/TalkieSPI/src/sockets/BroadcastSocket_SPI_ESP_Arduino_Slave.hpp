@@ -204,13 +204,12 @@ public:
     }
 
 
-    size_t _receive() override {
+    void _receive() override {
 
 		if (_received_data) {
 			size_t length = BroadcastSocket::startTransmission(_receiving_index);
 			deleteReceived();
 		}
-        return length;
     }
 
 };

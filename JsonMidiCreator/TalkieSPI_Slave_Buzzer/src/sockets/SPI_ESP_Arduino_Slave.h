@@ -139,7 +139,7 @@ protected:
         return true;
     }
 
-    size_t _receive() override {
+    void _receive() override {
 
 		uint8_t length = _received_length_spi;
 
@@ -158,8 +158,6 @@ protected:
 			_received_length_spi = 0;	// Allows the device to receive more data
 			_received_length = 0;
 		}
-
-        return length;
     }
 
 

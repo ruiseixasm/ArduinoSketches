@@ -68,7 +68,7 @@ protected:
     }
 
 
-    size_t _receive() override {
+    void _receive() override {
     
 		#ifdef SOCKET_SERIAL_DEBUG_TIMING
 		_reference_time = millis();
@@ -88,7 +88,7 @@ protected:
 
 						_received_buffer[_received_length++] = '}';
 						_startTransmission();
-						return _received_length;
+						return;
 					} else {
 						_received_buffer[_received_length++] = c;
 					}
@@ -109,7 +109,6 @@ protected:
 				_received_buffer[_received_length++] = '{';
 			}
 		}
-		return 0;
     }
 
 
