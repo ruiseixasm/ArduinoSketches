@@ -189,7 +189,6 @@ void setup() {
 void loop() {
     // Maintain DHCP lease (important for long-running applications)
     Ethernet.maintain();
-    
 	message_repeater.loop();
 }
 
