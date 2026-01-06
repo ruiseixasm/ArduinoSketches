@@ -439,31 +439,26 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool _checkReceivedMessage(const JsonMessage& json_message) override {
+	void _checkReceivedMessage(const JsonMessage& json_message) override {
 
-		if (BroadcastSocket::_checkReceivedMessage(json_message)) {
+		#ifdef BROADCAST_SPI_DEBUG
+		Serial.print(F("\tcheckJsonMessage1: FROM name: "));
+		Serial.println(json_message.get_from_name());
+		#endif
 
+		if (_names[_actual_ss_pin_i][0] == '\0') {
+			strcpy(_names[_actual_ss_pin_i], json_message.get_from_name());
+			
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
-			Serial.println(json_message.get_from_name());
+			Serial.print(F("\tcheckJsonMessage2: Saved actual named pin index i: "));
+			Serial.println(_actual_ss_pin_i);
+			Serial.print(F("\tcheckJsonMessage4: Saved name: "));
+			Serial.println(_names[_actual_ss_pin_i]);
+			Serial.print(F("\tcheckJsonMessage5: Concerning actual pin: "));
+			Serial.println(_ss_pins[_actual_ss_pin_i]);
 			#endif
 
-			if (_names[_actual_ss_pin_i][0] == '\0') {
-				strcpy(_names[_actual_ss_pin_i], json_message.get_from_name());
-				
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.print(F("\tcheckJsonMessage2: Saved actual named pin index i: "));
-				Serial.println(_actual_ss_pin_i);
-				Serial.print(F("\tcheckJsonMessage4: Saved name: "));
-				Serial.println(_names[_actual_ss_pin_i]);
-				Serial.print(F("\tcheckJsonMessage5: Concerning actual pin: "));
-				Serial.println(_ss_pins[_actual_ss_pin_i]);
-				#endif
-
-			}
-			return true;
 		}
-		return false;
 	}
 
     

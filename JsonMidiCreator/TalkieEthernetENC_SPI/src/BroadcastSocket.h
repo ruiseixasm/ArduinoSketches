@@ -99,9 +99,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool _checkReceivedMessage(const JsonMessage& json_message) {
-		return true;
-	}
+	virtual void _checkReceivedMessage(const JsonMessage& json_message) {}
 
 	
 	bool _transmitToRepeater(JsonMessage& json_message);
@@ -226,21 +224,7 @@ protected:
 				Serial.print(millis() - json_message._reference_time);
 				#endif
 				
-				// Gives a chance to show it one time
-				if (!_checkReceivedMessage(json_message)) {
-					#ifdef JSON_TALKER_DEBUG
-					Serial.println(4);
-					#endif
-					if (json_message.swap_from_with_to()) {
-						json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
-						if (!json_message.has_identity()) {
-							json_message.set_identity();
-						}
-						_finishTransmission(json_message);	// Includes reply swap
-					}
-					return false;
-				}
-
+				_checkReceivedMessage(json_message); // Gives a chance to show it before transmitting
 				_transmitToRepeater(json_message);
 				
 				#ifdef MESSAGE_DEBUG_TIMING

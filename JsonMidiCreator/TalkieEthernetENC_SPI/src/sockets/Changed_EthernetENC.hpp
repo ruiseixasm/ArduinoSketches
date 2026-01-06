@@ -114,21 +114,16 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool _checkReceivedMessage(const JsonMessage& json_message) override {
+	void _checkReceivedMessage(const JsonMessage& json_message) override {
 
-		if (BroadcastSocket::_checkReceivedMessage(json_message)) {
-			strcpy(_from_name, json_message.get_from_name());
-			
-			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
-			Serial.print(F("receivedJsonMessage1: "));
-			json_message.write_to(Serial);
-			Serial.print(" | ");
-			Serial.println(_from_name);
-			#endif
-
-			return true;
-		}
-		return false;
+		strcpy(_from_name, json_message.get_from_name());
+		
+		#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
+		Serial.print(F("receivedJsonMessage1: "));
+		json_message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println(_from_name);
+		#endif
 	}
 
 
