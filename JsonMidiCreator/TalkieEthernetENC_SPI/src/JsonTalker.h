@@ -371,11 +371,6 @@ public:
 				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				{   // Because of action_index and action !!!
 
-					#ifdef JSON_TALKER_DEBUG
-					Serial.print("\t=== This object is: ");
-					Serial.println(class_name());
-					#endif
-
 					uint8_t action_index = 0;
 					if (_manifesto) {
 						const TalkerManifesto::Action* action;
