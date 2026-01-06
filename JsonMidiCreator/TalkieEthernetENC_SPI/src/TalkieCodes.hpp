@@ -32,8 +32,8 @@ https://github.com/ruiseixasm/JsonTalkie
  * @file TalkieCodes.hpp
  * @brief This sets the multiple codes associated to the json values.
  * 
- * By default an inexistent key returns 0 as number, so, the first key
- * bellow is considered the default key value.
+ * By default an inexistent key returns 0 as number, so, any first key
+ * bellow is considered the respective default key value.
  * 
  * @author Rui Seixas Monteiro
  * @date Created: 2026-01-06
