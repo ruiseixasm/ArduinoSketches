@@ -102,7 +102,7 @@ protected:
 	virtual void _checkReceivedMessage(const JsonMessage& json_message) {}
 
 	
-	bool _transmitToRepeater(JsonMessage& json_message);
+	void _transmitToRepeater(JsonMessage& json_message);
 
     
     void _startTransmission() {
@@ -115,18 +115,18 @@ protected:
 
 		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
 		if (_received_length < 27) {
-			_received_length = 0;
+			_received_length = 0;	// Enables new receiving
 			return;
 		}
 
 		if (_received_buffer[0] != '{') {
-			_received_length = 0;
+			_received_length = 0;	// Enables new receiving
 			return;	
 		}
 
 		size_t colon_position = JsonMessage::_get_colon_position('c', _received_buffer, _received_length);
 		if (!colon_position) {
-			_received_length = 0;
+			_received_length = 0;	// Enables new receiving
 			return;	
 		}
 
@@ -139,7 +139,10 @@ protected:
 		Serial.println(received_checksum);
 		#endif
 
-		if (!JsonMessage::_remove('c', _received_buffer, &_received_length, colon_position)) return;
+		if (!JsonMessage::_remove('c', _received_buffer, &_received_length, colon_position)) {
+			_received_length = 0;	// Enables new receiving
+			return;
+		}
 		uint16_t checksum = _generateChecksum(_received_buffer, _received_length);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
