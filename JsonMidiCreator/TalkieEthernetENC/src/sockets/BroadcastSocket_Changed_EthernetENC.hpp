@@ -107,9 +107,6 @@ public:
     size_t _receive() override {
         if (_udp == nullptr) return 0;
 
-        // Need to call homologous method in super class first
-        BroadcastSocket::receive(); // Very im_portant to do or else it may stop receiving !!
-
         // Receive packets
         int packetSize = _udp->parsePacket();
         if (packetSize > 0) {

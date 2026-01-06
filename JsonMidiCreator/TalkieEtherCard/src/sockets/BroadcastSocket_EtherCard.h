@@ -83,7 +83,6 @@ protected:
 			Serial.println();
 			#endif
 
-			BroadcastSocket::receive();  // Makes sure it's the Ethernet reading that sets it! (always returns 0)
 			BroadcastSocket::_startTransmission();
 			_received_length = 0;
 			return _data_length;

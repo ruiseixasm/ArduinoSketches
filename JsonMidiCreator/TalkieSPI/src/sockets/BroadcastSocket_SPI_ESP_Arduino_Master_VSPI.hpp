@@ -390,11 +390,8 @@ public:
 
 		if (_initiated) {
 
-			// Need to call homologous method in super class first
-			size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
-
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				length = receiveString(_talkers_ss_pins[ss_pin_i]);
+				size_t length = receiveString(_talkers_ss_pins[ss_pin_i]);
 				if (length > 0) {
 					_actual_ss_pin = _talkers_ss_pins[ss_pin_i];
 					BroadcastSocket::startTransmission(length);

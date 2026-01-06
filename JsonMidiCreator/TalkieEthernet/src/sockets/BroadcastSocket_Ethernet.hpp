@@ -36,9 +36,6 @@ protected:
     size_t _receive() override {
         if (_udp == nullptr) return 0;
 
-        // Need to call homologous method in super class first
-        BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
-
         // Receive packets
         int packetSize = _udp->parsePacket();
         if (packetSize > 0) {
@@ -73,7 +70,7 @@ protected:
 
 
     bool _send(const JsonMessage& json_message) override {
-		
+
 		if (_udp) {
 
 			IPAddress broadcastIP(255, 255, 255, 255);

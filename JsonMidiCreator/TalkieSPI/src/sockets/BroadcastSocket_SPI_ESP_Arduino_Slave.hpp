@@ -206,14 +206,10 @@ public:
 
     size_t _receive() override {
 
-        // Need to call homologous method in super class first
-        size_t length = BroadcastSocket::receive(); // Very important to do or else it may stop receiving !!
-
 		if (_received_data) {
-			length = BroadcastSocket::startTransmission(_receiving_index);
+			size_t length = BroadcastSocket::startTransmission(_receiving_index);
 			deleteReceived();
 		}
-
         return length;
     }
 
