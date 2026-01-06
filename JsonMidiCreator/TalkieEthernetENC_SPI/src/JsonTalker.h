@@ -118,7 +118,7 @@ protected:
 	}
 
 
-	bool prepareMessage(JsonMessage& json_message) {
+	bool _prepareMessage(JsonMessage& json_message) {
 
 		if (json_message.has_from()) {
 			if (strcmp(json_message.get_from_name(), _name) != 0) {
@@ -518,7 +518,6 @@ public:
         }
         return true;
     }
-
 
 };
 
