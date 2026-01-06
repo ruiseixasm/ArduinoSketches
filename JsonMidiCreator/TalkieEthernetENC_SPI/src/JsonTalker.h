@@ -284,7 +284,7 @@ public:
 	bool transmitToRepeater(JsonMessage& json_message);
 	
     
-    bool _handleTransmission(JsonMessage& json_message, TalkerMatch talker_match) {
+    void _handleTransmission(JsonMessage& json_message, TalkerMatch talker_match) {
 
 		MessageValue message_value = json_message.get_message_value();
 
@@ -425,7 +425,7 @@ public:
 							if (!transmissionDrops(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
-        						return true;	// Avoids extra transmissions sends
+        						return;	// Avoids extra transmissions sends (to be developed)
 							}
 							break;
 
@@ -440,7 +440,7 @@ public:
 								if (!transmissionDelays(json_message)) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
-									return true;	// Avoids extra transmissions sends
+									return;	// Avoids extra transmissions sends (to be developed)
 								}
 							}
 							break;
@@ -449,7 +449,7 @@ public:
 							if (!transmissionSockets(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
-        						return true;	// Avoids extra transmissions sends
+        						return;	// Avoids extra transmissions sends (to be developed)
 							}
 							break;
 
@@ -509,9 +509,8 @@ public:
 				}
 				break;
 			
-			default: return false;
+			default: break;
         }
-        return true;
     }
 
 };
