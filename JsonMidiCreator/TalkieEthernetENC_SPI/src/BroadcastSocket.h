@@ -212,6 +212,7 @@ protected:
 									Serial.println(remote_delay);
 									#endif
 									_drops_count++;
+									_received_length = 0;	// Enables new receiving
 									return;  // Out of time package (too late)
 								}
 							}
