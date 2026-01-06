@@ -99,13 +99,13 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual bool receivedJsonMessage(const JsonMessage& json_message) {
+	virtual bool _receivedJsonMessage(const JsonMessage& json_message) {
 		
 		return true;
 	}
 
 	// Allows the overriding class to peek after processing of the JSON message
-	virtual bool processedJsonMessage(const JsonMessage& json_message) {
+	virtual bool _sendingJsonMessage(const JsonMessage& json_message) {
         (void)json_message;	// Silence unused parameter warning
 
 		return true;
@@ -235,7 +235,7 @@ protected:
 				#endif
 				
 				// Gives a chance to show it one time
-				if (!receivedJsonMessage(json_message)) {
+				if (!_receivedJsonMessage(json_message)) {
 					#ifdef JSON_TALKER_DEBUG
 					Serial.println(4);
 					#endif
@@ -276,7 +276,7 @@ protected:
     }
 
 
-	virtual bool availableReceivingBuffer(uint8_t wait_seconds = 3) {
+	virtual bool _availableReceivingBuffer(uint8_t wait_seconds = 3) {
 		uint16_t start_waiting = (uint16_t)millis();
 		while (_received_length) {
 			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
@@ -286,7 +286,7 @@ protected:
 		return true;
 	}
 
-	virtual bool availableSendingBuffer(uint8_t wait_seconds = 3) {
+	virtual bool _availableSendingBuffer(uint8_t wait_seconds = 3) {
 		uint16_t start_waiting = (uint16_t)millis();
 		while (_sending_length) {
 			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
@@ -421,7 +421,7 @@ public:
 		#endif
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (json_message.validate_fields() && processedJsonMessage(json_message) && availableSendingBuffer()) {
+		if (json_message.validate_fields() && _sendingJsonMessage(json_message) && _availableSendingBuffer()) {
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("socketSend2: "));

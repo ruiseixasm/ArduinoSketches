@@ -439,9 +439,9 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	bool receivedJsonMessage(const JsonMessage& json_message) override {
+	bool _receivedJsonMessage(const JsonMessage& json_message) override {
 
-		if (BroadcastSocket::receivedJsonMessage(json_message)) {
+		if (BroadcastSocket::_receivedJsonMessage(json_message)) {
 
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\tcheckJsonMessage1: FROM name: "));
