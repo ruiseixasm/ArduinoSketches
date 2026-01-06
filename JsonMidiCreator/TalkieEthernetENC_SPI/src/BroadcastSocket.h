@@ -299,8 +299,8 @@ protected:
 	}
 
 
-    virtual bool send(const JsonMessage& json_message) = 0;
-    virtual size_t receive() = 0;
+    virtual size_t _receive() = 0;
+    virtual bool _send(const JsonMessage& json_message) = 0;
 
 
 public:
@@ -320,7 +320,7 @@ public:
         if (_control_timing && (uint16_t)millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
             _control_timing = false;
         }
-        receive();
+        _receive();
     }
 
 
@@ -437,7 +437,7 @@ public:
 				Serial.print(millis() - json_message._reference_time);
 				return send_result;
 				#else
-				return send(json_message);
+				return _send(json_message);
 				#endif
 				
 			}

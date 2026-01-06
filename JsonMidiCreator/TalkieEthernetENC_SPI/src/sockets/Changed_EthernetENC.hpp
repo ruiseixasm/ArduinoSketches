@@ -52,7 +52,7 @@ protected:
     Changed_EthernetENC() : BroadcastSocket() {}
 
 
-    size_t receive() override {
+    size_t _receive() override {
         if (_udp == nullptr) return 0;
 
         // Receive packets
@@ -132,7 +132,7 @@ protected:
 	}
 
 
-    bool send(const JsonMessage& json_message) override {
+    bool _send(const JsonMessage& json_message) override {
 		
         if (_udp) {
 			
