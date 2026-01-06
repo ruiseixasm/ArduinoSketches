@@ -462,7 +462,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	void _checkReceivedMessage(const JsonMessage& json_message) override {
+	void _showReceivedMessage(const JsonMessage& json_message) override {
 
 		#ifdef BROADCAST_SPI_DEBUG
 		Serial.print(F("\tcheckJsonMessage1: FROM name: "));

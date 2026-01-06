@@ -112,7 +112,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	void _checkReceivedMessage(const JsonMessage& json_message) override {
+	void _showReceivedMessage(const JsonMessage& json_message) override {
 
 		strcpy(_from_name, json_message.get_from_name());
 		

@@ -99,7 +99,7 @@ protected:
 
 
 	// Allows the overriding class to peek at the received JSON message
-	virtual void _checkReceivedMessage(const JsonMessage& json_message) {}
+	virtual void _showReceivedMessage(const JsonMessage& json_message) {}
 
 	
 	bool _transmitToRepeater(JsonMessage& json_message);
@@ -224,7 +224,7 @@ protected:
 				Serial.print(millis() - json_message._reference_time);
 				#endif
 				
-				_checkReceivedMessage(json_message); // Gives a chance to show it before transmitting
+				_showReceivedMessage(json_message); // Gives a chance to show it before transmitting
 				_transmitToRepeater(json_message);
 				
 				#ifdef MESSAGE_DEBUG_TIMING
