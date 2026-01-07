@@ -110,7 +110,7 @@ protected:
 
     /**
      * @brief Allows the overriding Socket class to peek at the
-	 * received JSON message
+	 *        received JSON message
 	 * 
 	 * This method gives the overriding class the opportunity to
 	 * get direct information from the Json Message.
@@ -120,7 +120,7 @@ protected:
 	
     /**
      * @brief Sends the generated message by _startTransmission
-	 * to the Repeater
+	 *        to the Repeater
      */
 	void _transmitToRepeater(JsonMessage& json_message);
 
