@@ -93,11 +93,20 @@ protected:
 	
 	bool _unlockSendingBuffer() override {
 		uint16_t start_waiting = (uint16_t)millis();
-		while (_received_length_spi) {
+		while (_sending_length_spi) {
 			if ((uint16_t)millis() - start_waiting > 1000 * 3) {
+
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.println(F("\t_unlockSendingBuffer: NOT available sending buffer"));
+				#endif
+
 				return false;
 			}
 		}
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.println(F("\t_unlockSendingBuffer: Available sending buffer"));
+		#endif
+
 		return true;
 	}
 
