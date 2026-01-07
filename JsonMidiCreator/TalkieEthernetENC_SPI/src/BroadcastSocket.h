@@ -108,10 +108,20 @@ protected:
     }
 
 
-	// Allows the overriding class to peek at the received JSON message
+    /**
+     * @brief Allows the overriding Socket class to peek at the
+	 * received JSON message
+	 * 
+	 * This method gives the overriding class the opportunity to
+	 * get direct information from the Json Message.
+     */
 	virtual void _showReceivedMessage(const JsonMessage& json_message) {}
 
 	
+    /**
+     * @brief Sends the generated message by _startTransmission
+	 * to the Repeater
+     */
 	void _transmitToRepeater(JsonMessage& json_message);
 
 
