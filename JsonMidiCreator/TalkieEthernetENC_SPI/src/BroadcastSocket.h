@@ -58,6 +58,16 @@ using Original 			= JsonMessage::Original;
 
 class MessageRepeater;
 
+/**
+ * @class BroadcastSocket
+ * @brief An Interface to be implemented as a Socket to receive and send its buffer
+ * 
+ * The implementation of this class requires de definition of the methods, _receive,
+ * _send and class_name. After receiving data, the method _startTransmission
+ * shall be called.
+ * 
+ * @note This class has a received and a sending buffer already.
+ */
 class BroadcastSocket {
 protected:
 
@@ -104,7 +114,16 @@ protected:
 	
 	void _transmitToRepeater(JsonMessage& json_message);
 
-    
+
+    /**
+     * @brief Starts the transmission of the data received
+	 * 
+	 * This method creates a new message that is shown to the socket
+	 * implementation via the _showReceivedMessage method and then sends
+	 * it to the Repeater via the method _transmitToRepeater.
+     * 
+     * @note This method resets the _received_length to 0.
+     */
     void _startTransmission() {
 
 		// Trim trailing newline and carriage return characters or any other that isn't '}'
