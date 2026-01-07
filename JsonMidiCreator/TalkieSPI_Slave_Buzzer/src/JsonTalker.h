@@ -284,7 +284,7 @@ public:
 	bool transmitToRepeater(JsonMessage& json_message);
 	
     
-    bool _handleTransmission(JsonMessage& json_message, TalkerMatch talker_match) {
+    void _handleTransmission(JsonMessage& json_message, TalkerMatch talker_match) {
 
 		MessageValue message_value = json_message.get_message_value();
 
@@ -371,11 +371,6 @@ public:
 				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				{   // Because of action_index and action !!!
 
-					#ifdef JSON_TALKER_DEBUG
-					Serial.print("\t=== This object is: ");
-					Serial.println(class_name());
-					#endif
-
 					uint8_t action_index = 0;
 					if (_manifesto) {
 						const TalkerManifesto::Action* action;
@@ -430,7 +425,7 @@ public:
 							if (!transmissionDrops(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
-        						return true;	// Avoids extra transmissions sends
+        						return;	// Avoids extra transmissions sends (to be developed)
 							}
 							break;
 
@@ -445,7 +440,7 @@ public:
 								if (!transmissionDelays(json_message)) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
-									return true;	// Avoids extra transmissions sends
+									return;	// Avoids extra transmissions sends (to be developed)
 								}
 							}
 							break;
@@ -454,7 +449,7 @@ public:
 							if (!transmissionSockets(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
-        						return true;	// Avoids extra transmissions sends
+        						return;	// Avoids extra transmissions sends (to be developed)
 							}
 							break;
 
@@ -514,9 +509,8 @@ public:
 				}
 				break;
 			
-			default: return false;
+			default: break;
         }
-        return true;
     }
 
 };

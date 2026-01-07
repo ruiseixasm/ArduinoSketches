@@ -973,14 +973,7 @@ public:
      * @return MessageValue enum, or TALKIE_MSG_NOISE if invalid
      */
 	MessageValue get_message_value() const {
-		size_t colon_position = _get_colon_position('m', _json_payload, _json_length);
-		if (colon_position) {
-			uint8_t message_number = _get_value_number('m', _json_payload, _json_length, colon_position);
-			if (message_number < static_cast<uint8_t>( MessageValue::TALKIE_MSG_NOISE )) {
-				return static_cast<MessageValue>( message_number );
-			}
-		}
-		return MessageValue::TALKIE_MSG_NOISE;
+		return static_cast<MessageValue>( _get_value_number('m', _json_payload, _json_length) );
 	}
 
 
@@ -1007,14 +1000,7 @@ public:
      * @return BroadcastValue enum, or TALKIE_BC_NONE if invalid
      */
 	BroadcastValue get_broadcast_value() const {
-		size_t colon_position = _get_colon_position('b', _json_payload, _json_length);
-		if (colon_position) {
-			BroadcastValue broadcast_value = static_cast<BroadcastValue>( _get_value_number('b', _json_payload, _json_length, colon_position) );
-			if (broadcast_value < BroadcastValue::TALKIE_BC_NONE) {
-				return broadcast_value;
-			}
-		}
-		return BroadcastValue::TALKIE_BC_NONE;
+		return static_cast<BroadcastValue>( _get_value_number('b', _json_payload, _json_length) );
 	}
 
 
@@ -1023,14 +1009,7 @@ public:
      * @return RogerValue enum, or TALKIE_RGR_NIL if invalid
      */
 	RogerValue get_roger_value() const {
-		size_t colon_position = _get_colon_position('r', _json_payload, _json_length);
-		if (colon_position) {
-			uint8_t roger_number = (uint8_t)_get_value_number('r', _json_payload, _json_length, colon_position);
-			if (roger_number < static_cast<uint8_t>( RogerValue::TALKIE_RGR_NIL )) {
-				return static_cast<RogerValue>( roger_number );
-			}
-		}
-		return RogerValue::TALKIE_RGR_NIL;
+		return static_cast<RogerValue>( _get_value_number('r', _json_payload, _json_length) );
 	}
 
 
@@ -1039,14 +1018,7 @@ public:
      * @return SystemValue enum, or TALKIE_SYS_UNDEFINED if invalid
      */
 	SystemValue get_system_value() const {
-		size_t colon_position = _get_colon_position('s', _json_payload, _json_length);
-		if (colon_position) {
-			uint8_t system_number = (uint8_t)_get_value_number('s', _json_payload, _json_length, colon_position);
-			if (system_number < static_cast<uint8_t>( SystemValue::TALKIE_SYS_UNDEFINED )) {
-				return static_cast<SystemValue>( system_number );
-			}
-		}
-		return SystemValue::TALKIE_SYS_UNDEFINED;
+		return static_cast<SystemValue>( _get_value_number('s', _json_payload, _json_length) );
 	}
 
 
@@ -1055,14 +1027,7 @@ public:
      * @return ErrorValue enum, or TALKIE_ERR_UNDEFINED if invalid
      */
 	ErrorValue get_error_value() const {
-		size_t colon_position = _get_colon_position('e', _json_payload, _json_length);
-		if (colon_position) {
-			uint8_t error_number = (uint8_t)_get_value_number('e', _json_payload, _json_length, colon_position);
-			if (error_number < static_cast<uint8_t>( ErrorValue::TALKIE_ERR_UNDEFINED )) {
-				return static_cast<ErrorValue>( error_number );
-			}
-		}
-		return ErrorValue::TALKIE_ERR_UNDEFINED;
+		return static_cast<ErrorValue>( _get_value_number('e', _json_payload, _json_length) );
 	}
 	
 

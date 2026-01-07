@@ -58,6 +58,16 @@ using Original 			= JsonMessage::Original;
 
 class MessageRepeater;
 
+/**
+ * @class BroadcastSocket
+ * @brief An Interface to be implemented as a Socket to receive and send its buffer
+ * 
+ * The implementation of this class requires de definition of the methods, _receive,
+ * _send and class_name. After receiving data, the method _startTransmission
+ * shall be called.
+ * 
+ * @note This class has a received and a sending buffer already.
+ */
 class BroadcastSocket {
 protected:
 
@@ -102,9 +112,18 @@ protected:
 	virtual void _showReceivedMessage(const JsonMessage& json_message) {}
 
 	
-	bool _transmitToRepeater(JsonMessage& json_message);
+	void _transmitToRepeater(JsonMessage& json_message);
 
-    
+
+    /**
+     * @brief Starts the transmission of the data received
+	 * 
+	 * This method creates a new message that is shown to the socket
+	 * implementation via the _showReceivedMessage method and then sends
+	 * it to the Repeater via the method _transmitToRepeater.
+     * 
+     * @note This method resets the _received_length to 0.
+     */
     void _startTransmission() {
 
 		// Trim trailing newline and carriage return characters or any other that isn't '}'
@@ -115,18 +134,18 @@ protected:
 
 		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
 		if (_received_length < 27) {
-			_received_length = 0;
+			_received_length = 0;	// Enables new receiving
 			return;
 		}
 
 		if (_received_buffer[0] != '{') {
-			_received_length = 0;
+			_received_length = 0;	// Enables new receiving
 			return;	
 		}
 
 		size_t colon_position = JsonMessage::_get_colon_position('c', _received_buffer, _received_length);
 		if (!colon_position) {
-			_received_length = 0;
+			_received_length = 0;	// Enables new receiving
 			return;	
 		}
 
@@ -139,7 +158,10 @@ protected:
 		Serial.println(received_checksum);
 		#endif
 
-		if (!JsonMessage::_remove('c', _received_buffer, &_received_length, colon_position)) return;
+		if (!JsonMessage::_remove('c', _received_buffer, &_received_length, colon_position)) {
+			_received_length = 0;	// Enables new receiving
+			return;
+		}
 		uint16_t checksum = _generateChecksum(_received_buffer, _received_length);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
@@ -181,45 +203,42 @@ protected:
 				Serial.println(checksum);
 				#endif
 
-				if (_max_delay_ms > 0) {
+				if (_max_delay_ms > 0 && message_code == MessageValue::TALKIE_MSG_CALL) {
 
-					if (message_code == MessageValue::TALKIE_MSG_CALL) {	// Only does time control on Calls (drops)
+					#ifdef BROADCASTSOCKET_DEBUG
+					Serial.print(F("handleTransmission6: Message code requires delay check: "));
+					Serial.println((int)message_code);
+					#endif
 
-						#ifdef BROADCASTSOCKET_DEBUG
-						Serial.print(F("handleTransmission6: Message code requires delay check: "));
-						Serial.println(message_code_int);
-						#endif
-
-						const uint16_t local_time = (uint16_t)millis();
+					const uint16_t local_time = (uint16_t)millis();
+					
+					if (_control_timing) {
 						
-						if (_control_timing) {
-							
-							const uint16_t remote_delay = _last_message_timestamp - message_timestamp;  // Package received after
+						const uint16_t remote_delay = _last_message_timestamp - message_timestamp;  // Package received after
 
-							if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
-								const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
-								const uint16_t local_delay = local_time - _last_local_time;
+						if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
+							const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
+							const uint16_t local_delay = local_time - _last_local_time;
+							#ifdef BROADCASTSOCKET_DEBUG
+							Serial.print(F("handleTransmission7: Local delay: "));
+							Serial.println(local_delay);
+							#endif
+							if (remote_delay > allowed_delay || local_delay > allowed_delay) {
 								#ifdef BROADCASTSOCKET_DEBUG
-								Serial.print(F("handleTransmission7: Local delay: "));
-								Serial.println(local_delay);
+								Serial.print(F("handleTransmission8: Out of time package (remote delay): "));
+								Serial.println(remote_delay);
 								#endif
-								if (remote_delay > allowed_delay || local_delay > allowed_delay) {
-									#ifdef BROADCASTSOCKET_DEBUG
-									Serial.print(F("handleTransmission8: Out of time package (remote delay): "));
-									Serial.println(remote_delay);
-									#endif
-									_drops_count++;
-									return;  // Out of time package (too late)
-								}
+								_drops_count++;
+								_received_length = 0;	// Enables new receiving
+								return;  // Out of time package (too late)
 							}
 						}
-						_last_local_time = local_time;
-						_last_message_timestamp = message_timestamp;
-						_control_timing = true;
 					}
+					_last_local_time = local_time;
+					_last_message_timestamp = message_timestamp;
+					_control_timing = true;
 				}
 
-				
 				#ifdef MESSAGE_DEBUG_TIMING
 				Serial.print(millis() - json_message._reference_time);
 				#endif
@@ -231,7 +250,6 @@ protected:
 				Serial.print(" | ");
 				Serial.print(millis() - json_message._reference_time);
 				#endif
-				
 
 			} else {
 				#ifdef BROADCASTSOCKET_DEBUG
