@@ -90,34 +90,14 @@ protected:
             // devices_ss_pins["initialized"] = true;
         }
 
-
-	bool _availableReceivingBuffer(uint8_t wait_seconds = 3) override {
+	
+	bool _unlockSendingBuffer() override {
 		uint16_t start_waiting = (uint16_t)millis();
 		while (_received_length_spi) {
-			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
+			if ((uint16_t)millis() - start_waiting > 1000 * 3) {
 				return false;
 			}
 		}
-		return true;
-	}
-
-	bool _availableSendingBuffer(uint8_t wait_seconds = 3) override {
-		uint16_t start_waiting = (uint16_t)millis();
-		while (_sending_length_spi) {
-			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
-				
-				#ifdef BROADCASTSOCKET_DEBUG
-				Serial.println(F("\tavailableSendingBuffer: NOT available sending buffer"));
-				#endif
-
-				return false;
-			}
-		}
-		
-		#ifdef BROADCASTSOCKET_DEBUG
-		Serial.println(F("\tavailableSendingBuffer: Available sending buffer"));
-		#endif
-
 		return true;
 	}
 

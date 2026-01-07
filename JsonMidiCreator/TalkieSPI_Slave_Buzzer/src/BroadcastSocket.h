@@ -269,33 +269,7 @@ protected:
     }
 
 
-	virtual bool _availableReceivingBuffer(uint8_t wait_seconds = 3) {
-		uint16_t start_waiting = (uint16_t)millis();
-		while (_received_length) {
-			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	virtual bool _availableSendingBuffer(uint8_t wait_seconds = 3) {
-		uint16_t start_waiting = (uint16_t)millis();
-		while (_sending_length) {
-			if ((uint16_t)millis() - start_waiting > 1000 * wait_seconds) {
-
-				#ifdef BROADCASTSOCKET_DEBUG
-				Serial.println(F("\tavailableSendingBuffer: NOT available sending buffer"));
-				#endif
-
-				return false;
-			}
-		}
-		
-		#ifdef BROADCASTSOCKET_DEBUG
-		Serial.println(F("\tavailableSendingBuffer: Available sending buffer"));
-		#endif
-
+	virtual bool _unlockSendingBuffer() {
 		return true;
 	}
 
@@ -406,7 +380,7 @@ public:
 		#endif
 
 		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (json_message.validate_fields() && _availableSendingBuffer()) {
+		if (json_message.validate_fields() && _unlockSendingBuffer()) {
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("socketSend2: "));
