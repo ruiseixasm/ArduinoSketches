@@ -31,7 +31,8 @@
 		"Unmutes",
 		"USERPROFILE",
 		"vect",
-		"VSPI"
+		"VSPI",
+		"Walkie"
 	],
     "cmake.ignoreCMakeListsMissing": true
 }

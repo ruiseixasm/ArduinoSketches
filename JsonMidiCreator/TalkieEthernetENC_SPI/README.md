@@ -111,8 +111,37 @@ Talkers and Sockets and Downlinked Talkers and Sockets.
 ```
 
 ## Message protocol
+The extensive list of all Values is in the structure `TalkieCodes`.
 ### Message Value
 These are the Message Values (commands):
-- talk
-- channel
+- **talk** - Lists existent talkers in the network
+- **channel** - Channel management/configuration
+- **ping** - Network presence check and latency
+- **call** - Action Talker invocation
+- **list** - Lists Talker actions
+- **system** - System control/status messages
+- **echo** - Messages Echo returns
+- **error** - Error notification
+- **noise** - Invalid or malformed data
+
+### Broadcast Value
+Local messages aren't send to uplinked Sockets, except if they are up bridged.
+- **none** - No broadcast, the message is dropped
+- **remote** - Broadcast to remote talkers
+- **local** - Broadcast within local network talkers
+- **self** - Broadcast to self only (loopback)
+
+### System Value
+This messages are exclusive to the system.
+- **undefined** - Unspecified system request
+- **board** - Board/system information request
+- **mute** - Returns or sets the mute mode
+- **drops** - Packet loss statistics
+- **delay** - Network delay configuration
+- **socket** - List Socket class names
+- **manifesto** - Show the Manifesto class name
+The `mute` concerns exclusively the `call` commands in order to reduce network overhead
+
+
+
 

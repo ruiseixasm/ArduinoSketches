@@ -92,21 +92,6 @@ struct TalkieCodes {
 
 
     /**
-     * @enum BroadcastValue
-     * @brief Scope of broadcast message distribution
-     * 
-     * Specifies how far a broadcast message should propagate
-     * through the environment.
-     */
-    enum BroadcastValue : uint8_t {
-        TALKIE_BC_NONE,    ///< No broadcast (point-to-point)
-        TALKIE_BC_REMOTE,  ///< Broadcast to remote network segments
-        TALKIE_BC_LOCAL,   ///< Broadcast within local network segment
-        TALKIE_BC_SELF     ///< Broadcast to self only (loopback)
-    };
-
-
-    /**
      * @enum MessageValue
      * @brief Primary message type classification
      * 
@@ -114,15 +99,30 @@ struct TalkieCodes {
      * of communication packets in the Talkie protocol.
      */
     enum MessageValue : uint8_t {
-        TALKIE_MSG_TALK,    ///< Standard data transmission
+        TALKIE_MSG_TALK,    ///< Lists existent devices in the network
         TALKIE_MSG_CHANNEL, ///< Channel management/configuration
-        TALKIE_MSG_PING,    ///< Network presence check
-        TALKIE_MSG_CALL,    ///< Direct Talker invocation
-        TALKIE_MSG_LIST,    ///< Request list of available Talkers
+        TALKIE_MSG_PING,    ///< Network presence check and latency
+        TALKIE_MSG_CALL,    ///< Action Talker invocation
+        TALKIE_MSG_LIST,    ///< Lists Talker actions
         TALKIE_MSG_SYSTEM,  ///< System control/status messages
-        TALKIE_MSG_ECHO,    ///< Echo/test messages
+        TALKIE_MSG_ECHO,    ///< Messages Echo returns
         TALKIE_MSG_ERROR,   ///< Error notification
         TALKIE_MSG_NOISE    ///< Invalid or malformed data
+    };
+
+
+    /**
+     * @enum BroadcastValue
+     * @brief Scope of broadcast message distribution
+     * 
+     * Specifies how far a broadcast message should propagate
+     * through the environment.
+     */
+    enum BroadcastValue : uint8_t {
+        TALKIE_BC_NONE,    ///< No broadcast, the message is dropped
+        TALKIE_BC_REMOTE,  ///< Broadcast to remote talkers
+        TALKIE_BC_LOCAL,   ///< Broadcast within local network talkers
+        TALKIE_BC_SELF     ///< Broadcast to self only (loopback)
     };
 
 
@@ -131,13 +131,13 @@ struct TalkieCodes {
      * @brief Associated to the system state and configuration
      */
     enum SystemValue : uint8_t {
-        TALKIE_SYS_UNDEFINED, ///< Unspecified system operation
+        TALKIE_SYS_UNDEFINED, ///< Unspecified system request
         TALKIE_SYS_BOARD,     ///< Board/system information request
-        TALKIE_SYS_MUTE,      ///< Enable/disable mute mode
+        TALKIE_SYS_MUTE,      ///< Returns or sets the mute mode
         TALKIE_SYS_DROPS,     ///< Packet loss statistics
         TALKIE_SYS_DELAY,     ///< Network delay configuration
-        TALKIE_SYS_SOCKET,    ///< Socket management
-        TALKIE_SYS_MANIFESTO  ///< Manifesto information/update
+        TALKIE_SYS_SOCKET,    ///< List Socket class names
+        TALKIE_SYS_MANIFESTO  ///< Show the Manifesto class name
     };
 
 
