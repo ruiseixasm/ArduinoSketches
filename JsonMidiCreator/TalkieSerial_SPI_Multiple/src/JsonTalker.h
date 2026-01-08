@@ -58,6 +58,17 @@ class MessageRepeater;
 class BroadcastSocket;
 
 
+/**
+ * @class JsonTalker
+ * @brief Represents a Talker, the Talker is the class that processes and generates
+ *        json messages based on its associated `Manifesto` and its linked place
+ * 
+ * A Talker handles transmissions based on its name and channel, a channel of `255`
+ * means a disabled channel, resulting in no response to any channel.
+ * 
+ * @note This class is the antitheses of the `BroadcastSocket` class in the sense that
+ *       it works with the Repeater in between and as response.
+ */
 class JsonTalker {
 protected:
     
@@ -72,6 +83,9 @@ protected:
     bool _muted_calls = false;
 
 
+	/**
+     * @brief Returns the description of the board where the Talker is being run on
+     */
 	static const char* _board_description() {
 		
 		#ifdef __AVR__
@@ -118,6 +132,10 @@ protected:
 	}
 
 
+	/**
+     * @brief Verifies and sets the message fields before its following transmission
+     * @param json_message The json message being prepared to be sent
+     */
 	bool _prepareMessage(JsonMessage& json_message) {
 
 		if (json_message.has_from()) {
@@ -171,9 +189,35 @@ protected:
 	}
 
 	
+	/**
+     * @brief Sets the nth values in the json message with the sockets class name
+	 *        and does a transmission for each uplinked socket.
+     * @param json_message The json message being used for each transmission
+     */
 	bool transmissionSockets(JsonMessage& json_message);
+
+
+	/**
+     * @brief Sets the nth values in the json message with the sockets total drops
+	 *        and does a transmission for each uplinked socket.
+     * @param json_message The json message being used for each transmission
+     */
 	bool transmissionDrops(JsonMessage& json_message);
+
+
+	/**
+     * @brief Sets the nth values in the json message with the sockets configured delay
+	 *        and does a transmission for each uplinked socket.
+     * @param json_message The json message being used for each transmission
+     */
 	bool transmissionDelays(JsonMessage& json_message);
+
+	
+	/**
+     * @brief Sets the given delay on the uplinked socket given by the socket index
+     * @param socket_index The index of the socket to have its delay adjusted
+     * @param delay_value The delay amount in milliseconds
+     */
 	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
 
 
@@ -185,10 +229,14 @@ public:
     JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr, uint8_t channel = 255)
         : _name(name), _desc(desc), _manifesto(manifesto), _channel(channel) {}
 
+
+	/**
+     * @brief Method intended to be called by the Repeater class by its public loop method
+	 * 
+     * @note This method being underscored means to be called internally only.
+     */
     void _loop() {
-        if (_manifesto) {
-            _manifesto->_loop(this);
-        }
+        if (_manifesto) _manifesto->_loop(this);
     }
 
 
@@ -425,7 +473,7 @@ public:
 							if (!transmissionDrops(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
-        						return;	// Avoids extra transmissions sends (to be developed)
+        						return;	// All transmissions already done by the if condition above
 							}
 							break;
 
@@ -440,7 +488,7 @@ public:
 								if (!transmissionDelays(json_message)) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
-									return;	// Avoids extra transmissions sends (to be developed)
+									return;	// All transmissions already done by the if condition above
 								}
 							}
 							break;
@@ -449,7 +497,7 @@ public:
 							if (!transmissionSockets(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
-        						return;	// Avoids extra transmissions sends (to be developed)
+        						return;	// All transmissions already done by the if condition above
 							}
 							break;
 
