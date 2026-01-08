@@ -72,6 +72,9 @@ protected:
     bool _muted_calls = false;
 
 
+	/**
+     * @brief Returns the description of the board where the Talker is being run on
+     */
 	static const char* _board_description() {
 		
 		#ifdef __AVR__
@@ -118,6 +121,10 @@ protected:
 	}
 
 
+	/**
+     * @brief Verifies and sets the message fields before its following transmission
+     * @param json_message The json message being prepared to be sent
+     */
 	bool _prepareMessage(JsonMessage& json_message) {
 
 		if (json_message.has_from()) {
@@ -171,9 +178,35 @@ protected:
 	}
 
 	
+	/**
+     * @brief Sets the nth values in the json message with the sockets class name
+	 *        and does a transmission for each uplinked socket. 
+     * @param json_message The json message being used for each transmission
+     */
 	bool transmissionSockets(JsonMessage& json_message);
+
+
+	/**
+     * @brief Sets the nth values in the json message with the sockets total drops
+	 *        and does a transmission for each uplinked socket. 
+     * @param json_message The json message being used for each transmission
+     */
 	bool transmissionDrops(JsonMessage& json_message);
+
+
+	/**
+     * @brief Sets the nth values in the json message with the sockets configured delay
+	 *        and does a transmission for each uplinked socket. 
+     * @param json_message The json message being used for each transmission
+     */
 	bool transmissionDelays(JsonMessage& json_message);
+
+	
+	/**
+     * @brief Sets the given delay on the uplinked socket given by the socket index
+     * @param socket_index The index of the socket to have its delay adjusted
+     * @param delay_value The delay amount in milliseconds
+     */
 	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
 
 
@@ -425,7 +458,7 @@ public:
 							if (!transmissionDrops(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
-        						return;	// Avoids extra transmissions sends (to be developed)
+        						return;	// All transmissions already done by the if condition above
 							}
 							break;
 
@@ -440,7 +473,7 @@ public:
 								if (!transmissionDelays(json_message)) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
-									return;	// Avoids extra transmissions sends (to be developed)
+									return;	// All transmissions already done by the if condition above
 								}
 							}
 							break;
@@ -449,7 +482,7 @@ public:
 							if (!transmissionSockets(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
-        						return;	// Avoids extra transmissions sends (to be developed)
+        						return;	// All transmissions already done by the if condition above
 							}
 							break;
 
