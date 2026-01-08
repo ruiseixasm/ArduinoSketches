@@ -110,6 +110,31 @@ public:
     }
 
 
+	uint8_t uplinkedSocketsCount() const {
+		return _uplinked_sockets_count;
+	}
+
+
+	uint8_t downlinkedSocketsCount() const {
+		return _downlinked_sockets_count;
+	}
+
+	
+	BroadcastSocket* getUplinkedSocket(uint8_t socket_index) const {
+        if (socket_index < _uplinked_sockets_count) {
+            return _uplinked_sockets[socket_index];
+        }
+		return nullptr;
+	}
+	
+
+	BroadcastSocket* getDownlinkedSocket(uint8_t socket_index) const {
+        if (socket_index < _downlinked_sockets_count) {
+            return _downlinked_sockets[socket_index];
+        }
+		return nullptr;
+	}
+
 
 	void iterateSocketsReset() {
 		socketsIterIdx = 0;
@@ -128,7 +153,7 @@ public:
 		return _uplinked_sockets_count;
 	}
 
-	
+
 	BroadcastSocket* accessSocket(uint8_t socket_index) const {
 		if (socket_index < _uplinked_sockets_count) {
 			return _uplinked_sockets[socket_index];

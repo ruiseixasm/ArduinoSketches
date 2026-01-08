@@ -189,6 +189,26 @@ protected:
 	}
 
 
+	/** @brief Gets the total number of sockets regardless the linking type */
+	uint8_t socketsCount();
+
+
+	/**
+     * @brief Gets the socket pointer given by the socket index
+     * @param socket_index The index of the socket to get
+     * @return Returns the BroadcastSocket pointer or nullptr if none
+     */
+	BroadcastSocket* getSocket(uint8_t socket_index);
+
+
+	/**
+     * @brief Gets the total drops in the uplinked socket given by the socket index
+     * @param socket_index The index of the socket to get the total drops from
+     * @return Returns the total drops
+     */
+	uint16_t getSocketDrops(uint8_t socket_index) const;
+
+
 	/**
      * @brief Sets the given delay on the uplinked socket given by the socket index
      * @param socket_index The index of the socket to have its delay adjusted
@@ -206,27 +226,11 @@ protected:
 
 
 	/**
-     * @brief Sets the nth values in the json message with the sockets class name
-	 *        and does a transmission for each uplinked socket.
-     * @param json_message The json message being used for each transmission
-     */
-	bool transmissionSockets(JsonMessage& json_message);
-
-
-	/**
-     * @brief Sets the nth values in the json message with the sockets total drops
-	 *        and does a transmission for each uplinked socket.
-     * @param json_message The json message being used for each transmission
-     */
-	bool transmissionDrops(JsonMessage& json_message);
-
-
-	/**
      * @brief Sets the nth values in the json message with the sockets configured delay
 	 *        and does a transmission for each uplinked socket.
      * @param json_message The json message being used for each transmission
      */
-	bool transmissionDelays(JsonMessage& json_message);
+	bool transmitDelays(JsonMessage& json_message);
 
 
 public:
@@ -478,10 +482,20 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_DROPS:
-							if (!transmissionDrops(json_message)) {
-								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
-							} else {
-        						return;	// All transmissions already done by the if condition above
+							{
+								uint8_t sockets_count = socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_number(1, socket->get_drops_count());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								} else {
+									return;	// All transmissions already done by the if condition above
+								}
 							}
 							break;
 
@@ -493,7 +507,7 @@ public:
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
 								}
 							} else {
-								if (!transmissionDelays(json_message)) {
+								if (!transmitDelays(json_message)) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
 									return;	// All transmissions already done by the if condition above
@@ -502,10 +516,20 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_SOCKET:
-							if (!transmissionSockets(json_message)) {
-								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
-							} else {
-        						return;	// All transmissions already done by the if condition above
+							{
+								uint8_t sockets_count = socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_string(1, socket->class_name());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								} else {
+									return;	// All transmissions already done by the if condition above
+								}
 							}
 							break;
 

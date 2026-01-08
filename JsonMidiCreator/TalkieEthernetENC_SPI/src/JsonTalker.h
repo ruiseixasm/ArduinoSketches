@@ -202,14 +202,6 @@ protected:
 
 
 	/**
-     * @brief Sets the nth values in the json message with the sockets class name
-	 *        and does a transmission for each uplinked socket.
-     * @param json_message The json message being used for each transmission
-     */
-	bool transmitSockets(JsonMessage& json_message);
-
-
-	/**
      * @brief Gets the total drops in the uplinked socket given by the socket index
      * @param socket_index The index of the socket to get the total drops from
      * @return Returns the total drops
@@ -524,10 +516,20 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_SOCKET:
-							if (!transmitSockets(json_message)) {
-								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
-							} else {
-        						return;	// All transmissions already done by the if condition above
+							{
+								uint8_t sockets_count = socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_string(1, socket->class_name());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								} else {
+									return;	// All transmissions already done by the if condition above
+								}
 							}
 							break;
 
