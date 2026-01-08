@@ -189,8 +189,8 @@ protected:
 	}
 
 
-	/** @brief Gets the total number of sockets regardless the linking type */
-	uint8_t socketsCount();
+	/** @brief Gets the total number of sockets regardless the link type */
+	uint8_t _socketsCount();
 
 
 	/**
@@ -198,7 +198,7 @@ protected:
      * @param socket_index The index of the socket to get
      * @return Returns the BroadcastSocket pointer or nullptr if none
      */
-	BroadcastSocket* getSocket(uint8_t socket_index);
+	BroadcastSocket* _getSocket(uint8_t socket_index);
 
 
 public:
@@ -397,26 +397,22 @@ public:
 			
 			case MessageValue::TALKIE_MSG_LIST:
 				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
-				{   // Because of action_index and action !!!
-
-					uint8_t action_index = 0;
-					if (_manifesto) {
-						const TalkerManifesto::Action* action;
-						_manifesto->_iterateActionsReset();
-						while ((action = _manifesto->_iterateActionNext()) != nullptr) {	// No boilerplate
-							json_message.set_nth_value_number(0, action_index++);
-							json_message.set_nth_value_string(1, action->name);
-							json_message.set_nth_value_string(2, action->desc);
-							transmitToRepeater(json_message);	// Many-to-One
-						}
-						if (!action_index) {
-							json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
-							transmitToRepeater(json_message);	// One-to-One
-						}
-					} else {
-						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
-						transmitToRepeater(json_message);		// One-to-One
+				if (_manifesto) {
+					uint8_t total_actions = _manifesto->_actionsCount();	// This makes the access safe
+					const TalkerManifesto::Action* actions = _manifesto->_getActionsArray();
+					for (uint8_t action_i = 0; action_i < total_actions; ++action_i) {
+						json_message.set_nth_value_number(0, action_i);
+						json_message.set_nth_value_string(1, actions[action_i].name);
+						json_message.set_nth_value_string(2, actions[action_i].desc);
+						transmitToRepeater(json_message);	// Many-to-One
 					}
+					if (!total_actions) {
+						json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
+						transmitToRepeater(json_message);	// One-to-One
+					}
+				} else {
+					json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+					transmitToRepeater(json_message);		// One-to-One
 				}
 				break;
 			
@@ -451,9 +447,9 @@ public:
 
 						case SystemValue::TALKIE_SYS_DROPS:
 							{
-								uint8_t sockets_count = socketsCount();
+								uint8_t sockets_count = _socketsCount();
 								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
-									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									const BroadcastSocket* socket = _getSocket(socket_i);	// Safe sockets_count already
 									uint16_t total_drops = socket->get_drops_count();
 									json_message.set_nth_value_number(0, socket_i);
 									json_message.set_nth_value_number(1, socket->get_drops_count());
@@ -470,7 +466,7 @@ public:
 						case SystemValue::TALKIE_SYS_DELAY:
 							if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER) {
 								uint8_t socket_index = (uint8_t)json_message.get_nth_value_number(0);
-								BroadcastSocket* socket = getSocket(socket_index);
+								BroadcastSocket* socket = _getSocket(socket_index);
 								if (socket) {
 									if (json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
 										socket->set_max_delay( (uint8_t)json_message.get_nth_value_number(1) );
@@ -481,9 +477,9 @@ public:
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								}
 							} else {
-								uint8_t sockets_count = socketsCount();
+								uint8_t sockets_count = _socketsCount();
 								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
-									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									const BroadcastSocket* socket = _getSocket(socket_i);	// Safe sockets_count already
 									uint16_t total_drops = socket->get_drops_count();
 									json_message.set_nth_value_number(0, socket_i);
 									json_message.set_nth_value_number(1, socket->get_max_delay());
@@ -499,9 +495,9 @@ public:
 
 						case SystemValue::TALKIE_SYS_SOCKET:
 							{
-								uint8_t sockets_count = socketsCount();
+								uint8_t sockets_count = _socketsCount();
 								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
-									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									const BroadcastSocket* socket = _getSocket(socket_i);	// Safe sockets_count already
 									uint16_t total_drops = socket->get_drops_count();
 									json_message.set_nth_value_number(0, socket_i);
 									json_message.set_nth_value_string(1, socket->class_name());
