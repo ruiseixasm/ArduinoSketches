@@ -189,7 +189,7 @@ protected:
 	}
 
 
-	/** @brief Gets the total number of sockets regardless the linking type */
+	/** @brief Gets the total number of sockets regardless the link type */
 	uint8_t socketsCount();
 
 

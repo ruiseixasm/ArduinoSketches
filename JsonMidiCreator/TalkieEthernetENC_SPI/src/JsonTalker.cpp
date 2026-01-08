@@ -42,6 +42,7 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 	}
 }
 
+
 uint8_t JsonTalker::socketsCount() {
 	if (_message_repeater) {
 		uint8_t countUplinkedSockets = _message_repeater->uplinkedSocketsCount();
