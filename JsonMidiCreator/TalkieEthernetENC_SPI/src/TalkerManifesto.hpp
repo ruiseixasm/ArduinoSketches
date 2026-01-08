@@ -56,7 +56,7 @@ class TalkerManifesto {
 
 public:
 
-	// The subclass must have the class name defined (pure virtual)
+	/** @brief A getter for the class name to be returned for the `system` command */
     virtual const char* class_name() const = 0;
 
     TalkerManifesto(const TalkerManifesto&) = delete;
