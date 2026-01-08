@@ -218,10 +218,14 @@ public:
     JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr, uint8_t channel = 255)
         : _name(name), _desc(desc), _manifesto(manifesto), _channel(channel) {}
 
+
+	/**
+     * @brief Method intended to be called by the Repeater class by its public loop method
+	 * 
+     * @note This method being underscored means to be called internally only.
+     */
     void _loop() {
-        if (_manifesto) {
-            _manifesto->_loop(this);
-        }
+        if (_manifesto) _manifesto->_loop(this);
     }
 
 

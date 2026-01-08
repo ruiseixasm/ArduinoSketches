@@ -76,16 +76,27 @@ protected:
 
 public:
 
-    virtual void _loop(JsonTalker* talker) {	// Also defined, not a pure virtual one
+	/**
+     * @brief Method intended to be called by the Repeater class by its public loop method
+     * @param talker Allows the access by the Manifesto to its owner Talker class
+	 * 
+     * @note This method being underscored means to be called internally only.
+     */
+    virtual void _loop(JsonTalker* talker) {
         (void)talker;		// Silence unused parameter warning
 	}
 
+
+	/** @brief Resets the index of the actions list */
 	virtual void _iterateActionsReset() {
 		actionsIterIdx = 0;
 	}
 
 
-    // Iterator next methods - IMPLEMENTED in base class
+    /**
+     * @brief Returns each Action for each while iteration
+     * @return A pointer to an Action of the Manifesto
+     */
     virtual const Action* _iterateActionNext() {
         if (actionsIterIdx < _actionsCount()) {
             return &_getActionsArray()[actionsIterIdx++];
@@ -93,7 +104,12 @@ public:
         return nullptr;
     }
     
-    // Name-based index search - IMPLEMENTED in base class
+	
+    /**
+     * @brief Returns the index Action for a given Action name
+     * @param name The name of the Action
+     * @return The index number of the action or 255 if none was found
+     */
     virtual uint8_t _actionIndex(const char* name) const {
         for (uint8_t i = 0; i < _actionsCount(); i++) {
             if (strcmp(_getActionsArray()[i].name, name) == 0) {
@@ -103,11 +119,17 @@ public:
         return 255;
     }
     
-    // Numeric index validation
+
+    /**
+     * @brief Confirms the index Action for a given index Action
+     * @param index The index of the Action to be confirmed
+     * @return The index number of the action or 255 if none exists
+     */
     virtual uint8_t _actionIndex(uint8_t index) const {
         return (index < _actionsCount()) ? index : 255;
     }
-    
+
+	
     // Action implementations - MUST be implemented by derived
     virtual bool _actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)index;		// Silence unused parameter warning

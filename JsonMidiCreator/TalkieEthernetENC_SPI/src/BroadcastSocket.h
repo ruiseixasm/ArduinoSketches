@@ -328,8 +328,7 @@ public:
 
 	
 	/**
-     * @brief Method intended to be called by the Repeater class in their public loop
-	 *        method
+     * @brief Method intended to be called by the Repeater class by its public loop method
 	 * 
      * @note This method being underscored means to be called internally only.
      */
