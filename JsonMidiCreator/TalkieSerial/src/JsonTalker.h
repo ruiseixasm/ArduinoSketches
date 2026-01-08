@@ -201,38 +201,6 @@ protected:
 	BroadcastSocket* getSocket(uint8_t socket_index);
 
 
-	/**
-     * @brief Gets the total drops in the uplinked socket given by the socket index
-     * @param socket_index The index of the socket to get the total drops from
-     * @return Returns the total drops
-     */
-	uint16_t getSocketDrops(uint8_t socket_index) const;
-
-
-	/**
-     * @brief Sets the given delay on the uplinked socket given by the socket index
-     * @param socket_index The index of the socket to have its delay adjusted
-     * @param delay_value The delay amount in milliseconds
-     */
-	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
-
-
-	/**
-     * @brief Sets the given delay on the uplinked socket given by the socket index
-     * @param socket_index The index of the socket to have its delay adjusted
-     * @return Returns the delay amount in milliseconds
-     */
-	uint8_t getSocketDelay(uint8_t socket_index) const;
-
-
-	/**
-     * @brief Sets the nth values in the json message with the sockets configured delay
-	 *        and does a transmission for each uplinked socket.
-     * @param json_message The json message being used for each transmission
-     */
-	bool transmitDelays(JsonMessage& json_message);
-
-
 public:
 
     // Explicitly disabled the default constructor
@@ -500,14 +468,28 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_DELAY:
-							if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER && json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
-								if (!setSocketDelay((uint8_t)json_message.get_nth_value_number(0), (uint8_t)json_message.get_nth_value_number(1))) {
-									json_message.remove_nth_value(0);
-									json_message.remove_nth_value(1);
-									json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
+							if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER) {
+								uint8_t socket_index = (uint8_t)json_message.get_nth_value_number(0);
+								BroadcastSocket* socket = getSocket(socket_index);
+								if (socket) {
+									if (json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
+										socket->set_max_delay( (uint8_t)json_message.get_nth_value_number(1) );
+									} else {
+										json_message.set_nth_value_number(1, socket->get_max_delay());
+									}
+								} else {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								}
 							} else {
-								if (!transmitDelays(json_message)) {
+								uint8_t sockets_count = socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_number(1, socket->get_max_delay());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
 									return;	// All transmissions already done by the if condition above
