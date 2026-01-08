@@ -281,7 +281,25 @@ The included manifesto and socket are in the folders [manifestos](src/manifestos
 This example uses a Serial socket, so, the interaction is always one-to-one, and here you have two options, using another Talker with a different Manifesto that sends commands to this one, or just for testing, do it in an easier way with the [JsonTalkerPy](https://github.com/ruiseixasm/JsonTalkiePy) command line in the computer. To do so just follow the instructions [here](https://github.com/ruiseixasm/JsonTalkiePy).
 
 ### Command line usage
-Type the following commands to start the Serial communication
+Type the following commands to start the Serial communication (change port if needed)
 ```
-
+python talk.py --socket SERIAL --port COM5
+```
+Then you can just type commands
+```
+>>> talk
+        [talk serial]              I'm a serial talker
+>>> list serial
+        [call serial 0|on]         Turns led ON
+        [call serial 1|off]        Turns led OFF
+>>> ping serial
+        [ping serial]              15
+>>> call serial on
+        [call serial on]           roger
+>>> call serial off
+        [call serial off]          roger
+>>> call serial off
+        [call serial off]          negative        Already Off!
+>>>
+        Exiting...
 ```
