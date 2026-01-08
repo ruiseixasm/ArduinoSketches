@@ -190,6 +190,22 @@ protected:
 
 
 	/**
+     * @brief Sets the nth values in the json message with the sockets class name
+	 *        and does a transmission for each uplinked socket.
+     * @param json_message The json message being used for each transmission
+     */
+	bool transmitSockets(JsonMessage& json_message);
+
+
+	/**
+     * @brief Sets the nth values in the json message with the sockets total drops
+	 *        and does a transmission for each uplinked socket.
+     * @param json_message The json message being used for each transmission
+     */
+	bool transmitDrops(JsonMessage& json_message);
+
+
+	/**
      * @brief Sets the given delay on the uplinked socket given by the socket index
      * @param socket_index The index of the socket to have its delay adjusted
      * @param delay_value The delay amount in milliseconds
@@ -206,27 +222,11 @@ protected:
 
 
 	/**
-     * @brief Sets the nth values in the json message with the sockets class name
-	 *        and does a transmission for each uplinked socket.
-     * @param json_message The json message being used for each transmission
-     */
-	bool transmissionSockets(JsonMessage& json_message);
-
-
-	/**
-     * @brief Sets the nth values in the json message with the sockets total drops
-	 *        and does a transmission for each uplinked socket.
-     * @param json_message The json message being used for each transmission
-     */
-	bool transmissionDrops(JsonMessage& json_message);
-
-
-	/**
      * @brief Sets the nth values in the json message with the sockets configured delay
 	 *        and does a transmission for each uplinked socket.
      * @param json_message The json message being used for each transmission
      */
-	bool transmissionDelays(JsonMessage& json_message);
+	bool transmitDelays(JsonMessage& json_message);
 
 
 public:
@@ -478,7 +478,7 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_DROPS:
-							if (!transmissionDrops(json_message)) {
+							if (!transmitDrops(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
         						return;	// All transmissions already done by the if condition above
@@ -493,7 +493,7 @@ public:
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
 								}
 							} else {
-								if (!transmissionDelays(json_message)) {
+								if (!transmitDelays(json_message)) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
 									return;	// All transmissions already done by the if condition above
@@ -502,7 +502,7 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_SOCKET:
-							if (!transmissionSockets(json_message)) {
+							if (!transmitSockets(json_message)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							} else {
         						return;	// All transmissions already done by the if condition above
