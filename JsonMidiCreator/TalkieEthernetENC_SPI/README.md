@@ -87,7 +87,7 @@ Talkers and Sockets and Downlinked Talkers and Sockets.
 ## Repeater diagram
 ```
 +-------------------------+      +-------------------------+
-| Uplinked Sockets (list) |      | Uplinked Talkers (list) |
+| Uplinked Sockets (node) |      | Uplinked Talkers (node) |
 +-------------------------+      +-------------------------+
                         |          |
                     +------------------+
@@ -95,7 +95,7 @@ Talkers and Sockets and Downlinked Talkers and Sockets.
                     +------------------+
                         |          |
 +---------------------------+  +---------------------------+
-| Downlinked Sockets (list) |  | Downlinked Talkers (list) |
+| Downlinked Sockets (node) |  | Downlinked Talkers (node) |
 +---------------------------+  +---------------------------+
 ```
 
@@ -143,6 +143,19 @@ This messages are exclusive to the system.
 
 The `mute` concerns exclusively the `call` commands in order to reduce network overhead
 
+### Repeater Rules
+The `MessageRepeater` routes the messages accordingly to its source and message value, the source
+comes from the call method `_transmitToRepeater` depending if it's a Socket or a Talker, both here called
+nodes.
+1. Messages from `up_linked` nodes are routed to `down_linked` nodes all `remote` only;
+1. Messages from `down_linked` nodes are routed to other `down_linked` nodes if `local`
+and are routed to the `up_linked` nodes if `remote`;
+1. All messages from `up_bridged` are routed to the `down_linked` nodes regardless if `remote` or `local`;
+1. All `local` messages from `down_linked` nodes are also routed to all `up_bridged` nodes.
+
+The configuration of an `up_linked` node into an `up_bridged` one is needed for the case where the
+communications are done in the same platform passible of being considered local and thus it shall process
+`local` messages too.
 
 
 
