@@ -56,7 +56,7 @@ class TalkerManifesto {
 
 public:
 
-	// The subclass must have the class name defined (pure virtual)
+	/** @brief A getter for the class name to be returned for the `system` command */
     virtual const char* class_name() const = 0;
 
     TalkerManifesto(const TalkerManifesto&) = delete;
@@ -79,10 +79,14 @@ public:
         const char* desc;
     };
 
-
-protected:
 	
-    uint8_t actionsIterIdx = 0;
+	/**
+     * @brief Returns the total number of actions available to call
+	 * 
+	 * The typical method is:
+	 * `uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }`
+     */
+    virtual uint8_t _actionsCount() const = 0;
 
 
 	/**
@@ -95,17 +99,6 @@ protected:
 
 	
 	/**
-     * @brief Returns the total number of actions available to call
-	 * 
-	 * The typical method is:
-	 * `uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }`
-     */
-    virtual uint8_t _actionsCount() const = 0;
-
-
-public:
-
-	/**
      * @brief Method intended to be called by the Repeater class by its public loop method
      * @param talker Allows the access by the Manifesto to its owner Talker class
 	 * 
@@ -115,24 +108,6 @@ public:
         (void)talker;		// Silence unused parameter warning
 	}
 
-
-	/** @brief Resets the index of the actions list */
-	virtual void _iterateActionsReset() {
-		actionsIterIdx = 0;
-	}
-
-
-    /**
-     * @brief Returns each Action for each while iteration
-     * @return A pointer to an Action of the Manifesto
-     */
-    virtual const Action* _iterateActionNext() {
-        if (actionsIterIdx < _actionsCount()) {
-            return &_getActionsArray()[actionsIterIdx++];
-        }
-        return nullptr;
-    }
-    
 	
     /**
      * @brief Returns the index Action for a given Action name

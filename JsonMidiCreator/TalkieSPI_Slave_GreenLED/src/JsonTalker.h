@@ -188,37 +188,17 @@ protected:
 		return true;
 	}
 
-	
-	/**
-     * @brief Sets the nth values in the json message with the sockets class name
-	 *        and does a transmission for each uplinked socket.
-     * @param json_message The json message being used for each transmission
-     */
-	bool transmissionSockets(JsonMessage& json_message);
+
+	/** @brief Gets the total number of sockets regardless the link type */
+	uint8_t _socketsCount();
 
 
 	/**
-     * @brief Sets the nth values in the json message with the sockets total drops
-	 *        and does a transmission for each uplinked socket.
-     * @param json_message The json message being used for each transmission
+     * @brief Gets the socket pointer given by the socket index
+     * @param socket_index The index of the socket to get
+     * @return Returns the BroadcastSocket pointer or nullptr if none
      */
-	bool transmissionDrops(JsonMessage& json_message);
-
-
-	/**
-     * @brief Sets the nth values in the json message with the sockets configured delay
-	 *        and does a transmission for each uplinked socket.
-     * @param json_message The json message being used for each transmission
-     */
-	bool transmissionDelays(JsonMessage& json_message);
-
-	
-	/**
-     * @brief Sets the given delay on the uplinked socket given by the socket index
-     * @param socket_index The index of the socket to have its delay adjusted
-     * @param delay_value The delay amount in milliseconds
-     */
-	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
+	BroadcastSocket* _getSocket(uint8_t socket_index);
 
 
 public:
@@ -417,26 +397,22 @@ public:
 			
 			case MessageValue::TALKIE_MSG_LIST:
 				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
-				{   // Because of action_index and action !!!
-
-					uint8_t action_index = 0;
-					if (_manifesto) {
-						const TalkerManifesto::Action* action;
-						_manifesto->_iterateActionsReset();
-						while ((action = _manifesto->_iterateActionNext()) != nullptr) {	// No boilerplate
-							json_message.set_nth_value_number(0, action_index++);
-							json_message.set_nth_value_string(1, action->name);
-							json_message.set_nth_value_string(2, action->desc);
-							transmitToRepeater(json_message);	// Many-to-One
-						}
-						if (!action_index) {
-							json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
-							transmitToRepeater(json_message);	// One-to-One
-						}
-					} else {
-						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
-						transmitToRepeater(json_message);		// One-to-One
+				if (_manifesto) {
+					uint8_t total_actions = _manifesto->_actionsCount();	// This makes the access safe
+					const TalkerManifesto::Action* actions = _manifesto->_getActionsArray();
+					for (uint8_t action_i = 0; action_i < total_actions; ++action_i) {
+						json_message.set_nth_value_number(0, action_i);
+						json_message.set_nth_value_string(1, actions[action_i].name);
+						json_message.set_nth_value_string(2, actions[action_i].desc);
+						transmitToRepeater(json_message);	// Many-to-One
 					}
+					if (!total_actions) {
+						json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
+						transmitToRepeater(json_message);	// One-to-One
+					}
+				} else {
+					json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+					transmitToRepeater(json_message);		// One-to-One
 				}
 				break;
 			
@@ -470,22 +446,46 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_DROPS:
-							if (!transmissionDrops(json_message)) {
-								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
-							} else {
-        						return;	// All transmissions already done by the if condition above
+							{
+								uint8_t sockets_count = _socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = _getSocket(socket_i);	// Safe sockets_count already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_number(1, socket->get_drops_count());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								} else {
+									return;	// All transmissions already done by the if condition above
+								}
 							}
 							break;
 
 						case SystemValue::TALKIE_SYS_DELAY:
-							if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER && json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
-								if (!setSocketDelay((uint8_t)json_message.get_nth_value_number(0), (uint8_t)json_message.get_nth_value_number(1))) {
-									json_message.remove_nth_value(0);
-									json_message.remove_nth_value(1);
-									json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
+							if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER) {
+								uint8_t socket_index = (uint8_t)json_message.get_nth_value_number(0);
+								BroadcastSocket* socket = _getSocket(socket_index);
+								if (socket) {
+									if (json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
+										socket->set_max_delay( (uint8_t)json_message.get_nth_value_number(1) );
+									} else {
+										json_message.set_nth_value_number(1, socket->get_max_delay());
+									}
+								} else {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								}
 							} else {
-								if (!transmissionDelays(json_message)) {
+								uint8_t sockets_count = _socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = _getSocket(socket_i);	// Safe sockets_count already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_number(1, socket->get_max_delay());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
 									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 								} else {
 									return;	// All transmissions already done by the if condition above
@@ -494,10 +494,20 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_SOCKET:
-							if (!transmissionSockets(json_message)) {
-								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
-							} else {
-        						return;	// All transmissions already done by the if condition above
+							{
+								uint8_t sockets_count = _socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = _getSocket(socket_i);	// Safe sockets_count already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_string(1, socket->class_name());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								} else {
+									return;	// All transmissions already done by the if condition above
+								}
 							}
 							break;
 

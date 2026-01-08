@@ -281,6 +281,7 @@ protected:
 			JsonMessage noisy_message(_received_buffer, _received_length);
 			noisy_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
 			noisy_message.set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
+			_showReceivedMessage(noisy_message); // Gives a chance to show it before transmitting
 			_transmitToRepeater(noisy_message);
 		}
 		_received_length = 0;	// Enables new receiving

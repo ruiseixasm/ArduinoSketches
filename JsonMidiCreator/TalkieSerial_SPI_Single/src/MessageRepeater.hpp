@@ -110,27 +110,31 @@ public:
     }
 
 
-
-	void iterateSocketsReset() {
-		socketsIterIdx = 0;
+	uint8_t uplinkedSocketsCount() const {
+		return _uplinked_sockets_count;
 	}
 
-    // Iterator next methods - IMPLEMENTED in base class
-    const BroadcastSocket* iterateSocketNext() {
-        if (socketsIterIdx < _uplinked_sockets_count) {
-            return _uplinked_sockets[socketsIterIdx++];
+
+	uint8_t downlinkedSocketsCount() const {
+		return _downlinked_sockets_count;
+	}
+
+	
+	BroadcastSocket* getUplinkedSocket(uint8_t socket_index) const {
+        if (socket_index < _uplinked_sockets_count) {
+            return _uplinked_sockets[socket_index];
         }
-        return nullptr;
-    }
-
-
-	BroadcastSocket* accessSocket(uint8_t socket_index) const {
-		if (socket_index < _uplinked_sockets_count) {
-			return _uplinked_sockets[socket_index];
-		}
 		return nullptr;
 	}
-    
+	
+
+	BroadcastSocket* getDownlinkedSocket(uint8_t socket_index) const {
+        if (socket_index < _downlinked_sockets_count) {
+            return _downlinked_sockets[socket_index];
+        }
+		return nullptr;
+	}
+
 
 	void _socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();

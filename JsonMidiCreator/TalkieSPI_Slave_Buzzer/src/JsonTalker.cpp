@@ -43,60 +43,26 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 }
 
 
-bool JsonTalker::transmissionSockets(JsonMessage& json_message) {
+uint8_t JsonTalker::_socketsCount() {
 	if (_message_repeater) {
-		uint8_t socket_index = 0;
-		const BroadcastSocket* socket;
-		_message_repeater->iterateSocketsReset();
-		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
-			json_message.set_nth_value_number(0, socket_index++);
-			json_message.set_nth_value_string(1, socket->class_name());
-			transmitToRepeater(json_message);	// Many-to-One
+		uint8_t countUplinkedSockets = _message_repeater->uplinkedSocketsCount();
+		uint8_t countDownlinkedSockets = _message_repeater->downlinkedSocketsCount();
+		return countUplinkedSockets + countDownlinkedSockets;
+	}
+	return 0;
+}
+
+
+BroadcastSocket* JsonTalker::_getSocket(uint8_t socket_index) {
+	if (_message_repeater) {
+		uint8_t countUplinkedSockets = _message_repeater->uplinkedSocketsCount();
+		if (socket_index < countUplinkedSockets) {
+			return _message_repeater->getUplinkedSocket(socket_index);
+		} else {
+			return _message_repeater->getDownlinkedSocket(socket_index - countUplinkedSockets);
 		}
-		return socket_index > 0;
 	}
-	return false;
+	return nullptr;
 }
 
-
-bool JsonTalker::transmissionDrops(JsonMessage& json_message) {
-	if (_message_repeater) {
-		uint8_t socket_index = 0;
-		const BroadcastSocket* socket;
-		_message_repeater->iterateSocketsReset();
-		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
-			json_message.set_nth_value_number(0, socket_index++);
-			json_message.set_nth_value_number(1, socket->get_drops_count());
-			transmitToRepeater(json_message);	// Many-to-One
-		}
-		return socket_index > 0;
-	}
-	return false;
-}
-
-
-bool JsonTalker::transmissionDelays(JsonMessage& json_message) {
-	if (_message_repeater) {
-		uint8_t socket_index = 0;
-		const BroadcastSocket* socket;
-		_message_repeater->iterateSocketsReset();
-		while ((socket = _message_repeater->iterateSocketNext()) != nullptr) {	// No boilerplate
-			json_message.set_nth_value_number(0, socket_index++);
-			json_message.set_nth_value_number(1, socket->get_max_delay());
-			transmitToRepeater(json_message);	// Many-to-One
-		}
-		return socket_index > 0;
-	}
-	return false;
-}
-
-
-bool JsonTalker::setSocketDelay(uint8_t socket_index, uint8_t delay_value) const {
-	if (_message_repeater) {
-		BroadcastSocket* socket = _message_repeater->accessSocket(socket_index);
-		socket->set_max_delay(delay_value);
-		return true;
-	}
-	return false;
-}
 
