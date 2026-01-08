@@ -85,6 +85,7 @@ A lightweight library for Arduino communication and control using JSON messages 
 The center class is the `MessageRepeater` class, this class routes the JsonMessage between Uplinked
 Talkers and Sockets and Downlinked Talkers and Sockets.
 ## Repeater diagram
+![Repeater](repeater.png)
 The Repeater works in similar fashion as an HAM radio repeater on the top of a mountain, with a clear distinction of Uplinked and Downlinked communications, where the Uplinked nodes are considered remote nodes and the downlinked nodes are considered local nodes.
 ```
 +-------------------------+      +-------------------------+
