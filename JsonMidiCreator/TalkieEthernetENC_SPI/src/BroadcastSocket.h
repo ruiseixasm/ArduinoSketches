@@ -294,9 +294,7 @@ protected:
      * 
      * @note This method returns true whenever the sending buffer is available.
      */
-	virtual bool _unlockSendingBuffer() {
-		return true;
-	}
+	virtual bool _unlockSendingBuffer() { return true; }
 
 
     /**
