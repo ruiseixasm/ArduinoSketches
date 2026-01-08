@@ -453,7 +453,7 @@ public:
 							{
 								uint8_t sockets_count = socketsCount();
 								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
-									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									const BroadcastSocket* socket = getSocket(socket_i);	// Safe sockets_count already
 									uint16_t total_drops = socket->get_drops_count();
 									json_message.set_nth_value_number(0, socket_i);
 									json_message.set_nth_value_number(1, socket->get_drops_count());
@@ -483,7 +483,7 @@ public:
 							} else {
 								uint8_t sockets_count = socketsCount();
 								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
-									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									const BroadcastSocket* socket = getSocket(socket_i);	// Safe sockets_count already
 									uint16_t total_drops = socket->get_drops_count();
 									json_message.set_nth_value_number(0, socket_i);
 									json_message.set_nth_value_number(1, socket->get_max_delay());
@@ -501,7 +501,7 @@ public:
 							{
 								uint8_t sockets_count = socketsCount();
 								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
-									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									const BroadcastSocket* socket = getSocket(socket_i);	// Safe sockets_count already
 									uint16_t total_drops = socket->get_drops_count();
 									json_message.set_nth_value_number(0, socket_i);
 									json_message.set_nth_value_string(1, socket->class_name());
