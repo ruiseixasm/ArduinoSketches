@@ -160,5 +160,15 @@ The configuration of an `up_linked` node into an `up_bridged` one is needed for 
 communications are done in the same platform passible of being considered local and thus it shall process
 `local` messages too.
 
+## The Talker and its Manifesto
+### Talker
+These are the attributes of a Talker:
+- **name** - The name by which a Talker is identified in the network and targeted with
+- **description** - A brief description of the Talker returned in response to the `talk` command
+- **channel** - A channel in order to be simultaneously target among other talkers
+- **manifesto** - The Talker manifesto that sets all its Actions in detail
+
+### Manifesto
+The Manifesto has the following attributes:
 
 
