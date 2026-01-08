@@ -44,3 +44,16 @@
 | Downlinked Sockets (list) |  | Downlinked Talkers (list) |
 +---------------------------+  +---------------------------+
 ```
+
+## Talker diagram
+```
++--------+
+| Talker |
++--------+
+       |
+     +-----------+
+     | Manifesto |
+     +-----------+
+```
+
+
