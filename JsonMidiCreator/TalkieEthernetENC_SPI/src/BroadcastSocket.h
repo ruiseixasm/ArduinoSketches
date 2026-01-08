@@ -93,6 +93,13 @@ protected:
 	}
 
 
+	/**
+     * @brief This helper method generates the checksum of a given buffer content
+     * @param buffer The buffer which content is used to generate the checksum
+     * @param length The length in bytes of the data content in the buffer
+	 * 
+     * @note This method generates the number present in the 'c' field as value.
+     */
     static uint16_t _generateChecksum(const char* buffer, size_t length) {	// 16-bit word and XORing
         uint16_t checksum = 0;
 		if (length <= TALKIE_BUFFER_SIZE) {
@@ -279,12 +286,33 @@ protected:
     }
 
 
+    /**
+     * @brief Lets the overriding class to green light the access to the sending buffer
+	 * 
+	 * This method is intended to be used by slave devices that works with the sending
+	 * buffer asynchronously, like the case of the Arduino SPI in slave mode.
+     * 
+     * @note This method returns true whenever the sending buffer is available.
+     */
 	virtual bool _unlockSendingBuffer() {
 		return true;
 	}
 
 
+    /**
+     * @brief Pure abstract method that triggers the receiving data by the socket
+	 * 
+     * @note This method shall also trigger the method _startTransmission.
+     */
     virtual void _receive() = 0;
+
+
+	/**
+     * @brief Pure abstract method that sends via socket any received json message
+     * @param json_message A json message able to be accessed by the subclass socket
+	 * 
+     * @note This method marks the end of the message cycle with _finishTransmission.
+     */
     virtual bool _send(const JsonMessage& json_message) = 0;
 
 
@@ -298,6 +326,13 @@ public:
 	// The subclass must have the class name defined (pure virtual)
     virtual const char* class_name() const = 0;
 
+	
+	/**
+     * @brief Method intended to be called by the Repeater class in their public loop
+	 *        method
+	 * 
+     * @note This method being underscored means to be called internally only.
+     */
     virtual void _loop() {
         // In theory, a UDP packet on a local area network (LAN) could survive
         // for about 4.25 minutes (255 seconds).
@@ -374,13 +409,23 @@ public:
     void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
 	
 
-
-	
+	/**
+     * @brief Loads the content of the received buffer into the json message
+     * @param json_message A json message into which the buffer is loaded to
+     */
 	bool _deserialize_buffer(JsonMessage& json_message) const {
 		return json_message.deserialize_buffer(_received_buffer, _received_length);
 	}
 
 
+	/**
+     * @brief The final step in a cycle of processing a json message in which the
+	 *        json message content is loaded into the sending buffer of the socket
+	 *        to be sent
+     * @param json_message A json message to be serialized into the sending buffer
+	 * 
+     * @note This method marks the end of the message cycle.
+     */
     bool _finishTransmission(const JsonMessage& json_message) {
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
@@ -431,8 +476,5 @@ public:
     }
     
 };
-
-
-
 
 #endif // BROADCAST_SOCKET_H
