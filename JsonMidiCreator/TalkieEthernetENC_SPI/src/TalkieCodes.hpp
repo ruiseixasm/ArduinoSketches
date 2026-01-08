@@ -17,9 +17,6 @@ https://github.com/ruiseixasm/JsonTalkie
  * @file TalkieCodes.hpp
  * @brief This sets the multiple codes associated to the json values.
  * 
- * By default an inexistent key returns 0 as number, so, any first key
- * bellow is considered the respective default key value.
- * 
  * @author Rui Seixas Monteiro
  * @date Created: 2026-01-06
  * @version 1.0.0
@@ -35,10 +32,10 @@ https://github.com/ruiseixasm/JsonTalkie
  * @struct TalkieCodes
  * @brief Centralized enumeration repository for the Talker communication system
  * 
- * The Talker system processes and generates JSON messages based on its associated
- * `Manifesto` and linked network position. This struct contains all enumerated
- * types used throughout the Talker ecosystem, providing type safety and clear
- * intent for communication operations.
+ * This struct contains all enumerated types used throughout the Talkie protocol,
+ * providing type safety and clear intent for communication operations.
+ * By default an inexistent key returns 0 as number, so, any first key bellow is
+ * considered the respective default key value.
  * 
  * @see Talker
  * @see Manifesto
