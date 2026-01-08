@@ -117,6 +117,7 @@ The Repeater works in similar fashion as an HAM radio repeater on the top of a m
 The extensive list of all Values is in the structure `TalkieCodes`.
 ### Message Value
 These are the Message Values (commands):
+- **noise** - Invalid, missing or malformed data
 - **talk** - Lists existent talkers in the network
 - **channel** - Channel management/configuration
 - **ping** - Network presence check and latency
@@ -125,7 +126,6 @@ These are the Message Values (commands):
 - **system** - System control/status messages
 - **echo** - Messages Echo returns
 - **error** - Error notification
-- **noise** - Invalid or malformed data
 
 ### Broadcast Value
 Local messages aren't send to uplinked Sockets, except if they are up bridged.

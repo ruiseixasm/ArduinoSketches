@@ -99,7 +99,7 @@ struct TalkieCodes {
      * of communication packets in the Talkie protocol.
      */
     enum MessageValue : uint8_t {
-        TALKIE_MSG_NOISE,   ///< Invalid or malformed data
+        TALKIE_MSG_NOISE,   ///< Invalid, missing or malformed data
         TALKIE_MSG_TALK,    ///< Lists existent devices in the network
         TALKIE_MSG_CHANNEL, ///< Channel management/configuration
         TALKIE_MSG_PING,    ///< Network presence check and latency
