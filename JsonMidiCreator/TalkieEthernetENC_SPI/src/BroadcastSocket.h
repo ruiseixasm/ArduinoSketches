@@ -58,6 +58,7 @@ using Original 			= JsonMessage::Original;
 
 class MessageRepeater;
 
+
 /**
  * @class BroadcastSocket
  * @brief An Interface to be implemented as a Socket to receive and send its buffer

@@ -58,6 +58,17 @@ class MessageRepeater;
 class BroadcastSocket;
 
 
+/**
+ * @class JsonTalker
+ * @brief Represents a Talker, the Talker is the class that processes and generates
+ *        json messages based on its associated `Manifesto` and its linked place
+ * 
+ * A Talker handles transmissions based on its name and channel, a channel of `255`
+ * means a disabled channel, resulting in no response to any channel.
+ * 
+ * @note This class is the antitheses of the `BroadcastSocket` class in the sense that
+ *       it works with the Repeater in between and as response.
+ */
 class JsonTalker {
 protected:
     
@@ -180,7 +191,7 @@ protected:
 	
 	/**
      * @brief Sets the nth values in the json message with the sockets class name
-	 *        and does a transmission for each uplinked socket. 
+	 *        and does a transmission for each uplinked socket.
      * @param json_message The json message being used for each transmission
      */
 	bool transmissionSockets(JsonMessage& json_message);
@@ -188,7 +199,7 @@ protected:
 
 	/**
      * @brief Sets the nth values in the json message with the sockets total drops
-	 *        and does a transmission for each uplinked socket. 
+	 *        and does a transmission for each uplinked socket.
      * @param json_message The json message being used for each transmission
      */
 	bool transmissionDrops(JsonMessage& json_message);
@@ -196,7 +207,7 @@ protected:
 
 	/**
      * @brief Sets the nth values in the json message with the sockets configured delay
-	 *        and does a transmission for each uplinked socket. 
+	 *        and does a transmission for each uplinked socket.
      * @param json_message The json message being used for each transmission
      */
 	bool transmissionDelays(JsonMessage& json_message);

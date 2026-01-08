@@ -42,6 +42,16 @@ using Original 			= JsonMessage::Original;
 
 class JsonTalker;
 
+
+/**
+ * @class TalkerManifesto
+ * @brief An Interface to be implemented as a Manifesto to define the Talker actions
+ * 
+ * The implementation of this class requires de definition of a list of actions like so:
+ *     `Action calls[1] = {{"on", "Turns led ON"}};`
+ * 
+ * @note See examples of manifestos for more details about implementation.
+ */
 class TalkerManifesto {
 
 public:
@@ -58,6 +68,12 @@ public:
     virtual ~TalkerManifesto() = default;
 
 
+	/**
+	 * @brief Represents an Action with a name and a description
+	 * 
+	 * An Action placed in a list has it's position matched with is
+	 * callable index number.
+	 */
     struct Action {
         const char* name;
         const char* desc;
@@ -66,11 +82,24 @@ public:
 
 protected:
 	
-    // Iterator states
     uint8_t actionsIterIdx = 0;
 
+
+	/**
+     * @brief A getter to the actions array defined in the interface implementation
+	 * 
+	 * The typical method is:
+	 * `const Action* _getActionsArray() const override { return calls; }`
+     */
     virtual const Action* _getActionsArray() const = 0;
-    // Size methods
+
+	
+	/**
+     * @brief Returns the total number of actions available to call
+	 * 
+	 * The typical method is:
+	 * `uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }`
+     */
     virtual uint8_t _actionsCount() const = 0;
 
 
@@ -130,7 +159,14 @@ public:
     }
 
 	
-    // Action implementations - MUST be implemented by derived
+    /**
+     * @brief Calls a given Action by it's index number
+     * @param index The index of the Action being called
+     * @param talker Allows the access by the Manifesto to its owner Talker class
+     * @param json_message The json message made available for manipulation
+     * @param talker_match The type of matching concerning the Talker call
+     * @return Returns true if the call if successful (roger) or false if not (negative)
+     */
     virtual bool _actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)index;		// Silence unused parameter warning
         (void)talker;		// Silence unused parameter warning
@@ -139,20 +175,45 @@ public:
         return false;
 	}
 
-
+	
+    /**
+     * @brief The method that processes the received echoes of the messages sent
+     * @param talker Allows the access by the Manifesto to its owner Talker class
+     * @param json_message The json message made available for manipulation
+     * @param talker_match The type of matching concerning the Talker call
+	 * 
+	 * This method is intended to process the echoes from the talker sent messages.
+     */
     virtual void _echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
         (void)talker_match;	// Silence unused parameter warning
     }
 
-
-    virtual void _error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+	
+    /**
+     * @brief The method that processes the received errors of the messages sent
+     * @param talker Allows the access by the Manifesto to its owner Talker class
+     * @param json_message The json message made available for manipulation
+     * @param talker_match The type of matching concerning the Talker call
+	 * 
+	 * This method is intended to process the errors from the talker sent messages.
+     */
+	virtual void _error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning
         (void)talker_match;	// Silence unused parameter warning
     }
 
+	
+    /**
+     * @brief The method that processes the noisy messages received
+     * @param talker Allows the access by the Manifesto to its owner Talker class
+     * @param json_message The json message made available for manipulation
+     * @param talker_match The type of matching concerning the Talker call
+	 * 
+     * @note This method excludes noisy messages associated to errors (with error field).
+     */
     virtual void _noise(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
         (void)talker;		// Silence unused parameter warning
         (void)json_message;	// Silence unused parameter warning

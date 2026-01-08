@@ -50,8 +50,6 @@ protected:
     };
     
     const Action* _getActionsArray() const override { return calls; }
-
-    // Size methods
     uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
