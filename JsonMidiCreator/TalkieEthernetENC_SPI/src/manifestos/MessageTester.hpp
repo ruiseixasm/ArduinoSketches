@@ -72,7 +72,7 @@ public:
 		
 		if (index >= sizeof(calls)/sizeof(Action)) return false;
 		
-		const char json_payload[] = "{\"m\":6,\"b\":0,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+		const char json_payload[] = "{\"m\":7,\"b\":0,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 		JsonMessage test_json_message;
 		test_json_message.deserialize_buffer(json_payload, sizeof(json_payload) - 1);	// Discount the '\0' of the literal
 
@@ -241,13 +241,13 @@ public:
 			case 12:
 			{
 				bool payloads_match = true;
-				const char final_payload1[] = "{\"m\":6,\"b\":0,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
+				const char final_payload1[] = "{\"m\":7,\"b\":0,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
 				test_json_message.remove_from();
 				if (!test_json_message.compare_buffer(final_payload1, sizeof(final_payload1) - 1)) {
 					json_message.set_nth_value_string(0, "Failed match 1");
 					payloads_match = false;
 				}
-				const char final_payload2[] = "{\"m\":6,\"b\":0,\"i\":13825,\"t\":\"Talker-7a\"}";
+				const char final_payload2[] = "{\"m\":7,\"b\":0,\"i\":13825,\"t\":\"Talker-7a\"}";
 				test_json_message.remove_nth_value(0);
 				if (!test_json_message.compare_buffer(final_payload2, sizeof(final_payload2) - 1)) {
 					if (payloads_match) {	// has to be at 0
@@ -264,7 +264,7 @@ public:
 			case 13:
 			{
 				uint32_t big_number = 1234567;
-				const char final_payload1[] = "{\"m\":6,\"b\":0,\"f\":\"buzzer\",\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567}";
+				const char final_payload1[] = "{\"m\":7,\"b\":0,\"f\":\"buzzer\",\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567}";
 				if (!test_json_message.set_nth_value_number(0, big_number) || !test_json_message.compare_buffer(final_payload1, sizeof(final_payload1) - 1)) {
 					json_message.set_nth_value_string(0, "1st");
 					json_message.set_nth_value_number(1, sizeof(final_payload1) - 1);
@@ -272,7 +272,7 @@ public:
 					return false;
 				}
 				const char from_green[] = "green";
-				const char final_payload2[] = "{\"m\":6,\"b\":0,\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567,\"f\":\"green\"}";
+				const char final_payload2[] = "{\"m\":7,\"b\":0,\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567,\"f\":\"green\"}";
 				if (!test_json_message.set_from_name(from_green) || !test_json_message.compare_buffer(final_payload2, sizeof(final_payload2) - 1)) {
 					json_message.set_nth_value_string(0, "2nd");
 					json_message.set_nth_value_number(1, sizeof(final_payload2) - 1);
