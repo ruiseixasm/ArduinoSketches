@@ -397,26 +397,22 @@ public:
 			
 			case MessageValue::TALKIE_MSG_LIST:
 				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
-				{   // Because of action_index and action !!!
-
-					uint8_t action_index = 0;
-					if (_manifesto) {
-						const TalkerManifesto::Action* action;
-						_manifesto->_iterateActionsReset();
-						while ((action = _manifesto->_iterateActionNext()) != nullptr) {	// No boilerplate
-							json_message.set_nth_value_number(0, action_index++);
-							json_message.set_nth_value_string(1, action->name);
-							json_message.set_nth_value_string(2, action->desc);
-							transmitToRepeater(json_message);	// Many-to-One
-						}
-						if (!action_index) {
-							json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
-							transmitToRepeater(json_message);	// One-to-One
-						}
-					} else {
-						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
-						transmitToRepeater(json_message);		// One-to-One
+				if (_manifesto) {
+					uint8_t total_actions = _manifesto->_actionsCount();	// This makes the access safe
+					const TalkerManifesto::Action* actions = _manifesto->_getActionsArray();
+					for (uint8_t action_i = 0; action_i < total_actions; ++action_i) {
+						json_message.set_nth_value_number(0, action_i);
+						json_message.set_nth_value_string(1, actions[action_i].name);
+						json_message.set_nth_value_string(2, actions[action_i].desc);
+						transmitToRepeater(json_message);	// Many-to-One
 					}
+					if (!total_actions) {
+						json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
+						transmitToRepeater(json_message);	// One-to-One
+					}
+				} else {
+					json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+					transmitToRepeater(json_message);		// One-to-One
 				}
 				break;
 			

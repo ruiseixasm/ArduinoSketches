@@ -80,20 +80,16 @@ public:
     };
 
 
-protected:
-	
     uint8_t actionsIterIdx = 0;
 
-
 	/**
-     * @brief A getter to the actions array defined in the interface implementation
+     * @brief Returns the total number of actions available to call
 	 * 
 	 * The typical method is:
-	 * `const Action* _getActionsArray() const override { return calls; }`
+	 * `uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }`
      */
-    virtual const Action* _getActionsArray(uint8_t action_index) const = 0;
+    virtual uint8_t _actionsCount() const = 0;
 
-	
 
 	/**
      * @brief A getter to the actions array defined in the interface implementation
@@ -104,17 +100,6 @@ protected:
     virtual const Action* _getActionsArray() const = 0;
 
 	
-	/**
-     * @brief Returns the total number of actions available to call
-	 * 
-	 * The typical method is:
-	 * `uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }`
-     */
-    virtual uint8_t _actionsCount() const = 0;
-
-
-public:
-
 	/**
      * @brief Method intended to be called by the Repeater class by its public loop method
      * @param talker Allows the access by the Manifesto to its owner Talker class
