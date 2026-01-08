@@ -170,7 +170,9 @@ These are the attributes of a Talker:
 - **channel** - A channel in order to be simultaneously target among other talkers
 - **manifesto** - The Talker manifesto that sets all its Actions in detail
 
-### Manifesto (implementation)
+### Manifesto implementation
+In the folders [src/manifestos](manifestos) you can find further description and some manifesto examples for diverse type of actions and Talker methods processing, like echo and error.
+
 A Manifesto **implementation** has the following attributes:
 - **calls** - An array of Actions (name and description)
 
@@ -193,7 +195,7 @@ uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 A Broadcast Socket **implementation** shall be able to receive and send in broadcast mode, this ability is required because the Talkers are recognizable by their names shown by the `talk` command, and thus, become able to auto configure the following direct connections (unicast). The broadcast communications are mainly intended to discover talkers or send to a channel (many) instead of talker name (single).
 
 ### Implementation
-In the folders [sockets](sockets) you can find further description and many socket examples for diverse type of protocols and even libraries, like Ethernet and SPI protocols.
+In the folders [src/sockets](sockets) you can find further description and many socket examples for diverse type of protocols and even libraries, like Ethernet and SPI protocols.
 
 These are the main attributes of the `BroadcastSocket`:
 ```
