@@ -79,9 +79,7 @@ public:
         const char* desc;
     };
 
-
-    uint8_t actionsIterIdx = 0;
-
+	
 	/**
      * @brief Returns the total number of actions available to call
 	 * 
@@ -110,24 +108,6 @@ public:
         (void)talker;		// Silence unused parameter warning
 	}
 
-
-	/** @brief Resets the index of the actions list */
-	virtual void _iterateActionsReset() {
-		actionsIterIdx = 0;
-	}
-
-
-    /**
-     * @brief Returns each Action for each while iteration
-     * @return A pointer to an Action of the Manifesto
-     */
-    virtual const Action* _iterateActionNext() {
-        if (actionsIterIdx < _actionsCount()) {
-            return &_getActionsArray()[actionsIterIdx++];
-        }
-        return nullptr;
-    }
-    
 	
     /**
      * @brief Returns the index Action for a given Action name
