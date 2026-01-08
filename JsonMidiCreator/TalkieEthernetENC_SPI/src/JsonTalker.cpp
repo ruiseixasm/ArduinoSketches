@@ -58,7 +58,7 @@ BroadcastSocket* JsonTalker::getSocket(uint8_t socket_index) {
 		if (socket_index < countUplinkedSockets) {
 			return _message_repeater->getUplinkedSocket(socket_index);
 		} else {
-			return _message_repeater->getUplinkedSocket(socket_index - countUplinkedSockets);
+			return _message_repeater->getDownlinkedSocket(socket_index - countUplinkedSockets);
 		}
 	}
 	return nullptr;
