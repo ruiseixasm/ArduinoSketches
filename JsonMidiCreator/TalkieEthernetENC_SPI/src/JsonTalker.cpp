@@ -42,6 +42,28 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 	}
 }
 
+uint8_t JsonTalker::socketsCount() {
+	if (_message_repeater) {
+		uint8_t countUplinkedSockets = _message_repeater->uplinkedSocketsCount();
+		uint8_t countDownlinkedSockets = _message_repeater->downlinkedSocketsCount();
+		return countUplinkedSockets + countDownlinkedSockets;
+	}
+	return 0;
+}
+
+
+BroadcastSocket* JsonTalker::getSocket(uint8_t socket_index) {
+	if (_message_repeater) {
+		uint8_t countUplinkedSockets = _message_repeater->uplinkedSocketsCount();
+		if (socket_index < countUplinkedSockets) {
+			return _message_repeater->getUplinkedSocket(socket_index);
+		} else {
+			return _message_repeater->getUplinkedSocket(socket_index - countUplinkedSockets);
+		}
+	}
+	return nullptr;
+}
+
 
 bool JsonTalker::transmitSockets(JsonMessage& json_message) {
 	if (_message_repeater) {

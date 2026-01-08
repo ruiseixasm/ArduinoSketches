@@ -189,6 +189,18 @@ protected:
 	}
 
 
+	/** @brief Gets the total number of sockets regardless the linking type */
+	uint8_t socketsCount();
+
+
+	/**
+     * @brief Gets the socket pointer given by the socket index
+     * @param socket_index The index of the socket to get
+     * @return Returns the BroadcastSocket pointer or nullptr if none
+     */
+	BroadcastSocket* getSocket(uint8_t socket_index);
+
+
 	/**
      * @brief Sets the nth values in the json message with the sockets class name
 	 *        and does a transmission for each uplinked socket.
