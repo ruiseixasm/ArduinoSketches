@@ -218,14 +218,6 @@ protected:
 
 
 	/**
-     * @brief Sets the nth values in the json message with the sockets total drops
-	 *        and does a transmission for each uplinked socket.
-     * @param json_message The json message being used for each transmission
-     */
-	bool transmitDrops(JsonMessage& json_message);
-
-
-	/**
      * @brief Sets the given delay on the uplinked socket given by the socket index
      * @param socket_index The index of the socket to have its delay adjusted
      * @param delay_value The delay amount in milliseconds
@@ -498,10 +490,20 @@ public:
 							break;
 
 						case SystemValue::TALKIE_SYS_DROPS:
-							if (!transmitDrops(json_message)) {
-								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
-							} else {
-        						return;	// All transmissions already done by the if condition above
+							{
+								uint8_t sockets_count = socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = getSocket(socket_i);	// Safe method already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_number(1, socket->get_drops_count());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								} else {
+									return;	// All transmissions already done by the if condition above
+								}
 							}
 							break;
 
