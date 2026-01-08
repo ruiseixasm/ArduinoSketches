@@ -139,7 +139,8 @@ This messages are exclusive to the system.
 - **drops** - Packet loss statistics
 - **delay** - Network delay configuration
 - **socket** - List Socket class names
-- **manifesto** - Show the Manifesto class name  
+- **manifesto** - Show the Manifesto class name
+
 The `mute` concerns exclusively the `call` commands in order to reduce network overhead
 
 
