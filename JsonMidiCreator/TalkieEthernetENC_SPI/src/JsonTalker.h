@@ -188,13 +188,41 @@ protected:
 		return true;
 	}
 
-	
+
+	/**
+     * @brief Sets the given delay on the uplinked socket given by the socket index
+     * @param socket_index The index of the socket to have its delay adjusted
+     * @param delay_value The delay amount in milliseconds
+     */
+	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
+
+
+	/**
+     * @brief Sets the given delay on the uplinked socket given by the socket index
+     * @param socket_index The index of the socket to have its delay adjusted
+     * @return Returns the delay amount in milliseconds
+     */
+	uint8_t getSocketDelay(uint8_t socket_index) const;
+
+
 	/**
      * @brief Sets the nth values in the json message with the sockets class name
 	 *        and does a transmission for each uplinked socket.
      * @param json_message The json message being used for each transmission
      */
-	bool transmissionSockets(JsonMessage& json_message);
+	bool transmissionSockets(JsonMessage& json_message) {
+		if (_message_repeater) {
+			uint8_t sockets_count = _message_repeater->socketsCount();
+			for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+				BroadcastSocket* socket = _message_repeater->accessSocket(socket_i);
+				json_message.set_nth_value_number(0, socket_i);
+				json_message.set_nth_value_number(1, socket->get_max_delay());
+				transmitToRepeater(json_message);	// Many-to-One
+			}
+			return sockets_count > 0;
+		}
+		return false;
+	}
 
 
 	/**
@@ -211,14 +239,6 @@ protected:
      * @param json_message The json message being used for each transmission
      */
 	bool transmissionDelays(JsonMessage& json_message);
-
-	
-	/**
-     * @brief Sets the given delay on the uplinked socket given by the socket index
-     * @param socket_index The index of the socket to have its delay adjusted
-     * @param delay_value The delay amount in milliseconds
-     */
-	bool setSocketDelay(uint8_t socket_index, uint8_t delay_value) const;
 
 
 public:
