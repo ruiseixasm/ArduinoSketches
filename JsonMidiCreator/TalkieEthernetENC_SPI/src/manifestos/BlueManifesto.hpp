@@ -42,19 +42,18 @@ protected:
     bool _is_led_on = false;  	// keep track of state yourself, by default it's off
     uint16_t _total_calls = 0;
 
-
     Action calls[3] = {
 		{"on", "Turns led ON"},
 		{"off", "Turns led OFF"},
 		{"actions", "Returns the number of triggered Actions"}
     };
     
+public:
+    
     const Action* _getActionsArray() const override { return calls; }
     uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
-public:
-    
     // Index-based operations (simplified examples)
     bool _actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
         (void)talker;		// Silence unused parameter warning

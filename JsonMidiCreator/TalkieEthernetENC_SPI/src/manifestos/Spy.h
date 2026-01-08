@@ -41,13 +41,13 @@ protected:
 		{"call", "I can call actions on others [<talker> <action>]"}
     };
     
+public:
+
     const Action* _getActionsArray() const override { return calls; }
 
     // Size methods
     uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
-
-public:
 
     // Action implementations - MUST be implemented by derived
     bool _actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override;

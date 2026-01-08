@@ -59,14 +59,14 @@ protected:
 		{"string", "Checks if it has a value 0 as string"}
     };
     
+public:
+    
     const Action* _getActionsArray() const override { return calls; }
 
     // Size methods
     uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
-public:
-    
     // Index-based operations (simplified examples)
     bool _actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
 		

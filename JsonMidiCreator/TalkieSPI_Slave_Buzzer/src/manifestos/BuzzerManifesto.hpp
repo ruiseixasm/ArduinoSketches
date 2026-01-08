@@ -28,7 +28,6 @@ public:
 
     BuzzerManifesto() : TalkerManifesto() {}	// Constructor
 
-
 protected:
 
     uint16_t _buzz_duration_ms = 100;
@@ -41,13 +40,13 @@ protected:
 		{"ms", "Gets and sets the buzzing duration"}
     };
     
+public:
+
     const Action* _getActionsArray() const override { return calls; }
 
     // Size methods
     uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
-
-public:
 
 	void _loop(JsonTalker* talker) override {
         (void)talker;		// Silence unused parameter warning
