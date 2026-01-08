@@ -151,7 +151,7 @@ nodes.
 1. All `remote` messages from `down_linked` nodes are routed to the `up_linked` nodes (just);
 1. All `remote` and `local` messages from `up_bridged` nodes are routed to `down_linked` nodes (both);
 1. All `remote` and `local` messages from `down_linked` nodes are routed to the `up_bridged` nodes (both);
-1. All `local` messages from `down_linked` nodes are routed to other `down_linked` nodes;
+1. All `local` messages from `down_linked` nodes are also routed to other `down_linked` nodes;
 1. All `self` messages from a Talker are routed to the same Talker;
 1. All `none` messages are dropped and thus NOT sent to any node.
 
