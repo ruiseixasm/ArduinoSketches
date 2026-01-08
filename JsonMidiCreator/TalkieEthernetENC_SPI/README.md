@@ -142,7 +142,7 @@ This messages are exclusive to the system.
 - **socket** - List Socket class names
 - **manifesto** - Show the Manifesto class name
 
-The `mute` concerns exclusively the `call` commands in order to reduce network overhead
+The `mute` setting is exclusive to the `call` commands in order to reduce network overhead.
 
 ### Repeater Rules
 The `MessageRepeater` routes the messages accordingly to its source and message value, the source
