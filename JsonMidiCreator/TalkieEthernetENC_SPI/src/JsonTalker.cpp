@@ -58,6 +58,15 @@ bool JsonTalker::transmitSockets(JsonMessage& json_message) {
 }
 
 
+uint16_t JsonTalker::getSocketDrops(uint8_t socket_index) const {
+	if (_message_repeater) {
+		BroadcastSocket* socket = _message_repeater->accessSocket(socket_index);
+		return socket->get_drops_count();
+	}
+	return 0;
+}
+
+
 bool JsonTalker::transmitDrops(JsonMessage& json_message) {
 	if (_message_repeater) {
 		uint8_t socket_index = 0;
@@ -91,7 +100,6 @@ uint8_t JsonTalker::getSocketDelay(uint8_t socket_index) const {
 	}
 	return 0;
 }
-
 
 
 bool JsonTalker::transmitDelays(JsonMessage& json_message) {

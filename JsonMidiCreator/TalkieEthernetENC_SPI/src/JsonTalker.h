@@ -198,6 +198,14 @@ protected:
 
 
 	/**
+     * @brief Gets the total drops in the uplinked socket given by the socket index
+     * @param socket_index The index of the socket to get the total drops from
+     * @return Returns the total drops
+     */
+	uint16_t getSocketDrops(uint8_t socket_index) const;
+
+
+	/**
      * @brief Sets the nth values in the json message with the sockets total drops
 	 *        and does a transmission for each uplinked socket.
      * @param json_message The json message being used for each transmission
