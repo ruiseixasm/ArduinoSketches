@@ -31,86 +31,153 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
 
 
-// PREFIXED VERSION - 100% safe across all boards
+/**
+ * @struct TalkieCodes
+ * @brief Centralized enumeration repository for the Talker communication system
+ * 
+ * The Talker system processes and generates JSON messages based on its associated
+ * `Manifesto` and linked network position. This struct contains all enumerated
+ * types used throughout the Talker ecosystem, providing type safety and clear
+ * intent for communication operations.
+ * 
+ * @see Talker
+ * @see Manifesto
+ * @see BroadcastSocket
+ * @see MessageRepeater
+ * @ingroup JsonTalkie
+ */
 struct TalkieCodes {
 
-	enum ValueType : uint8_t {
-		TALKIE_VT_VOID,
-		TALKIE_VT_OTHER,
-		TALKIE_VT_INTEGER,
-		TALKIE_VT_STRING
-	};
-
-	
-	enum LinkType : uint8_t {
-		TALKIE_LT_NONE,
-		TALKIE_LT_DOWN_LINKED,
-		TALKIE_LT_UP_LINKED,
-		TALKIE_LT_UP_BRIDGED	// TALKIE_LT_UP_BRIDGED allows the sending of LOCAL broadcasted messages
-	};
-
-
-	enum TalkerMatch : uint8_t {
-		TALKIE_MATCH_NONE,
-		TALKIE_MATCH_ANY,
-		TALKIE_MATCH_BY_CHANNEL,
-		TALKIE_MATCH_BY_NAME,
-		TALKIE_MATCH_FAIL
-	};
+    /**
+     * @enum ValueType
+     * @brief Data type classification for message values
+     * 
+     * Used to identify the type of data contained in json fields,
+     * because these can be strings or numbers.
+     */
+    enum ValueType : uint8_t {
+        TALKIE_VT_VOID,      ///< No value (null/empty)
+        TALKIE_VT_OTHER,     ///< Custom or complex data type
+        TALKIE_VT_INTEGER,   ///< Numeric integer value
+        TALKIE_VT_STRING     ///< Text string value
+    };
 
 
-	enum BroadcastValue : uint8_t {
-		TALKIE_BC_NONE,
-		TALKIE_BC_REMOTE,
-		TALKIE_BC_LOCAL,
-		TALKIE_BC_SELF
-	};
+    /**
+     * @enum LinkType
+     * @brief Network linkage configuration for Socket and Talker positioning
+     * 
+     * Defines how a Socket or a Talker is connected to the Message Repeater,
+     * affecting message routing to other Sockets and Talkers.
+     */
+    enum LinkType : uint8_t {
+        TALKIE_LT_NONE,         ///< No special linkage (standalone)
+        TALKIE_LT_DOWN_LINKED,  ///< Linked as a Local node (LOCAL and REMOTE messages)
+        TALKIE_LT_UP_LINKED,    ///< Linked as a remote node associated to REMOTE messages
+        TALKIE_LT_UP_BRIDGED    ///< Up-bridged: Can send LOCAL broadcast messages too
+    };
 
 
+    /**
+     * @enum TalkerMatch
+     * @brief The type of match associated to the Talker
+     * 
+     * Based on the `to` field of the message a Talker has its handle transmission method
+	 * called, the match by which the Talker is select is defined by this enum.
+     */
+    enum TalkerMatch : uint8_t {
+        TALKIE_MATCH_NONE,        ///< No match attempted
+        TALKIE_MATCH_ANY,         ///< Matches any Talker (wildcard)
+        TALKIE_MATCH_BY_CHANNEL,  ///< Successfully matched by channel number
+        TALKIE_MATCH_BY_NAME,     ///< Successfully matched by name string
+        TALKIE_MATCH_FAIL         ///< Matching failed (no such Talker)
+    };
+
+
+    /**
+     * @enum BroadcastValue
+     * @brief Scope of broadcast message distribution
+     * 
+     * Specifies how far a broadcast message should propagate
+     * through the environment.
+     */
+    enum BroadcastValue : uint8_t {
+        TALKIE_BC_NONE,    ///< No broadcast (point-to-point)
+        TALKIE_BC_REMOTE,  ///< Broadcast to remote network segments
+        TALKIE_BC_LOCAL,   ///< Broadcast within local network segment
+        TALKIE_BC_SELF     ///< Broadcast to self only (loopback)
+    };
+
+
+    /**
+     * @enum MessageValue
+     * @brief Primary message type classification
+     * 
+     * Core message types that define the purpose and handling
+     * of communication packets in the Talkie protocol.
+     */
     enum MessageValue : uint8_t {
-        TALKIE_MSG_TALK,
-        TALKIE_MSG_CHANNEL,
-        TALKIE_MSG_PING,
-        TALKIE_MSG_CALL,
-        TALKIE_MSG_LIST,
-        TALKIE_MSG_SYSTEM,
-        TALKIE_MSG_ECHO,
-        TALKIE_MSG_ERROR,
-        TALKIE_MSG_NOISE
+        TALKIE_MSG_TALK,    ///< Standard data transmission
+        TALKIE_MSG_CHANNEL, ///< Channel management/configuration
+        TALKIE_MSG_PING,    ///< Network presence check
+        TALKIE_MSG_CALL,    ///< Direct Talker invocation
+        TALKIE_MSG_LIST,    ///< Request list of available Talkers
+        TALKIE_MSG_SYSTEM,  ///< System control/status messages
+        TALKIE_MSG_ECHO,    ///< Echo/test messages
+        TALKIE_MSG_ERROR,   ///< Error notification
+        TALKIE_MSG_NOISE    ///< Invalid or malformed data
     };
 
 
+    /**
+     * @enum SystemValue
+     * @brief Associated to the system state and configuration
+     */
     enum SystemValue : uint8_t {
-        TALKIE_SYS_UNDEFINED,
-        TALKIE_SYS_BOARD,
-        TALKIE_SYS_MUTE,
-        TALKIE_SYS_DROPS,
-        TALKIE_SYS_DELAY,
-        TALKIE_SYS_SOCKET,
-        TALKIE_SYS_MANIFESTO
+        TALKIE_SYS_UNDEFINED, ///< Unspecified system operation
+        TALKIE_SYS_BOARD,     ///< Board/system information request
+        TALKIE_SYS_MUTE,      ///< Enable/disable mute mode
+        TALKIE_SYS_DROPS,     ///< Packet loss statistics
+        TALKIE_SYS_DELAY,     ///< Network delay configuration
+        TALKIE_SYS_SOCKET,    ///< Socket management
+        TALKIE_SYS_MANIFESTO  ///< Manifesto information/update
     };
 
 
+    /**
+     * @enum RogerValue
+     * @brief Standardized response codes (acknowledgments)
+     * 
+     * Predefined responses following typical radio procedure
+     * for clear acknowledgment and status reporting.
+     */
     enum RogerValue : uint8_t {
-        TALKIE_RGR_ROGER,
-		TALKIE_RGR_NEGATIVE,
-		TALKIE_RGR_SAY_AGAIN,
-		TALKIE_RGR_NIL,
-		TALKIE_RGR_NO_JOY
+        TALKIE_RGR_ROGER,      ///< Call positively processed
+        TALKIE_RGR_NEGATIVE,   ///< Call denied/cannot comply
+        TALKIE_RGR_SAY_AGAIN,  ///< No matching Action available for the call
+        TALKIE_RGR_NIL,        ///< Empty content, nothing to be processed
+        TALKIE_RGR_NO_JOY      ///< No processing due to lack of implementations
     };
 
 
+    /**
+     * @enum ErrorValue
+     * @brief Specific error conditions in communication
+     * 
+     * Detailed error codes for diagnosing communication
+     * failures and malformed messages.
+     */
     enum ErrorValue : uint8_t {
-        TALKIE_ERR_UNDEFINED,
-        TALKIE_ERR_CHECKSUM,
-        TALKIE_ERR_MESSAGE,
-        TALKIE_ERR_IDENTITY,
-        TALKIE_ERR_FIELD,
-        TALKIE_ERR_FROM,
-        TALKIE_ERR_TO,
-        TALKIE_ERR_DELAY,
-        TALKIE_ERR_KEY,
-        TALKIE_ERR_VALUE
+        TALKIE_ERR_UNDEFINED, ///< Unspecified/generic error
+        TALKIE_ERR_CHECKSUM,  ///< Message checksum failure
+        TALKIE_ERR_MESSAGE,   ///< Malformed message structure
+        TALKIE_ERR_IDENTITY,  ///< Invalid sender/receiver identity
+        TALKIE_ERR_FIELD,     ///< Missing or invalid field
+        TALKIE_ERR_FROM,      ///< Invalid source specification
+        TALKIE_ERR_TO,        ///< Invalid destination specification
+        TALKIE_ERR_DELAY,     ///< Timing/delay violation
+        TALKIE_ERR_KEY,       ///< Invalid message key
+        TALKIE_ERR_VALUE      ///< Invalid message value
     };
 };
 
