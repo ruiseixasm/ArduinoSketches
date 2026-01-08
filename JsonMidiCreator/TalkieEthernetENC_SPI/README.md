@@ -85,7 +85,7 @@ A lightweight library for Arduino communication and control using JSON messages 
 The center class is the `MessageRepeater` class, this class routes the JsonMessage between Uplinked
 Talkers and Sockets and Downlinked Talkers and Sockets.
 ## Repeater diagram
-![Repeater](repeater.png)
+![The Repeater](repeater.png)
 
 The Repeater works in similar fashion as an HAM radio repeater on the top of a mountain, with a clear distinction of Uplinked and Downlinked communications, where the Uplinked nodes are considered remote nodes and the downlinked nodes are considered local nodes.
 ```
@@ -170,7 +170,22 @@ These are the attributes of a Talker:
 - **channel** - A channel in order to be simultaneously target among other talkers
 - **manifesto** - The Talker manifesto that sets all its Actions in detail
 
-### Manifesto
-The Manifesto has the following attributes:
+### Manifesto (implementation)
+A Manifesto **implementation** has the following attributes:
+- **calls** - An array of Actions (name and description)
 
+An example of a calls array:
+```
+Action calls[3] = {
+	{"on", "Turns led ON"},
+	{"off", "Turns led OFF"},
+	{"actions", "Returns the number of triggered Actions"}
+};
+```
+Besides the calls, a Manifesto implementation should also have these mandatory methods:
+```
+const char* class_name() const override { return "BlueManifesto"; }
+const Action* _getActionsArray() const override { return calls; }
+uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
+```
 
