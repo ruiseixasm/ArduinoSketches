@@ -149,7 +149,7 @@ public:
     }
 
 
-	uint8_t socketsCount() const {
+	uint8_t _socketsCount() const {
 		return _uplinked_sockets_count;
 	}
 

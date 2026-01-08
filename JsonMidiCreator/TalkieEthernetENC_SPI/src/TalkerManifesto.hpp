@@ -91,6 +91,16 @@ protected:
 	 * The typical method is:
 	 * `const Action* _getActionsArray() const override { return calls; }`
      */
+    virtual const Action* _getActionsArray(uint8_t action_index) const = 0;
+
+	
+
+	/**
+     * @brief A getter to the actions array defined in the interface implementation
+	 * 
+	 * The typical method is:
+	 * `const Action* _getActionsArray() const override { return calls; }`
+     */
     virtual const Action* _getActionsArray() const = 0;
 
 	
