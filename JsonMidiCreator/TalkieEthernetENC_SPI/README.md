@@ -222,5 +222,58 @@ virtual void _receive() = 0;
 virtual bool _send(const JsonMessage& json_message) = 0;
 ```
 
+## A bare minimum sketch with a Serial socket
+This example is useful to illustrate how easy it is to include this library for a simple Serial socket.
 
+### The .ino sketch for a Serial socket (115200)
+```
+#include "src/JsonTalker.h"
+#include "src/MessageRepeater.hpp"
+#include "src/manifestos/SerialManifesto.hpp"
+#include "src/sockets/SocketSerial.hpp"
+
+
+const char talker_name[] = "serial";
+const char talker_desc[] = "I'm a serial talker";
+SerialManifesto serial_manifesto;
+JsonTalker talker = JsonTalker(talker_name, talker_desc, &serial_manifesto);
+
+// Singleton requires the & (to get a reference variable)
+auto& serial_socket = SocketSerial::instance();
+
+// SETTING THE REPEATER
+BroadcastSocket* uplinked_sockets[] = { &serial_socket };
+JsonTalker* downlinked_talkers[] = { &talker };
+MessageRepeater message_repeater(
+		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),
+		downlinked_talkers, sizeof(downlinked_talkers)/sizeof(JsonTalker*)
+	);
+
+
+void setup() {
+    // Initialize pins FIRST before anything else
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW); // Start with LED off
+
+    // Then start Serial
+    Serial.begin(115200);
+    delay(250); // Important: Give time for serial to initialize
+    Serial.println("\n\n=== Arduino with SERIAL ===");
+
+    // Final startup indication
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(500);
+    digitalWrite(LED_BUILTIN, LOW);
+
+    Serial.println("Setup completed - Ready for JSON communication!");
+}
+
+
+void loop() {
+    message_repeater.loop();
+}
+```
+
+### The included manifestos and sockets
+The included manifesto and socket are in the folders [manifestos](src/manifestos) and [sockets](src/sockets) respectively, 
 

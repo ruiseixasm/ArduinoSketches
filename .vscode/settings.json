@@ -16,6 +16,7 @@
 		"MOSI",
 		"MSBFIRST",
 		"nullptr",
+		"println",
 		"quadhd",
 		"quadwp",
 		"RAMEND",
