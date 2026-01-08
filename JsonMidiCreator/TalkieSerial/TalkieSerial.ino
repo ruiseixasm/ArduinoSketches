@@ -48,16 +48,6 @@ void setup() {
     delay(250); // Important: Give time for serial to initialize
     Serial.println("\n\n=== Arduino with SERIAL ===");
 
-    // Add a small LED blink to confirm code is running
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(100);
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(100);
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(100);
-    digitalWrite(LED_BUILTIN, LOW);
-    
-
     // Final startup indication
     digitalWrite(LED_BUILTIN, HIGH);
     delay(500);
