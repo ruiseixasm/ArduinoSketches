@@ -275,5 +275,5 @@ void loop() {
 ```
 
 ### The included manifestos and sockets
-The included manifesto and socket are in the folders [manifestos](src/manifestos) and [sockets](src/sockets) respectively, 
+The included manifesto and socket are in the folders [manifestos](src/manifestos) and [sockets](src/sockets) respectively, depending on the socket implemented being used, you may have more methods available specific for that socket.
 
