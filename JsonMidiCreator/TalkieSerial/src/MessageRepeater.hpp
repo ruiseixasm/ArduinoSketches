@@ -124,6 +124,11 @@ public:
     }
 
 
+	uint8_t socketsCount() const {
+		return _uplinked_sockets_count;
+	}
+
+	
 	BroadcastSocket* accessSocket(uint8_t socket_index) const {
 		if (socket_index < _uplinked_sockets_count) {
 			return _uplinked_sockets[socket_index];
