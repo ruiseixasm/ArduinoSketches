@@ -407,10 +407,12 @@ public:
 			Serial.print(millis() - json_message._reference_time);
 			#endif
 				
-			if (_sending_length) {
+			if (json_message._message_length() > 0) {
 				
 				uint16_t checksum = JsonMessage::_generateChecksum(_sending_buffer, _sending_length);
 				JsonMessage::_set_number('c', checksum, _sending_buffer, &_sending_length);
+				
+				json_message._insert_checksum();
 				message_sent = _send(json_message);
 
 				#ifdef MESSAGE_DEBUG_TIMING

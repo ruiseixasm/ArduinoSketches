@@ -670,6 +670,12 @@ public:
 	}
 
 
+	void _remove_checksum() {
+		// Makes sure any existent checksum is removed first
+		_remove('c', _json_payload, &_json_length);
+	}
+
+
     // ============================================
     // MESSAGE TARGETING
     // ============================================
