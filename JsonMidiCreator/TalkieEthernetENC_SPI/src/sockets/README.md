@@ -7,6 +7,17 @@ Multiple sockets that can be used with the [JsonTalkie](https://github.com/ruise
 Lightweight socket intended to be used with low memory boards like the Uno and the Nano, for the ethernet module `ENC28J60`.
 This library has the limitation of not being able to send unicast messages, all its responses are in broadcast mode, so, one
 way to avoid it is to mute the Talker and in that way the `call` commands on it don't overload the network.
+```
+>>> list nano
+        [call nano 0|buzz]         Buzz for a while
+        [call nano 1|ms]           Gets and sets the buzzing duration
+>>> call nano 0
+        [call nano 0]              roger
+>>> system nano mute 1
+        [system nano mute]         1
+>>> call nano 0
+>>>
+```
 ### Changed_EthernetENC
 This is the best library to be used with the module `ENC28J60`, it requires more memory so it shall be used with an Arduino Mega
 or any other with similar amount of memory or more.
