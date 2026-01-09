@@ -12,7 +12,7 @@ This is the best library to be used with the module `ENC28J60`, it requires more
 or any other with similar amount of memory or more.
 
 One of it's problems is that relies in a change done to the original library, as it's one that doesn't respond to broadcasted UDP packets
-out of the box. To do so, you can pick up the already tweaked one [here](https://github.com/ruiseixasm/JsonTalkie/tree/main/extras/Changed_EthernetENC),
+out of the box. To do so, you can pick up the already changed one [here](https://github.com/ruiseixasm/JsonTalkie/tree/main/extras/Changed_EthernetENC),
 or you can tweak the original yourself, by changing these lines in the file `Enc28J60Network.cpp`.
 
 Comment the existing lines and add the new one as bellow:
@@ -22,9 +22,9 @@ Comment the existing lines and add the new one as bellow:
     // writeRegPair(EPMCSL, 0xf7f9);
     writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
 ```
-After the changes above the library will start to receive broadcasted UDP messages too.
+After these changes the library will start to receive broadcasted UDP messages too.
 For more details check the data sheet of the chip [ENC28J60](https://ww1.microchip.com/downloads/en/devicedoc/39662a.pdf)
-- **BroadcastSocket_Ethernet**
+### BroadcastSocket_Ethernet
 This socket is intended to be used with the original [Arduino Ethernet board](https://docs.arduino.cc/retired/shields/arduino-ethernet-shield-without-poe-module/),
 or other that has the chip `W5500` or `W5100`. Take note that depending on the board, the pins may vary, so read the following note first.
 ```
