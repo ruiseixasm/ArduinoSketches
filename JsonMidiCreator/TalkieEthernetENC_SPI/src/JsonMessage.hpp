@@ -93,6 +93,26 @@ public:
     // STATIC METHODS (Parsing utilities)
     // ============================================
 
+	/**
+     * @brief This helper method generates the checksum of a given buffer content
+     * @param buffer The buffer which content is used to generate the checksum
+     * @param length The length in bytes of the data content in the buffer
+     */
+    static uint16_t _generateChecksum(const char* buffer, size_t length) {	// 16-bit word and XORing
+        uint16_t checksum = 0;
+		if (length <= TALKIE_BUFFER_SIZE) {
+			for (size_t i = 0; i < length; i += 2) {
+				uint16_t chunk = buffer[i] << 8;
+				if (i + 1 < length) {
+					chunk |= buffer[i + 1];
+				}
+				checksum ^= chunk;
+			}
+		}
+        return checksum;
+    }
+
+
     /**
      * @brief Calculate number of digits in an unsigned integer
      * @param number The number to analyze

@@ -94,28 +94,6 @@ protected:
 	}
 
 
-	/**
-     * @brief This helper method generates the checksum of a given buffer content
-     * @param buffer The buffer which content is used to generate the checksum
-     * @param length The length in bytes of the data content in the buffer
-	 * 
-     * @note This method generates the number present in the 'c' field as value.
-     */
-    static uint16_t _generateChecksum(const char* buffer, size_t length) {	// 16-bit word and XORing
-        uint16_t checksum = 0;
-		if (length <= TALKIE_BUFFER_SIZE) {
-			for (size_t i = 0; i < length; i += 2) {
-				uint16_t chunk = buffer[i] << 8;
-				if (i + 1 < length) {
-					chunk |= buffer[i + 1];
-				}
-				checksum ^= chunk;
-			}
-		}
-        return checksum;
-    }
-
-
     /**
      * @brief Allows the overriding Socket class to peek at the
 	 *        received JSON message
@@ -177,7 +155,7 @@ protected:
 		#endif
 
 		JsonMessage::_remove('c', _received_buffer, &_received_length, c_colon_position);
-		uint16_t checksum = _generateChecksum(_received_buffer, _received_length);
+		uint16_t checksum = JsonMessage::_generateChecksum(_received_buffer, _received_length);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
 		Serial.print(F("\thandleTransmission0.2: "));
@@ -457,7 +435,7 @@ public:
 				
 			if (_sending_length) {
 				
-				uint16_t checksum = _generateChecksum(_sending_buffer, _sending_length);
+				uint16_t checksum = JsonMessage::_generateChecksum(_sending_buffer, _sending_length);
 				JsonMessage::_set_number('c', checksum, _sending_buffer, &_sending_length);
 				message_sent = _send(json_message);
 
