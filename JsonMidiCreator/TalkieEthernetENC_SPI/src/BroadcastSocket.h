@@ -161,13 +161,13 @@ protected:
 			return;	
 		}
 
-		size_t colon_position = JsonMessage::_get_colon_position('c', _received_buffer, _received_length);
-		if (!colon_position) {
+		size_t c_colon_position = JsonMessage::_get_colon_position('c', _received_buffer, _received_length);
+		if (!c_colon_position) {
 			_received_length = 0;	// Enables new receiving
 			return;	
 		}
 
-		uint16_t received_checksum = JsonMessage::_get_value_number('c', _received_buffer, _received_length, colon_position);
+		uint16_t received_checksum = JsonMessage::_get_value_number('c', _received_buffer, _received_length, c_colon_position);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
 		Serial.print(F("\thandleTransmission0.1: "));
@@ -176,7 +176,7 @@ protected:
 		Serial.println(received_checksum);
 		#endif
 
-		JsonMessage::_remove('c', _received_buffer, &_received_length, colon_position);
+		JsonMessage::_remove('c', _received_buffer, &_received_length, c_colon_position);
 		uint16_t checksum = _generateChecksum(_received_buffer, _received_length);
 
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
