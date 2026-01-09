@@ -216,7 +216,7 @@ protected:
 
 				MessageValue message_code = json_message.get_message_value();
 				if (message_code == MessageValue::TALKIE_MSG_CALL) {
-					
+
 					uint16_t message_timestamp = json_message.get_timestamp();
 
 					#ifdef BROADCASTSOCKET_DEBUG
@@ -424,6 +424,8 @@ public:
      */
     bool _finishTransmission(const JsonMessage& json_message) {
 
+		bool message_sent = false;
+
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
 		Serial.print(F("socketSend1: "));
 		json_message.write_to(Serial);
@@ -440,8 +442,6 @@ public:
 			#endif
 
 			_sending_length = json_message.serialize_json(_sending_buffer, TALKIE_BUFFER_SIZE);
-			uint16_t checksum = _generateChecksum(_sending_buffer, _sending_length);
-			JsonMessage::_set_number('c', checksum, _sending_buffer, &_sending_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("socketSend3: "));
@@ -457,20 +457,20 @@ public:
 				
 			if (_sending_length) {
 				
+				uint16_t checksum = _generateChecksum(_sending_buffer, _sending_length);
+				JsonMessage::_set_number('c', checksum, _sending_buffer, &_sending_length);
+				message_sent = _send(json_message);
+
 				#ifdef MESSAGE_DEBUG_TIMING
-				bool send_result = send(json_message);
 				Serial.print(" | ");
 				Serial.print(millis() - json_message._reference_time);
-				return send_result;
-				#else
-				return _send(json_message);
 				#endif
-				
 			}
 		}
-		return false;
+		_sending_length = 0;	// Marks sending buffer available even if the send fails
+		return message_sent;
     }
-    
+
 };
 
 #endif // BROADCAST_SOCKET_H
