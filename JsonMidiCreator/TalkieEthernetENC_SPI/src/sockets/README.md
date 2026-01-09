@@ -1,6 +1,6 @@
-# JsonTalkie - Walkie-Talkie based Communication for Arduino
+# JsonTalkie - Broadcast Sockets
 
-A lightweight library for Arduino communication and control using JSON messages over network sockets, with Python companion scripts for host computer interaction.
+Multiple sockets that can be used with the [JsonTalkie](https://github.com/ruiseixasm/JsonTalkie) software.
 
 ## Sockets
 
