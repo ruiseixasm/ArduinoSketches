@@ -9,12 +9,11 @@ You can always implement your own socket, by extending the `BroadcastSocket` cla
 	void _receive() override {}
 	bool _send(const JsonMessage& json_message) override {}
 ```
-In the `_receive` method you must write to the `_receiving_buffer` and set it's size in the variable `_receiving_length`. After which,
+The methods above should follow these basic rules:
+- In the `_receive` method you must write to the `_receiving_buffer` and set it's size in the variable `_receiving_length`. After which,
 it should be called the method `_startTransmission` to process the received data.
-
-In the `_send` method you must read from the `_sending_buffer` accordingly to the `_sending_length`. No need to set it as `0` at the end.
-
-In the `_send` method you have access to the `json_message` as parameter while in the `_receive` method you don't, so, if you need to process the
+- In the `_send` method you must read from the `_sending_buffer` accordingly to the `_sending_length`. No need to set it as `0` at the end.
+- In the `_send` method you have access to the `json_message` as parameter while in the `_receive` method you don't, so, if you need to process the
 received `json_message` you can always override the method `_showReceivedMessage`.
 ### Example
 Here is an example of such implementation for the Serial protocol:
