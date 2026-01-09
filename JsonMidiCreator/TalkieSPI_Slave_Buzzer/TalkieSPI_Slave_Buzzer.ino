@@ -17,7 +17,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // COMPILE WITH ARDUINO BOARD
 #include "src/manifestos/BuzzerManifesto.hpp"
 #include "src/JsonTalker.h"
-#include "src/sockets/SPI_ESP_Arduino_Slave.h"
+#include "src/sockets/SPI_Arduino_Slave.h"
 #include "src/MessageRepeater.hpp"
 
 
@@ -27,7 +27,7 @@ BuzzerManifesto talker_manifesto;
 JsonTalker talker = JsonTalker(talker_name, talker_desc, &talker_manifesto);
 
 // Singleton requires the & (to get a reference variable)
-auto& spi_socket = SPI_ESP_Arduino_Slave::instance();
+auto& spi_socket = SPI_Arduino_Slave::instance();
 
 // SETTING THE REPEATER
 BroadcastSocket* uplinked_sockets[] = { &spi_socket };

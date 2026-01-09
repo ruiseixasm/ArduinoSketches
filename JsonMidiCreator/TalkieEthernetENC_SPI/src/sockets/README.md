@@ -23,10 +23,10 @@ Comment the existing lines and add the new one as bellow:
     writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
 ```
 After these changes the library will start to receive broadcasted UDP messages too.
-For more details check the data sheet of the chip [ENC28J60](https://ww1.microchip.com/downloads/en/devicedoc/39662a.pdf)
+For more details check the data sheet of the chip [ENC28J60](https://ww1.microchip.com/downloads/en/devicedoc/39662a.pdf).
 ### BroadcastSocket_Ethernet
 This socket is intended to be used with the original [Arduino Ethernet board](https://docs.arduino.cc/retired/shields/arduino-ethernet-shield-without-poe-module/),
-or other that has the chip `W5500` or `W5100`. Take note that depending on the board, the pins may vary, so read the following note first.
+or other that has the chip `W5500` or `W5100`. Take note that depending on the board, the pins may vary, so read the following notes first.
 ```
 Arduino communicates with both the W5100 and SD card using the SPI bus (through the ICSP header).
 This is on digital pins 10, 11, 12, and 13 on the Uno and pins 50, 51, and 52 on the Mega. On both boards,
@@ -37,16 +37,18 @@ but it must be kept as an output or the SPI interface won't work.
 
 ## SPI
 SPI is among the most difficult protocols to implement, mainly in the Slave side. This happens because the SPI Arduino Slave is software based and the interrupts
-are done per byte and also they take their time, around, 100us. So, a message of 90 bytes long will take around 1 millisecond to be transmitted, this means that,
-it is best to target the talkers by name (unicast) than by channel (broadcast).
+are done per byte and also they take their time, around, 12us. So, a message of 90 bytes long will take around 1 millisecond to be transmitted, this means that,
+it is best to target the talkers by name (unicast) than by channel (broadcast) to avoid repeating a single message among multiple Slave sockets.
 ### ESP32 Master
 #### SPI_ESP_Arduino_Master
-
-#### SPI_Arduino_Arduino_Master_Multiple
+This Socket allows the communication centered in a single ESP32 master board to many Arduino slave boards.
 ### Arduino Master
+#### SPI_Arduino_Arduino_Master_Multiple
+This Socket allows the communication centered in a single Arduino master board to many Arduino slave boards.
 #### SPI_Arduino_Arduino_Master_Single
+This Socket allows the communication centered in a single Arduino master board to another single Arduino slave board.
 ### Arduino Slave
-#### SPI_ESP_Arduino_Slave
+#### SPI_Arduino_Slave
 
 
 ## Serial

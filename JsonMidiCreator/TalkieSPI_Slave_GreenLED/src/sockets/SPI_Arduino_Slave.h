@@ -24,10 +24,10 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG_2
 
 
-class SPI_ESP_Arduino_Slave : public BroadcastSocket {
+class SPI_Arduino_Slave : public BroadcastSocket {
 public:
 
-    const char* class_name() const override { return "SPI_ESP_Arduino_Slave"; }
+    const char* class_name() const override { return "SPI_Arduino_Slave"; }
 
     enum StatusByte : uint8_t {
         TALKIE_SB_ACK		= 0xF0, // Acknowledge
@@ -63,7 +63,7 @@ protected:
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    SPI_ESP_Arduino_Slave() : BroadcastSocket() {
+    SPI_Arduino_Slave() : BroadcastSocket() {
             
 			// Initialize SPI
 			SPI.begin();
@@ -153,9 +153,9 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static SPI_ESP_Arduino_Slave& instance() {
+    static SPI_Arduino_Slave& instance() {
 
-        static SPI_ESP_Arduino_Slave instance;
+        static SPI_Arduino_Slave instance;
         return instance;
     }
 
