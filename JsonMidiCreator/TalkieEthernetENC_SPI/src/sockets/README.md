@@ -2,6 +2,90 @@
 
 Multiple sockets that can be used with the [JsonTalkie](https://github.com/ruiseixasm/JsonTalkie) software by implementing its `BroadcastSocket` interface.
 
+## Implementation
+You can always implement your own socket, by extending the `BroadcastSocket` class. To do so, you must override the following methods:
+```
+	const char* class_name() const override { return "YourSocketName"; }
+	void _receive() override {}
+	bool _send(const JsonMessage& json_message) override {}
+```
+### Example
+Here is an example of such implementation for the Serial protocol:
+```
+#ifndef SOCKET_SERIAL_HPP
+#define SOCKET_SERIAL_HPP
+
+#include "../BroadcastSocket.h"
+
+class SocketSerial : public BroadcastSocket {
+public:
+
+    const char* class_name() const override { return "SocketSerial"; }
+
+
+protected:
+
+    // Singleton accessor
+    SocketSerial() : BroadcastSocket() {}
+
+	bool _reading_serial = false;
+    
+    bool _send(const JsonMessage& json_message) override {
+        (void)json_message;	// Silence unused parameter warning
+
+		if (_sending_length) {
+			if (Serial.write(_sending_buffer, _sending_length) == _sending_length) {
+				
+				_sending_length = 0;
+				return true;
+			}
+			_sending_length = 0;
+		}
+		return false;
+    }
+
+
+    void _receive() override {
+    
+		while (Serial.available()) {
+			char c = Serial.read();
+
+			if (_reading_serial) {
+				if (_received_length < TALKIE_BUFFER_SIZE) {
+					if (c == '}' && _received_length && _received_buffer[_received_length - 1] != '\\') {
+						_reading_serial = false;
+						_received_buffer[_received_length++] = '}';
+						_startTransmission();
+						return;
+					} else {
+						_received_buffer[_received_length++] = c;
+					}
+				} else {
+					_reading_serial = false;
+					_received_length = 0; // Reset to start writing
+				}
+			} else if (c == '{') {
+				_reading_serial = true;
+				_received_length = 0; // Reset to start writing
+				_received_buffer[_received_length++] = '{';
+			}
+		}
+    }
+
+
+public:
+    // Move ONLY the singleton instance method to subclass
+    static SocketSerial& instance() {
+
+        static SocketSerial instance;
+        return instance;
+    }
+
+};
+
+#endif // SOCKET_SERIAL_HPP
+```
+
 ## Ethernet
 ### BroadcastSocket_EtherCard
 Lightweight socket intended to be used with low memory boards like the Uno and the Nano, for the ethernet module `ENC28J60`.
