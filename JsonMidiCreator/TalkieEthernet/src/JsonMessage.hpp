@@ -317,11 +317,10 @@ public:
      * @param[in,out] json_payload JSON buffer
      * @param[in,out] json_length Current length, updated after removal
      * @param colon_position Optional hint for colon position
-     * @return true if key was found and removed, false otherwise
      * 
      * @note Also removes leading or trailing commas as needed
      */
-	static bool _remove(char key, char* json_payload, size_t *json_length, size_t colon_position = 4) {
+	static void _remove(char key, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		colon_position = _get_colon_position(key, json_payload, *json_length, colon_position);
 		if (colon_position) {
 			size_t field_position = colon_position - 3;	// All keys occupy 3 '"k":' chars to the left of the colon
@@ -336,9 +335,7 @@ public:
                 json_payload[json_i] = json_payload[json_i + field_length];
             }
 			*json_length -= field_length;	// Finally updates the json_payload full length
-			return true;
 		}
-		return false;
 	}
 
 
@@ -355,9 +352,7 @@ public:
      */
 	static bool _set_number(char key, uint32_t number, char* json_payload, size_t *json_length, size_t colon_position = 4) {
 		colon_position = _get_colon_position(key, json_payload, *json_length, colon_position);
-		if (colon_position) {
-			if (!_remove(key, json_payload, json_length, colon_position)) return false;
-		}
+		if (colon_position) _remove(key, json_payload, json_length, colon_position);
 		// At this time there is no field key for sure, so, one can just add it right before the '}'
 		size_t number_size = _number_of_digits(number);
 		size_t new_length = *json_length + number_size + 4 + 1;	// the usual key 4 plus the + 1 due to the ',' needed to be added
@@ -413,9 +408,7 @@ public:
 			}
 			if (length) {
 				colon_position = _get_colon_position(key, json_payload, *json_length, colon_position);
-				if (colon_position) {
-					if (!_remove(key, json_payload, json_length, colon_position)) return false;
-				}
+				if (colon_position) _remove(key, json_payload, json_length, colon_position);
 				// the usual key + 4 plus + 2 for both '"' and the + 1 due to the heading ',' needed to be added
 				size_t new_length = *json_length + length + 4 + 2 + 1;
 				if (new_length > TALKIE_BUFFER_SIZE) {
@@ -582,87 +575,6 @@ public:
      */
 	void reset() {
 		_reset(_json_payload, &_json_length);
-	}
-
-
-    /**
-     * @brief Validate required fields
-     * @return true if all mandatory fields are present and valid
-     * 
-     * Mandatory fields: m, b, i, f
-     */
-	bool validate_fields() const {
-		bool found_m = false;
-		bool found_b = false;
-		bool found_i = false;
-		bool found_f = false;
-		for (size_t json_i = 4; json_i < _json_length; ++json_i) {	// 4 because it's the shortest position possible for ':'
-			if (_json_payload[json_i] == ':' && _json_payload[json_i - 3] == '"' && _json_payload[json_i - 1] == '"') {
-
-				switch (_json_payload[json_i - 2]) {
-
-					case 'm':
-					{
-						ValueType value_type = _get_value_type('m', _json_payload, _json_length, json_i);
-						if (value_type == ValueType::TALKIE_VT_INTEGER) {
-							if (_json_payload[json_i + 2] == ',' || _json_payload[json_i + 2] == '}') {
-								if (found_b && found_i && found_f) return true;
-								found_m = true;
-							} else {
-								return false;
-							}
-						} else {
-							return false;
-						}
-					}
-					break;
-					
-					case 'b':
-					{
-						ValueType value_type = _get_value_type('b', _json_payload, _json_length, json_i);
-						if (value_type == ValueType::TALKIE_VT_INTEGER) {
-							if (_json_payload[json_i + 2] == ',' || _json_payload[json_i + 2] == '}') {
-								if (found_m && found_i && found_f) return true;
-								found_b = true;
-							} else {
-								return false;
-							}
-						} else {
-							return false;
-						}
-					}
-					break;
-					
-					case 'i':
-					{
-						ValueType value_type = _get_value_type('i', _json_payload, _json_length, json_i);
-						if (value_type == ValueType::TALKIE_VT_INTEGER) {
-							if (found_m && found_b && found_f) return true;
-							found_i = true;
-						} else {
-							return false;
-						}
-					}
-					break;
-					
-					case 'f':
-					{
-						ValueType value_type = _get_value_type('f', _json_payload, _json_length, json_i);
-						if (value_type == ValueType::TALKIE_VT_STRING) {
-							if (found_m && found_b && found_i) return true;
-							found_f = true;
-						} else {
-							return false;
-						}
-					}
-					break;
-					
-					default: break;
-				}
-			}
-		}
-
-		return found_m && found_b && found_i && found_f;
 	}
 
 
@@ -1127,8 +1039,7 @@ public:
      */
 	ValueType get_nth_value_type(uint8_t nth) {
 		if (nth < 10) {
-			char value_key = '0' + nth;
-			return _get_value_type(value_key, _json_payload, _json_length);
+			return _get_value_type('0' + nth, _json_payload, _json_length);
 		}
 		return ValueType::TALKIE_VT_VOID;
 	}
@@ -1154,10 +1065,9 @@ public:
      */
 	uint32_t get_nth_value_number(uint8_t nth) const {
 		if (nth < 10) {
-			char value_key = '0' + nth;
-			return _get_value_number(value_key, _json_payload, _json_length);
+			return _get_value_number('0' + nth, _json_payload, _json_length);
 		}
-		return false;
+		return 0;
 	}
 
 
@@ -1196,64 +1106,59 @@ public:
     // ============================================
 
     /** @brief Remove message field */
-	bool remove_message() {
-		return _remove('m', _json_payload, &_json_length);
+	void remove_message() {
+		_remove('m', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove from field */
-	bool remove_from() {
-		return _remove('f', _json_payload, &_json_length);
+	void remove_from() {
+		_remove('f', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove to field */
-	bool remove_to() {
-		return _remove('t', _json_payload, &_json_length);
+	void remove_to() {
+		_remove('t', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove identity field */
-	bool remove_identity() {
-		return _remove('i', _json_payload, &_json_length);
+	void remove_identity() {
+		_remove('i', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove timestamp field */
-	bool remove_timestamp() {
-		return _remove('i', _json_payload, &_json_length);
+	void remove_timestamp() {
+		_remove('i', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove broadcast field */
-	bool remove_broadcast_value() {
-		return _remove('b', _json_payload, &_json_length);
+	void remove_broadcast_value() {
+		_remove('b', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove roger field */
-	bool remove_roger_value() {
-		return _remove('r', _json_payload, &_json_length);
+	void remove_roger_value() {
+		_remove('r', _json_payload, &_json_length);
 	}
 
 
 	/** @brief Remove system field */
-	bool remove_system_value() {
-		return _remove('s', _json_payload, &_json_length);
+	void remove_system_value() {
+		_remove('s', _json_payload, &_json_length);
 	}
 
 
     /**
      * @brief Remove nth value field
      * @param nth Index 0-9
-     * @return true if removed successfully
      */
-	bool remove_nth_value(uint8_t nth) {
-		if (nth < 10) {
-			char value_key = '0' + nth;
-			return _remove(value_key, _json_payload, &_json_length);
-		}
-		return false;
+	void remove_nth_value(uint8_t nth) {
+		if (nth < 10) _remove('0' + nth, _json_payload, &_json_length);
 	}
 
 
@@ -1261,12 +1166,10 @@ public:
      * @brief Remove all the nth values
      * @return true if removed at least one value
      */
-	bool remove_all_nth_values() {
-		bool removed_values = false;
+	void remove_all_nth_values() {
 		for (uint8_t nth = 0; nth < 10; ++nth) {
-			if (remove_nth_value(nth)) removed_values = true;
+			remove_nth_value(nth);
 		}
-		return removed_values;
 	}
 
 
