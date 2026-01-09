@@ -13,7 +13,7 @@ In the `_receive` method you must write to the `_receiving_buffer` and set it's 
 
 In the `_send` method you must read from the `_sending_buffer` accordingly to the `_sending_length`. No need to set it as `0` at the end.
 
-In the `_send` method you have access to the `json_message` as parameter while in the `_receive` method don't, so, if you need to process the
+In the `_send` method you have access to the `json_message` as parameter while in the `_receive` method you don't, so, if you need to process the
 received `json_message` you can always override the method `_showReceivedMessage`.
 ### Example
 Here is an example of such implementation for the Serial protocol:
@@ -28,7 +28,6 @@ public:
 
     const char* class_name() const override { return "SocketSerial"; }
 
-
 protected:
 
     // Singleton accessor
@@ -36,20 +35,6 @@ protected:
 
 	bool _reading_serial = false;
     
-    bool _send(const JsonMessage& json_message) override {
-        (void)json_message;	// Silence unused parameter warning
-
-		if (_sending_length) {
-			if (Serial.write(_sending_buffer, _sending_length) == _sending_length) {
-				
-				_sending_length = 0;
-				return true;
-			}
-			_sending_length = 0;
-		}
-		return false;
-    }
-
 
     void _receive() override {
     
@@ -76,6 +61,21 @@ protected:
 				_received_buffer[_received_length++] = '{';
 			}
 		}
+    }
+
+
+    bool _send(const JsonMessage& json_message) override {
+        (void)json_message;	// Silence unused parameter warning
+
+		if (_sending_length) {
+			if (Serial.write(_sending_buffer, _sending_length) == _sending_length) {
+				
+				_sending_length = 0;
+				return true;
+			}
+			_sending_length = 0;
+		}
+		return false;
     }
 
 
