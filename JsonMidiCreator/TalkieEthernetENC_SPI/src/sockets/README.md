@@ -49,10 +49,14 @@ This Socket allows the communication centered in a single Arduino master board t
 This Socket allows the communication centered in a single Arduino master board to another single Arduino slave board.
 ### Arduino Slave
 #### SPI_Arduino_Slave
-
+This Socket is targeted to Arduino boards intended to be used as SPI Slaves.
 
 ## Serial
-- **SocketSerial**
+### SocketSerial
+This is the simplest Socket of all, and it's not a Broadcast Socket at all, given that the Serial protocol is one-to-one, so, it's main purpose is just that, for one board to communicate with other, ideal for local communication in the same platform.
+
+It may be used for testing too, by allowing a direct connection with a computer. Just make sure you disable any Serial print as those
+may interfere with the normal flow of communication if formatted in the same way as a json string.
 
 
 
