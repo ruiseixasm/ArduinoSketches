@@ -10,7 +10,7 @@ You can always implement your own socket, by extending the `BroadcastSocket` cla
 	bool _send(const JsonMessage& json_message) override {}
 ```
 The methods above should follow these basic rules:
-- In the `_receive` method you must write to the `_receiving_buffer` and set it's size in the variable `_receiving_length`. After which,
+- In the `_receive` method you must write to the `_received_buffer` and set it's size in the variable `_received_length`. After which,
 it should be called the method `_startTransmission` to process the received data.
 - In the `_send` method you must read from the `_sending_buffer` accordingly to the `_sending_length`. No need to set it as `0` at the end.
 - In the `_send` method you have access to the `json_message` as parameter while in the `_receive` method you don't, so, if you need to process the
