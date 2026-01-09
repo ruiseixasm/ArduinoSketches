@@ -196,7 +196,7 @@ protected:
 				
 			// There is no need to validate or assert the existent of any field,
 			// simple because their non existence will result in the default 
-			// and innocuous value of Message Codes
+			// and innocuous value of Talkie Codes
 			JsonMessage json_message(_received_buffer, _received_length);
 
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
