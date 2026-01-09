@@ -200,8 +200,6 @@ protected:
             Serial.println();
             #endif
 
-			_sending_length = 0;	// Marks sending buffer available
-
 			return true;
         }
         return false;

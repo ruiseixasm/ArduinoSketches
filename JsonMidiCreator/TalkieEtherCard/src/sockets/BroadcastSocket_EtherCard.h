@@ -105,8 +105,6 @@ protected:
 		ether.sendUdp(_sending_buffer, _sending_length, _port, broadcastIp, _port);
 		#endif
 
-		_sending_length = 0;	// Marks sending buffer available
-
 		return true;
     }
 
