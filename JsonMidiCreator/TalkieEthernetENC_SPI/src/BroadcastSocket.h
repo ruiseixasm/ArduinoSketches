@@ -139,32 +139,12 @@ protected:
 			return;	
 		}
 
-		size_t c_colon_position = JsonMessage::_get_colon_position('c', _received_buffer, _received_length);
-		if (!c_colon_position) {
-			_received_length = 0;	// Enables new receiving
-			return;	
-		}
+		// There is no need to validate or assert the existent of any field,
+		// simple because their non existence will result in the default 
+		// and innocuous value of Talkie Codes
+		JsonMessage json_message(_received_buffer, _received_length);
 
-		uint16_t received_checksum = JsonMessage::_get_value_number('c', _received_buffer, _received_length, c_colon_position);
-
-		#ifdef BROADCASTSOCKET_DEBUG_NEW
-		Serial.print(F("\thandleTransmission0.1: "));
-        Serial.write(_received_buffer, _received_length);
-		Serial.print(" | ");
-		Serial.println(received_checksum);
-		#endif
-
-		JsonMessage::_remove('c', _received_buffer, &_received_length, c_colon_position);
-		uint16_t checksum = JsonMessage::_generateChecksum(_received_buffer, _received_length);
-
-		#ifdef BROADCASTSOCKET_DEBUG_NEW
-		Serial.print(F("\thandleTransmission0.2: "));
-        Serial.write(_received_buffer, _received_length);
-		Serial.print(" | ");
-		Serial.println(checksum);
-		#endif
-
-		if (received_checksum == checksum) {
+		if (json_message._validate_checksum()) {	// It also removes the 'c' field from the json_message
 
 			#ifdef MESSAGE_DEBUG_TIMING
 			Serial.print("\n\t");
@@ -172,11 +152,6 @@ protected:
 			Serial.print(": ");
 			#endif
 				
-			// There is no need to validate or assert the existent of any field,
-			// simple because their non existence will result in the default 
-			// and innocuous value of Talkie Codes
-			JsonMessage json_message(_received_buffer, _received_length);
-
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("\thandleTransmission1.1: "));
 			json_message.write_to(Serial);
@@ -252,11 +227,10 @@ protected:
 		// Has to report an error
 		} else {
 			// Mark error message as noise and dispatch it to be processed by the respective Talker
-			JsonMessage noisy_message(_received_buffer, _received_length);
-			noisy_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
-			noisy_message.set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
-			_showReceivedMessage(noisy_message); // Gives a chance to show it before transmitting
-			_transmitToRepeater(noisy_message);
+			json_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+			json_message.set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
+			_showReceivedMessage(json_message); // Gives a chance to show it before transmitting
+			_transmitToRepeater(json_message);
 		}
 		_received_length = 0;	// Enables new receiving
     }
