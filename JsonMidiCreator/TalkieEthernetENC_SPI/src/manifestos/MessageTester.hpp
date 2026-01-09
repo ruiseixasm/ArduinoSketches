@@ -39,7 +39,7 @@ public:
 
 protected:
 
-    Action calls[17] = {
+    Action calls[16] = {
 		{"all", "Tests all methods"},
 		{"deserialize", "Test deserialize (fill up)"},
 		{"compare", "Test if it's the same"},
@@ -47,7 +47,6 @@ protected:
 		{"has_not", "Test if DOESN't find the given char"},
 		{"length", "Test it has the right length"},
 		{"type", "Test the type of value"},
-		{"validate", "Validate message fields"},
 		{"identity", "Extract the message identity"},
 		{"value", "Checks if it has a value 0"},
 		{"message", "Gets the message number"},
@@ -197,12 +196,6 @@ public:
 				
 			case 7:
 			{
-				return test_json_message.validate_fields();
-			}
-			break;
-				
-			case 8:
-			{
 				
 				json_message.set_nth_value_number(0, test_json_message._get_value_number('i'));
 				json_message.set_nth_value_number(1, 13825);
@@ -210,13 +203,13 @@ public:
 			}
 			break;
 				
-			case 9:
+			case 8:
 			{
 				return test_json_message.has_nth_value(0);
 			}
 			break;
 				
-			case 10:
+			case 9:
 			{
 				MessageValue message_value = static_cast<MessageValue>( test_json_message._get_value_number('m') );
 				json_message.set_nth_value_number(0, static_cast<int>(message_value));
@@ -225,7 +218,7 @@ public:
 			}
 			break;
 				
-			case 11:
+			case 10:
 			{
 				bool from_match = false;
 				char from_name[] = "buzzer";
@@ -238,7 +231,7 @@ public:
 			}
 			break;
 				
-			case 12:
+			case 11:
 			{
 				bool payloads_match = true;
 				const char final_payload1[] = "{\"m\":7,\"b\":0,\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
@@ -261,7 +254,7 @@ public:
 			}
 			break;
 				
-			case 13:
+			case 12:
 			{
 				uint32_t big_number = 1234567;
 				const char final_payload1[] = "{\"m\":7,\"b\":0,\"f\":\"buzzer\",\"i\":13825,\"t\":\"Talker-7a\",\"0\":1234567}";
@@ -283,10 +276,11 @@ public:
 			}
 			break;
 				
-			case 14:
+			case 13:
 			{
 				const char final_payload[] = "{\"b\":0,\"f\":\"buzzer\",\"i\":13825,\"0\":\"I'm a buzzer that buzzes\",\"t\":\"Talker-7a\"}";
-				if (!test_json_message.remove_message() || !test_json_message.compare_buffer(final_payload, sizeof(final_payload) - 1)) {	// The first key (no header ',' char)
+				test_json_message.remove_message();
+				if (!test_json_message.compare_buffer(final_payload, sizeof(final_payload) - 1)) {	// The first key (no header ',' char)
 					json_message.set_nth_value_string(0, "1st");
 					return false;
 				}
@@ -309,7 +303,7 @@ public:
 			}
 			break;
 				
-			case 15:
+			case 14:
 			{
 				JsonMessage copy_json_message(test_json_message);
 				if (copy_json_message != test_json_message) {
@@ -326,7 +320,7 @@ public:
 			}
 			break;
 				
-			case 16:
+			case 15:
 			{
 				return test_json_message.has_nth_value_string(0);
 			}
