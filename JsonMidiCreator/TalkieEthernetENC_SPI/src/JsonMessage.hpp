@@ -648,6 +648,34 @@ public:
 	}
 
 
+	uint16_t extract_checksum() {
+		size_t c_colon_position = _get_colon_position('c', _json_payload, _json_length);
+		uint16_t received_checksum = _get_value_number('c', _json_payload, _json_length, c_colon_position);
+		_remove('c', _json_payload, &_json_length, c_colon_position);
+		return received_checksum;
+	}
+
+
+	uint16_t generate_checksum() const {
+		return _generateChecksum(_json_payload, _json_length);
+	}
+
+
+	bool validate_checksum() {
+		size_t c_colon_position = _get_colon_position('c', _json_payload, _json_length);
+		uint16_t received_checksum = _get_value_number('c', _json_payload, _json_length, c_colon_position);
+		_remove('c', _json_payload, &_json_length, c_colon_position);
+		uint16_t generated_checksum = _generateChecksum(_json_payload, _json_length);
+		return received_checksum == generated_checksum;
+	}
+
+
+	bool insert_checksum() {
+		uint16_t checksum = _generateChecksum(_json_payload, _json_length);
+		return _set_number('c', checksum, _json_payload, &_json_length);
+	}
+
+
     // ============================================
     // MESSAGE TARGETING
     // ============================================

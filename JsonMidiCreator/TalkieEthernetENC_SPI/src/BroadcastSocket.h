@@ -400,7 +400,7 @@ public:
 	 * 
      * @note This method marks the end of the message cycle.
      */
-    bool _finishTransmission(const JsonMessage& json_message) {
+    bool _finishTransmission(JsonMessage& json_message) {
 
 		bool message_sent = false;
 
