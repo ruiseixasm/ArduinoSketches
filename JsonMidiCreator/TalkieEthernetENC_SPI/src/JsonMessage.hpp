@@ -304,26 +304,18 @@ private:
     /**
      * @brief Reset JSON to default minimal message
      * 
-     * Default message: `{"m":0,"b":0,"i":0,"f":"n"}`
+     * Default bare minimum message: `{}`
      */
 	void _reset() {
-		// Only static guarantees it won't live on the stack!
-		static const char default_payload[] = "{\"m\":0,\"b\":0,\"i\":0,\"f\":\"n\"}";
-		size_t default_length = sizeof(default_payload) - 1;
-		if (default_length <= TALKIE_BUFFER_SIZE) {
-			for (size_t char_j = 0; char_j < default_length; char_j++) {
-				_json_payload[char_j] = default_payload[char_j];
-			}
-			_json_length = default_length;
-		}
+		_json_payload[0] = '{';
+		_json_payload[1] = '}';
+		_json_length = 2;
 	}
 
 
     /**
      * @brief Remove a key-value pair from JSON
      * @param key Key to remove
-     * @param[in,out] _json_payload JSON buffer
-     * @param[in,out] _json_length Current length, updated after removal
      * @param colon_position Optional hint for colon position
      * 
      * @note Also removes leading or trailing commas as needed
@@ -351,8 +343,6 @@ private:
      * @brief Set numeric value for a key
      * @param key Key to set
      * @param number Numeric value
-     * @param[in,out] _json_payload JSON buffer
-     * @param[in,out] _json_length Current length, updated after change
      * @param colon_position Optional hint for colon position
      * @return true if successful, false if buffer too small
      * 
@@ -404,8 +394,6 @@ private:
      * @brief Set string value for a key
      * @param key Key to set
      * @param in_string String value (null-terminated)
-     * @param[in,out] _json_payload JSON buffer
-     * @param[in,out] _json_length Current length, updated after change
      * @param colon_position Optional hint for colon position
      * @return true if successful, false if buffer too small or string empty
      */
@@ -468,7 +456,7 @@ public:
     /**
      * @brief Default constructor
      * 
-     * Initializes with default message: `{"m":0,"b":0,"i":0,"f":"n"}`
+     * Initializes with the bare minimum: `{}`
      */
 	JsonMessage() {
 		_reset();	// Initiate with the bare minimum
@@ -665,12 +653,12 @@ public:
 
 		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
 		if (_json_length < 27) {
-			_json_length = 0;	// Enables new receiving
+			_reset();
 			return false;
 		}
 
 		if (_json_payload[0] != '{') {
-			_json_length = 0;	// Enables new receiving
+			_reset();
 			return false;	
 		}
 		return true;
