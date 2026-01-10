@@ -75,11 +75,6 @@ protected:
 	MessageRepeater* _message_repeater = nullptr;
 	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
-    char _received_buffer[TALKIE_BUFFER_SIZE];
-    char _sending_buffer[TALKIE_BUFFER_SIZE];
-	size_t _received_length = 0;
-	size_t _sending_length = 0;
-
     // Pointer PRESERVE the polymorphism while objects don't!
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
@@ -94,38 +89,6 @@ protected:
 	}
 
 
-	/**
-     * @brief This helper method generates the checksum of a given buffer content
-     * @param buffer The buffer which content is used to generate the checksum
-     * @param length The length in bytes of the data content in the buffer
-	 * 
-     * @note This method generates the number present in the 'c' field as value.
-     */
-    static uint16_t _generateChecksum(const char* buffer, size_t length) {	// 16-bit word and XORing
-        uint16_t checksum = 0;
-		if (length <= TALKIE_BUFFER_SIZE) {
-			for (size_t i = 0; i < length; i += 2) {
-				uint16_t chunk = buffer[i] << 8;
-				if (i + 1 < length) {
-					chunk |= buffer[i + 1];
-				}
-				checksum ^= chunk;
-			}
-		}
-        return checksum;
-    }
-
-
-    /**
-     * @brief Allows the overriding Socket class to peek at the
-	 *        received JSON message
-	 * 
-	 * This method gives the overriding class the opportunity to
-	 * get direct information from the Json Message.
-     */
-	virtual void _showReceivedMessage(const JsonMessage& json_message) {}
-
-	
     /**
      * @brief Sends the generated message by _startTransmission
 	 *        to the Repeater
@@ -136,165 +99,93 @@ protected:
     /**
      * @brief Starts the transmission of the data received
 	 * 
-	 * This method creates a new message that is shown to the socket
-	 * implementation via the _showReceivedMessage method and then sends
-	 * it to the Repeater via the method _transmitToRepeater.
-     * 
      * @note This method resets the _received_length to 0.
      */
-    void _startTransmission() {
+    void _startTransmission(JsonMessage& json_message) {
 
-		// Trim trailing newline and carriage return characters or any other that isn't '}'
-		while (_received_length > 26 
-			&& (_received_buffer[_received_length - 1] != '}' || _received_buffer[_received_length - 2] == '\\')) {
-			_received_length--;	// Note that literals add the '\0'!
-		}
-
-		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
-		if (_received_length < 27) {
-			_received_length = 0;	// Enables new receiving
-			return;
-		}
-
-		if (_received_buffer[0] != '{') {
-			_received_length = 0;	// Enables new receiving
-			return;	
-		}
-
-		size_t c_colon_position = JsonMessage::_get_colon_position('c', _received_buffer, _received_length);
-		if (!c_colon_position) {
-			_received_length = 0;	// Enables new receiving
-			return;	
-		}
-
-		uint16_t received_checksum = JsonMessage::_get_value_number('c', _received_buffer, _received_length, c_colon_position);
-
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print("\n\t");
+		Serial.print(class_name());
+		Serial.print(": ");
+		#endif
+			
 		#ifdef BROADCASTSOCKET_DEBUG_NEW
-		Serial.print(F("\thandleTransmission0.1: "));
-        Serial.write(_received_buffer, _received_length);
+		Serial.print(F("\thandleTransmission1.1: "));
+		json_message.write_to(Serial);
 		Serial.print(" | ");
-		Serial.println(received_checksum);
+		Serial.println(json_message._get_length());
 		#endif
 
-		JsonMessage::_remove('c', _received_buffer, &_received_length, c_colon_position);
-		uint16_t checksum = _generateChecksum(_received_buffer, _received_length);
-
-		#ifdef BROADCASTSOCKET_DEBUG_NEW
-		Serial.print(F("\thandleTransmission0.2: "));
-        Serial.write(_received_buffer, _received_length);
-		Serial.print(" | ");
+		
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.print(F("handleTransmission4: Validated Checksum of "));
 		Serial.println(checksum);
 		#endif
+		
+		if (_max_delay_ms > 0) {
 
-		if (received_checksum == checksum) {
+			MessageValue message_code = json_message.get_message_value();
+			if (message_code == MessageValue::TALKIE_MSG_CALL) {
 
-			#ifdef MESSAGE_DEBUG_TIMING
-			Serial.print("\n\t");
-			Serial.print(class_name());
-			Serial.print(": ");
-			#endif
-				
-			// There is no need to validate or assert the existent of any field,
-			// simple because their non existence will result in the default 
-			// and innocuous value of Talkie Codes
-			JsonMessage json_message(_received_buffer, _received_length);
+				uint16_t message_timestamp = json_message.get_timestamp();
 
-			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("\thandleTransmission1.1: "));
-			json_message.write_to(Serial);
-			Serial.print(" | ");
-			Serial.println(_received_length);
-			#endif
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.print(F("handleTransmission6: Message code requires delay check: "));
+				Serial.println((int)message_code);
+				#endif
 
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.print(F("handleTransmission3: Remote time: "));
+				Serial.println(message_timestamp);
+				#endif
 			
-			#ifdef BROADCASTSOCKET_DEBUG
-			Serial.print(F("handleTransmission4: Validated Checksum of "));
-			Serial.println(checksum);
-			#endif
-			
-			if (_max_delay_ms > 0) {
-
-				MessageValue message_code = json_message.get_message_value();
-				if (message_code == MessageValue::TALKIE_MSG_CALL) {
-
-					uint16_t message_timestamp = json_message.get_timestamp();
-
-					#ifdef BROADCASTSOCKET_DEBUG
-					Serial.print(F("handleTransmission6: Message code requires delay check: "));
-					Serial.println((int)message_code);
-					#endif
-
-					#ifdef BROADCASTSOCKET_DEBUG
-					Serial.print(F("handleTransmission3: Remote time: "));
-					Serial.println(message_timestamp);
-					#endif
+				const uint16_t local_time = (uint16_t)millis();
 				
-					const uint16_t local_time = (uint16_t)millis();
+				if (_control_timing) {
 					
-					if (_control_timing) {
-						
-						const uint16_t remote_delay = _last_message_timestamp - message_timestamp;  // Package received after
+					const uint16_t remote_delay = _last_message_timestamp - message_timestamp;  // Package received after
 
-						if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
-							const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
-							const uint16_t local_delay = local_time - _last_local_time;
+					if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
+						const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
+						const uint16_t local_delay = local_time - _last_local_time;
+						#ifdef BROADCASTSOCKET_DEBUG
+						Serial.print(F("handleTransmission7: Local delay: "));
+						Serial.println(local_delay);
+						#endif
+						if (remote_delay > allowed_delay || local_delay > allowed_delay) {
 							#ifdef BROADCASTSOCKET_DEBUG
-							Serial.print(F("handleTransmission7: Local delay: "));
-							Serial.println(local_delay);
+							Serial.print(F("handleTransmission8: Out of time package (remote delay): "));
+							Serial.println(remote_delay);
 							#endif
-							if (remote_delay > allowed_delay || local_delay > allowed_delay) {
-								#ifdef BROADCASTSOCKET_DEBUG
-								Serial.print(F("handleTransmission8: Out of time package (remote delay): "));
-								Serial.println(remote_delay);
-								#endif
-								_drops_count++;
-								_received_length = 0;	// Enables new receiving
-								return;  // Out of time package (too late)
-							}
+							_drops_count++;
+
+							// Mark error message as noise and dispatch it to be processed by the respective Talker
+							json_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+							json_message.set_error_value(ErrorValue::TALKIE_ERR_DELAY);
+							_transmitToRepeater(json_message);
+							return;
 						}
 					}
-					_last_local_time = local_time;
-					_last_message_timestamp = message_timestamp;
-					_control_timing = true;
 				}
+				_last_local_time = local_time;
+				_last_message_timestamp = message_timestamp;
+				_control_timing = true;
 			}
-
-			#ifdef MESSAGE_DEBUG_TIMING
-			Serial.print(millis() - json_message._reference_time);
-			#endif
-			
-			_showReceivedMessage(json_message); // Gives a chance to show it before transmitting
-			_transmitToRepeater(json_message);
-			
-			#ifdef MESSAGE_DEBUG_TIMING
-			Serial.print(" | ");
-			Serial.print(millis() - json_message._reference_time);
-			#endif
-
-		// Has to report an error
-		} else {
-			// Mark error message as noise and dispatch it to be processed by the respective Talker
-			JsonMessage noisy_message(_received_buffer, _received_length);
-			noisy_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
-			noisy_message.set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
-			_showReceivedMessage(noisy_message); // Gives a chance to show it before transmitting
-			_transmitToRepeater(noisy_message);
 		}
-		_received_length = 0;	// Enables new receiving
+
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print(millis() - json_message._reference_time);
+		#endif
+		
+		_transmitToRepeater(json_message);
+		
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print(" | ");
+		Serial.print(millis() - json_message._reference_time);
+		#endif
     }
 
-
-    /**
-     * @brief Lets the overriding class to green light the access to the sending buffer
-	 * 
-	 * This method is intended to be used by slave devices that works with the sending
-	 * buffer asynchronously, like the case of the Arduino SPI in slave mode.
-     * 
-     * @note This method returns true whenever the sending buffer is available.
-     */
-	virtual bool _unlockSendingBuffer() { return true; }
-
-
+	
     /**
      * @brief Pure abstract method that triggers the receiving data by the socket
 	 * 
@@ -406,15 +297,6 @@ public:
 	
 
 	/**
-     * @brief Loads the content of the received buffer into the json message
-     * @param json_message A json message into which the buffer is loaded to
-     */
-	bool _deserialize_buffer(JsonMessage& json_message) const {
-		return json_message.deserialize_buffer(_received_buffer, _received_length);
-	}
-
-
-	/**
      * @brief The final step in a cycle of processing a json message in which the
 	 *        json message content is loaded into the sending buffer of the socket
 	 *        to be sent
@@ -422,7 +304,7 @@ public:
 	 * 
      * @note This method marks the end of the message cycle.
      */
-    bool _finishTransmission(const JsonMessage& json_message) {
+    bool _finishTransmission(JsonMessage& json_message) {
 
 		bool message_sent = false;
 
@@ -432,42 +314,20 @@ public:
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
-		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (_unlockSendingBuffer()) {
-
-			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("socketSend2: "));
-			json_message.write_to(Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-			_sending_length = json_message.serialize_json(_sending_buffer, TALKIE_BUFFER_SIZE);
-
-			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("socketSend3: "));
-			Serial.write(_sending_buffer, _sending_length);
-			Serial.print(" | ");
-			Serial.println(_sending_length);
-			#endif
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print(" | ");
+		Serial.print(millis() - json_message._reference_time);
+		#endif
+			
+		if (json_message._get_length() && json_message._insert_checksum()) {
+			
+			message_sent = _send(json_message);
 
 			#ifdef MESSAGE_DEBUG_TIMING
 			Serial.print(" | ");
 			Serial.print(millis() - json_message._reference_time);
 			#endif
-				
-			if (_sending_length) {
-				
-				uint16_t checksum = _generateChecksum(_sending_buffer, _sending_length);
-				JsonMessage::_set_number('c', checksum, _sending_buffer, &_sending_length);
-				message_sent = _send(json_message);
-
-				#ifdef MESSAGE_DEBUG_TIMING
-				Serial.print(" | ");
-				Serial.print(millis() - json_message._reference_time);
-				#endif
-			}
 		}
-		_sending_length = 0;	// Marks sending buffer available even if the send fails
 		return message_sent;
     }
 

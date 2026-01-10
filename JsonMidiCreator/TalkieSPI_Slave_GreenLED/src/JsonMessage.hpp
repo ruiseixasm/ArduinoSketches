@@ -363,7 +363,8 @@ private:
 		if (colon_position) _remove(key, colon_position);
 		// At this time there is no field key for sure, so, one can just add it right before the '}'
 		size_t number_size = _number_of_digits(number);
-		size_t new_length = _json_length + number_size + 4 + 1;	// the usual key 4 plus the + 1 due to the ',' needed to be added
+		// the usual key 4 plus the + 1 due to the ',' needed to be added to the beginning
+		size_t new_length = _json_length + 1 + 4 + number_size;
 		if (new_length > TALKIE_BUFFER_SIZE) {
 			return false;
 		}

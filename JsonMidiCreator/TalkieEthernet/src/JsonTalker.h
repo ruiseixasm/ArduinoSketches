@@ -401,6 +401,7 @@ public:
 					uint8_t total_actions = _manifesto->_actionsCount();	// This makes the access safe
 					const TalkerManifesto::Action* actions = _manifesto->_getActionsArray();
 					for (uint8_t action_i = 0; action_i < total_actions; ++action_i) {
+						json_message.remove_all_nth_values();	// Makes sure there is space for each new action
 						json_message.set_nth_value_number(0, action_i);
 						json_message.set_nth_value_string(1, actions[action_i].name);
 						json_message.set_nth_value_string(2, actions[action_i].desc);
@@ -557,6 +558,18 @@ public:
 			case MessageValue::TALKIE_MSG_NOISE:
 				if (json_message.has_error()) {
 					if (talker_match == TalkerMatch::TALKIE_MATCH_BY_NAME || talker_match == TalkerMatch::TALKIE_MATCH_BY_CHANNEL) {
+
+						ErrorValue error_value = json_message.get_error_value();
+						switch (error_value) {
+							case ErrorValue::TALKIE_ERR_DELAY:
+								if (_muted_calls) {
+									return;
+								}
+								break;
+							
+							default: break;
+						}
+
 						json_message.remove_all_nth_values();	// Keeps it small and clean of bad chars
 						json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
 						if (!json_message.has_identity()) json_message.set_identity();
