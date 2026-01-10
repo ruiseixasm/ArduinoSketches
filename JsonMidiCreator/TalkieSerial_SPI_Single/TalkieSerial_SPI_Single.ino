@@ -16,14 +16,14 @@ https://github.com/ruiseixasm/JsonTalkie
 // COMPILE WITH ARDUINO BOARD
 #include "src/JsonTalker.h"
 #include "src/MessageRepeater.hpp"
-#include "src/manifestos/SerialManifesto.hpp"
+#include "src/manifestos/SingleManifesto.hpp"
 #include "src/sockets/SocketSerial.hpp"
 #include "src/sockets/SPI_Arduino_Arduino_Master_Single.hpp"
 
 
-const char talker_name[] = "serial";
-const char talker_desc[] = "I'm a serial talker";
-SerialManifesto serial_manifesto;
+const char talker_name[] = "single";
+const char talker_desc[] = "I'm a single talker";
+SingleManifesto serial_manifesto;
 JsonTalker talker = JsonTalker(talker_name, talker_desc, &serial_manifesto);
 
 // Singleton requires the & (to get a reference variable)
@@ -48,7 +48,7 @@ void setup() {
 
     // Then start Serial
     Serial.begin(115200);
-    delay(250); // Important: Give time for serial to initialize
+    delay(250); // Important: Give time for single to initialize
     Serial.println("\n\n=== Arduino with SERIAL ===");
 
     // Add a small LED blink to confirm code is running

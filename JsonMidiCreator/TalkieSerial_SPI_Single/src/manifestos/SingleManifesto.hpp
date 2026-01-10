@@ -11,20 +11,20 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef MULTIPLE_MANIFESTO_HPP
-#define MULTIPLE_MANIFESTO_HPP
+#ifndef SINGLE_MANIFESTO_HPP
+#define SINGLE_MANIFESTO_HPP
 
 #include "../TalkerManifesto.hpp"
 
 #define BUZZ_PIN 2	// External BUZZER pin
 
 
-class MultipleManifesto : public TalkerManifesto {
+class SingleManifesto : public TalkerManifesto {
 public:
 
-    const char* class_name() const override { return "MultipleManifesto"; }
+    const char* class_name() const override { return "SingleManifesto"; }
 
-    MultipleManifesto() : TalkerManifesto() {}	// Constructor
+    SingleManifesto() : TalkerManifesto() {}	// Constructor
 
 
 protected:
@@ -111,4 +111,4 @@ public:
 };
 
 
-#endif // MULTIPLE_MANIFESTO_HPP
+#endif // SINGLE_MANIFESTO_HPP
