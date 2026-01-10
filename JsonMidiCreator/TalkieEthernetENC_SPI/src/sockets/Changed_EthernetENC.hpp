@@ -86,16 +86,12 @@ protected:
 				}
 
 				JsonMessage new_message;
-				char* message_buffer = new_message._write_buffer(packetSize);
+				char* message_buffer = new_message._write_buffer((size_t)packetSize);
 				if (!message_buffer) return;	// Avoids overflow
 
 				int length = _udp->read(message_buffer, static_cast<size_t>(packetSize));
-				if (length > 0) {
+				if (length == packetSize) {
 
-					if (length != packetSize) {
-					}
-					new_message._set_length((size_t)length);
-					
 					if (new_message._validate_json()) {
 				
 						if (new_message._process_checksum()) {
