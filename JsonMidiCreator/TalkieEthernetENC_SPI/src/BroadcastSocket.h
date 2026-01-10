@@ -23,9 +23,6 @@ https://github.com/ruiseixasm/JsonTalkie
  * @warning This class does not use dynamic memory allocation.
  *          All operations are performed on fixed-size buffers.
  * 
- * @section constraints Memory Constraints
- * - Maximum buffer size: TALKIE_BUFFER_SIZE (default: 128 bytes)
- * 
  * @author Rui Seixas Monteiro
  * @date Created: 2026-01-03
  * @version 1.0.0
@@ -61,13 +58,11 @@ class MessageRepeater;
 
 /**
  * @class BroadcastSocket
- * @brief An Interface to be implemented as a Socket to receive and send its buffer
+ * @brief An Interface to be implemented as a Socket to receive and send `JsonMessage` content
  * 
- * The implementation of this class requires de definition of the methods, _receive,
- * _send and class_name. After receiving data, the method _startTransmission
+ * The implementation of this class requires de definition of the methods, `_receive`,
+ * `_send` and `class_name`. After receiving data, the method `_startTransmission`
  * shall be called.
- * 
- * @note This class has a received and a sending buffer already.
  */
 class BroadcastSocket {
 protected:
