@@ -50,8 +50,8 @@ public:
 
 protected:
 
-    static char* _ptr_received_buffer;
-    static char* _ptr_sending_buffer;
+	static char _received_buffer[TALKIE_BUFFER_SIZE];
+	static char _sending_buffer[TALKIE_BUFFER_SIZE];
 
     volatile static uint8_t _receiving_index;
 	volatile static uint8_t _received_length_spi;
@@ -80,10 +80,6 @@ protected:
 			SPCR &= ~_BV(DORD);  // MSB First (DORD=0 for MSB first)
 			SPCR &= ~_BV(CPOL);  // Clock polarity 0
 			SPCR &= ~_BV(CPHA);  // Clock phase 0 (MODE0)
-
-            // For static access to the buffers
-            _ptr_received_buffer = _received_buffer;
-            _ptr_sending_buffer = _sending_buffer;
 
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
             // // Initialize devices control object (optional initial setup)
@@ -188,9 +184,9 @@ public:
             switch (_transmission_mode) {
                 case TALKIE_SB_RECEIVE:
                     if (_receiving_index < TALKIE_BUFFER_SIZE) {
-                        _ptr_received_buffer[_receiving_index] = c;
+                        _received_buffer[_receiving_index] = c;
 						if (_receiving_index > 0) {
-							SPDR = _ptr_received_buffer[_receiving_index - 1];	// Char sent with an offset to guarantee matching
+							SPDR = _received_buffer[_receiving_index - 1];	// Char sent with an offset to guarantee matching
 						}
 						_receiving_index++;
                     } else {
@@ -203,7 +199,7 @@ public:
                     break;
                 case TALKIE_SB_SEND:
 					if (_sending_index < _sending_length_spi) {
-						SPDR = _ptr_sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
+						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
 					} else if (_sending_index == _sending_length_spi) {
 						SPDR = TALKIE_SB_LAST;	// Asks for the TALKIE_SB_LAST char
 					} else {	// Less missed sends this way
@@ -211,7 +207,7 @@ public:
 					}
 					// Starts checking 2 indexes after
 					if (_sending_index > 1) {    // Two positions of delay
-						if (c == _ptr_sending_buffer[_validation_index]) {	// Checks all chars
+						if (c == _sending_buffer[_validation_index]) {	// Checks all chars
 							_validation_index++; // Starts checking after two sent
 						} else {
 							_transmission_mode = TALKIE_SB_NONE;  // Makes sure no more communication is done, regardless
@@ -234,7 +230,7 @@ public:
 
             switch (c) {
                 case TALKIE_SB_RECEIVE:
-                    if (_ptr_received_buffer) {
+                    if (_received_buffer) {
 						if (!_received_length_spi) {
 							_transmission_mode = TALKIE_SB_RECEIVE;
 							_receiving_index = 0;
@@ -253,7 +249,7 @@ public:
                     }
                     break;
                 case TALKIE_SB_SEND:
-                    if (_ptr_sending_buffer) {
+                    if (_sending_buffer) {
                         if (_sending_length_spi) {
 							if (_sending_length_spi > TALKIE_BUFFER_SIZE) {
 								_sending_length_spi = 0;
@@ -279,9 +275,9 @@ public:
                     break;
                 case TALKIE_SB_LAST:
 					if (_transmission_mode == TALKIE_SB_RECEIVE) {
-						SPDR = _ptr_received_buffer[_receiving_index - 1];
+						SPDR = _received_buffer[_receiving_index - 1];
                     } else if (_transmission_mode == TALKIE_SB_SEND && _sending_length_spi > 0) {
-						SPDR = _ptr_sending_buffer[_sending_length_spi - 1];
+						SPDR = _sending_buffer[_sending_length_spi - 1];
                     } else {
 						SPDR = TALKIE_SB_NONE;
 					}

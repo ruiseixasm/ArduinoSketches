@@ -15,6 +15,9 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "SPI_Arduino_Slave.h"
 
 
+char SPI_Arduino_Slave::_received_buffer[TALKIE_BUFFER_SIZE];
+char SPI_Arduino_Slave::_sending_buffer[TALKIE_BUFFER_SIZE];
+
 char* SPI_Arduino_Slave::_ptr_received_buffer = nullptr;
 char* SPI_Arduino_Slave::_ptr_sending_buffer = nullptr;
 
