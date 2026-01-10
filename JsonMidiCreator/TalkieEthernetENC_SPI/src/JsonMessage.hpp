@@ -593,6 +593,11 @@ public:
 	}
 
 
+	char* write_buffer(size_t length) {
+        return (length <= TALKIE_BUFFER_SIZE) ? _json_payload : nullptr;
+    }
+
+
     /**
      * @brief Reset to default message
      * 
