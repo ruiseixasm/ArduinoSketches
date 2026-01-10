@@ -35,37 +35,8 @@ protected:
     // Singleton accessor
     SocketSerial() : BroadcastSocket() {}
 
+	JsonMessage serial_message;
 	bool _reading_serial = false;
-    
-    bool _send(const JsonMessage& json_message) override {
-        (void)json_message;	// Silence unused parameter warning
-
-		#ifdef SOCKET_SERIAL_DEBUG_TIMING
-		Serial.print(" | ");
-		Serial.print(millis() - _reference_time);
-		#endif
-
-		if (_sending_length) {
-			
-			#ifdef SOCKET_SERIAL_DEBUG_TIMING
-			Serial.print(" | ");
-			Serial.print(millis() - _reference_time);
-			#endif
-
-			if (Serial.write(_sending_buffer, _sending_length) == _sending_length) {
-				
-				#ifdef SOCKET_SERIAL_DEBUG_TIMING
-				Serial.print(" | ");
-				Serial.print(millis() - _reference_time);
-				#endif
-
-				_sending_length = 0;
-				return true;
-			}
-			_sending_length = 0;
-		}
-		return false;
-    }
 
 
     void _receive() override {
@@ -77,26 +48,35 @@ protected:
 		while (Serial.available()) {
 			char c = Serial.read();
 
+			char* message_buffer = serial_message._write_buffer(TALKIE_BUFFER_SIZE);
 			if (_reading_serial) {
-				if (_received_length < TALKIE_BUFFER_SIZE) {
-					if (c == '}' && _received_length && _received_buffer[_received_length - 1] != '\\') {
+
+				size_t message_length = serial_message._get_length();
+				if (message_length < TALKIE_BUFFER_SIZE) {
+					if (c == '}' && message_length && message_buffer[message_length - 1] != '\\') {
+
 						_reading_serial = false;
 
 						#ifdef SOCKET_SERIAL_DEBUG_TIMING
 						Serial.print(millis() - _reference_time);
 						#endif
 
-						_received_buffer[_received_length++] = '}';
-						_startTransmission();
+						message_buffer[serial_message._increment_length()] = '}';
+						if (serial_message._validate_json()) {
+							serial_message._validate_checksum();	// Has to validate and process the checksum
+							_startTransmission(serial_message);
+						}
 						return;
 					} else {
-						_received_buffer[_received_length++] = c;
+						message_buffer[serial_message._increment_length()] = c;
 					}
 				} else {
 					_reading_serial = false;
-					_received_length = 0; // Reset to start writing
+					serial_message._set_length(0);	// Reset to start writing
 				}
 			} else if (c == '{') {
+				
+				serial_message._set_length(0);
 				_reading_serial = true;
 
 				#ifdef SOCKET_SERIAL_DEBUG_TIMING
@@ -105,10 +85,40 @@ protected:
 				Serial.print(": ");
 				#endif
 
-				_received_length = 0; // Reset to start writing
-				_received_buffer[_received_length++] = '{';
+				message_buffer[serial_message._increment_length()] = '{';
 			}
 		}
+    }
+
+
+    bool _send(const JsonMessage& json_message) override {
+        (void)json_message;	// Silence unused parameter warning
+
+		#ifdef SOCKET_SERIAL_DEBUG_TIMING
+		Serial.print(" | ");
+		Serial.print(millis() - _reference_time);
+		#endif
+
+		size_t message_length = json_message._get_length();
+		if (message_length) {
+			
+			#ifdef SOCKET_SERIAL_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - _reference_time);
+			#endif
+
+			const char* message_buffer = json_message._read_buffer();
+			if (Serial.write(message_buffer, message_length) == message_length) {
+				
+				#ifdef SOCKET_SERIAL_DEBUG_TIMING
+				Serial.print(" | ");
+				Serial.print(millis() - _reference_time);
+				#endif
+
+				return true;
+			}
+		}
+		return false;
     }
 
 
