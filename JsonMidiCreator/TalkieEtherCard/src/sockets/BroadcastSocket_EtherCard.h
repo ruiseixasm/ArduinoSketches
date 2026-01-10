@@ -55,6 +55,7 @@ private:
         if (length) {
 			char* message_buffer = _json_message._write_buffer(length);
 			if (message_buffer) {
+				_json_message._set_length(length);
 				memcpy(message_buffer, data, length);
 				memcpy(_source_ip, src_ip, 4);
 				_data_length = length;	// Where is marked as received (> 0)
