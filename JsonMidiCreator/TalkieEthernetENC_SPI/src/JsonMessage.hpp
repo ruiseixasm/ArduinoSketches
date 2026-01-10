@@ -574,10 +574,13 @@ public:
     }
 
 
-	size_t _increment_length() {
-        return _json_length++;
-    }
-
+	bool _append(char c) {
+		if (_json_length < TALKIE_BUFFER_SIZE) {
+			_json_payload[_json_length++] = c;
+			return true;
+		}
+		return false;
+	}
 
 
 	const char* _read_buffer() const {
@@ -688,8 +691,8 @@ public:
 
 
 	bool _insert_checksum() {
-		// Makes sure NO checksum exists first
-		if (has_checksum()) return true;
+		// Starts by clearing any pre existent checksum (NO surprises or miss receives)
+		_remove('c');
 		uint16_t checksum = _generateChecksum();
 		return _set_number('c', checksum);
 	}
