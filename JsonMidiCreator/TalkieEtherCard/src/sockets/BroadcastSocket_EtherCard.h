@@ -25,6 +25,7 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket_EtherCard : public BroadcastSocket {
 private:
 
+	static JsonMessage _json_message;
     static char* _ptr_received_buffer;
     uint16_t _port = 5005;
     static uint8_t _source_ip[4];

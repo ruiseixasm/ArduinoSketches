@@ -35,7 +35,7 @@ protected:
     // Singleton accessor
     SocketSerial() : BroadcastSocket() {}
 
-	JsonMessage serial_message;
+	JsonMessage _json_message;
 	bool _reading_serial = false;
 
 
@@ -48,10 +48,10 @@ protected:
 		while (Serial.available()) {
 			char c = Serial.read();
 
-			char* message_buffer = serial_message._write_buffer(TALKIE_BUFFER_SIZE);
+			char* message_buffer = _json_message._write_buffer(TALKIE_BUFFER_SIZE);
 			if (_reading_serial) {
 
-				size_t message_length = serial_message._get_length();
+				size_t message_length = _json_message._get_length();
 				if (message_length < TALKIE_BUFFER_SIZE) {
 					if (c == '}' && message_length && message_buffer[message_length - 1] != '\\') {
 
@@ -61,21 +61,21 @@ protected:
 						Serial.print(millis() - _reference_time);
 						#endif
 
-						if (serial_message._append('}') && serial_message._validate_json()) {
-							serial_message._process_checksum();	// Has to validate and process the checksum
-							_startTransmission(serial_message);
+						if (_json_message._append('}') && _json_message._validate_json()) {
+							_json_message._process_checksum();	// Has to validate and process the checksum
+							_startTransmission(_json_message);
 						}
 						return;
-					} else if (!serial_message._append(c)) {
+					} else if (!_json_message._append(c)) {
 						return;
 					}
 				} else {
 					_reading_serial = false;
-					serial_message._set_length(0);	// Reset to start writing
+					_json_message._set_length(0);	// Reset to start writing
 				}
 			} else if (c == '{') {
 				
-				serial_message._set_length(0);
+				_json_message._set_length(0);
 				_reading_serial = true;
 
 				#ifdef SOCKET_SERIAL_DEBUG_TIMING
@@ -84,7 +84,7 @@ protected:
 				Serial.print(": ");
 				#endif
 
-				serial_message._append('{');
+				_json_message._append('{');
 			}
 		}
     }

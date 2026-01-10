@@ -15,6 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket_EtherCard.h"
 
 
+JsonMessage BroadcastSocket_EtherCard::_json_message;
 char* BroadcastSocket_EtherCard::_ptr_received_buffer = nullptr;
 
 uint8_t BroadcastSocket_EtherCard::_source_ip[4] = {0};
