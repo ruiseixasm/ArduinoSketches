@@ -109,26 +109,6 @@ protected:
     }
 
 
-	bool _unlockSendingBuffer() override {
-		uint16_t start_waiting = (uint16_t)millis();
-		while (_sending_length) {
-			if ((uint16_t)millis() - start_waiting > 1000 * 3) {
-
-				#ifdef BROADCASTSOCKET_DEBUG
-				Serial.println(F("\t_unlockSendingBuffer: NOT available sending buffer"));
-				#endif
-
-				return false;
-			}
-		}
-		#ifdef BROADCASTSOCKET_DEBUG
-		Serial.println(F("\t_unlockSendingBuffer: Available sending buffer"));
-		#endif
-
-		return true;
-	}
-
-
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     bool _send(const JsonMessage& json_message) override {
 
@@ -140,6 +120,17 @@ protected:
 		Serial.println(_sending_length);
 		#endif
 
+		uint16_t start_waiting = (uint16_t)millis();
+		while (_sending_length) {
+			if ((uint16_t)millis() - start_waiting > 1000 * 3) {
+
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.println(F("\t_unlockSendingBuffer: NOT available sending buffer"));
+				#endif
+
+				return false;
+			}
+		}
 		_sending_length = json_message.serialize_json(_sending_buffer, TALKIE_BUFFER_SIZE);
 			
         return true;

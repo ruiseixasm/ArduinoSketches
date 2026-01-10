@@ -185,18 +185,7 @@ protected:
 		#endif
     }
 
-
-    /**
-     * @brief Lets the overriding class to green light the access to the sending buffer
-	 * 
-	 * This method is intended to be used by slave devices that works with the sending
-	 * buffer asynchronously, like the case of the Arduino SPI in slave mode.
-     * 
-     * @note This method returns true whenever the sending buffer is available.
-     */
-	virtual bool _unlockSendingBuffer() { return true; }
-
-
+	
     /**
      * @brief Pure abstract method that triggers the receiving data by the socket
 	 * 
@@ -325,36 +314,19 @@ public:
 		Serial.println();  // optional: just to add a newline after the JSON
 		#endif
 
-		// Before writing on the _sending_buffer it needs the final processing and then waits for buffer availability
-		if (_unlockSendingBuffer()) {
-
-			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("socketSend2: "));
-			json_message.write_to(Serial);
-			Serial.println();  // optional: just to add a newline after the JSON
-			#endif
-
-			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("socketSend3: "));
-			Serial.write(json_message._read_buffer(), _sending_length);
-			Serial.print(" | ");
-			Serial.println(_sending_length);
-			#endif
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print(" | ");
+		Serial.print(millis() - json_message._reference_time);
+		#endif
+			
+		if (json_message._get_length() && json_message._insert_checksum()) {
+			
+			message_sent = _send(json_message);
 
 			#ifdef MESSAGE_DEBUG_TIMING
 			Serial.print(" | ");
 			Serial.print(millis() - json_message._reference_time);
 			#endif
-				
-			if (json_message._get_length() && json_message._insert_checksum()) {
-				
-				message_sent = _send(json_message);
-
-				#ifdef MESSAGE_DEBUG_TIMING
-				Serial.print(" | ");
-				Serial.print(millis() - json_message._reference_time);
-				#endif
-			}
 		}
 		return message_sent;
     }
