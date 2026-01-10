@@ -158,7 +158,11 @@ protected:
 							Serial.println(remote_delay);
 							#endif
 							_drops_count++;
-							return;  // Out of time package (too late)
+
+							// Mark error message as noise and dispatch it to be processed by the respective Talker
+							json_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+							json_message.set_error_value(ErrorValue::TALKIE_ERR_DELAY);
+							_transmitToRepeater(json_message);
 						}
 					}
 				}
