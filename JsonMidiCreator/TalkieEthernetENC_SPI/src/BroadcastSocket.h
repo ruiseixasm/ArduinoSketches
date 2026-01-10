@@ -98,8 +98,10 @@ protected:
 
     /**
      * @brief Starts the transmission of the data received
+     * @param json_message A json message to be transmitted to the repeater
 	 * 
-     * @note This method resets the _received_length to 0.
+     * @note Before calling this method, the `JsonMessage` methods `_validate_json` and `_process_checksum`
+	 *       shall be called first
      */
     void _startTransmission(JsonMessage& json_message) {
 
@@ -115,7 +117,6 @@ protected:
 		Serial.print(" | ");
 		Serial.println(json_message._get_length());
 		#endif
-
 		
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("handleTransmission4: Validated Checksum of "));
