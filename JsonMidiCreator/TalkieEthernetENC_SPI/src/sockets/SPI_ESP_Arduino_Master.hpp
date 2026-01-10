@@ -217,7 +217,7 @@ protected:
 					#ifdef BROADCAST_SPI_DEBUG_1
 					if (size > 1) {
 						Serial.print("Sent message: ");
-						Serial.write(_sending_buffer, length);
+						Serial.write(json_message._read_buffer(), length);
 						Serial.println();
 					} else {
 						Serial.println("\tNothing sent");
@@ -477,7 +477,7 @@ protected:
 
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
-			Serial.write(_sending_buffer, _sending_length);
+			Serial.write(json_message._read_buffer(), _sending_length);
 			Serial.print(F("\n\t\t\t\t\tsend2: Sent length: "));
 			Serial.println(_sending_length);
 			#endif
