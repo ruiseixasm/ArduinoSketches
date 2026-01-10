@@ -74,8 +74,6 @@ protected:
 
 
     bool _send(const JsonMessage& json_message) override {
-        (void)json_message;	// Silence unused parameter warning
-
 		const char* message_buffer = json_message._read_buffer();
 		size_t message_length = json_message._get_length();
 		return Serial.write(message_buffer, message_length) == message_length;
