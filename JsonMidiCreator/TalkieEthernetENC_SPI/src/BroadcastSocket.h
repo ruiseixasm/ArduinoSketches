@@ -75,9 +75,6 @@ protected:
 	MessageRepeater* _message_repeater = nullptr;
 	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
-    char _sending_buffer[TALKIE_BUFFER_SIZE];
-	size_t _sending_length = 0;
-
     // Pointer PRESERVE the polymorphism while objects don't!
     uint8_t _max_delay_ms = 5;
     bool _control_timing = false;
@@ -381,7 +378,6 @@ public:
 				#endif
 			}
 		}
-		_sending_length = 0;	// Marks sending buffer available even if the send fails
 		return message_sent;
     }
 

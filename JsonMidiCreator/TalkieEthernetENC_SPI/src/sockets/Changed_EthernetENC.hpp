@@ -190,7 +190,7 @@ protected:
 
             size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(
 				json_message._read_buffer()),
-				_sending_length
+				json_message._get_length()
 			);
             (void)bytesSent; // Silence unused variable warning
 
