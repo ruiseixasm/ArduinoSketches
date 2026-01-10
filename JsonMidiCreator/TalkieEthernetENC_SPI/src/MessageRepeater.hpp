@@ -204,8 +204,8 @@ public:
 			#endif
 				
 			for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-				JsonMessage message_copy(message);
-				_downlinked_sockets[socket_j]->_finishTransmission(message_copy);
+				// Sockets ONLY manipulate the checksum ('c')
+				_downlinked_sockets[socket_j]->_finishTransmission(message);
 			}
 			
 			#ifdef MESSAGE_DEBUG_TIMING
@@ -276,8 +276,8 @@ public:
 					}
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						JsonMessage message_copy(message);
-						if (!_uplinked_sockets[socket_j]->_finishTransmission(message_copy)) {
+						// Sockets ONLY manipulate the checksum ('c')
+						if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
 							no_fails = false;
 						}
 					}
@@ -285,8 +285,8 @@ public:
 				} else {
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						JsonMessage message_copy(message);
-						if (!_uplinked_sockets[socket_j]->_finishTransmission(message_copy)) {
+						// Sockets ONLY manipulate the checksum ('c')
+						if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
 							no_fails = false;
 						}
 					}
@@ -348,15 +348,15 @@ public:
 					}
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						JsonMessage message_copy(message);
-						if (!_downlinked_sockets[socket_j]->_finishTransmission(message_copy)) {
+						// Sockets ONLY manipulate the checksum ('c')
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
 							no_fails = false;
 						}
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-							JsonMessage message_copy(message);
-							if (!_uplinked_sockets[socket_j]->_finishTransmission(message_copy)) {
+							// Sockets ONLY manipulate the checksum ('c')
+							if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
 								no_fails = false;
 							}
 						}
@@ -365,15 +365,15 @@ public:
 				} else {
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						JsonMessage message_copy(message);
-						if (!_downlinked_sockets[socket_j]->_finishTransmission(message_copy)) {
+						// Sockets ONLY manipulate the checksum ('c')
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
 							no_fails = false;
 						}
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-							JsonMessage message_copy(message);
-							if (!_uplinked_sockets[socket_j]->_finishTransmission(message_copy)) {
+							// Sockets ONLY manipulate the checksum ('c')
+							if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
 								no_fails = false;
 							}
 						}
@@ -500,6 +500,7 @@ public:
 				#endif
 				
 				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+					// Sockets ONLY manipulate the checksum ('c')
 					_uplinked_sockets[socket_j]->_finishTransmission(message);
 				}
 				
@@ -555,14 +556,14 @@ public:
 				}
 				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
 					if (_downlinked_sockets[socket_j] != &socket) {	// Shouldn't locally Uplink to itself
-						JsonMessage message_copy(message);
-						_downlinked_sockets[socket_j]->_finishTransmission(message_copy);
+						// Sockets ONLY manipulate the checksum ('c')
+						_downlinked_sockets[socket_j]->_finishTransmission(message);
 					}
 				}
 				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 					if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-						JsonMessage message_copy(message);
-						_uplinked_sockets[socket_j]->_finishTransmission(message_copy);
+						// Sockets ONLY manipulate the checksum ('c')
+						_uplinked_sockets[socket_j]->_finishTransmission(message);
 					}
 				}
 			}
@@ -635,8 +636,8 @@ public:
 					}
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						JsonMessage message_copy(message);
-						if (!_downlinked_sockets[socket_j]->_finishTransmission(message_copy)) {
+						// Sockets ONLY manipulate the checksum ('c')
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
 							no_fails = false;
 						}
 					}
@@ -644,8 +645,8 @@ public:
 				} else {
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						JsonMessage message_copy(message);
-						if (!_downlinked_sockets[socket_j]->_finishTransmission(message_copy)) {
+						// Sockets ONLY manipulate the checksum ('c')
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
 							no_fails = false;
 						}
 					}
