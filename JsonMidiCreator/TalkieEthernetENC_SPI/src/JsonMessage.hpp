@@ -302,7 +302,7 @@ private:
     // ============================================
 
     /**
-     * @brief Reset JSON to default minimal message
+     * @brief Reset JSON payload to the bare minimum
      * 
      * Default bare minimum message: `{}`
      */
@@ -551,18 +551,26 @@ public:
 
     /**
      * @brief Get current JSON length
-     * @return Length of JSON string (not including null terminator)
+     * @return Length of JSON string (not including null terminator like '\0')
      */
 	size_t _get_length() const {
 		return _json_length;
 	}
 
 
+    /**
+     * @brief Set current JSON length
+     * @return Length of JSON string (not including null terminator like '\0')
+     */
 	void _set_length(size_t length) {
         _json_length = length;
     }
 
 
+    /**
+     * @brief Handy method that allows to add single chars one by one
+     * @return true if it has space for the added char
+     */
 	bool _append(char c) {
 		if (_json_length < TALKIE_BUFFER_SIZE) {
 			_json_payload[_json_length++] = c;
@@ -572,11 +580,21 @@ public:
 	}
 
 
+    /**
+     * @brief Allows a read only access to the message buffer
+     * @return A constant pointer to the message buffer
+     */
 	const char* _read_buffer() const {
 		return _json_payload;
 	}
 
 
+    /**
+     * @brief Allows a read and write access to the message buffer
+     * @param length The length of the amount of data intended to be written
+     * @return A pointer to the message buffer to write on, or nullptr, if `length` is
+	 *         greater than `TALKIE_BUFFER_SIZE`
+     */
 	char* _write_buffer(size_t length = 0) {
 		if (length > TALKIE_BUFFER_SIZE) return nullptr;
         return _json_payload;
@@ -584,7 +602,7 @@ public:
 
 	
     /**
-     * @brief Reset to bare minimum message
+     * @brief Reset to a bare minimum message
      * 
      * Resets to: `{}`
      */
@@ -1179,7 +1197,7 @@ public:
 	void remove_checksum() {
 		_remove('c');
 	}
-	
+
 
     /** @brief Remove message field */
 	void remove_message() {
