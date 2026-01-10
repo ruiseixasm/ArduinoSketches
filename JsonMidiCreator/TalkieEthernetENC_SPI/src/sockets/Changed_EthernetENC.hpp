@@ -40,9 +40,10 @@ class Changed_EthernetENC : public BroadcastSocket {
 protected:
 
     uint16_t _port = 5005;
-    IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     EthernetUDP* _udp = nullptr;
+	// Source Talker info
 	char _from_name[TALKIE_NAME_LEN] = {'\0'};
+    IPAddress _from_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
 
     // ===== [SELF IP] cache our own IP =====
     IPAddress _local_ip;
@@ -96,6 +97,7 @@ protected:
 				
 						if (new_message._validate_checksum()) {
 							strcpy(_from_name, new_message.get_from_name());
+							_from_ip = _udp->remoteIP();
 						}
 		
 						#ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -109,7 +111,6 @@ protected:
 						Serial.println(message_buffer);
 						#endif
 						
-						_source_ip = _udp->remoteIP();
 						_startTransmission(new_message);
 					}
 				}
@@ -145,7 +146,7 @@ protected:
 			Serial.println(_sending_length);
 			#endif
 
-            if (!_udp->beginPacket(as_reply ? _source_ip : broadcastIP, _port)) {
+            if (!_udp->beginPacket(as_reply ? _from_ip : broadcastIP, _port)) {
                 #ifdef BROADCAST_ETHERNETENC_DEBUG
                 Serial.println(F("\tFailed to begin packet"));
                 #endif
@@ -153,10 +154,10 @@ protected:
             } else {
 				
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
-				if (as_reply && _source_ip != broadcastIP) {
+				if (as_reply && _from_ip != broadcastIP) {
 
 					Serial.print(F("\tsend1: --> Directly sent to the  "));
-					Serial.print(_source_ip);
+					Serial.print(_from_ip);
 					Serial.print(F(" address --> "));
 					
 				} else {

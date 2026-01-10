@@ -163,6 +163,7 @@ protected:
 							json_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
 							json_message.set_error_value(ErrorValue::TALKIE_ERR_DELAY);
 							_transmitToRepeater(json_message);
+							return;
 						}
 					}
 				}
