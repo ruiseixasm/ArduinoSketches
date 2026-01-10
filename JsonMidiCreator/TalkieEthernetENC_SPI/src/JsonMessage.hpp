@@ -593,12 +593,12 @@ public:
 	}
 
 
-	char* write_buffer(size_t length) {
+	char* _write_buffer(size_t length) {
         return (length <= TALKIE_BUFFER_SIZE) ? _json_payload : nullptr;
     }
 
 
-	void set_length(size_t length) {
+	void _set_length(size_t length) {
         _json_length = length;
     }
 

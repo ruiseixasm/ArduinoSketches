@@ -85,25 +85,29 @@ protected:
 				}
 
 				JsonMessage new_message;
-				char* message_buffer = new_message.write_buffer(packetSize);
+				char* message_buffer = new_message._write_buffer(packetSize);
 				if (!message_buffer) return;	// Avoids overflow
 
 				int length = _udp->read(message_buffer, static_cast<size_t>(packetSize));
 				if (length > 0) {
-				
-					#ifdef BROADCAST_ETHERNETENC_DEBUG
-					Serial.print(F("\treceive1: "));
-					Serial.print(packetSize);
-					Serial.print(F("B from "));
-					Serial.print(_udp->remoteIP());
-					Serial.print(F(" to "));
-					Serial.print(_local_ip);
-					Serial.print(F(" -->      "));
-					Serial.println(_received_buffer);
-					#endif
 					
-					_source_ip = _udp->remoteIP();
-					_startTransmission(new_message);
+					new_message._set_length((size_t)length);
+					if (new_message._validate_json()) {
+				
+						#ifdef BROADCAST_ETHERNETENC_DEBUG
+						Serial.print(F("\treceive1: "));
+						Serial.print(packetSize);
+						Serial.print(F("B from "));
+						Serial.print(_udp->remoteIP());
+						Serial.print(F(" to "));
+						Serial.print(_local_ip);
+						Serial.print(F(" -->      "));
+						Serial.println(_received_buffer);
+						#endif
+						
+						_source_ip = _udp->remoteIP();
+						_startTransmission(new_message);
+					}
 				}
 			}
 		}
