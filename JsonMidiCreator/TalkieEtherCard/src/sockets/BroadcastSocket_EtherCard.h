@@ -78,7 +78,7 @@ protected:
 			
 			#ifdef BROADCAST_ETHERCARD_DEBUG
 			Serial.print(F("R: "));
-			Serial.write(json_message._read_buffer(), json_message._get_length());
+			Serial.write(_json_message._read_buffer(), _json_message._get_length());
 			Serial.println();
 			#endif
 
