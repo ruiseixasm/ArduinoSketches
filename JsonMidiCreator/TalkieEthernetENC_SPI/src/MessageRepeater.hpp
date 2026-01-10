@@ -156,10 +156,8 @@ public:
 				case TalkerMatch::TALKIE_MATCH_ANY:
 				{
 					for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
-						_downlinked_talkers[talker_i++]->_handleTransmission(message, talker_match);
-						if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
-							socket._deserialize_buffer(message);
-						}
+						JsonMessage message_copy(message);
+						_downlinked_talkers[talker_i++]->_handleTransmission(message_copy, talker_match);
 					}
 				}
 				break;
@@ -170,10 +168,8 @@ public:
 					for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 						uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 						if (talker_channel == message_channel) {
-							_downlinked_talkers[talker_i]->_handleTransmission(message, talker_match);
-							if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
-								socket._deserialize_buffer(message);
-							}
+							JsonMessage message_copy(message);
+							_downlinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
 						}
 					}
 				}
@@ -208,7 +204,8 @@ public:
 			#endif
 				
 			for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-				_downlinked_sockets[socket_j]->_finishTransmission(message);
+				JsonMessage message_copy(message);
+				_downlinked_sockets[socket_j]->_finishTransmission(message_copy);
 			}
 			
 			#ifdef MESSAGE_DEBUG_TIMING
@@ -236,18 +233,14 @@ public:
 			{
 				if (_uplinked_talkers_count) {
 					TalkerMatch talker_match = message.get_talker_match();
-					// Talkers have no buffer, so a message copy will be necessary
-					JsonMessage original_message(message);
 
 					switch (talker_match) {
 
 						case TalkerMatch::TALKIE_MATCH_ANY:
 						{
 							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
-								_uplinked_talkers[talker_i++]->_handleTransmission(message, talker_match);
-								if (talker_i < _uplinked_talkers_count) {
-									message = original_message;
-								}
+								JsonMessage message_copy(message);
+								_uplinked_talkers[talker_i++]->_handleTransmission(message_copy, talker_match);
 							}
 						}
 						break;
@@ -258,10 +251,8 @@ public:
 							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
 								uint8_t talker_channel = _uplinked_talkers[talker_i]->get_channel();
 								if (talker_channel == message_channel) {
-									_uplinked_talkers[talker_i]->_handleTransmission(message, talker_match);
-									if (talker_i < _uplinked_talkers_count) {
-										message = original_message;
-									}
+									JsonMessage message_copy(message);
+									_uplinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
 								}
 							}
 						}
@@ -285,7 +276,8 @@ public:
 					}
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						if (!_uplinked_sockets[socket_j]->_finishTransmission(original_message)) {
+						JsonMessage message_copy(message);
+						if (!_uplinked_sockets[socket_j]->_finishTransmission(message_copy)) {
 							no_fails = false;
 						}
 					}
@@ -293,7 +285,8 @@ public:
 				} else {
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
+						JsonMessage message_copy(message);
+						if (!_uplinked_sockets[socket_j]->_finishTransmission(message_copy)) {
 							no_fails = false;
 						}
 					}
@@ -306,8 +299,6 @@ public:
 			{
 				if (_downlinked_talkers_count) {
 					TalkerMatch talker_match = message.get_talker_match();
-					// Talkers have no buffer, so a message copy will be necessary
-					JsonMessage original_message(message);
 
 					switch (talker_match) {
 
@@ -315,10 +306,8 @@ public:
 						{
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								if (_downlinked_talkers[talker_i] != &talker) {
-									_downlinked_talkers[talker_i]->_handleTransmission(message, talker_match);
-									if (talker_i + 1 < _downlinked_talkers_count) {
-										message = original_message;
-									}
+									JsonMessage message_copy(message);
+									_downlinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
 								}
 							}
 						}
@@ -331,10 +320,8 @@ public:
 								if (_downlinked_talkers[talker_i] != &talker) {
 									uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 									if (talker_channel == message_channel) {
-										_downlinked_talkers[talker_i]->_handleTransmission(message, talker_match);
-										if (talker_i + 1 < _downlinked_talkers_count) {
-											message = original_message;
-										}
+										JsonMessage message_copy(message);
+										_downlinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
 									}
 								}
 							}
@@ -361,13 +348,15 @@ public:
 					}
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						if (!_downlinked_sockets[socket_j]->_finishTransmission(original_message)) {
+						JsonMessage message_copy(message);
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(message_copy)) {
 							no_fails = false;
 						}
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-							if (!_uplinked_sockets[socket_j]->_finishTransmission(original_message)) {
+							JsonMessage message_copy(message);
+							if (!_uplinked_sockets[socket_j]->_finishTransmission(message_copy)) {
 								no_fails = false;
 							}
 						}
@@ -376,13 +365,15 @@ public:
 				} else {
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
+						JsonMessage message_copy(message);
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(message_copy)) {
 							no_fails = false;
 						}
 					}
 					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 						if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-							if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
+							JsonMessage message_copy(message);
+							if (!_uplinked_sockets[socket_j]->_finishTransmission(message_copy)) {
 								no_fails = false;
 							}
 						}
@@ -461,10 +452,8 @@ public:
 					case TalkerMatch::TALKIE_MATCH_ANY:
 					{
 						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
-							_uplinked_talkers[talker_i++]->_handleTransmission(message, talker_match);
-							if (talker_i < _uplinked_talkers_count || _uplinked_sockets_count) {
-								socket._deserialize_buffer(message);
-							}
+							JsonMessage message_copy(message);
+							_uplinked_talkers[talker_i++]->_handleTransmission(message_copy, talker_match);
 						}
 					}
 					break;
@@ -475,10 +464,8 @@ public:
 						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
 							uint8_t talker_channel = _uplinked_talkers[talker_i]->get_channel();
 							if (talker_channel == message_channel) {
-								_uplinked_talkers[talker_i]->_handleTransmission(message, talker_match);
-								if (talker_i + 1 < _uplinked_talkers_count || _uplinked_sockets_count) {
-									socket._deserialize_buffer(message);
-								}
+								JsonMessage message_copy(message);
+								_uplinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
 							}
 						}
 					}
@@ -531,10 +518,8 @@ public:
 					case TalkerMatch::TALKIE_MATCH_ANY:
 					{
 						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
-							_downlinked_talkers[talker_i++]->_handleTransmission(message, talker_match);
-							if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
-								socket._deserialize_buffer(message);
-							}
+							JsonMessage message_copy(message);
+							_downlinked_talkers[talker_i++]->_handleTransmission(message_copy, talker_match);
 						}
 					}
 					break;
@@ -545,10 +530,8 @@ public:
 						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 							uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 							if (talker_channel == message_channel) {
-								_downlinked_talkers[talker_i]->_handleTransmission(message, talker_match);
-								if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
-									socket._deserialize_buffer(message);
-								}
+								JsonMessage message_copy(message);
+								_downlinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
 							}
 						}
 					}
@@ -572,12 +555,14 @@ public:
 				}
 				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
 					if (_downlinked_sockets[socket_j] != &socket) {	// Shouldn't locally Uplink to itself
-						_downlinked_sockets[socket_j]->_finishTransmission(message);
+						JsonMessage message_copy(message);
+						_downlinked_sockets[socket_j]->_finishTransmission(message_copy);
 					}
 				}
 				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 					if (_uplinked_sockets[socket_j]->getLinkType() == LinkType::TALKIE_LT_UP_BRIDGED) {
-						_uplinked_sockets[socket_j]->_finishTransmission(message);
+						JsonMessage message_copy(message);
+						_uplinked_sockets[socket_j]->_finishTransmission(message_copy);
 					}
 				}
 			}
@@ -613,10 +598,8 @@ public:
 						case TalkerMatch::TALKIE_MATCH_ANY:
 						{
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
-								_downlinked_talkers[talker_i++]->_handleTransmission(message, talker_match);
-								if (talker_i < _downlinked_talkers_count || _downlinked_sockets_count) {
-									message = original_message;
-								}
+								JsonMessage message_copy(message);
+								_downlinked_talkers[talker_i++]->_handleTransmission(message_copy, talker_match);
 							}
 						}
 						break;
@@ -627,10 +610,8 @@ public:
 							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
 								uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
 								if (talker_channel == message_channel) {
-									_downlinked_talkers[talker_i]->_handleTransmission(message, talker_match);
-									if (talker_i + 1 < _downlinked_talkers_count || _downlinked_sockets_count) {
-										message = original_message;
-									}
+									JsonMessage message_copy(message);
+									_downlinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
 								}
 							}
 						}
@@ -654,7 +635,8 @@ public:
 					}
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						if (!_downlinked_sockets[socket_j]->_finishTransmission(original_message)) {
+						JsonMessage message_copy(message);
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(message_copy)) {
 							no_fails = false;
 						}
 					}
@@ -662,7 +644,8 @@ public:
 				} else {
 					bool no_fails = true;
 					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
+						JsonMessage message_copy(message);
+						if (!_downlinked_sockets[socket_j]->_finishTransmission(message_copy)) {
 							no_fails = false;
 						}
 					}
