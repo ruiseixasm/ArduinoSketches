@@ -75,7 +75,6 @@ protected:
 	MessageRepeater* _message_repeater = nullptr;
 	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
-    char _received_buffer[TALKIE_BUFFER_SIZE];
     char _sending_buffer[TALKIE_BUFFER_SIZE];
 	size_t _received_length = 0;
 	size_t _sending_length = 0;
@@ -334,15 +333,6 @@ public:
      */
     void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
 	
-
-	/**
-     * @brief Loads the content of the received buffer into the json message
-     * @param json_message A json message into which the buffer is loaded to
-     */
-	bool _deserialize_buffer(JsonMessage& json_message) const {
-		return json_message.deserialize_buffer(_received_buffer, _received_length);
-	}
-
 
 	/**
      * @brief The final step in a cycle of processing a json message in which the

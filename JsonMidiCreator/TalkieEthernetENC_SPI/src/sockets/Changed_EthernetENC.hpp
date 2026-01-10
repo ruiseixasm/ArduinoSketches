@@ -102,7 +102,7 @@ protected:
 						Serial.print(F(" to "));
 						Serial.print(_local_ip);
 						Serial.print(F(" -->      "));
-						Serial.println(_received_buffer);
+						Serial.println(message_buffer);
 						#endif
 						
 						_source_ip = _udp->remoteIP();

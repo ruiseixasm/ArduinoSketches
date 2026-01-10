@@ -589,7 +589,7 @@ protected:
 								
 							#ifdef BROADCAST_SPI_DEBUG
 							Serial.print(F("\treceive1: Received message: "));
-							Serial.write(_received_buffer, length);
+							Serial.write(message_buffer, length);
 							Serial.println();
 							Serial.print(F("\treceive2: Received length: "));
 							Serial.println(length);
