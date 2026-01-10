@@ -75,7 +75,7 @@ protected:
 				if (!message_buffer) return;	// Avoids overflow
 
 				int length = _udp->read(message_buffer, static_cast<size_t>(packetSize));
-				if (length == packetSize) {
+				if (length <= packetSize) {
 				
 					if (new_message._validate_json()) {
 				
