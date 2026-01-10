@@ -103,91 +103,81 @@ protected:
      */
     void _startTransmission(JsonMessage& json_message) {
 
-		if (json_message._validate_checksum()) {	// It also removes the 'c' field from the json_message
-
-			#ifdef MESSAGE_DEBUG_TIMING
-			Serial.print("\n\t");
-			Serial.print(class_name());
-			Serial.print(": ");
-			#endif
-				
-			#ifdef BROADCASTSOCKET_DEBUG_NEW
-			Serial.print(F("\thandleTransmission1.1: "));
-			json_message.write_to(Serial);
-			Serial.print(" | ");
-			Serial.println(json_message._get_length());
-			#endif
-
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print("\n\t");
+		Serial.print(class_name());
+		Serial.print(": ");
+		#endif
 			
-			#ifdef BROADCASTSOCKET_DEBUG
-			Serial.print(F("handleTransmission4: Validated Checksum of "));
-			Serial.println(checksum);
-			#endif
+		#ifdef BROADCASTSOCKET_DEBUG_NEW
+		Serial.print(F("\thandleTransmission1.1: "));
+		json_message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println(json_message._get_length());
+		#endif
+
+		
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.print(F("handleTransmission4: Validated Checksum of "));
+		Serial.println(checksum);
+		#endif
+		
+		if (_max_delay_ms > 0) {
+
+			MessageValue message_code = json_message.get_message_value();
+			if (message_code == MessageValue::TALKIE_MSG_CALL) {
+
+				uint16_t message_timestamp = json_message.get_timestamp();
+
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.print(F("handleTransmission6: Message code requires delay check: "));
+				Serial.println((int)message_code);
+				#endif
+
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.print(F("handleTransmission3: Remote time: "));
+				Serial.println(message_timestamp);
+				#endif
 			
-			if (_max_delay_ms > 0) {
-
-				MessageValue message_code = json_message.get_message_value();
-				if (message_code == MessageValue::TALKIE_MSG_CALL) {
-
-					uint16_t message_timestamp = json_message.get_timestamp();
-
-					#ifdef BROADCASTSOCKET_DEBUG
-					Serial.print(F("handleTransmission6: Message code requires delay check: "));
-					Serial.println((int)message_code);
-					#endif
-
-					#ifdef BROADCASTSOCKET_DEBUG
-					Serial.print(F("handleTransmission3: Remote time: "));
-					Serial.println(message_timestamp);
-					#endif
+				const uint16_t local_time = (uint16_t)millis();
 				
-					const uint16_t local_time = (uint16_t)millis();
+				if (_control_timing) {
 					
-					if (_control_timing) {
-						
-						const uint16_t remote_delay = _last_message_timestamp - message_timestamp;  // Package received after
+					const uint16_t remote_delay = _last_message_timestamp - message_timestamp;  // Package received after
 
-						if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
-							const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
-							const uint16_t local_delay = local_time - _last_local_time;
+					if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
+						const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
+						const uint16_t local_delay = local_time - _last_local_time;
+						#ifdef BROADCASTSOCKET_DEBUG
+						Serial.print(F("handleTransmission7: Local delay: "));
+						Serial.println(local_delay);
+						#endif
+						if (remote_delay > allowed_delay || local_delay > allowed_delay) {
 							#ifdef BROADCASTSOCKET_DEBUG
-							Serial.print(F("handleTransmission7: Local delay: "));
-							Serial.println(local_delay);
+							Serial.print(F("handleTransmission8: Out of time package (remote delay): "));
+							Serial.println(remote_delay);
 							#endif
-							if (remote_delay > allowed_delay || local_delay > allowed_delay) {
-								#ifdef BROADCASTSOCKET_DEBUG
-								Serial.print(F("handleTransmission8: Out of time package (remote delay): "));
-								Serial.println(remote_delay);
-								#endif
-								_drops_count++;
-								return;  // Out of time package (too late)
-							}
+							_drops_count++;
+							return;  // Out of time package (too late)
 						}
 					}
-					_last_local_time = local_time;
-					_last_message_timestamp = message_timestamp;
-					_control_timing = true;
 				}
+				_last_local_time = local_time;
+				_last_message_timestamp = message_timestamp;
+				_control_timing = true;
 			}
-
-			#ifdef MESSAGE_DEBUG_TIMING
-			Serial.print(millis() - json_message._reference_time);
-			#endif
-			
-			_transmitToRepeater(json_message);
-			
-			#ifdef MESSAGE_DEBUG_TIMING
-			Serial.print(" | ");
-			Serial.print(millis() - json_message._reference_time);
-			#endif
-
-		// Has to report an error
-		} else {
-			// Mark error message as noise and dispatch it to be processed by the respective Talker
-			json_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
-			json_message.set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
-			_transmitToRepeater(json_message);
 		}
+
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print(millis() - json_message._reference_time);
+		#endif
+		
+		_transmitToRepeater(json_message);
+		
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print(" | ");
+		Serial.print(millis() - json_message._reference_time);
+		#endif
     }
 
 

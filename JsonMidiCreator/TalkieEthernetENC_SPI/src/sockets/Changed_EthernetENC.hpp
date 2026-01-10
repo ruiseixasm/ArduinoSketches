@@ -94,7 +94,9 @@ protected:
 					new_message._set_length((size_t)length);
 					if (new_message._validate_json()) {
 				
-						strcpy(_from_name, new_message.get_from_name());
+						if (new_message._validate_checksum()) {
+							strcpy(_from_name, new_message.get_from_name());
+						}
 		
 						#ifdef BROADCAST_ETHERNETENC_DEBUG
 						Serial.print(F("\treceive1: "));

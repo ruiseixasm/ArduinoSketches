@@ -465,7 +465,7 @@ protected:
 						new_message._set_length(length);
 						if (new_message._validate_json()) {
 							
-							if (_names[_actual_ss_pin_i][0] == '\0') {
+							if (new_message._validate_checksum() && _names[_actual_ss_pin_i][0] == '\0') {
 								strcpy(_names[_actual_ss_pin_i], new_message.get_from_name());
 								
 								#ifdef BROADCAST_SPI_DEBUG
