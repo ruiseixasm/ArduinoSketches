@@ -46,7 +46,7 @@ using Original 			= JsonMessage::Original;
 
 
 class MessageRepeater {
-protected:
+private:
 
 	BroadcastSocket* const* const _uplinked_sockets;
 	const uint8_t _uplinked_sockets_count;

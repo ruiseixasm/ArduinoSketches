@@ -70,7 +70,7 @@ class BroadcastSocket;
  *       it works with the Repeater in between and as response.
  */
 class JsonTalker {
-protected:
+private:
     
 	MessageRepeater* _message_repeater = nullptr;
 	LinkType _link_type = LinkType::TALKIE_LT_NONE;
