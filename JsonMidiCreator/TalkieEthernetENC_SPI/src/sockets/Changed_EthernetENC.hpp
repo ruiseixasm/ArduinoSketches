@@ -85,10 +85,10 @@ protected:
 				}
 
 				JsonMessage new_message;
-				char* json_buffer = new_message.write_buffer(packetSize);
-				if (!json_buffer) return;	// Avoids overflow
+				char* message_buffer = new_message.write_buffer(packetSize);
+				if (!message_buffer) return;	// Avoids overflow
 
-				int length = _udp->read(json_buffer, static_cast<size_t>(packetSize));
+				int length = _udp->read(message_buffer, static_cast<size_t>(packetSize));
 				if (length > 0) {
 				
 					#ifdef BROADCAST_ETHERNETENC_DEBUG
