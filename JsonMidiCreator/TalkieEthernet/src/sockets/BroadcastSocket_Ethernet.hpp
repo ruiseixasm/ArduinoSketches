@@ -25,8 +25,13 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastSocket_Ethernet : public BroadcastSocket {
 private:
     uint16_t _port = 5005;
-    IPAddress _source_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     EthernetUDP* _udp = nullptr;
+	// Source Talker info
+	char _from_name[TALKIE_NAME_LEN] = {'\0'};
+    IPAddress _from_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
+    // ===== [SELF IP] cache our own IP =====
+    IPAddress _local_ip;
+
 
 protected:
     // Constructor
@@ -40,28 +45,58 @@ protected:
 			int packetSize = _udp->parsePacket();
 			if (packetSize > 0) {
 
-				// Avoids overflow
-				if (packetSize > TALKIE_BUFFER_SIZE) return;
-
-				int length = _udp->read(_received_buffer, static_cast<size_t>(packetSize));
-				if (length > 0) {
-
-					_received_length = (size_t)length;
+				// ===== [SELF IP] DROP self-sent packets =====
+				if (_udp->remoteIP() == _local_ip) {
+					_udp->flush();   // discard payload
 					
 					#ifdef BROADCAST_ETHERNETENC_DEBUG
-					Serial.print(packetSize);
-					Serial.print(F("B from "));
-					Serial.print(_udp->remoteIP());
-					Serial.print(F(":"));
-					Serial.print(_udp->remotePort());
-					Serial.print(F(" -> "));
-					Serial.write(_received_buffer, _received_length);
-					Serial.println();
+					Serial.println(F("\treceive1: Dropped packet for being sent from this socket"));
+					Serial.print(F("\t\tRemote IP: "));
+					Serial.println(_udp->remoteIP());
+					Serial.print(F("\t\tLocal IP:  "));
+					Serial.println(_local_ip);
 					#endif
 					
-					_source_ip = _udp->remoteIP();
-					_startTransmission();
-					_received_length = 0;
+					return;
+				} else {
+					
+					#ifdef BROADCAST_ETHERNETENC_DEBUG
+					Serial.println(F("\treceive1: Packet NOT sent from this socket"));
+					Serial.print(F("\t\tRemote IP: "));
+					Serial.println(_udp->remoteIP());
+					Serial.print(F("\t\tLocal IP:  "));
+					Serial.println(_local_ip);
+					#endif
+					
+				}
+
+				JsonMessage new_message;
+				char* message_buffer = new_message._write_buffer(packetSize);
+				if (!message_buffer) return;	// Avoids overflow
+
+				int length = _udp->read(message_buffer, static_cast<size_t>(packetSize));
+				if (length == packetSize) {
+				
+					if (new_message._validate_json()) {
+				
+						if (new_message._process_checksum()) {
+							strcpy(_from_name, new_message.get_from_name());
+							_from_ip = _udp->remoteIP();
+						}
+		
+						#ifdef BROADCAST_ETHERNETENC_DEBUG
+						Serial.print(F("\treceive1: "));
+						Serial.print(packetSize);
+						Serial.print(F("B from "));
+						Serial.print(_udp->remoteIP());
+						Serial.print(F(" to "));
+						Serial.print(_local_ip);
+						Serial.print(F(" -->      "));
+						Serial.println(message_buffer);
+						#endif
+						
+						_startTransmission(new_message);
+					}
 				}
 			}
 		}
@@ -75,7 +110,7 @@ protected:
 			IPAddress broadcastIP(255, 255, 255, 255);
 
 			#ifdef ENABLE_DIRECT_ADDRESSING
-			if (!_udp->beginPacket(_source_ip, _port)) {
+			if (!_udp->beginPacket(_from_ip, _port)) {
 				#ifdef BROADCAST_ETHERNETENC_DEBUG
 				Serial.println(F("Failed to begin packet"));
 				#endif
@@ -90,7 +125,10 @@ protected:
 			}
 			#endif
 
-			size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(_sending_buffer), _sending_length);
+			size_t bytesSent = _udp->write(
+				reinterpret_cast<const uint8_t*>( json_message._read_buffer() ),
+				json_message._get_length()
+			);
 			(void)bytesSent; // Silence unused variable warning
 
 			if (!_udp->endPacket()) {
@@ -102,7 +140,10 @@ protected:
 
 			#ifdef BROADCAST_ETHERNETENC_DEBUG
 			Serial.print(F("S: "));
-			Serial.write(_sending_buffer, _sending_length);
+			Serial.write(
+				json_message._read_buffer(),
+				json_message._get_length()
+			);
 			Serial.println();
 			#endif
 
@@ -124,7 +165,12 @@ public:
 
 
     void set_port(uint16_t port) { _port = port; }
-    void set_udp(EthernetUDP* udp) { _udp = udp; }
+    void set_udp(EthernetUDP* udp) {
+		
+        // ===== [SELF IP] store local IP for self-filtering =====
+        _local_ip = Ethernet.localIP();
+		_udp = udp;
+	}
 };
 
 #endif // BROADCAST_SOCKET_ETHERNET_HPP
