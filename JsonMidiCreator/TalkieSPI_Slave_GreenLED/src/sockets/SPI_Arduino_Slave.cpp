@@ -15,15 +15,14 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "SPI_Arduino_Slave.h"
 
 
-char* SPI_Arduino_Slave::_ptr_received_buffer = nullptr;
-char* SPI_Arduino_Slave::_ptr_sending_buffer = nullptr;
-
+char SPI_Arduino_Slave::_received_buffer[TALKIE_BUFFER_SIZE];
+char SPI_Arduino_Slave::_sending_buffer[TALKIE_BUFFER_SIZE];
 
 volatile uint8_t SPI_Arduino_Slave::_receiving_index = 0;
-volatile uint8_t SPI_Arduino_Slave::_received_length_spi = 0;
+volatile uint8_t SPI_Arduino_Slave::_received_length = 0;
 volatile uint8_t SPI_Arduino_Slave::_sending_index = 0;
 volatile uint8_t SPI_Arduino_Slave::_validation_index = 0;
-volatile uint8_t SPI_Arduino_Slave::_sending_length_spi = 0;
+volatile uint8_t SPI_Arduino_Slave::_sending_length = 0;
 volatile SPI_Arduino_Slave::StatusByte SPI_Arduino_Slave::_transmission_mode 
 									= SPI_Arduino_Slave::StatusByte::TALKIE_SB_NONE;
 

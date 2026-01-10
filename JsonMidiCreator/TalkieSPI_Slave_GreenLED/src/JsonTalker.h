@@ -557,6 +557,18 @@ public:
 			case MessageValue::TALKIE_MSG_NOISE:
 				if (json_message.has_error()) {
 					if (talker_match == TalkerMatch::TALKIE_MATCH_BY_NAME || talker_match == TalkerMatch::TALKIE_MATCH_BY_CHANNEL) {
+
+						ErrorValue error_value = json_message.get_error_value();
+						switch (error_value) {
+							case ErrorValue::TALKIE_ERR_DELAY:
+								if (_muted_calls) {
+									return;
+								}
+								break;
+							
+							default: break;
+						}
+
 						json_message.remove_all_nth_values();	// Keeps it small and clean of bad chars
 						json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
 						if (!json_message.has_identity()) json_message.set_identity();
