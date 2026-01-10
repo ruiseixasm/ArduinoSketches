@@ -67,8 +67,6 @@ protected:
     // Constructor
     BroadcastSocket_EtherCard() : BroadcastSocket() {
 		
-		// For static access to the buffers
-		_ptr_received_buffer = _received_buffer;
 		ether.udpServerListenOnPort(staticCallback, _port);
 	}
 
