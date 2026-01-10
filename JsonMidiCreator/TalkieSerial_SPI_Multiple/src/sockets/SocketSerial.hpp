@@ -91,7 +91,6 @@ protected:
 
 
     bool _send(const JsonMessage& json_message) override {
-        (void)json_message;	// Silence unused parameter warning
 
 		#ifdef SOCKET_SERIAL_DEBUG_TIMING
 		Serial.print(" | ");

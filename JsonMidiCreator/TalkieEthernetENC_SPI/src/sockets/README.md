@@ -10,11 +10,8 @@ You can always implement your own socket, by extending the `BroadcastSocket` cla
 	bool _send(const JsonMessage& json_message) override {}
 ```
 The methods above should follow these basic rules:
-- In the `_receive` method you must write to the `_received_buffer` and set it's size in the variable `_received_length`. After which,
-it should be called the method `_startTransmission` to process the received data;
-- In the `_send` method you must read from the `_sending_buffer` accordingly to the `_sending_length`. No need to set it as `0` at the end;
-- In the `_send` method you have access to the `json_message` as parameter while in the `_receive` method you don't, so, if you need to process the
-received `json_message` you can always override the method `_showReceivedMessage`.
+- In the `_receive` method you must create a `JsonMessage` and write on it or deserialize on it the data received, on that `new_message` you shall always call the methods `_validate_json` and `_process_checksum`. See example bellow for details. After that, it should be called the method `_startTransmission` to process the received data;
+- In the `_send` method you must read from the `json_message` buffer with the help pf the methods `_read_buffer` and `_get_length`.
 ### Example
 Here is an example of such implementation for the Serial protocol:
 ```
@@ -74,6 +71,7 @@ protected:
 
 
     bool _send(const JsonMessage& json_message) override {
+
 		const char* message_buffer = json_message._read_buffer();
 		size_t message_length = json_message._get_length();
 		return Serial.write(message_buffer, message_length) == message_length;
