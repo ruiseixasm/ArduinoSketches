@@ -183,9 +183,11 @@ protected:
 
 	
     /**
-     * @brief Pure abstract method that triggers the receiving data by the socket
+     * @brief Pure abstract method that creates a new `JsonMessage` based on the
+	 *        receiving data by the socket
 	 * 
-     * @note This method shall also trigger the method _startTransmission.
+     * @note This method shall call the method `_startTransmission` with the new created
+	 *       `JsonMessage`.
      */
     virtual void _receive() = 0;
 
@@ -194,7 +196,7 @@ protected:
      * @brief Pure abstract method that sends via socket any received json message
      * @param json_message A json message able to be accessed by the subclass socket
 	 * 
-     * @note This method marks the end of the message cycle with _finishTransmission.
+     * @note This method marks the end of the message cycle with `_finishTransmission`.
      */
     virtual bool _send(const JsonMessage& json_message) = 0;
 
@@ -294,11 +296,10 @@ public:
 
 	/**
      * @brief The final step in a cycle of processing a json message in which the
-	 *        json message content is loaded into the sending buffer of the socket
-	 *        to be sent
-     * @param json_message A json message to be serialized into the sending buffer
+	 *        json message content is sent accordingly to the `_send` method implementation
+     * @param json_message A json message which buffer is to be sent
 	 * 
-     * @note This method marks the end of the message cycle.
+     * @note This method marks the end of the message transmission cycle.
      */
     bool _finishTransmission(JsonMessage& json_message) {
 
