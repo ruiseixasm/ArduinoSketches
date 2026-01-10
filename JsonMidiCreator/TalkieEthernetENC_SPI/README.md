@@ -197,25 +197,20 @@ A Broadcast Socket **implementation** shall be able to receive and send in broad
 ### Implementation
 In the folders [sockets](src/sockets) you can find further description and many socket examples for diverse type of protocols and even libraries, like Ethernet and SPI protocols.
 
-These are the main attributes of the `BroadcastSocket`:
+These are the member variables of the `BroadcastSocket`:
 ```
-MessageRepeater* _message_repeater = nullptr;
-LinkType _link_type = LinkType::TALKIE_LT_NONE;
+	MessageRepeater* _message_repeater = nullptr;
+	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
-char _received_buffer[TALKIE_BUFFER_SIZE];
-char _sending_buffer[TALKIE_BUFFER_SIZE];
-size_t _received_length = 0;
-size_t _sending_length = 0;
-
-// Pointer PRESERVE the polymorphism while objects don't!
-uint8_t _max_delay_ms = 5;
-bool _control_timing = false;
-uint16_t _last_local_time = 0;
-uint16_t _last_message_timestamp = 0;
-uint16_t _drops_count = 0;
+    // Pointer PRESERVE the polymorphism while objects don't!
+    uint8_t _max_delay_ms = 5;
+    bool _control_timing = false;
+    uint16_t _last_local_time = 0;
+    uint16_t _last_message_timestamp = 0;
+    uint16_t _drops_count = 0;
 ```
 
-And these are the methods which definition in the socket implementation are mandatory:
+And these are the methods which definition in the socket implementation is mandatory:
 ```
 virtual const char* class_name() const = 0;
 virtual void _receive() = 0;
