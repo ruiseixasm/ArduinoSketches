@@ -243,7 +243,7 @@ protected:
     }
 
 
-    size_t receiveSPI(int ss_pin, char* message_buffer, size_t max_length) {
+    size_t receiveSPI(int ss_pin, char* message_buffer, size_t buffer_size) {
         size_t size = 0;	// No interrupts, so, not volatile
         uint8_t c;			// Avoid using 'char' while using values above 127
 
@@ -272,7 +272,7 @@ protected:
 					message_buffer[0] = c;
 
 					// Starts to receive all chars here
-					for (uint8_t i = 1; c < 128 && i < max_length; i++) { // First i isn't a char byte
+					for (uint8_t i = 1; c < 128 && i < buffer_size; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						c = _spi_instance->transfer(message_buffer[i - 1]);
 						message_buffer[i] = c;
@@ -301,7 +301,7 @@ protected:
 							Serial.println(F("\t\tERROR: END NOT received"));
 							#endif
 						}
-					} else if (size == max_length) {
+					} else if (size == buffer_size) {
 						delayMicroseconds(12);    // Makes sure the Status Byte is sent
 						_spi_instance->transfer(TALKIE_SB_FULL);
 						size = 1;	// Try no more
@@ -517,8 +517,11 @@ protected:
 			Serial.print(millis() - _reference_time);
 			#endif
 
+			const char* message_buffer = json_message._read_buffer();
+			size_t message_length = json_message._get_length();
+
 			if (as_reply) {
-				sendSPI(_sending_length, _ss_pins[_actual_ss_pin_i]);
+				sendSPI(_ss_pins[_actual_ss_pin_i], message_buffer, message_length);
 
 				#ifdef BROADCAST_SPI_DEBUG
 				Serial.print(F("\t\t\t\t\tsend4: --> Directly sent for the received pin --> "));
