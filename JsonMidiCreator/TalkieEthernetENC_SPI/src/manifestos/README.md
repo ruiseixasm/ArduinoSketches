@@ -5,7 +5,7 @@ Multiple manifestos that can be used with the [JsonTalkie](https://github.com/ru
 ## Implementation
 You can create many Manifestos to different scenarios by extending the `TalkerManifesto` class. To do so, you must override, at least, the following methods:
 ```
-	const char* class_name() const override { return "UserManifesto"; }
+	const char* class_name() const override { return "LedManifesto"; }
 	const Action* _getActionsArray() const override { return calls; }
     uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 ```
@@ -21,93 +21,121 @@ This structure is a list of `Action` objects with a name and a description of th
 Their id is given by the respective position in the array. You must make sure the number of actions is typed,
 in the case above, that is represented with `[3]`.
 
-
-
-
-The methods above should follow these basic rules:
-- In the `_receive` method you must create a `JsonMessage` and write on it or deserialize on it the data received, on that `new_message` you shall always call the methods `_validate_json` and `_process_checksum`. After that, it should be called the method `_startTransmission` to process the received data. See example bellow or sockets implementations in [this same folder](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/sockets) for details;
-- In the `_send` method you must read from the `json_message` buffer with the help of the methods `_read_buffer` and `_get_length`.
 ### Example
-Here is an example of such implementation for the Serial protocol:
+Here is a bare minimum example of such implementation that controls a Blue LED:
 ```
-#ifndef SOCKET_SERIAL_HPP
-#define SOCKET_SERIAL_HPP
+#ifndef BLUE_MANIFESTO_HPP
+#define BLUE_MANIFESTO_HPP
 
-#include "../BroadcastSocket.h"
+#include "../TalkerManifesto.hpp"
 
-class SocketSerial : public BroadcastSocket {
+class BlueManifesto : public TalkerManifesto {
 public:
 
-    const char* class_name() const override { return "SocketSerial"; }
+    const char* class_name() const override { return "BlueManifesto"; }
+
+    BlueManifesto(uint8_t led_pin) : TalkerManifesto(), _led_pin(led_pin)
+	{
+		pinMode(_led_pin, OUTPUT);
+	}	// Constructor
+
+    ~BlueManifesto()
+	{	// ~TalkerManifesto() called automatically here
+		digitalWrite(_led_pin, LOW);
+		pinMode(_led_pin, INPUT);
+	}	// Destructor
+
 
 protected:
 
-    // Singleton accessor
-    SocketSerial() : BroadcastSocket() {}
+	const uint8_t _led_pin;
+    bool _is_led_on = false;	// keep track of the led state, by default it's off
+    uint16_t _total_calls = 0;
 
-	JsonMessage _json_message;
-	bool _reading_serial = false;
-
-
-    void _receive() override {
+    Action calls[3] = {
+		{"on", "Turns led ON"},
+		{"off", "Turns led OFF"},
+		{"actions", "Returns the number of triggered Actions"}
+    };
     
-		while (Serial.available()) {
-			char c = Serial.read();
-
-			char* message_buffer = _json_message._write_buffer();
-			if (_reading_serial) {
-
-				size_t message_length = _json_message._get_length();
-				if (message_length < TALKIE_BUFFER_SIZE) {
-					if (c == '}' && message_length && message_buffer[message_length - 1] != '\\') {
-
-						_reading_serial = false;
-
-						if (_json_message._append('}') && _json_message._validate_json()) {
-							_json_message._process_checksum();	// Has to validate and process the checksum
-							_startTransmission(_json_message);
-						}
-						return;
-					} else if (!_json_message._append(c)) {
-						return;
-					}
-				} else {
-					_reading_serial = false;
-					_json_message._set_length(0);	// Reset to start writing
-				}
-			} else if (c == '{') {
-				
-				_json_message._set_length(0);
-				_reading_serial = true;
-				_json_message._append('{');
-			}
-		}
-    }
-
-
-    bool _send(const JsonMessage& json_message) override {
-
-		const char* message_buffer = json_message._read_buffer();
-		size_t message_length = json_message._get_length();
-		return Serial.write(message_buffer, message_length) == message_length;
-    }
-
-
 public:
-    // Move ONLY the singleton instance method to subclass
-    static SocketSerial& instance() {
+    
+    const Action* _getActionsArray() const override { return calls; }
+    uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
-        static SocketSerial instance;
-        return instance;
-    }
+
+    // Index-based operations (simplified examples)
+    bool _actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
+        (void)talker;		// Silence unused parameter warning
+    	(void)talker_match;	// Silence unused parameter warning
+		
+		if (index >= sizeof(calls)/sizeof(Action)) return false;
+		
+		// Actual implementation would do something based on index
+		switch(index) {
+
+			case 0:
+			{
+				if (!_is_led_on) {
+					digitalWrite(_led_pin, HIGH);
+					_is_led_on = true;
+					_total_calls++;
+					return true;
+				} else {
+					json_message.set_nth_value_string(0, "Already On!");
+					return false;
+				}
+			}
+			break;
+
+			case 1:
+			{
+				if (_is_led_on) {
+				digitalWrite(_led_pin, LOW);
+					_is_led_on = false;
+					_total_calls++;
+				} else {
+					json_message.set_nth_value_string(0, "Already Off!");
+					return false;
+				}
+				return true;
+			}
+			break;
+			
+            case 2:
+				json_message.set_nth_value_number(0, _total_calls);
+                return true;
+            break;
+				
+            default: return false;
+		}
+		return false;
+	}
 
 };
 
-#endif // SOCKET_SERIAL_HPP
+
+#endif // BLUE_MANIFESTO_HPP
 ```
 
-## Ethernet
-### BroadcastSocket_EtherCard
+## Other methods
+You can go beyond the bare minimum above, here are more methods that may be overridden.
+### _loop
+
+
+### _echo
+
+
+
+### _error
+
+
+
+### _noise
+
+
+
+
 Lightweight socket intended to be used with low memory boards like the Uno and the Nano, for the ethernet module `ENC28J60`.
 This library has the limitation of not being able to send unicast messages, all its responses are in broadcast mode, so, one
 way to avoid it is to mute the Talker and in that way the `call` commands on it don't overload the network.

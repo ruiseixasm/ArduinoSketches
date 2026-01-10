@@ -16,7 +16,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #include "../TalkerManifesto.hpp"
 
-// #define GREEN_TALKER_DEBUG
+// #define BLUE_MANIFESTO_DEBUG
 
 
 class BlueManifesto : public TalkerManifesto {
@@ -39,7 +39,7 @@ public:
 protected:
 
 	const uint8_t _led_pin;
-    bool _is_led_on = false;  	// keep track of state yourself, by default it's off
+    bool _is_led_on = false;	// keep track of the led state, by default it's off
     uint16_t _total_calls = 0;
 
     Action calls[3] = {
@@ -66,7 +66,7 @@ public:
 
 			case 0:
 			{
-				#ifdef GREEN_MANIFESTO_DEBUG
+				#ifdef BLUE_MANIFESTO_DEBUG
 				Serial.println(F("\tCase 0 - Turning LED ON"));
 				#endif
 		
@@ -84,7 +84,7 @@ public:
 
 			case 1:
 			{
-				#ifdef GREEN_MANIFESTO_DEBUG
+				#ifdef BLUE_MANIFESTO_DEBUG
 				Serial.println(F("\tCase 1 - Turning LED OFF"));
 				#endif
 		
