@@ -3,6 +3,7 @@
 Multiple manifestos that can be used with the [JsonTalkie](https://github.com/ruiseixasm/JsonTalkie)
 software by implementing its `TalkerManifesto` interface.
 
+You can see many examples of manifestos right in [this same folder](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/manifestos).
 ## Implementation
 You can create many Manifestos to different scenarios by extending the `TalkerManifesto` class.
 To do so, you must override, at least, the following methods:
@@ -174,8 +175,6 @@ void Spy::_echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talke
 ### _error
 The `_error` method can be used for report the errors returned by other Talkers,
 in this example the Talker Manifesto results in the printing of those errors received.
-
-You can see many examples of manifestos right in [this same folder](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/manifestos).
 ```
 void Spy::_error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
     (void)talker;		// Silence unused parameter warning
