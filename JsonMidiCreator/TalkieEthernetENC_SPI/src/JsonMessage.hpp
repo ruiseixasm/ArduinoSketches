@@ -695,8 +695,8 @@ public:
 
 
 	bool _insert_checksum() {
-		// Makes sure any existent checksum is removed first
-		_remove('c', _json_payload, &_json_length);
+		// Makes sure NO checksum exists first
+		if (has_checksum()) return true;
 		uint16_t checksum = _generateChecksum(_json_payload, _json_length);
 		return _set_number('c', checksum, _json_payload, &_json_length);
 	}
@@ -783,6 +783,12 @@ public:
 	bool has_key(char key, size_t colon_position = 4) const {
 		size_t json_i = _get_colon_position(key, _json_payload, _json_length, colon_position);
 		return json_i > 0;
+	}
+
+
+	/** @brief Check if checksum field exists */ 
+	bool has_checksum() const {
+		return _get_colon_position('c', _json_payload, _json_length) > 0;
 	}
 
 
