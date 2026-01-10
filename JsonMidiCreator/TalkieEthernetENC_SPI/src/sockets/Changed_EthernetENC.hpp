@@ -148,7 +148,7 @@ protected:
 			Serial.println(as_reply);
 			Serial.print(F("\t\t\t\t\tsend buff: "));
 			Serial.write(
-				json_message._read_buffer()),
+				json_message._read_buffer(),
 				json_message._get_length()
 			);
 			Serial.print(" | ");
@@ -191,8 +191,8 @@ protected:
 			}
             #endif
 
-            size_t bytesSent = _udp->write(reinterpret_cast<const uint8_t*>(
-				json_message._read_buffer()),
+            size_t bytesSent = _udp->write(
+				reinterpret_cast<const uint8_t*>( json_message._read_buffer() ),
 				json_message._get_length()
 			);
             (void)bytesSent; // Silence unused variable warning
@@ -206,7 +206,7 @@ protected:
 
             #ifdef BROADCAST_ETHERNETENC_DEBUG
             Serial.write(
-				json_message._read_buffer()),
+				json_message._read_buffer(),
 				json_message._get_length()
 			);
             Serial.println();
