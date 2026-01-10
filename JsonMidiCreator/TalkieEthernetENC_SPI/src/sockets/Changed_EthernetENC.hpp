@@ -94,6 +94,8 @@ protected:
 					new_message._set_length((size_t)length);
 					if (new_message._validate_json()) {
 				
+						strcpy(_from_name, new_message.get_from_name());
+		
 						#ifdef BROADCAST_ETHERNETENC_DEBUG
 						Serial.print(F("\treceive1: "));
 						Serial.print(packetSize);
@@ -112,20 +114,6 @@ protected:
 			}
 		}
     }
-
-
-	// Allows the overriding class to peek at the received JSON message
-	void _showReceivedMessage(const JsonMessage& json_message) override {
-
-		strcpy(_from_name, json_message.get_from_name());
-		
-		#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
-		Serial.print(F("receivedJsonMessage1: "));
-		json_message.write_to(Serial);
-		Serial.print(" | ");
-		Serial.println(_from_name);
-		#endif
-	}
 
 
     bool _send(const JsonMessage& json_message) override {

@@ -90,16 +90,6 @@ protected:
 
 
     /**
-     * @brief Allows the overriding Socket class to peek at the
-	 *        received JSON message
-	 * 
-	 * This method gives the overriding class the opportunity to
-	 * get direct information from the Json Message.
-     */
-	virtual void _showReceivedMessage(const JsonMessage& json_message) {}
-
-	
-    /**
      * @brief Sends the generated message by _startTransmission
 	 *        to the Repeater
      */
@@ -109,10 +99,6 @@ protected:
     /**
      * @brief Starts the transmission of the data received
 	 * 
-	 * This method creates a new message that is shown to the socket
-	 * implementation via the _showReceivedMessage method and then sends
-	 * it to the Repeater via the method _transmitToRepeater.
-     * 
      * @note This method resets the _received_length to 0.
      */
     void _startTransmission(JsonMessage& json_message) {
@@ -188,7 +174,6 @@ protected:
 			Serial.print(millis() - json_message._reference_time);
 			#endif
 			
-			_showReceivedMessage(json_message); // Gives a chance to show it before transmitting
 			_transmitToRepeater(json_message);
 			
 			#ifdef MESSAGE_DEBUG_TIMING
@@ -201,7 +186,6 @@ protected:
 			// Mark error message as noise and dispatch it to be processed by the respective Talker
 			json_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
 			json_message.set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
-			_showReceivedMessage(json_message); // Gives a chance to show it before transmitting
 			_transmitToRepeater(json_message);
 		}
     }
