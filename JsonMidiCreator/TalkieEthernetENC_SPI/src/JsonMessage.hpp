@@ -574,6 +574,12 @@ public:
     }
 
 
+	size_t _increment_length() {
+        return _json_length++;
+    }
+
+
+
 	const char* _read_buffer() const {
 		return _json_payload;
 	}
