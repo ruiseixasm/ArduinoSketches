@@ -87,8 +87,8 @@ protected:
     // Specific methods associated to Arduino SPI as Master
 
 	
-    bool sendSPI(uint8_t length, int ss_pin) {
-        uint8_t size = 0;	// No interrupts, so, not volatile
+    bool sendSPI(int ss_pin, const char* message_buffer, size_t length) {
+        size_t size = 0;	// No interrupts, so, not volatile
 		
 		#ifdef BROADCAST_SPI_DEBUG_1
 		Serial.print(F("\tSending on pin: "));
@@ -119,16 +119,16 @@ protected:
 				if (c != TALKIE_SB_VOID) {
 
 					delayMicroseconds(12);	// Makes sure it's processed by the slave (12us) (critical path)
-					c = _spi_instance->transfer(_sending_buffer[0]);
+					c = _spi_instance->transfer(message_buffer[0]);
 
 					if (c == TALKIE_SB_READY) {	// Makes sure the Slave it's ready first
 					
 						for (uint8_t i = 1; i < length; i++) {
 							delayMicroseconds(send_delay_us);
-							c = _spi_instance->transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
+							c = _spi_instance->transfer(message_buffer[i]);	// Receives the echoed message_buffer[i - 1]
 							if (c < 128) {
 								// Offset of 2 picks all mismatches than an offset of 1
-								if (i > 1 && c != _sending_buffer[i - 2]) {
+								if (i > 1 && c != message_buffer[i - 2]) {
 									#ifdef BROADCAST_SPI_DEBUG_1
 									Serial.print(F("\t\tERROR: Char mismatch at index: "));
 									Serial.println(i - 2);
@@ -150,10 +150,10 @@ protected:
 						// Checks the last 2 chars still to be checked
 						delayMicroseconds(12);    // Makes sure the Status Byte is sent
 						c = _spi_instance->transfer(TALKIE_SB_LAST);
-						if (c == _sending_buffer[length - 2]) {
+						if (c == message_buffer[length - 2]) {
 							delayMicroseconds(12);    // Makes sure the Status Byte is sent
 							c = _spi_instance->transfer(TALKIE_SB_END);
-							if (c == _sending_buffer[length - 1]) {	// Last char
+							if (c == message_buffer[length - 1]) {	// Last char
 								size = length + 1;	// Just for error catch
 								// Makes sure Slave does the respective sets
 								for (uint8_t end_r = 0; c != TALKIE_SB_DONE && end_r < 3; end_r++) {	// Makes sure the receiving buffer of the Slave is deleted, for sure!
@@ -220,7 +220,7 @@ protected:
 					#ifdef BROADCAST_SPI_DEBUG_1
 					if (size > 1) {
 						Serial.print("Sent message: ");
-						Serial.write(_sending_buffer, length);
+						Serial.write(json_message._read_buffer(), length);
 						Serial.println();
 					} else {
 						Serial.println("\tNothing sent");
@@ -246,9 +246,9 @@ protected:
     }
 
 
-    uint8_t receiveSPI(int ss_pin) {
-        uint8_t size = 0;	// No interrupts, so, not volatile
-        uint8_t c; // Avoid using 'char' while using values above 127
+    size_t receiveSPI(int ss_pin, char* message_buffer, size_t buffer_size) {
+        size_t size = 0;	// No interrupts, so, not volatile
+        uint8_t c;			// Avoid using 'char' while using values above 127
 
 		#ifdef BROADCAST_SPI_DEBUG_2
 		Serial.print(F("\tReceiving on pin: "));
@@ -272,18 +272,18 @@ protected:
 					
 					delayMicroseconds(receive_delay_us);
 					c = _spi_instance->transfer('\0');   // Dummy char to get the ACK
-					_received_buffer[0] = c;
+					message_buffer[0] = c;
 
 					// Starts to receive all chars here
-					for (uint8_t i = 1; c < 128 && i < TALKIE_BUFFER_SIZE; i++) { // First i isn't a char byte
+					for (uint8_t i = 1; c < 128 && i < buffer_size; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
-						c = _spi_instance->transfer(_received_buffer[i - 1]);
-						_received_buffer[i] = c;
+						c = _spi_instance->transfer(message_buffer[i - 1]);
+						message_buffer[i] = c;
 						size = i;
 					}
 					if (c == TALKIE_SB_LAST) {
 						delayMicroseconds(receive_delay_us);    // Makes sure the Status Byte is sent
-						c = _spi_instance->transfer(_received_buffer[size]);  // Replies the last char to trigger END in return
+						c = _spi_instance->transfer(message_buffer[size]);  // Replies the last char to trigger END in return
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\t\tReceived LAST"));
 						#endif
@@ -304,7 +304,7 @@ protected:
 							Serial.println(F("\t\tERROR: END NOT received"));
 							#endif
 						}
-					} else if (size == TALKIE_BUFFER_SIZE) {
+					} else if (size == buffer_size) {
 						delayMicroseconds(12);    // Makes sure the Status Byte is sent
 						_spi_instance->transfer(TALKIE_SB_FULL);
 						size = 1;	// Try no more
@@ -364,7 +364,7 @@ protected:
                 #ifdef BROADCAST_SPI_DEBUG_1
                 if (size > 1) {
                     Serial.print("Received message: ");
-					Serial.write(_received_buffer, size - 1);
+					Serial.write(message_buffer, size - 1);
                     Serial.println();
                 } else {
                 	#ifdef BROADCAST_SPI_DEBUG_2
@@ -440,6 +440,51 @@ protected:
         return acknowledge;
     }
 
+
+    // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
+    void _receive() override {
+
+		if (_spi_instance) {
+
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			_reference_time = millis();
+			#endif
+
+			JsonMessage new_message;
+			char* message_buffer = new_message._write_buffer(TALKIE_BUFFER_SIZE);
+			size_t length = receiveSPI(_ss_pin, message_buffer, TALKIE_BUFFER_SIZE);
+
+			if (length > 0) {
+				
+				new_message._set_length(length);
+				if (new_message._validate_json()) {
+					
+					#ifdef BROADCAST_SPI_DEBUG_TIMING
+					Serial.print("\n\treceive: ");
+					Serial.print(millis() - _reference_time);
+					#endif
+						
+					#ifdef BROADCAST_SPI_DEBUG
+					Serial.print(F("\treceive1: Received message: "));
+					Serial.write(message_buffer, length);
+					Serial.println();
+					Serial.print(F("\treceive2: Received length: "));
+					Serial.println(length);
+					#endif
+
+					new_message._process_checksum();	// Required step
+					_startTransmission(new_message);
+					
+					#ifdef BROADCAST_SPI_DEBUG_TIMING
+					Serial.print(" | ");
+					Serial.print(millis() - _reference_time);
+					#endif
+
+				}
+			}
+		}
+    }
+
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     bool _send(const JsonMessage& json_message) override {
@@ -462,7 +507,9 @@ protected:
 			Serial.println(_sending_length);
 			#endif
 			
-			sendSPI(_sending_length, _ss_pin);
+			const char* message_buffer = json_message._read_buffer();
+			size_t message_length = json_message._get_length();
+			sendSPI(_ss_pin, message_buffer, message_length);
 
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print(" | ");
@@ -472,52 +519,6 @@ protected:
 			return true;
 		}
         return false;
-    }
-
-	
-    // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    void _receive() override {
-
-		if (_spi_instance) {
-
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			_reference_time = millis();
-			#endif
-
-			uint8_t length = receiveSPI(_ss_pin);
-
-			if (length > 0) {
-				
-				#ifdef BROADCAST_SPI_DEBUG_TIMING
-				Serial.print("\n\treceive: ");
-				Serial.print(millis() - _reference_time);
-				#endif
-					
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.print(F("\treceive1: Received message: "));
-				Serial.write(_received_buffer, length);
-				Serial.println();
-				Serial.print(F("\treceive2: Received length: "));
-				Serial.println(length);
-				Serial.print(F("\t\t"));
-				Serial.print(class_name());
-				Serial.print(F(" is triggering the talkers with the received message from the SS pin: "));
-				Serial.println(_ss_pins[ss_pin_i]);
-				#endif
-
-				_received_length = length;
-				_startTransmission();
-				
-				#ifdef BROADCAST_SPI_DEBUG_TIMING
-				Serial.print(" | ");
-				Serial.print(millis() - _reference_time);
-				#endif
-
-			}
-			// Makes sure the _received_buffer is deleted with 0
-			_received_length = 0;
-			
-		}
     }
 
 
