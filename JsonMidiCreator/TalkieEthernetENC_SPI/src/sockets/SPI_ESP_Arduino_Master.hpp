@@ -600,7 +600,6 @@ protected:
 							#endif
 
 							_actual_ss_pin_i = ss_pin_i;
-							_received_length = length;
 							_startTransmission(new_message);
 							
 							#ifdef BROADCAST_SPI_DEBUG_TIMING

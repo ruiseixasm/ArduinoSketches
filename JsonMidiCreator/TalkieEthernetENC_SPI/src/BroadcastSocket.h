@@ -76,7 +76,6 @@ protected:
 	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
     char _sending_buffer[TALKIE_BUFFER_SIZE];
-	size_t _received_length = 0;
 	size_t _sending_length = 0;
 
     // Pointer PRESERVE the polymorphism while objects don't!
@@ -133,7 +132,7 @@ protected:
 			Serial.print(F("\thandleTransmission1.1: "));
 			json_message.write_to(Serial);
 			Serial.print(" | ");
-			Serial.println(_received_length);
+			Serial.println(json_message._get_length());
 			#endif
 
 			
@@ -178,7 +177,6 @@ protected:
 								Serial.println(remote_delay);
 								#endif
 								_drops_count++;
-								_received_length = 0;	// Enables new receiving
 								return;  // Out of time package (too late)
 							}
 						}
@@ -209,7 +207,6 @@ protected:
 			_showReceivedMessage(json_message); // Gives a chance to show it before transmitting
 			_transmitToRepeater(json_message);
 		}
-		_received_length = 0;	// Enables new receiving
     }
 
 
