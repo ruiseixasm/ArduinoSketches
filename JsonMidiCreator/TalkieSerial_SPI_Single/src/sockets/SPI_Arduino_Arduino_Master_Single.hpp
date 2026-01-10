@@ -246,7 +246,7 @@ protected:
     }
 
 
-    size_t receiveSPI(int ss_pin, char* message_buffer, size_t buffer_size) {
+    size_t receiveSPI(int ss_pin, char* message_buffer, size_t buffer_size = TALKIE_BUFFER_SIZE) {
         size_t size = 0;	// No interrupts, so, not volatile
         uint8_t c;			// Avoid using 'char' while using values above 127
 
@@ -451,8 +451,8 @@ protected:
 			#endif
 
 			JsonMessage new_message;
-			char* message_buffer = new_message._write_buffer(TALKIE_BUFFER_SIZE);
-			size_t length = receiveSPI(_ss_pin, message_buffer, TALKIE_BUFFER_SIZE);
+			char* message_buffer = new_message._write_buffer();
+			size_t length = receiveSPI(_ss_pin, message_buffer);
 
 			if (length > 0) {
 				
