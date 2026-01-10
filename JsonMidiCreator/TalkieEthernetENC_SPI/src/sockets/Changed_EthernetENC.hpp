@@ -84,10 +84,11 @@ protected:
 					
 				}
 
-				// Avoids overflow
-				if (packetSize > TALKIE_BUFFER_SIZE) return;
+				JsonMessage new_message;
+				char* json_buffer = new_message.write_buffer(packetSize);
+				if (!json_buffer) return;	// Avoids overflow
 
-				int length = _udp->read(_received_buffer, static_cast<size_t>(packetSize));
+				int length = _udp->read(json_buffer, static_cast<size_t>(packetSize));
 				if (length > 0) {
 				
 					#ifdef BROADCAST_ETHERNETENC_DEBUG
@@ -102,9 +103,7 @@ protected:
 					#endif
 					
 					_source_ip = _udp->remoteIP();
-					// Makes sure the _received_length is set
-					_received_length = (size_t)length;
-					_startTransmission();
+					_startTransmission(new_message);
 				}
 			}
 		}

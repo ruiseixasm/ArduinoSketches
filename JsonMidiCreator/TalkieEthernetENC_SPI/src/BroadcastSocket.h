@@ -120,29 +120,7 @@ protected:
      * 
      * @note This method resets the _received_length to 0.
      */
-    void _startTransmission() {
-
-		// Trim trailing newline and carriage return characters or any other that isn't '}'
-		while (_received_length > 26 
-			&& (_received_buffer[_received_length - 1] != '}' || _received_buffer[_received_length - 2] == '\\')) {
-			_received_length--;	// Note that literals add the '\0'!
-		}
-
-		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
-		if (_received_length < 27) {
-			_received_length = 0;	// Enables new receiving
-			return;
-		}
-
-		if (_received_buffer[0] != '{') {
-			_received_length = 0;	// Enables new receiving
-			return;	
-		}
-
-		// There is no need to validate or assert the existent of any field,
-		// simple because their non existence will result in the default 
-		// and innocuous value of Talkie Codes
-		JsonMessage json_message(_received_buffer, _received_length);
+    void _startTransmission(JsonMessage& json_message) {
 
 		if (json_message._validate_checksum()) {	// It also removes the 'c' field from the json_message
 
@@ -411,7 +389,7 @@ public:
 				
 				uint16_t checksum = JsonMessage::_generateChecksum(_sending_buffer, _sending_length);
 				JsonMessage::_set_number('c', checksum, _sending_buffer, &_sending_length);
-				
+
 				json_message._insert_checksum();
 				message_sent = _send(json_message);
 

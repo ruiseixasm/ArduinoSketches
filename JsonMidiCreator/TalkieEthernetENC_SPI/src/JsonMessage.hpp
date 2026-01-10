@@ -598,6 +598,11 @@ public:
     }
 
 
+	void set_length(size_t length) {
+        _json_length = length;
+    }
+
+
     /**
      * @brief Reset to default message
      * 
