@@ -689,8 +689,14 @@ public:
 		size_t c_colon_position = _get_colon_position('c', _json_payload, _json_length);
 		uint16_t received_checksum = _get_value_number('c', _json_payload, _json_length, c_colon_position);
 		_remove('c', _json_payload, &_json_length, c_colon_position);
-		uint16_t generated_checksum = _generateChecksum(_json_payload, _json_length);
-		return received_checksum == generated_checksum;
+		uint16_t checksum = _generateChecksum(_json_payload, _json_length);
+		if (checksum != received_checksum) {
+			// Mark error message as noise and dispatch it to be processed by the respective Talker
+			set_message_value(MessageValue::TALKIE_MSG_NOISE);
+			set_error_value(ErrorValue::TALKIE_ERR_CHECKSUM);
+			return false;
+		}
+		return true;
 	}
 
 
