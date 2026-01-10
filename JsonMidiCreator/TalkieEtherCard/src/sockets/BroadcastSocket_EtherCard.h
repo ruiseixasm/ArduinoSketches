@@ -52,12 +52,13 @@ private:
         Serial.println(length);
         #endif
 
-        if (length && length < TALKIE_BUFFER_SIZE) {
-            memcpy(_ptr_received_buffer, data, length);
-            memcpy(_source_ip, src_ip, 4);
-            _data_length = length;	// Where is marked as received (> 0)
-        } else {
-			_data_length = 0;
+        if (length) {
+			char* message_buffer = _json_message._write_buffer(length);
+			if (message_buffer) {
+				memcpy(message_buffer, data, length);
+				memcpy(_source_ip, src_ip, 4);
+				_data_length = length;	// Where is marked as received (> 0)
+			}
 		}
     }
 
@@ -76,7 +77,6 @@ protected:
 		_data_length = 0;	// Makes sure this is only called once per message received (it's the Ethernet reading that sets it)
 		ether.packetLoop(ether.packetReceive());	// Updates the _data_length variable
 		if (_data_length) {
-			_received_length = _data_length;
 			
 			#ifdef BROADCAST_ETHERCARD_DEBUG
 			Serial.print(F("R: "));
@@ -84,26 +84,30 @@ protected:
 			Serial.println();
 			#endif
 
-			BroadcastSocket::_startTransmission();
-			_received_length = 0;
+			if (_json_message._validate_json()) {
+				_json_message._process_checksum();	// Has to be done before transmission
+				_startTransmission(_json_message);
+			}
 		}
     }
 
 
     bool _send(const JsonMessage& json_message) override {
         
+		const char* message_buffer = json_message._read_buffer();
+		size_t message_length = json_message._get_length();
 		uint8_t broadcastIp[4] = {255, 255, 255, 255};
 		
 		#ifdef BROADCAST_ETHERCARD_DEBUG
 		Serial.print(F("S: "));
-		Serial.write(_sending_buffer, _sending_length);
+		Serial.write(message_buffer, message_length);
 		Serial.println();
 		#endif
 
 		#ifdef ENABLE_DIRECT_ADDRESSING
-		ether.sendUdp(_sending_buffer, _sending_length, _port, _source_ip, _port);
+		ether.sendUdp(message_buffer, message_length, _port, _source_ip, _port);
 		#else
-		ether.sendUdp(_sending_buffer, _sending_length, _port, broadcastIp, _port);
+		ether.sendUdp(message_buffer, message_length, _port, broadcastIp, _port);
 		#endif
 
 		return true;

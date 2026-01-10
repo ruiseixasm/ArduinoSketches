@@ -590,7 +590,9 @@ public:
 
 
 	char* _write_buffer(size_t length) {
-        return (length <= TALKIE_BUFFER_SIZE) ? _json_payload : nullptr;
+		if (length > TALKIE_BUFFER_SIZE) return nullptr;
+		_json_length = length;
+        return _json_payload;
     }
 
 	
