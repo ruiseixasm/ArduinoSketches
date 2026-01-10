@@ -175,19 +175,19 @@ public:
 				
 			case 6:
 			{
-				if (test_json_message._get_value_type('m') != ValueType::TALKIE_VT_INTEGER) {
+				if (test_json_message.get_key_value_type('m') != ValueType::TALKIE_VT_INTEGER) {
 					json_message.set_nth_value_string(0, "m");
-					json_message.set_nth_value_number(1, static_cast<int>(test_json_message._get_value_type('m')));
+					json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_key_value_type('m')));
 					return false;
 				}
-				if (test_json_message._get_value_type('f') != ValueType::TALKIE_VT_STRING) {
+				if (test_json_message.get_key_value_type('f') != ValueType::TALKIE_VT_STRING) {
 					json_message.set_nth_value_string(0, "f");
-					json_message.set_nth_value_number(1, static_cast<int>(test_json_message._get_value_type('f')));
+					json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_key_value_type('f')));
 					return false;
 				}
-				if (test_json_message._get_value_type('i') != ValueType::TALKIE_VT_INTEGER) {
+				if (test_json_message.get_key_value_type('i') != ValueType::TALKIE_VT_INTEGER) {
 					json_message.set_nth_value_string(0, "i");
-					json_message.set_nth_value_number(1, static_cast<int>(test_json_message._get_value_type('i')));
+					json_message.set_nth_value_number(1, static_cast<int>(test_json_message.get_key_value_type('i')));
 					return false;
 				}
 				return true;
@@ -197,9 +197,9 @@ public:
 			case 7:
 			{
 				
-				json_message.set_nth_value_number(0, test_json_message._get_value_number('i'));
+				json_message.set_nth_value_number(0, test_json_message.get_identity());
 				json_message.set_nth_value_number(1, 13825);
-				return test_json_message._get_value_number('i') == 13825;
+				return test_json_message.get_identity() == 13825;
 			}
 			break;
 				
@@ -211,7 +211,7 @@ public:
 				
 			case 9:
 			{
-				MessageValue message_value = static_cast<MessageValue>( test_json_message._get_value_number('m') );
+				MessageValue message_value = test_json_message.get_message_value();
 				json_message.set_nth_value_number(0, static_cast<int>(message_value));
 				json_message.set_nth_value_number(1, static_cast<int>(MessageValue::TALKIE_MSG_ECHO));
 				return message_value == MessageValue::TALKIE_MSG_ECHO;
