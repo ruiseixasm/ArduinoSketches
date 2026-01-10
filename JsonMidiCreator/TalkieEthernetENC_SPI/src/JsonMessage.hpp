@@ -583,12 +583,17 @@ public:
      * @brief Get current JSON length
      * @return Length of JSON string (not including null terminator)
      */
-	size_t _message_length() const {
+	size_t _get_length() const {
 		return _json_length;
 	}
 
 
-	const char* _message_payload() const {
+	void _set_length(size_t length) {
+        _json_length = length;
+    }
+
+
+	const char* _read_buffer() const {
 		return _json_payload;
 	}
 
@@ -597,12 +602,7 @@ public:
         return (length <= TALKIE_BUFFER_SIZE) ? _json_payload : nullptr;
     }
 
-
-	void _set_length(size_t length) {
-        _json_length = length;
-    }
-
-
+	
     /**
      * @brief Reset to default message
      * 

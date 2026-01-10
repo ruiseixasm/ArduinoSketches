@@ -375,7 +375,7 @@ public:
 			Serial.print(millis() - json_message._reference_time);
 			#endif
 				
-			if (json_message._message_length() > 0) {
+			if (json_message._get_length() > 0) {
 				
 				uint16_t checksum = JsonMessage::_generateChecksum(_sending_buffer, _sending_length);
 				JsonMessage::_set_number('c', checksum, _sending_buffer, &_sending_length);
