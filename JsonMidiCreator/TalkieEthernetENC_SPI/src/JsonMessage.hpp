@@ -658,6 +658,28 @@ public:
 	}
 
 
+	bool _validate_json() {
+		
+		// Trim trailing newline and carriage return characters or any other that isn't '}'
+		while (_json_length > 26 
+			&& (_json_payload[_json_length - 1] != '}' || _json_payload[_json_length - 2] == '\\')) {
+			_json_length--;	// Note that literals add the '\0'!
+		}
+
+		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
+		if (_json_length < 27) {
+			_json_length = 0;	// Enables new receiving
+			return false;
+		}
+
+		if (_json_payload[0] != '{') {
+			_json_length = 0;	// Enables new receiving
+			return false;	
+		}
+		return true;
+	}
+
+
 	bool _validate_checksum() {
 		size_t c_colon_position = _get_colon_position('c', _json_payload, _json_length);
 		uint16_t received_checksum = _get_value_number('c', _json_payload, _json_length, c_colon_position);
