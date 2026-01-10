@@ -147,7 +147,10 @@ protected:
 			Serial.print(" | ");
 			Serial.println(as_reply);
 			Serial.print(F("\t\t\t\t\tsend buff: "));
-			Serial.write(json_message._read_buffer(), _sending_length);
+			Serial.write(
+				json_message._read_buffer()),
+				json_message._get_length()
+			);
 			Serial.print(" | ");
 			Serial.println(_sending_length);
 			#endif
@@ -202,7 +205,10 @@ protected:
             }
 
             #ifdef BROADCAST_ETHERNETENC_DEBUG
-            Serial.write(json_message._read_buffer(), _sending_length);
+            Serial.write(
+				json_message._read_buffer()),
+				json_message._get_length()
+			);
             Serial.println();
             #endif
 
