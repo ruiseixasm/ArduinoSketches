@@ -2,7 +2,6 @@
 
 Multiple manifestos that can be used with the [JsonTalkie](https://github.com/ruiseixasm/JsonTalkie)
 software by implementing its `TalkerManifesto` interface.
-
 You can see many examples of manifestos right in [this same folder](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/manifestos).
 ## Implementation
 You can create many Manifestos to different scenarios by extending the `TalkerManifesto` class.

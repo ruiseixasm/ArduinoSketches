@@ -1,6 +1,7 @@
 # JsonTalkie - Broadcast Sockets
 
 Multiple sockets that can be used with the [JsonTalkie](https://github.com/ruiseixasm/JsonTalkie) software by implementing its `BroadcastSocket` interface.
+You can see many examples of sockets right in [this same folder](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/sockets).
 
 ## Implementation
 You can always implement your own socket, by extending the `BroadcastSocket` class. To do so, you must override the following methods:
@@ -10,7 +11,7 @@ You can always implement your own socket, by extending the `BroadcastSocket` cla
 	bool _send(const JsonMessage& json_message) override {}
 ```
 The methods above should follow these basic rules:
-- In the `_receive` method you must create a `JsonMessage` and write on it or deserialize on it the data received, on that `new_message` you shall always call the methods `_validate_json` and `_process_checksum`. After that, it should be called the method `_startTransmission` to process the received data. See example bellow or sockets implementations in [this same folder](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/sockets) for details;
+- In the `_receive` method you must create a `JsonMessage` and write on it or deserialize on it the data received, on that `new_message` you shall always call the methods `_validate_json` and `_process_checksum`. After that, it should be called the method `_startTransmission` to process the received data. See example bellow for details;
 - In the `_send` method you must read from the `json_message` buffer with the help of the methods `_read_buffer` and `_get_length`.
 ### Example
 Here is an example of such implementation for the Serial protocol:
