@@ -62,7 +62,7 @@ protected:
 						#endif
 
 						if (serial_message._append('}') && serial_message._validate_json()) {
-							serial_message._validate_checksum();	// Has to validate and process the checksum
+							serial_message._process_checksum();	// Has to validate and process the checksum
 							_startTransmission(serial_message);
 						}
 						return;
