@@ -89,22 +89,29 @@ protected:
 	
     void _receive() override {
 
-		uint8_t length = _received_length;
+		if (_received_length) {
 
-		if (length) {
-			
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\treceive1: Received message: "));
-			Serial.write(_received_buffer, length);
-			Serial.println();
-			Serial.print(F("\treceive1: Received length: "));
-			Serial.println(length);
-			#endif
-			
-			_received_length = length;
-			BroadcastSocket::_startTransmission();
-			_received_length = 0;	// Allows the device to receive more data
-			_received_length = 0;
+			JsonMessage new_message;
+			if (new_message.deserialize_buffer(_received_buffer, _received_length)) {
+				
+				#ifdef BROADCAST_SPI_DEBUG
+				Serial.print(F("\treceive1: Received message: "));
+				Serial.write(_received_buffer, _received_length);
+				Serial.println();
+				Serial.print(F("\treceive1: Received length: "));
+				Serial.println(_received_length);
+				#endif
+				
+				_received_length = 0;	// Allows the device to receive more data
+				
+				if (new_message._validate_json()) {
+					new_message._process_checksum();	// Has to validate and process the checksum
+					BroadcastSocket::_startTransmission(new_message);
+				}
+
+			} else {
+				_received_length = 0;	// Discards the data regardless
+			}
 		}
     }
 
