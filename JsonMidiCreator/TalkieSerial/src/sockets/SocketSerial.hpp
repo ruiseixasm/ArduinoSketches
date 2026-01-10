@@ -98,24 +98,22 @@ protected:
 		Serial.print(millis() - _reference_time);
 		#endif
 
+		
+		#ifdef SOCKET_SERIAL_DEBUG_TIMING
+		Serial.print(" | ");
+		Serial.print(millis() - _reference_time);
+		#endif
+		
+		const char* message_buffer = json_message._read_buffer();
 		size_t message_length = json_message._get_length();
-		if (message_length) {
+		if (Serial.write(message_buffer, message_length) == message_length) {
 			
 			#ifdef SOCKET_SERIAL_DEBUG_TIMING
 			Serial.print(" | ");
 			Serial.print(millis() - _reference_time);
 			#endif
 
-			const char* message_buffer = json_message._read_buffer();
-			if (Serial.write(message_buffer, message_length) == message_length) {
-				
-				#ifdef SOCKET_SERIAL_DEBUG_TIMING
-				Serial.print(" | ");
-				Serial.print(millis() - _reference_time);
-				#endif
-
-				return true;
-			}
+			return true;
 		}
 		return false;
     }

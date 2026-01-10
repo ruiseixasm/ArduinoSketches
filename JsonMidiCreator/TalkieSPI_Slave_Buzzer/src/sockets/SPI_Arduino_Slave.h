@@ -54,10 +54,10 @@ protected:
 	static char _sending_buffer[TALKIE_BUFFER_SIZE];
 
     volatile static uint8_t _receiving_index;
-	volatile static uint8_t _received_length_spi;
+	volatile static uint8_t _received_length;
     volatile static uint8_t _sending_index;
     volatile static uint8_t _validation_index;
-	volatile static uint8_t _sending_length_spi;
+	volatile static uint8_t _sending_length;
     volatile static StatusByte _transmission_mode;
 
 
@@ -87,9 +87,31 @@ protected:
         }
 
 	
+    void _receive() override {
+
+		uint8_t length = _received_length;
+
+		if (length) {
+			
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print(F("\treceive1: Received message: "));
+			Serial.write(_received_buffer, length);
+			Serial.println();
+			Serial.print(F("\treceive1: Received length: "));
+			Serial.println(length);
+			#endif
+			
+			_received_length = length;
+			BroadcastSocket::_startTransmission();
+			_received_length = 0;	// Allows the device to receive more data
+			_received_length = 0;
+		}
+    }
+
+
 	bool _unlockSendingBuffer() override {
 		uint16_t start_waiting = (uint16_t)millis();
-		while (_sending_length_spi) {
+		while (_sending_length) {
 			if ((uint16_t)millis() - start_waiting > 1000 * 3) {
 
 				#ifdef BROADCASTSOCKET_DEBUG
@@ -118,31 +140,9 @@ protected:
 		Serial.println(_sending_length);
 		#endif
 
-		// Marks the sending buffer ready to be sent
-		_sending_length_spi = _sending_length;
+		_sending_length = json_message.serialize_json(_sending_buffer, TALKIE_BUFFER_SIZE);
 			
         return true;
-    }
-
-    void _receive() override {
-
-		uint8_t length = _received_length_spi;
-
-		if (length) {
-			
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\treceive1: Received message: "));
-			Serial.write(_received_buffer, length);
-			Serial.println();
-			Serial.print(F("\treceive1: Received length: "));
-			Serial.println(length);
-			#endif
-			
-			_received_length = length;
-			BroadcastSocket::_startTransmission();
-			_received_length_spi = 0;	// Allows the device to receive more data
-			_received_length = 0;
-		}
     }
 
 
@@ -198,9 +198,9 @@ public:
                     }
                     break;
                 case TALKIE_SB_SEND:
-					if (_sending_index < _sending_length_spi) {
+					if (_sending_index < _sending_length) {
 						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
-					} else if (_sending_index == _sending_length_spi) {
+					} else if (_sending_index == _sending_length) {
 						SPDR = TALKIE_SB_LAST;	// Asks for the TALKIE_SB_LAST char
 					} else {	// Less missed sends this way
 						SPDR = TALKIE_SB_END;		// All chars have been checked
@@ -231,7 +231,7 @@ public:
             switch (c) {
                 case TALKIE_SB_RECEIVE:
                     if (_received_buffer) {
-						if (!_received_length_spi) {
+						if (!_received_length) {
 							_transmission_mode = TALKIE_SB_RECEIVE;
 							_receiving_index = 0;
 							SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
@@ -250,9 +250,9 @@ public:
                     break;
                 case TALKIE_SB_SEND:
                     if (_sending_buffer) {
-                        if (_sending_length_spi) {
-							if (_sending_length_spi > TALKIE_BUFFER_SIZE) {
-								_sending_length_spi = 0;
+                        if (_sending_length) {
+							if (_sending_length > TALKIE_BUFFER_SIZE) {
+								_sending_length = 0;
 								SPDR = TALKIE_SB_FULL;
 							} else {
 								_transmission_mode = TALKIE_SB_SEND;
@@ -276,20 +276,20 @@ public:
                 case TALKIE_SB_LAST:
 					if (_transmission_mode == TALKIE_SB_RECEIVE) {
 						SPDR = _received_buffer[_receiving_index - 1];
-                    } else if (_transmission_mode == TALKIE_SB_SEND && _sending_length_spi > 0) {
-						SPDR = _sending_buffer[_sending_length_spi - 1];
+                    } else if (_transmission_mode == TALKIE_SB_SEND && _sending_length > 0) {
+						SPDR = _sending_buffer[_sending_length - 1];
                     } else {
 						SPDR = TALKIE_SB_NONE;
 					}
                     break;
                 case TALKIE_SB_END:
 					if (_transmission_mode == TALKIE_SB_RECEIVE) {
-						_received_length_spi = _receiving_index;
+						_received_length = _receiving_index;
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tReceived message"));
 						#endif
                     } else if (_transmission_mode == TALKIE_SB_SEND) {
-                        _sending_length_spi = 0;	// Makes sure the sending buffer is zeroed
+                        _sending_length = 0;	// Makes sure the sending buffer is zeroed
 						#ifdef BROADCAST_SPI_DEBUG_1
 						Serial.println(F("\tSent message"));
 						#endif
