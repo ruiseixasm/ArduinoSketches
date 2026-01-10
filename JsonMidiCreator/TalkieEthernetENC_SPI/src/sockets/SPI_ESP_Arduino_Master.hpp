@@ -530,7 +530,7 @@ protected:
 
 			} else {    // Broadcast mode
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-					sendSPI(_sending_length, _ss_pins[ss_pin_i]);
+					sendSPI(_ss_pins[ss_pin_i], message_buffer, message_length);
 				}
 				
 				#ifdef BROADCAST_SPI_DEBUG
@@ -540,7 +540,7 @@ protected:
 			}
 			#else
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				sendSPI(_sending_length, _ss_pins[ss_pin_i]);
+				sendSPI(_ss_pins[ss_pin_i], message_buffer, message_length);
 			}
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
