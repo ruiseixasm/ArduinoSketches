@@ -358,11 +358,9 @@ public:
 			Serial.println();  // optional: just to add a newline after the JSON
 			#endif
 
-			_sending_length = json_message.serialize_json(_sending_buffer, TALKIE_BUFFER_SIZE);
-
 			#ifdef BROADCASTSOCKET_DEBUG_NEW
 			Serial.print(F("socketSend3: "));
-			Serial.write(_sending_buffer, _sending_length);
+			Serial.write(json_message._read_buffer(), _sending_length);
 			Serial.print(" | ");
 			Serial.println(_sending_length);
 			#endif
@@ -374,9 +372,6 @@ public:
 				
 			if (json_message._get_length() > 0) {
 				
-				uint16_t checksum = JsonMessage::_generateChecksum(_sending_buffer, _sending_length);
-				JsonMessage::_set_number('c', checksum, _sending_buffer, &_sending_length);
-
 				json_message._insert_checksum();
 				message_sent = _send(json_message);
 

@@ -84,8 +84,8 @@ protected:
     // Specific methods associated to Arduino SPI as Master
 
 	
-    bool sendSPI(uint8_t length, int ss_pin) {
-        uint8_t size = 0;	// No interrupts, so, not volatile
+    bool sendSPI(int ss_pin, const char* message_buffer, size_t length) {
+        size_t size = 0;	// No interrupts, so, not volatile
 		
 		#ifdef BROADCAST_SPI_DEBUG_1
 		Serial.print(F("\tSending on pin: "));
@@ -116,16 +116,16 @@ protected:
 				if (c != TALKIE_SB_VOID) {
 
 					delayMicroseconds(12);	// Makes sure it's processed by the slave (12us) (critical path)
-					c = _spi_instance->transfer(_sending_buffer[0]);
+					c = _spi_instance->transfer(message_buffer[0]);
 
 					if (c == TALKIE_SB_READY) {	// Makes sure the Slave it's ready first
 					
 						for (uint8_t i = 1; i < length; i++) {
 							delayMicroseconds(send_delay_us);
-							c = _spi_instance->transfer(_sending_buffer[i]);	// Receives the echoed _sending_buffer[i - 1]
+							c = _spi_instance->transfer(message_buffer[i]);	// Receives the echoed message_buffer[i - 1]
 							if (c < 128) {
 								// Offset of 2 picks all mismatches than an offset of 1
-								if (i > 1 && c != _sending_buffer[i - 2]) {
+								if (i > 1 && c != message_buffer[i - 2]) {
 									#ifdef BROADCAST_SPI_DEBUG_1
 									Serial.print(F("\t\tERROR: Char mismatch at index: "));
 									Serial.println(i - 2);
@@ -147,10 +147,10 @@ protected:
 						// Checks the last 2 chars still to be checked
 						delayMicroseconds(12);    // Makes sure the Status Byte is sent
 						c = _spi_instance->transfer(TALKIE_SB_LAST);
-						if (c == _sending_buffer[length - 2]) {
+						if (c == message_buffer[length - 2]) {
 							delayMicroseconds(12);    // Makes sure the Status Byte is sent
 							c = _spi_instance->transfer(TALKIE_SB_END);
-							if (c == _sending_buffer[length - 1]) {	// Last char
+							if (c == message_buffer[length - 1]) {	// Last char
 								size = length + 1;	// Just for error catch
 								// Makes sure Slave does the respective sets
 								for (uint8_t end_r = 0; c != TALKIE_SB_DONE && end_r < 3; end_r++) {	// Makes sure the receiving buffer of the Slave is deleted, for sure!
@@ -243,7 +243,7 @@ protected:
     }
 
 
-    size_t receiveSPI(int ss_pin, char* message_buffer, size_t length) {
+    size_t receiveSPI(int ss_pin, char* message_buffer, size_t max_length) {
         size_t size = 0;	// No interrupts, so, not volatile
         uint8_t c;			// Avoid using 'char' while using values above 127
 
@@ -272,7 +272,7 @@ protected:
 					message_buffer[0] = c;
 
 					// Starts to receive all chars here
-					for (uint8_t i = 1; c < 128 && i < length; i++) { // First i isn't a char byte
+					for (uint8_t i = 1; c < 128 && i < max_length; i++) { // First i isn't a char byte
 						delayMicroseconds(receive_delay_us);
 						c = _spi_instance->transfer(message_buffer[i - 1]);
 						message_buffer[i] = c;
@@ -301,7 +301,7 @@ protected:
 							Serial.println(F("\t\tERROR: END NOT received"));
 							#endif
 						}
-					} else if (size == length) {
+					} else if (size == max_length) {
 						delayMicroseconds(12);    // Makes sure the Status Byte is sent
 						_spi_instance->transfer(TALKIE_SB_FULL);
 						size = 1;	// Try no more
