@@ -584,9 +584,9 @@ public:
 
 	
     /**
-     * @brief Reset to default message
+     * @brief Reset to bare minimum message
      * 
-     * Resets to: `{"m":0,"b":0,"i":0,"f":"n"}`
+     * Resets to: `{}`
      */
 	void reset() {
 		_reset();
@@ -643,6 +643,10 @@ public:
 	}
 
 
+    /**
+     * @brief Validates the delimiters while adjusting the last `}` one if necessary
+     * @return true if the message is correctly delimited inside `{}`
+     */
 	bool _validate_json() {
 		
 		// Trim trailing newline and carriage return characters or any other that isn't '}'
@@ -651,7 +655,7 @@ public:
 			_json_length--;	// Note that literals add the '\0'!
 		}
 
-		// Minimum length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
+		// Minimum valid length: '{"m":0,"b":0,"i":0,"f":"n"}' = 27
 		if (_json_length < 27) {
 			_reset();
 			return false;
@@ -665,6 +669,12 @@ public:
 	}
 
 
+    /**
+     * @brief Checks if the checksum of the message matches the on in the respective field,
+	 *        if not, sets the message value as `NOISE`, so, it still shall be transmitted in order
+	 *        to be processed by the Talker and be returned as error to the original sender
+     * @return true if it has a valid checksum
+     */
 	bool _process_checksum() {
 		size_t c_colon_position = _get_colon_position('c');
 		uint16_t received_checksum = _get_value_number('c', c_colon_position);
@@ -680,17 +690,15 @@ public:
 	}
 
 
+    /**
+     * @brief Generates a new message checksum and inserts it in the message
+     * @return true if it had space to insert the checksum field
+     */
 	bool _insert_checksum() {
 		// Starts by clearing any pre existent checksum (NO surprises or miss receives)
 		_remove('c');
 		uint16_t checksum = _generateChecksum();
 		return _set_number('c', checksum);
-	}
-
-
-	void _remove_checksum() {
-		// Makes sure any existent checksum is removed first
-		_remove('c');
 	}
 
 
@@ -1166,6 +1174,12 @@ public:
     // ============================================
     // REMOVERS - FIELD DELETION
     // ============================================
+
+    /** @brief Remove checksum field */
+	void remove_checksum() {
+		_remove('c');
+	}
+	
 
     /** @brief Remove message field */
 	void remove_message() {
