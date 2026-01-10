@@ -61,14 +61,13 @@ protected:
 						Serial.print(millis() - _reference_time);
 						#endif
 
-						message_buffer[serial_message._increment_length()] = '}';
-						if (serial_message._validate_json()) {
+						if (serial_message._append('}') && serial_message._validate_json()) {
 							serial_message._validate_checksum();	// Has to validate and process the checksum
 							_startTransmission(serial_message);
 						}
 						return;
-					} else {
-						message_buffer[serial_message._increment_length()] = c;
+					} else if (!serial_message._append(c)) {
+						return;
 					}
 				} else {
 					_reading_serial = false;
@@ -85,7 +84,7 @@ protected:
 				Serial.print(": ");
 				#endif
 
-				message_buffer[serial_message._increment_length()] = '{';
+				serial_message._append('{')
 			}
 		}
     }

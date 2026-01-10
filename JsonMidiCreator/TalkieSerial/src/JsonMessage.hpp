@@ -574,10 +574,13 @@ public:
     }
 
 
-	size_t _increment_length() {
-        return _json_length++;
-    }
-
+	bool _append(char c) {
+		if (_json_length < TALKIE_BUFFER_SIZE) {
+			_json_payload[_json_length++] = c;
+			return true;
+		}
+		return false;
+	}
 
 
 	const char* _read_buffer() const {
