@@ -401,7 +401,7 @@ public:
 					uint8_t total_actions = _manifesto->_actionsCount();	// This makes the access safe
 					const TalkerManifesto::Action* actions = _manifesto->_getActionsArray();
 					for (uint8_t action_i = 0; action_i < total_actions; ++action_i) {
-						json_message.remove_all_nth_values();	// Makes sure there is space for new action
+						json_message.remove_all_nth_values();	// Makes sure there is space for each new action
 						json_message.set_nth_value_number(0, action_i);
 						json_message.set_nth_value_string(1, actions[action_i].name);
 						json_message.set_nth_value_string(2, actions[action_i].desc);
