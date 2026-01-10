@@ -611,8 +611,6 @@ protected:
 						}
 					}
 				}
-				// Makes sure the _received_buffer is deleted with 0
-				_received_length = 0;
 			}
 		}
     }
