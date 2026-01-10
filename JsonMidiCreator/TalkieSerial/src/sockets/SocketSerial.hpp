@@ -48,7 +48,7 @@ protected:
 		while (Serial.available()) {
 			char c = Serial.read();
 
-			char* message_buffer = _json_message._write_buffer(TALKIE_BUFFER_SIZE);
+			char* message_buffer = _json_message._write_buffer(0);
 			if (_reading_serial) {
 
 				size_t message_length = _json_message._get_length();

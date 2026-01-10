@@ -454,7 +454,7 @@ protected:
 				#endif
 
 				JsonMessage new_message;
-				char* message_buffer = new_message._write_buffer(TALKIE_BUFFER_SIZE);
+				char* message_buffer = new_message._write_buffer(0);
 
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 					
