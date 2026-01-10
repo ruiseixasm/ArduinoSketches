@@ -84,7 +84,7 @@ protected:
 				Serial.print(": ");
 				#endif
 
-				serial_message._append('{')
+				serial_message._append('{');
 			}
 		}
     }

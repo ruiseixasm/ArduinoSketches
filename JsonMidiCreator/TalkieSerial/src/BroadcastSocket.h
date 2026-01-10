@@ -346,9 +346,8 @@ public:
 			Serial.print(millis() - json_message._reference_time);
 			#endif
 				
-			if (json_message._get_length() > 0) {
+			if (json_message._get_length() && json_message._insert_checksum()) {
 				
-				json_message._insert_checksum();
 				message_sent = _send(json_message);
 
 				#ifdef MESSAGE_DEBUG_TIMING

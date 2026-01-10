@@ -691,8 +691,8 @@ public:
 
 
 	bool _insert_checksum() {
-		// Makes sure NO checksum exists first
-		if (has_checksum()) return true;
+		// Starts by clearing any pre existent checksum (NO surprises or miss receives)
+		_remove('c');
 		uint16_t checksum = _generateChecksum();
 		return _set_number('c', checksum);
 	}
