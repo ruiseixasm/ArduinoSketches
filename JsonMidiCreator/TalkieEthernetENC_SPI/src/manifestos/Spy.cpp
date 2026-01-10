@@ -141,6 +141,7 @@ void Spy::_echo(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talke
 
 
 void Spy::_error(JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) {
+    (void)talker;		// Silence unused parameter warning
     (void)talker_match;	// Silence unused parameter warning
 	ValueType value_type = json_message.get_nth_value_type(0);
 	switch (value_type) {
