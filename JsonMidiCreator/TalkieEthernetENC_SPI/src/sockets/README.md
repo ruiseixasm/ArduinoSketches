@@ -95,7 +95,7 @@ public:
 ## Ethernet
 ### BroadcastSocket_EtherCard
 Lightweight socket intended to be used with low memory boards like the Uno and the Nano, for the ethernet module `ENC28J60`.
-This library has the limitation of not being able to send unicast messages, all its responses are in broadcast mode, so, one
+This library has the limitation of not being able to send *unicast* messages, all its responses are in *broadcast* mode, so, one
 way to avoid it is to mute the Talker and in that way the `call` commands on it don't overload the network.
 ```
 >>> list nano
@@ -108,6 +108,20 @@ way to avoid it is to mute the Talker and in that way the `call` commands on it 
 >>> call nano 0
 >>>
 ```
+Not being able to work in unicast, means that the replies take have high latency or can even not reach the source
+if the message was sent via Wi-Fi.
+```
+>>> talk uno
+>>> talk uno
+	[talk uno]           	   Arduino Uno
+>>> ping uno
+>>> ping uno
+	[ping uno]           	   106
+>>>
+```
+Above, besides a long ping, 106 milliseconds, some replies weren't even received, so, this library shouldn't be
+used via Wi-Fi if replies are critical. Must be noted however, that this huge latency is mainly the due of the broadcasted reply,
+meaning that the received unicast message by the Uno board has the usual small latency.
 ### Changed_EthernetENC
 This is the best library to be used with the module `ENC28J60`, it requires more memory so it shall be used with an Arduino Mega
 or any other with similar amount of memory or more.
@@ -125,9 +139,19 @@ Comment the existing lines and add the new one as bellow:
 ```
 After these changes the library will start to receive broadcasted UDP messages too.
 For more details check the data sheet of the chip [ENC28J60](https://ww1.microchip.com/downloads/en/devicedoc/39662a.pdf).
+Contrary to the socket implementation `BroadcastSocket_EtherCard` described above, this socket does *unicast*, so,
+it can be used via Wi-Fi too without the latency referred above, 4 instead of 106 milliseconds.
+```
+>>> talk spy
+	[talk spy]           	   I'm a Spy and I spy the talkers' pings
+>>> ping spy
+	[ping spy]           	   4
+>>>
+```
 ### BroadcastSocket_Ethernet
 This socket is intended to be used with the original [Arduino Ethernet board](https://docs.arduino.cc/retired/shields/arduino-ethernet-shield-without-poe-module/),
-or other that has the chip `W5500` or `W5100`. Take note that depending on the board, the pins may vary, so read the following notes first.
+or other that has the chip `W5500` or `W5100`. Take note that depending on the board, the pins may vary, so read the
+following notes first.
 ```
 Arduino communicates with both the W5100 and SD card using the SPI bus (through the ICSP header).
 This is on digital pins 10, 11, 12, and 13 on the Uno and pins 50, 51, and 52 on the Mega. On both boards,
@@ -135,7 +159,14 @@ pin 10 is used to select the W5100 and pin 4 for the SD card. These pins cannot 
 On the Mega, the hardware SS pin, 53, is not used to select either the W5100 or the SD card,
 but it must be kept as an output or the SPI interface won't work.
 ```
-
+Contrary to the socket implementation `BroadcastSocket_EtherCard` described above, this socket does *unicast*, so,
+it can be used via Wi-Fi too without the latency referred above, 6 instead of 106 milliseconds.
+```
+>>> talk mega
+	[talk mega]          	   I'm a Mega talker
+>>> ping mega
+	[ping mega]          	   6
+>>>
 ## SPI
 SPI is among the most difficult protocols to implement, mainly in the Slave side. This happens because the SPI Arduino Slave is software based and the interrupts
 are done per byte and also they take their time, around, 12us. So, a message of 90 bytes long will take around 1 millisecond to be transmitted, this means that,
