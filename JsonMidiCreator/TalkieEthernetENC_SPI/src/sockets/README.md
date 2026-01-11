@@ -173,14 +173,16 @@ This socket is intended to be used with the boards ESP8266 or ESP32 that come wi
 
 Contrary to the socket implementation `BroadcastSocket_EtherCard` described above, this socket does *unicast*, so,
 it can be used via Wi-Fi too without the latency referred above, 6 instead of 106 milliseconds.
-```>>> talk blue
+```
+>>> talk blue
 	[talk blue]          	   I turn led Blue on and off
 >>> ping blue
 	[ping blue]          	   3
 >>>
 ```
 One thing to take into consideration though, is that the fist ping can be sent in Broadcast mode because the first command is also
-used to get the Talker address and only then the messages are sent in unicast mode afterwards. Talker's name vs IP address.
+used to get the Talker address and only then the messages are sent in unicast mode afterwards. So, in the example above,
+the `talk blue` command resulted in the association of the IP address with the Talker's name enabling the unicast `ping blue` command.
 ## SPI
 SPI is among the most difficult protocols to implement, mainly in the Slave side. This happens because the SPI Arduino Slave is software based and the interrupts
 are done per byte and also they take their time, around, 12us. So, a message of 90 bytes long will take around 1 millisecond to be transmitted, this means that,
