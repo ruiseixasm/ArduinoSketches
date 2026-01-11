@@ -391,6 +391,29 @@ private:
 
 
     /**
+     * @brief Set numeric value for a single digit field value
+     * @param key Key to set
+     * @param number Numeric value
+     * @param colon_position Optional hint for colon position
+     * @return true if successful, false if buffer too small
+     * 
+     * @note If key exists, the value is replaced. Otherwise, it's added before closing brace.
+     */
+	bool _set_single_digit_number(char key, uint32_t number, size_t colon_position = 4) {
+		if (number < 10) {
+			colon_position = _get_colon_position(key, colon_position);
+			if (colon_position) {
+				size_t value_position = _get_value_position(key, colon_position);
+				_json_payload[value_position] = '0' + number;
+			} else {
+				return _set_number(key, number);
+			}
+		}
+		return false;
+	}
+
+
+    /**
      * @brief Set string value for a key
      * @param key Key to set
      * @param in_string String value (null-terminated)
@@ -403,46 +426,45 @@ private:
 			for (size_t char_j = 0; in_string[char_j] != '\0' && char_j < TALKIE_BUFFER_SIZE; char_j++) {
 				length++;
 			}
-			if (length) {
-				colon_position = _get_colon_position(key, colon_position);
-				if (colon_position) _remove(key, colon_position);
-				// the usual key + 4 plus + 2 for both '"' and the + 1 due to the heading ',' needed to be added
-				size_t new_length = _json_length + length + 4 + 2 + 1;
-				if (new_length > TALKIE_BUFFER_SIZE) {
-					return false;
-				}
-				// Sets the key json data
-				char json_key[] = ",\"k\":";
-				json_key[2] = key;
-				// length to position requires - 1 and + 5 for the key (at '}' position + 5)
-				size_t setting_position = _json_length - 1 + 5;
-				if (_json_length > 2) {
-					for (size_t char_j = 0; char_j < 5; char_j++) {
-						_json_payload[_json_length - 1 + char_j] = json_key[char_j];
-					}
-				} else if (_json_length == 2) {	// Edge case of '{}'
-					new_length--;	// Has to remove the extra ',' considered above
-					setting_position--;
-					for (size_t char_j = 1; char_j < 5; char_j++) {
-						_json_payload[_json_length - 1 + char_j - 1] = json_key[char_j];
-					}
-				} else {
-					_reset();	// Something very wrong, needs to be reset
-					return false;
-				}
-				// Adds the first char '"'
-				_json_payload[setting_position++] = '"';
-				// To be added, it has to be from right to left
-				for (size_t char_j = 0; char_j < length; char_j++) {
-					_json_payload[setting_position++] = in_string[char_j];
-				}
-				// Adds the second char '"'
-				_json_payload[setting_position++] = '"';
-				// Finally writes the last char '}'
-				_json_payload[setting_position++] = '}';
-				_json_length = new_length;
-				return true;
+			// It can have empty strings too, so, a length can be 0!
+			colon_position = _get_colon_position(key, colon_position);
+			if (colon_position) _remove(key, colon_position);
+			// the usual key + 4 plus + 2 for both '"' and the + 1 due to the heading ',' needed to be added
+			size_t new_length = _json_length + length + 1 + 4 + 2;
+			if (new_length > TALKIE_BUFFER_SIZE) {
+				return false;
 			}
+			// Sets the key json data
+			char json_key[] = ",\"k\":";
+			json_key[2] = key;
+			// length to position requires - 1 and + 5 for the key (at '}' position + 5)
+			size_t setting_position = _json_length - 1 + 5;
+			if (_json_length > 2) {
+				for (size_t char_j = 0; char_j < 5; char_j++) {
+					_json_payload[_json_length - 1 + char_j] = json_key[char_j];
+				}
+			} else if (_json_length == 2) {	// Edge case of '{}'
+				new_length--;	// Has to remove the extra ',' considered above
+				setting_position--;
+				for (size_t char_j = 1; char_j < 5; char_j++) {
+					_json_payload[_json_length - 1 + char_j - 1] = json_key[char_j];
+				}
+			} else {
+				_reset();	// Something very wrong, needs to be reset
+				return false;
+			}
+			// Adds the first char '"'
+			_json_payload[setting_position++] = '"';
+			// To be added, it has to be from right to left
+			for (size_t char_j = 0; char_j < length; char_j++) {
+				_json_payload[setting_position++] = in_string[char_j];
+			}
+			// Adds the second char '"'
+			_json_payload[setting_position++] = '"';
+			// Finally writes the last char '}'
+			_json_payload[setting_position++] = '}';
+			_json_length = new_length;
+			return true;
 		}
 		return false;
 	}
@@ -904,6 +926,15 @@ public:
 	}
 
 
+    /**
+     * @brief Get if it's not to be replied
+     * @return true if it's not to be replied with echo
+     */
+	bool is_no_reply() const {
+		return _get_colon_position('n') > 0;
+	}
+
+
     // ============================================
     // FIELD VALUE CHECKS
     // ============================================
@@ -1089,13 +1120,18 @@ public:
      * Determines if message is for specific name, channel, broadcast, or invalid.
      */
 	TalkerMatch get_talker_match() const {
-		size_t colon_position = _get_colon_position('t');
-		if (colon_position) {
-			ValueType value_type = _get_value_type('t', colon_position);
+		// Has to have a valid `from`, anonymous messages aren't acceptable
+		size_t from_position = _get_colon_position('f');
+		if (!from_position || _get_value_type('f', from_position) != ValueType::TALKIE_VT_STRING) {
+			return TalkerMatch::TALKIE_MATCH_FAIL;
+		}
+		size_t to_position = _get_colon_position('t');
+		if (to_position) {
+			ValueType value_type = _get_value_type('t', to_position);
 			switch (value_type) {
 				case ValueType::TALKIE_VT_INTEGER:
 				{
-					uint8_t channel = _get_value_number('t', colon_position);
+					uint8_t channel = _get_value_number('t', to_position);
 					if (channel < 255) {
 						return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
 					} else {	// 255 is a NO response channel
@@ -1169,7 +1205,7 @@ public:
 
 
     /**
-     * @brief Get action as string
+     * @brief Get action as a string
      * @return Pointer to action string, or nullptr if not string
      */
 	char* get_action_string() const {
@@ -1181,8 +1217,8 @@ public:
 
 
     /**
-     * @brief Get action as number
-     * @return Numeric action value, or 0 if not number
+     * @brief Get action as a number
+     * @return The action index
      */
 	uint32_t get_action_index() const {
 		return _get_value_number('a');
@@ -1267,6 +1303,12 @@ public:
 	}
 
 
+	/** @brief Remove no reply field */
+	void remove_no_reply() {
+		_remove('n');
+	}
+
+
     // ============================================
     // SETTERS - FIELD MODIFICATION
     // ============================================
@@ -1277,12 +1319,7 @@ public:
      * @return true if field exists and was updated
      */
 	bool set_message_value(MessageValue message_value) {
-		size_t value_position = _get_value_position('m');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(message_value);
-			return true;
-		}
-		return false;
+		return _set_single_digit_number('m', static_cast<uint32_t>(message_value));
 	}
 
 
@@ -1366,12 +1403,12 @@ public:
 
 
     /**
-     * @brief Set action number
-     * @param number Action number
+     * @brief Set action index
+     * @param index Action index
      * @return true if successful
      */
-	bool set_action_index(uint8_t number) {
-		return _set_number('a', number);
+	bool set_action_index(uint8_t index) {
+		return _set_number('a', index);
 	}
 
 
@@ -1381,12 +1418,7 @@ public:
      * @return true if successful
      */
 	bool set_broadcast_value(BroadcastValue broadcast_value) {
-		size_t value_position = _get_value_position('b');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(broadcast_value);
-			return true;
-		}
-		return _set_number('b', static_cast<uint8_t>(broadcast_value));
+		return _set_single_digit_number('b', static_cast<uint32_t>(broadcast_value));
 	}
 
 
@@ -1396,12 +1428,7 @@ public:
      * @return true if successful
      */
 	bool set_roger_value(RogerValue roger_value) {
-		size_t value_position = _get_value_position('r');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(roger_value);
-			return true;
-		}
-		return _set_number('r', static_cast<uint8_t>(roger_value));
+		return _set_single_digit_number('r', static_cast<uint32_t>(roger_value));
 	}
 
 
@@ -1411,12 +1438,7 @@ public:
      * @return true if successful
      */
 	bool set_system_value(SystemValue system_value) {
-		size_t value_position = _get_value_position('s');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(system_value);
-			return true;
-		}
-		return _set_number('s', static_cast<uint8_t>(system_value));
+		return _set_single_digit_number('s', static_cast<uint32_t>(system_value));
 	}
 
 
@@ -1426,12 +1448,7 @@ public:
      * @return true if successful
      */
 	bool set_error_value(ErrorValue error_value) {
-		size_t value_position = _get_value_position('e');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(error_value);
-			return true;
-		}
-		return _set_number('e', static_cast<uint8_t>(error_value));
+		return _set_single_digit_number('e', static_cast<uint32_t>(error_value));
 	}
 
 
@@ -1460,6 +1477,18 @@ public:
 			return _set_string('0' + nth, in_string);
 		}
 		return false;
+	}
+
+
+    /**
+     * @brief Set as a No Reply for `call` messages
+	 * 
+	 * There will be no echo for this message if it's a `call` one
+	 * 
+     * @return true if successful
+     */
+	bool set_no_reply() {
+		return _set_number('n', 1);
 	}
 
 
