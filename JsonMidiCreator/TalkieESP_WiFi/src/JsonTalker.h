@@ -289,16 +289,7 @@ public:
      * @note This method is used by the Message Repeater to set up the Talker
      */
 	void _setLink(MessageRepeater* message_repeater, LinkType link_type);
-	
 
-    /**
-     * @brief Sets the Link Type of the Talker directly
-     * @param link_type The Link Type with the Message Repeater
-     * 
-     * @note Only usefull if intended to be disabled (ex. NONE)
-     */
-	void setLinkType(LinkType link_type) { _link_type = link_type; }
-	
 
     /**
      * @brief Set the Talker as muted or not muted

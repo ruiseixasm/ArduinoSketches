@@ -599,8 +599,10 @@ public:
 		#endif
 
 		switch (broadcast) {
-			// Uplink sockets or talkers can only process REMOTE messages
-			case BroadcastValue::TALKIE_BC_REMOTE:		// To downlinked nodes
+			
+			// A Talker is always a local talker, so, it's an implicit bridge
+			case BroadcastValue::TALKIE_BC_REMOTE:
+			case BroadcastValue::TALKIE_BC_LOCAL:
 			{
 				TalkerMatch talker_match = message.get_talker_match();
 
@@ -653,6 +655,49 @@ public:
 					}
 				}
 				return no_fails;
+			}
+			break;
+			
+			case BroadcastValue::TALKIE_BC_SELF:
+			{
+				TalkerMatch talker_match = message.get_talker_match();
+
+				switch (talker_match) {
+
+					case TalkerMatch::TALKIE_MATCH_ANY:
+					{
+						talker._handleTransmission(message, talker_match);
+						return true;
+					}
+					break;
+					
+					case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
+					{
+						uint8_t message_channel = message.get_to_channel();
+						uint8_t talker_channel = talker.get_channel();
+						if (talker_channel == message_channel) {
+							talker._handleTransmission(message, talker_match);
+							return true;
+						}
+					}
+					break;
+					
+					case TalkerMatch::TALKIE_MATCH_BY_NAME:
+					{
+						char message_to_name[TALKIE_NAME_LEN];
+						strcpy(message_to_name, message.get_to_name());
+						
+						const char* talker_name = talker.get_name();
+						if (strcmp(talker_name, message_to_name) == 0) {
+							talker._handleTransmission(message, talker_match);
+							return true;
+						}
+					}
+					break;
+					
+					case TalkerMatch::TALKIE_MATCH_NONE: return true;
+					default: return false;
+				}
 			}
 			break;
 			
