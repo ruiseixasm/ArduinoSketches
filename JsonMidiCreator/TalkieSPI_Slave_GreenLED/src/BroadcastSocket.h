@@ -23,9 +23,6 @@ https://github.com/ruiseixasm/JsonTalkie
  * @warning This class does not use dynamic memory allocation.
  *          All operations are performed on fixed-size buffers.
  * 
- * @section constraints Memory Constraints
- * - Maximum buffer size: TALKIE_BUFFER_SIZE (default: 128 bytes)
- * 
  * @author Rui Seixas Monteiro
  * @date Created: 2026-01-03
  * @version 1.0.0
@@ -61,13 +58,11 @@ class MessageRepeater;
 
 /**
  * @class BroadcastSocket
- * @brief An Interface to be implemented as a Socket to receive and send its buffer
+ * @brief An Interface to be implemented as a Socket to receive and send `JsonMessage` content
  * 
- * The implementation of this class requires de definition of the methods, _receive,
- * _send and class_name. After receiving data, the method _startTransmission
+ * The implementation of this class requires de definition of the methods, `_receive`,
+ * `_send` and `class_name`. After receiving data, the method `_startTransmission`
  * shall be called.
- * 
- * @note This class has a received and a sending buffer already.
  */
 class BroadcastSocket {
 protected:
@@ -98,8 +93,10 @@ protected:
 
     /**
      * @brief Starts the transmission of the data received
+     * @param json_message A json message to be transmitted to the repeater
 	 * 
-     * @note This method resets the _received_length to 0.
+     * @note Before calling this method, the `JsonMessage` methods `_validate_json` and `_process_checksum`
+	 *       shall be called first
      */
     void _startTransmission(JsonMessage& json_message) {
 
@@ -115,7 +112,6 @@ protected:
 		Serial.print(" | ");
 		Serial.println(json_message._get_length());
 		#endif
-
 		
 		#ifdef BROADCASTSOCKET_DEBUG
 		Serial.print(F("handleTransmission4: Validated Checksum of "));
@@ -187,9 +183,11 @@ protected:
 
 	
     /**
-     * @brief Pure abstract method that triggers the receiving data by the socket
+     * @brief Pure abstract method that creates a new `JsonMessage` based on the
+	 *        receiving data by the socket
 	 * 
-     * @note This method shall also trigger the method _startTransmission.
+     * @note This method shall call the method `_startTransmission` with the new created
+	 *       `JsonMessage`.
      */
     virtual void _receive() = 0;
 
@@ -198,7 +196,7 @@ protected:
      * @brief Pure abstract method that sends via socket any received json message
      * @param json_message A json message able to be accessed by the subclass socket
 	 * 
-     * @note This method marks the end of the message cycle with _finishTransmission.
+     * @note This method marks the end of the message cycle with `_finishTransmission`.
      */
     virtual bool _send(const JsonMessage& json_message) = 0;
 
@@ -298,11 +296,10 @@ public:
 
 	/**
      * @brief The final step in a cycle of processing a json message in which the
-	 *        json message content is loaded into the sending buffer of the socket
-	 *        to be sent
-     * @param json_message A json message to be serialized into the sending buffer
+	 *        json message content is sent accordingly to the `_send` method implementation
+     * @param json_message A json message which buffer is to be sent
 	 * 
-     * @note This method marks the end of the message cycle.
+     * @note This method marks the end of the message transmission cycle.
      */
     bool _finishTransmission(JsonMessage& json_message) {
 

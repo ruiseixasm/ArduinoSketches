@@ -103,8 +103,13 @@ private:
 			return buffer;
 			
 		#elif defined(ESP32)
-			static char buffer[50];
-			snprintf(buffer, sizeof(buffer), "ESP32 (Rev: %d)", ESP.getChipRevision());
+			static char buffer[64];
+    		uint64_t chipId = ESP.getEfuseMac();
+			snprintf(buffer, sizeof(buffer),
+				"ESP32 (Rev: %d) (Chip ID: %08X%08X)",
+             	ESP.getChipRevision(),
+				(uint32_t)(chipId >> 32),  // Upper 32 bits
+				(uint32_t)chipId);         // Lower 32 bits
 			return buffer;
 			
 		#elif defined(TEENSYDUINO)
@@ -289,16 +294,7 @@ public:
      * @note This method is used by the Message Repeater to set up the Talker
      */
 	void _setLink(MessageRepeater* message_repeater, LinkType link_type);
-	
 
-    /**
-     * @brief Sets the Link Type of the Talker directly
-     * @param link_type The Link Type with the Message Repeater
-     * 
-     * @note Only usefull if intended to be disabled (ex. NONE)
-     */
-	void setLinkType(LinkType link_type) { _link_type = link_type; }
-	
 
     /**
      * @brief Set the Talker as muted or not muted
@@ -362,7 +358,9 @@ public:
 						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 					}
 					// In the end sends back the processed message (single message, one-to-one)
-					if (!_muted_calls) transmitToRepeater(json_message);
+					if (!(_muted_calls || json_message.is_no_reply())) {
+						transmitToRepeater(json_message);
+					}
 				}
 				break;
 			
