@@ -120,8 +120,7 @@ if the message was sent via Wi-Fi.
 >>>
 ```
 Above, besides a long ping, 106 milliseconds, some replies weren't even received, so, this library shouldn't be
-used via Wi-Fi if replies are critical. Must be noted however, that this huge latency is mainly the due of the broadcasted reply,
-meaning that the received unicast message by the Uno board has the usual small latency.
+used via Wi-Fi if replies are critical. Must be noted however, that this huge latency is mainly due to the broadcasted reply, meaning that the received unicast message by the Uno board has the usual small latency.
 ### Changed_EthernetENC
 This is the best library to be used with the module `ENC28J60`, it requires more memory so it shall be used with an Arduino Mega
 or any other with similar amount of memory or more.
