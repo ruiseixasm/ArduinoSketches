@@ -45,6 +45,14 @@ using ValueType 		= TalkieCodes::ValueType;
 using Original 			= JsonMessage::Original;
 
 
+/**
+ * @class MessageRepeater
+ * @brief An Interface to be implemented as a Manifesto to define the Talker actions
+ * 
+ * The Repeater works in similar fashion as an HAM radio repeater on the top of a mountain,
+ * with a clear distinction of Uplinked and Downlinked communications, where the Uplinked nodes
+ * are considered remote nodes and the downlinked nodes are considered local nodes.
+ */
 class MessageRepeater {
 private:
 
@@ -94,6 +102,18 @@ public:
 	}
 
 
+	/**
+	 * @brief Method intended to be called from the Arduino sketch `loop()` function.
+	 *
+	 * @note This method should be called regularly from the sketch `loop()` function.
+	 * Example:
+	 * ```
+	 * void loop() {
+	 *     // Other needed calls here
+	 *     message_repeater.loop();
+	 * }
+	 * ```
+	 */
     void loop() {
 		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 			_uplinked_sockets[socket_j]->_loop();
