@@ -332,6 +332,30 @@ the ESP32 board is a down linked one, this means it behaves like a down linked T
 remote and local messages to its Repeater. This way, the SPI link between both SPI Sockets carries
 both remote and local messages, like a bridge.
 
+The Repeater automatically sets the up linked sockets as up linked, so, in order to turn an up linked socket into a bridged one, you need to set it in the `setup` function like so:
+```
+    spi_socket.setLinkType(LinkType::TALKIE_LT_UP_BRIDGED);  // Makes sure it accepts LOCAL messages too
+```
+With the command `system` it's possible to get the board and the sockets associated to the a Talker.
+```
+>>> talk
+	[talk spy]           	   I'm a Spy and I spy the talkers' pings
+	[talk test]          	   I test the JsonMessage class
+	[talk blue]          	   I have no Socket, but I turn led Blue on and off
+	[talk green]         	   I'm a green talker
+	[talk buzzer]        	   I'm a buzzer that buzzes
+>>> system blue board
+	[system blue board]  	   ESP32 (Rev: 100)
+>>> system green board
+	[system green board] 	   Arduino Uno/Nano (ATmega328P)
+>>> system blue socket
+	[system blue socket] 	   0	   Changed_EthernetENC
+	[system blue socket] 	   1	   SPI_ESP_Arduino_Master
+>>> system green socket
+	[system green socket]	   0	   SPI_Arduino_Slave
+>>>
+
+```
 Note that you can have more than two boards, given that the SPI protocol allows more than a single
 connection.
 ### Unit testing
