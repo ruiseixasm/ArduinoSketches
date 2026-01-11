@@ -303,7 +303,7 @@ Then you can just type commands
 ## Use Cases
 Besides the simple examples shown above, there are other interesting use cases that are important to consider.
 ### One platform, multiple boards
-The JsonTalkie allows the **remote** communication as it allows the **local** communication.
+The JsonTalkie allows both **remote** and **local** communication depending on the type of linking.
 By local communication one doesn't necessarily mean in the same board, it is possible to have local communication among multiple boards as long as they are in the same *platform*, so, you may have a circuit where different boards communicate with each other via protocols like the SPI.
 ```
 +-----------------------------+                                     +-----------------------------+
