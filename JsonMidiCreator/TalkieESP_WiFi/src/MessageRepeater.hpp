@@ -32,7 +32,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.h"
 #include "JsonTalker.h"
 
-// #define MESSAGE_REPEATER_DEBUG
+#define MESSAGE_REPEATER_DEBUG
 
 using LinkType			= TalkieCodes::LinkType;
 using TalkerMatch 		= TalkieCodes::TalkerMatch;
@@ -113,7 +113,7 @@ public:
 	bool downlinkMessage(const JsonMessage &message) {
 		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
 		JsonMessage message_copy(message);
-		message_copy.set_from_name("");
+		message_copy.set_from_name("dummy");
 		message_copy.set_no_reply();
 		return _talkerDownlink(dummy_talker, message_copy);
 	}
@@ -122,7 +122,7 @@ public:
 	bool uplinkMessage(const JsonMessage &message) {
 		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
 		JsonMessage message_copy(message);
-		message_copy.set_from_name("");
+		message_copy.set_from_name("dummy");
 		message_copy.set_no_reply();
 		return _talkerUplink(dummy_talker, message_copy);
 	}
