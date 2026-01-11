@@ -235,9 +235,8 @@ public:
 
 	
 	bool _talkerUplink(JsonTalker &talker, JsonMessage &message) {
+		
 		BroadcastValue broadcast = message.get_broadcast_value();
-
-		TalkerMatch match = TalkerMatch::TALKIE_MATCH_NONE;
 
 		#ifdef MESSAGE_REPEATER_DEBUG
 		Serial.print(F("\t\t_talkerUplink1: "));
@@ -587,9 +586,8 @@ public:
 
 
 	bool _talkerDownlink(JsonTalker &talker, JsonMessage &message) {
-		BroadcastValue broadcast = message.get_broadcast_value();
 
-		TalkerMatch match = TalkerMatch::TALKIE_MATCH_NONE;
+		BroadcastValue broadcast = message.get_broadcast_value();
 
 		#ifdef MESSAGE_REPEATER_DEBUG
 		Serial.print(F("\t\t_talkerDownlink1: "));
