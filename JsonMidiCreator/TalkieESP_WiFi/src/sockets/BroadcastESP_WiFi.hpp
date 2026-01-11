@@ -18,8 +18,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "../BroadcastSocket.h"
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
-#elif defined(ESP8285)
-#include <ESP8285WiFi.h>
 #else
 #include <WiFi.h>
 #endif
@@ -43,7 +41,7 @@ protected:
     // ===== [SELF IP] cache our own IP =====
     IPAddress _local_ip;
 
-	
+
     // Constructor
     BroadcastESP_WiFi() : BroadcastSocket() {}
 
