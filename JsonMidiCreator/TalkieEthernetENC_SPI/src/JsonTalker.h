@@ -103,8 +103,13 @@ private:
 			return buffer;
 			
 		#elif defined(ESP32)
-			static char buffer[50];
-			snprintf(buffer, sizeof(buffer), "ESP32 (Rev: %d)", ESP.getChipRevision());
+			static char buffer[64];
+    		uint64_t chipId = ESP.getEfuseMac();
+			snprintf(buffer, sizeof(buffer),
+				"ESP32 (Rev: %d) (Chip ID: %08X%08X)",
+             	ESP.getChipRevision(),
+				(uint32_t)(chipId >> 32),  // Upper 32 bits
+				(uint32_t)chipId);         // Lower 32 bits
 			return buffer;
 			
 		#elif defined(TEENSYDUINO)
