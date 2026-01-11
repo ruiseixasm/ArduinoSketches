@@ -403,46 +403,45 @@ private:
 			for (size_t char_j = 0; in_string[char_j] != '\0' && char_j < TALKIE_BUFFER_SIZE; char_j++) {
 				length++;
 			}
-			if (length) {
-				colon_position = _get_colon_position(key, colon_position);
-				if (colon_position) _remove(key, colon_position);
-				// the usual key + 4 plus + 2 for both '"' and the + 1 due to the heading ',' needed to be added
-				size_t new_length = _json_length + length + 4 + 2 + 1;
-				if (new_length > TALKIE_BUFFER_SIZE) {
-					return false;
-				}
-				// Sets the key json data
-				char json_key[] = ",\"k\":";
-				json_key[2] = key;
-				// length to position requires - 1 and + 5 for the key (at '}' position + 5)
-				size_t setting_position = _json_length - 1 + 5;
-				if (_json_length > 2) {
-					for (size_t char_j = 0; char_j < 5; char_j++) {
-						_json_payload[_json_length - 1 + char_j] = json_key[char_j];
-					}
-				} else if (_json_length == 2) {	// Edge case of '{}'
-					new_length--;	// Has to remove the extra ',' considered above
-					setting_position--;
-					for (size_t char_j = 1; char_j < 5; char_j++) {
-						_json_payload[_json_length - 1 + char_j - 1] = json_key[char_j];
-					}
-				} else {
-					_reset();	// Something very wrong, needs to be reset
-					return false;
-				}
-				// Adds the first char '"'
-				_json_payload[setting_position++] = '"';
-				// To be added, it has to be from right to left
-				for (size_t char_j = 0; char_j < length; char_j++) {
-					_json_payload[setting_position++] = in_string[char_j];
-				}
-				// Adds the second char '"'
-				_json_payload[setting_position++] = '"';
-				// Finally writes the last char '}'
-				_json_payload[setting_position++] = '}';
-				_json_length = new_length;
-				return true;
+			// It can have empty strings too, so, a length can be 0!
+			colon_position = _get_colon_position(key, colon_position);
+			if (colon_position) _remove(key, colon_position);
+			// the usual key + 4 plus + 2 for both '"' and the + 1 due to the heading ',' needed to be added
+			size_t new_length = _json_length + length + 1 + 4 + 2;
+			if (new_length > TALKIE_BUFFER_SIZE) {
+				return false;
 			}
+			// Sets the key json data
+			char json_key[] = ",\"k\":";
+			json_key[2] = key;
+			// length to position requires - 1 and + 5 for the key (at '}' position + 5)
+			size_t setting_position = _json_length - 1 + 5;
+			if (_json_length > 2) {
+				for (size_t char_j = 0; char_j < 5; char_j++) {
+					_json_payload[_json_length - 1 + char_j] = json_key[char_j];
+				}
+			} else if (_json_length == 2) {	// Edge case of '{}'
+				new_length--;	// Has to remove the extra ',' considered above
+				setting_position--;
+				for (size_t char_j = 1; char_j < 5; char_j++) {
+					_json_payload[_json_length - 1 + char_j - 1] = json_key[char_j];
+				}
+			} else {
+				_reset();	// Something very wrong, needs to be reset
+				return false;
+			}
+			// Adds the first char '"'
+			_json_payload[setting_position++] = '"';
+			// To be added, it has to be from right to left
+			for (size_t char_j = 0; char_j < length; char_j++) {
+				_json_payload[setting_position++] = in_string[char_j];
+			}
+			// Adds the second char '"'
+			_json_payload[setting_position++] = '"';
+			// Finally writes the last char '}'
+			_json_payload[setting_position++] = '}';
+			_json_length = new_length;
+			return true;
 		}
 		return false;
 	}
