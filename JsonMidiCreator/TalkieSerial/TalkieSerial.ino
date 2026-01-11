@@ -15,8 +15,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // COMPILE WITH ARDUINO BOARD
-#include "src/JsonTalker.h"
-#include "src/MessageRepeater.hpp"
+#include "src/JsonTalkie.h"
 #include "src/manifestos/SerialManifesto.hpp"
 #include "src/sockets/SocketSerial.hpp"
 
