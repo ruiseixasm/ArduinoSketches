@@ -1418,12 +1418,7 @@ public:
      * @return true if successful
      */
 	bool set_broadcast_value(BroadcastValue broadcast_value) {
-		size_t value_position = _get_value_position('b');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(broadcast_value);
-			return true;
-		}
-		return _set_number('b', static_cast<uint8_t>(broadcast_value));
+		return _set_single_digit_number('b', static_cast<uint32_t>(broadcast_value));
 	}
 
 
@@ -1433,12 +1428,7 @@ public:
      * @return true if successful
      */
 	bool set_roger_value(RogerValue roger_value) {
-		size_t value_position = _get_value_position('r');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(roger_value);
-			return true;
-		}
-		return _set_number('r', static_cast<uint8_t>(roger_value));
+		return _set_single_digit_number('r', static_cast<uint32_t>(roger_value));
 	}
 
 
@@ -1448,12 +1438,7 @@ public:
      * @return true if successful
      */
 	bool set_system_value(SystemValue system_value) {
-		size_t value_position = _get_value_position('s');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(system_value);
-			return true;
-		}
-		return _set_number('s', static_cast<uint8_t>(system_value));
+		return _set_single_digit_number('s', static_cast<uint32_t>(system_value));
 	}
 
 
@@ -1463,12 +1448,7 @@ public:
      * @return true if successful
      */
 	bool set_error_value(ErrorValue error_value) {
-		size_t value_position = _get_value_position('e');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(error_value);
-			return true;
-		}
-		return _set_number('e', static_cast<uint8_t>(error_value));
+		return _set_single_digit_number('e', static_cast<uint32_t>(error_value));
 	}
 
 
@@ -1501,9 +1481,9 @@ public:
 
 
     /**
-     * @brief Set as a No Reply message
+     * @brief Set as a No Reply for `call` messages
 	 * 
-	 * There will be no echo for this message
+	 * There will be no echo for this message if it's a `call` one
 	 * 
      * @return true if successful
      */
