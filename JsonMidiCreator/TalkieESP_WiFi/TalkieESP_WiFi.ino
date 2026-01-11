@@ -20,8 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
   #define LED_BUILTIN 2  // Fallback definition if not already defined
 #endif
 
-// ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
-#include "src/sockets/Changed_EthernetENC.hpp"
+#include "src/sockets/BroadcastESP_WiFi.hpp"
 #include "src/manifestos/Spy.h"
 #include "src/manifestos/BlueManifesto.hpp"
 #include "src/manifestos/MessageTester.hpp"
@@ -52,7 +51,7 @@ JsonTalker t_tester = JsonTalker(t_tester_name, t_tester_desc, &message_tester);
 // SOCKETS
 
 // Singleton requires the & (to get a reference variable)
-auto& ethernet_socket = Changed_EthernetENC::instance();
+auto& ethernet_socket = BroadcastESP_WiFi::instance();
 
 
 // SETTING THE REPEATER
