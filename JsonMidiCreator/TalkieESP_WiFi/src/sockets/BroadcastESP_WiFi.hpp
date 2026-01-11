@@ -213,7 +213,7 @@ public:
     void set_udp(WiFiUDP* udp) {
         
         // ===== [SELF IP] store local IP for self-filtering =====
-        _local_ip = Ethernet.localIP();
+        _local_ip = WiFi.localIP();
         _udp = udp;
     }
 
