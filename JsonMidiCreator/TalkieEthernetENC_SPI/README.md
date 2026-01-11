@@ -218,10 +218,9 @@ This example is useful to illustrate how easy it is to include this library for 
 
 ### The .ino sketch for a Serial socket (115200)
 ```
-#include "src/JsonTalker.h"
-#include "src/MessageRepeater.hpp"
-#include "src/manifestos/SerialManifesto.hpp"
-#include "src/sockets/SocketSerial.hpp"
+#include <JsonTalkie.hpp>
+#include <sockets/SocketSerial.hpp>
+#include <manifestos/SerialManifesto.hpp>
 
 
 const char talker_name[] = "serial";
