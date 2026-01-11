@@ -402,7 +402,7 @@ to do a call from inside the board's Talker itself. This is the case of the *spy
 	[ping green]         	   8
 >>>
 ```
-In the interaction above, we have the ping results, from inside the ESP32 board (spy Talker), 1 and 4 milliseconds respectively. From the computer those results are greater because they reflect the wi-fi latency too.
+In the interaction above, we have the ping results, from inside the ESP32 board (spy Talker), 1 and 4 milliseconds respectively. From the computer those results are greater because they reflect the wi-fi latency too. Note that the latency above includes the return time, so, in reality it takes around half that value to reach the Talker.
 
 Nevertheless, with the help of the spy, we can see that the SPI connections represents an increase 0f 3 milliseconds in latency (4 - 1).
 
