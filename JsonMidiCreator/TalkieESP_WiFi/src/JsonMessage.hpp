@@ -1169,7 +1169,7 @@ public:
 
 
     /**
-     * @brief Get action as string
+     * @brief Get action as a string
      * @return Pointer to action string, or nullptr if not string
      */
 	char* get_action_string() const {
@@ -1181,8 +1181,8 @@ public:
 
 
     /**
-     * @brief Get action as number
-     * @return Numeric action value, or 0 if not number
+     * @brief Get action as a number
+     * @return The action index
      */
 	uint32_t get_action_index() const {
 		return _get_value_number('a');
@@ -1366,12 +1366,12 @@ public:
 
 
     /**
-     * @brief Set action number
-     * @param number Action number
+     * @brief Set action index
+     * @param index Action index
      * @return true if successful
      */
-	bool set_action_index(uint8_t number) {
-		return _set_number('a', number);
+	bool set_action_index(uint8_t index) {
+		return _set_number('a', index);
 	}
 
 
