@@ -19,17 +19,17 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BLUE_MANIFESTO_DEBUG
 
 
-class BlueManifesto : public TalkerManifesto {
+class LedManifesto : public TalkerManifesto {
 public:
 
-    const char* class_name() const override { return "BlueManifesto"; }
+    const char* class_name() const override { return "LedManifesto"; }
 
-    BlueManifesto(uint8_t led_pin) : TalkerManifesto(), _led_pin(led_pin)
+    LedManifesto(uint8_t led_pin) : TalkerManifesto(), _led_pin(led_pin)
 	{
 		pinMode(_led_pin, OUTPUT);
 	}	// Constructor
 
-    ~BlueManifesto()
+    ~LedManifesto()
 	{	// ~TalkerManifesto() called automatically here
 		digitalWrite(_led_pin, LOW);
 		pinMode(_led_pin, INPUT);

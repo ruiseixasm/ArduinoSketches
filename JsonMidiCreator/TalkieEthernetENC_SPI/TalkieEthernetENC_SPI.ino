@@ -24,7 +24,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/sockets/Changed_EthernetENC.hpp"  // Go to: https://github.com/ruiseixasm/JsonTalkie/tree/main/src/sockets
 #include "src/sockets/SPI_ESP_Arduino_Master.hpp"
 #include "src/manifestos/Spy.h"
-#include "src/manifestos/BlueManifesto.hpp"
+#include "src/manifestos/LedManifesto.hpp"
 #include "src/manifestos/MessageTester.hpp"
 #include "src/MessageRepeater.hpp"
 
@@ -37,11 +37,11 @@ const char t_spy_desc[] = "I'm a Spy and I spy the talkers' pings";
 Spy spy_manifesto;
 JsonTalker t_spy = JsonTalker(t_spy_name, t_spy_desc, &spy_manifesto);
 
-// Sockless Talker (blue led)
-const char l_blue_name[] = "blue";
-const char l_blue_desc[] = "I turn led Blue on and off";
-BlueManifesto blue_manifesto(2);
-JsonTalker l_blue = JsonTalker(l_blue_name, l_blue_desc, &blue_manifesto);
+// Sockless Talker (led)
+const char l_led_name[] = "led";
+const char l_led_desc[] = "I turn led Blue on and off";
+LedManifesto led_manifesto(LED_BUILTIN);
+JsonTalker l_led = JsonTalker(l_led_name, l_led_desc, &led_manifesto);
 
 // Sockless Talker (JsonMessage tester)
 const char t_tester_name[] = "test";
@@ -60,7 +60,7 @@ auto& spi_socket = SPI_ESP_Arduino_Master::instance(spi_pins, sizeof(spi_pins)/s
 
 // SETTING THE REPEATER
 BroadcastSocket* uplinked_sockets[] = { &ethernet_socket };
-JsonTalker* downlinked_talkers[] = { &t_spy, &t_tester, &l_blue };
+JsonTalker* downlinked_talkers[] = { &t_spy, &t_tester, &l_led };
 BroadcastSocket* downlinked_sockets[] = { &spi_socket };
 MessageRepeater message_repeater(
 		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),

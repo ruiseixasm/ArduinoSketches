@@ -26,8 +26,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/manifestos/MessageTester.hpp"
 #include "src/MessageRepeater.hpp"
 
-const char ssid[] = "Pirelli";
-const char password[] = "rabitzita";
+const char ssid[] = "wifiName";
+const char password[] = "wifiPassword";
 
 
 // TALKERS 
