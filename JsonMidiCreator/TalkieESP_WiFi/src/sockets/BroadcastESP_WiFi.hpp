@@ -16,8 +16,10 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #include "../BroadcastSocket.h"
-#ifdef ESP8266
+#if defined(ESP8266)
 #include <ESP8266WiFi.h>
+#elif defined(ESP8285)
+#include <ESP8285WiFi.h>
 #else
 #include <WiFi.h>
 #endif
@@ -33,13 +35,13 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastESP_WiFi : public BroadcastSocket {
 protected:
 
-	static WiFiUDP* _udp;
+	uint16_t _port = 5005;
+	WiFiUDP* _udp;
 	// Source Talker info
 	char _from_name[TALKIE_NAME_LEN] = {'\0'};
 	IPAddress _from_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     // ===== [SELF IP] cache our own IP =====
     IPAddress _local_ip;
-    uint16_t _port = 5005;
 
 	
     // Constructor
