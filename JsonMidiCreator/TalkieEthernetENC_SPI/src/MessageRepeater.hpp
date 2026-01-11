@@ -65,9 +65,6 @@ private:
 	JsonTalker* const* const _uplinked_talkers;
 	const uint8_t _uplinked_talkers_count;
 	
-    // Iterator states
-    uint8_t socketsIterIdx = 0;
-
 
 public:
 
