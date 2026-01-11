@@ -167,6 +167,7 @@ it can be used via Wi-Fi too without the latency referred above, 6 instead of 10
 >>> ping mega
 	[ping mega]          	   6
 >>>
+```
 ## SPI
 SPI is among the most difficult protocols to implement, mainly in the Slave side. This happens because the SPI Arduino Slave is software based and the interrupts
 are done per byte and also they take their time, around, 12us. So, a message of 90 bytes long will take around 1 millisecond to be transmitted, this means that,
