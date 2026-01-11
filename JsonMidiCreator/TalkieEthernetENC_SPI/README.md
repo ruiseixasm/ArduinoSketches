@@ -298,3 +298,44 @@ Then you can just type commands
 >>>
         Exiting...
 ```
+
+
+## Use Cases
+Besides the simple examples shown above, there are other interesting use cases that are important to consider.
+### One platform, multiple boards
+The JsonTalkie allows the **remote** communication as it allows the **local** communication.
+By local communication one doesn't necessarily mean in the same board, it is possible to have local communication among multiple boards as long as they are in the same *platform*, so, you may have a circuit where different boards communicate with each other via protocols like the SPI.
+
+The scheme is like this:
+```
++-----------------------------+                                 +-----------------------------+
+| Ethernet socket (up linked) |                            +----| SPI socket (**up bridged**) |
++-----------------------------+                            |    +-----------------------------+
+                          |                                |                   |
+                 +------------------+                      |          +------------------+
+                 | Message Repeater |                      |          | Message Repeater |
+                 +------------------+                      |          +------------------+
+                    |           |                          |                   |
++-----------------------+  +--------------------------+    |       +-----------------------+
+| Talkers (down linked) |  | SPI Socket (down linked) |----+       | Talkers (down linked) |
++-----------------------+  +--------------------------+            +-----------------------+
+
++-----------------------------------------------------+         +------------------------------
+|                   ESP32 Board                       |         |        Arduino nano         |
++-----------------------------------------------------+         +------------------------------
++---------------------------------------------------------------------------------------------+
+|                                Local platform with two boards                               |
++---------------------------------------------------------------------------------------------+
+
+```
+In the scheme above, the Arduino nano board has its SPI Socket configured as *bridged*, this means
+that not only remote messages are sent trough it, buy *also*, local messages. The SPI Socket in
+the ESP32 board is a down linked one, this means it behaves like a down linked Talker, sending both
+remote and local messages to its Repeater. This way, the SPI link between both SPI Sockets carries
+both remote and local messages, like a bridge.
+
+Note that you can have more than two boards, given that the SPI protocol allows more than a single
+connection.
+
+
+
