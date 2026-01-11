@@ -904,6 +904,15 @@ public:
 	}
 
 
+    /**
+     * @brief Get if it's not to be replied
+     * @return true if it's not to be replied with echo
+     */
+	bool has_no_reply() const {
+		return _get_colon_position('n') > 0;
+	}
+
+
     // ============================================
     // FIELD VALUE CHECKS
     // ============================================
@@ -1272,6 +1281,12 @@ public:
 	}
 
 
+	/** @brief Remove no reply field */
+	void remove_no_reply() {
+		_remove('n');
+	}
+
+
     // ============================================
     // SETTERS - FIELD MODIFICATION
     // ============================================
@@ -1465,6 +1480,18 @@ public:
 			return _set_string('0' + nth, in_string);
 		}
 		return false;
+	}
+
+
+    /**
+     * @brief Set as a No Reply message
+	 * 
+	 * There will be no echo for this message
+	 * 
+     * @return true if successful
+     */
+	bool set_no_reply() {
+		return _set_number('n', 1);
 	}
 
 
