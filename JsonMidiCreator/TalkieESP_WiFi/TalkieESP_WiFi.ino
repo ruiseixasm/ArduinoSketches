@@ -26,6 +26,9 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "src/manifestos/MessageTester.hpp"
 #include "src/MessageRepeater.hpp"
 
+const char ssid[] = "wifiName";
+const char password[] = "wifiPassword";
+
 
 // TALKERS 
 // Ethernet Socket Repeater
@@ -63,33 +66,7 @@ MessageRepeater message_repeater(
 	);
 
 
-EthernetUDP udp;
-
-// uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};   // DEFAULT
-
-uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01};
-// uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x02};
-// uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x03};
-// uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x04};
-
-// uint8_t mac[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x01};
-// uint8_t mac[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x02};
-// uint8_t mac[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x03};
-// uint8_t mac[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x04};
-// uint8_t mac[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x05};
-
-// uint8_t mac[] = {0x02, 0x11, 0x22, 0x33, 0x44, 0x01};
-// uint8_t mac[] = {0x02, 0x11, 0x22, 0x33, 0x44, 0x02};
-// uint8_t mac[] = {0x02, 0x11, 0x22, 0x33, 0x44, 0x03};
-// uint8_t mac[] = {0x02, 0x11, 0x22, 0x33, 0x44, 0x04};
-// uint8_t mac[] = {0x02, 0x11, 0x22, 0x33, 0x44, 0x05};
-
-// uint8_t mac[] = {0x02, 0xAA, 0xFA, 0xCE, 0x10, 0x01};
-// uint8_t mac[] = {0x02, 0xAA, 0xFA, 0xCE, 0x10, 0x02};
-// uint8_t mac[] = {0x02, 0xAA, 0xFA, 0xCE, 0x10, 0x03};
-// uint8_t mac[] = {0x02, 0xAA, 0xFA, 0xCE, 0x10, 0x04};
-// uint8_t mac[] = {0x02, 0xAA, 0xFA, 0xCE, 0x10, 0x05};
-
+WiFiUDP udp;
 
 // Network settings
 #define PORT 5005   // UDP port
@@ -114,46 +91,25 @@ void setup() {
     delay(100);
     digitalWrite(LED_BUILTIN, LOW);
     
-    // STEP 1: Initialize Ethernet with CS pin
-    const int CS_PIN = 5;  // Defines CS pin here (Enc28j60)
-    Serial.println("Step 1: Initializing EthernetENC...");
-	// This forces the Ethernet to use the default SPI
-    Ethernet.init(CS_PIN);	// Uses global SPI (VSPI)
-	// // As alternative it is possible to give a specific SPI
-	// SPIClass* ethSPI = new SPIClass(HSPI);
-	// ethSPI->begin(14, 12, 13, 15);  // SCK, MISO, MOSI, SS (dummy)
-	// EthernetENC(uint8_t csPin, SPIClass* ethSPI)
-    Serial.println("Ethernet initialized successfully");
+    // STEP 1: Initialize WiFi
+    Serial.println("Step 1: Initializing WiFi...");
+    WiFi.begin(ssid, password);
+    Serial.println("WiFi initialized successfully");
     delay(500);
-
-    // STEP 2: Begin Ethernet connection with DHCP
-    Serial.println("Step 2: Starting Ethernet connection with DHCP...");
-    if (Ethernet.begin(mac) == 0) {
-        Serial.println("Failed to configure Ethernet using DHCP");
-        // Optional: Fallback to static IP
-        // Ethernet.begin(mac, IPAddress(192, 168, 1, 100));
-        // while (Ethernet.localIP() == INADDR_NONE) {
-        //     delay(1000);
-        // }
-    } else {
-        Serial.println("DHCP successful!");
-    }
 
     // Give Ethernet time to stabilize
     delay(1500);
 
-    // STEP 3: Check connection status
+    // STEP 2: Check connection status
     Serial.println("Step 3: Checking Ethernet status...");
     Serial.print("Local IP: ");
-    Serial.println(Ethernet.localIP());
+    Serial.println(WiFi.localIP());
     Serial.print("Subnet Mask: ");
-    Serial.println(Ethernet.subnetMask());
+    Serial.println(WiFi.subnetMask());
     Serial.print("Gateway IP: ");
-    Serial.println(Ethernet.gatewayIP());
-    Serial.print("DNS Server: ");
-    Serial.println(Ethernet.dnsServerIP());
+    Serial.println(WiFi.gatewayIP());
 
-    // STEP 4: Initialize UDP and broadcast socket
+    // STEP 3: Initialize UDP and broadcast socket
     Serial.println("Step 4: Initializing UDP...");
     if (udp.begin(PORT)) {
         Serial.println("UDP started successfully on port " + String(PORT));
@@ -176,8 +132,6 @@ void setup() {
 
 
 void loop() {
-    // Maintain DHCP lease (important for long-running applications)
-    Ethernet.maintain();
 	message_repeater.loop();
 }
 
