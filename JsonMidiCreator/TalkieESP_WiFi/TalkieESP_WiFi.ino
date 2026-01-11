@@ -79,8 +79,8 @@ void setup() {
     
     // Then start Serial
     Serial.begin(115200);
-    delay(2000); // Important: Give time for serial to initialize
-    Serial.println("\n\n=== ESP32 with EthernetENC STARTING ===");
+    delay(1000); // Important: Give time for serial to initialize
+    Serial.println("\n\n=== ESP with WiFi STARTING ===");
 
     // Add a small LED blink to confirm code is running
     digitalWrite(LED_BUILTIN, HIGH);
@@ -94,27 +94,27 @@ void setup() {
     // STEP 1: Initialize WiFi
     Serial.println("Step 1: Initializing WiFi...");
     WiFi.begin(ssid, password);
-    Serial.println("WiFi initialized successfully");
-    delay(500);
-
-    // Give Ethernet time to stabilize
-    delay(1500);
+	while (WiFi.status() != WL_CONNECTED) {
+		delay(250);
+		Serial.print(".");
+	}
+	Serial.println("\tWiFi connected!");
 
     // STEP 2: Check connection status
-    Serial.println("Step 3: Checking Ethernet status...");
-    Serial.print("Local IP: ");
+    Serial.println("Step 3: Checking WiFi status...");
+    Serial.print("\tLocal IP: ");
     Serial.println(WiFi.localIP());
-    Serial.print("Subnet Mask: ");
+    Serial.print("\tSubnet Mask: ");
     Serial.println(WiFi.subnetMask());
-    Serial.print("Gateway IP: ");
+    Serial.print("\tGateway IP: ");
     Serial.println(WiFi.gatewayIP());
 
     // STEP 3: Initialize UDP and broadcast socket
     Serial.println("Step 4: Initializing UDP...");
     if (udp.begin(PORT)) {
-        Serial.println("UDP started successfully on port " + String(PORT));
+        Serial.println("\tUDP started successfully on port " + String(PORT));
     } else {
-        Serial.println("Failed to start UDP!");
+        Serial.println("\tFailed to start UDP!");
     }
 
     // STEP 5: Setting up broadcast sockets
