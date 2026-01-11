@@ -45,6 +45,14 @@ using ValueType 		= TalkieCodes::ValueType;
 using Original 			= JsonMessage::Original;
 
 
+/**
+ * @class MessageRepeater
+ * @brief An Interface to be implemented as a Manifesto to define the Talker actions
+ * 
+ * The Repeater works in similar fashion as an HAM radio repeater on the top of a mountain,
+ * with a clear distinction of Uplinked and Downlinked communications, where the Uplinked nodes
+ * are considered remote nodes and the downlinked nodes are considered local nodes.
+ */
 class MessageRepeater {
 private:
 
@@ -57,9 +65,6 @@ private:
 	JsonTalker* const* const _uplinked_talkers;
 	const uint8_t _uplinked_talkers_count;
 	
-    // Iterator states
-    uint8_t socketsIterIdx = 0;
-
 
 public:
 
@@ -94,6 +99,18 @@ public:
 	}
 
 
+	/**
+	 * @brief Method intended to be called from the Arduino sketch `loop()` function.
+	 *
+	 * @note This method should be called regularly from the sketch `loop()` function.
+	 * Example:
+	 * ```
+	 * void loop() {
+	 *     // Other needed calls here
+	 *     message_repeater.loop();
+	 * }
+	 * ```
+	 */
     void loop() {
 		for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
 			_uplinked_sockets[socket_j]->_loop();
@@ -110,6 +127,13 @@ public:
     }
 
 
+	/**
+     * @brief Method intended to be called directly inside a sketch
+	 *        without the need of using a Talker
+     * @param message A json message to be transmitted
+	 * 
+     * @note Transmits a downlink message to the Repeater.
+     */
 	bool downlinkMessage(const JsonMessage &message) {
 		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
 		JsonMessage message_copy(message);
@@ -120,6 +144,13 @@ public:
 	}
 
 
+	/**
+     * @brief Method intended to be called directly inside a sketch
+	 *        without the need of using a Talker
+     * @param message A json message to be transmitted
+	 * 
+     * @note Transmits a uplink message to the Repeater.
+     */
 	bool uplinkMessage(const JsonMessage &message) {
 		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
 		JsonMessage message_copy(message);
@@ -130,16 +161,32 @@ public:
 	}
 
 
+	/**
+     * @brief Returns the amount of uplinked sockets
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	uint8_t _uplinkedSocketsCount() const {
 		return _uplinked_sockets_count;
 	}
 
 
+	/**
+     * @brief Returns the amount of downlinked sockets
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	uint8_t _downlinkedSocketsCount() const {
 		return _downlinked_sockets_count;
 	}
 
 	
+	/**
+     * @brief Returns the uplinked socked selected via its index
+     * @param socket_index The index of the socket
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	BroadcastSocket* _getUplinkedSocket(uint8_t socket_index) const {
         if (socket_index < _uplinked_sockets_count) {
             return _uplinked_sockets[socket_index];
@@ -148,6 +195,12 @@ public:
 	}
 	
 
+	/**
+     * @brief Returns the downlinked socked selected via its index
+     * @param socket_index The index of the socket
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	BroadcastSocket* _getDownlinkedSocket(uint8_t socket_index) const {
         if (socket_index < _downlinked_sockets_count) {
             return _downlinked_sockets[socket_index];
@@ -156,6 +209,13 @@ public:
 	}
 
 
+	/**
+     * @brief Transmits to the Repeater downlink a json message
+     * @param socket The socket that is calling the method
+     * @param message A json message to be transmitted
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	void _socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch talker_match = message.get_talker_match();
@@ -236,6 +296,13 @@ public:
 	}
 
 	
+	/**
+     * @brief Transmits to the Repeater uplink a json message
+     * @param talker The talker that is calling the method
+     * @param message A json message to be transmitted
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	bool _talkerUplink(JsonTalker &talker, JsonMessage &message) {
 
 		BroadcastValue broadcast = message.get_broadcast_value();
@@ -445,6 +512,13 @@ public:
 	}
 
 
+	/**
+     * @brief Transmits to the Repeater downlink a json message
+     * @param socket The socket that is calling the method
+     * @param message A json message to be transmitted
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	void _socketUplink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch talker_match = message.get_talker_match();
@@ -587,6 +661,13 @@ public:
 	}
 
 
+	/**
+     * @brief Transmits to the Repeater downlink a json message
+     * @param talker The talker that is calling the method
+     * @param message A json message to be transmitted
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	bool _talkerDownlink(JsonTalker &talker, JsonMessage &message) {
 
 		BroadcastValue broadcast = message.get_broadcast_value();

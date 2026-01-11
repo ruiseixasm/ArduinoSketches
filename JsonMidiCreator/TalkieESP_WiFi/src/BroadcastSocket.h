@@ -63,6 +63,8 @@ class MessageRepeater;
  * The implementation of this class requires de definition of the methods, `_receive`,
  * `_send` and `class_name`. After receiving data, the method `_startTransmission`
  * shall be called.
+ * 
+ * @note Find `BroadcastSocket` implementation in https://github.com/ruiseixasm/JsonTalkie/tree/main/src/sockets.
  */
 class BroadcastSocket {
 protected:

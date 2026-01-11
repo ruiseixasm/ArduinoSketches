@@ -45,12 +45,12 @@ class JsonTalker;
 
 /**
  * @class TalkerManifesto
- * @brief An Interface to be implemented as a Manifesto to define the Talker actions
- * 
+ * @brief An Interface to be implemented as a Manifesto to define the Talker's actions
+ *
  * The implementation of this class requires de definition of a list of actions like so:
  *     `Action calls[1] = {{"on", "Turns led ON"}};`
- * 
- * @note See examples of manifestos for more details about implementation.
+ *
+ * @note Find `TalkerManifesto` implementation in https://github.com/ruiseixasm/JsonTalkie/tree/main/src/manifestos.
  */
 class TalkerManifesto {
 
