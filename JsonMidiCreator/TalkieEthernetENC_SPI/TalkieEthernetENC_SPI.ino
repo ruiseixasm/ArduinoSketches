@@ -39,7 +39,7 @@ JsonTalker t_spy = JsonTalker(t_spy_name, t_spy_desc, &spy_manifesto);
 
 // Sockless Talker (blue led)
 const char l_blue_name[] = "blue";
-const char l_blue_desc[] = "I have no Socket, but I turn led Blue on and off";
+const char l_blue_desc[] = "I turn led Blue on and off";
 BlueManifesto blue_manifesto(2);
 JsonTalker l_blue = JsonTalker(l_blue_name, l_blue_desc, &blue_manifesto);
 

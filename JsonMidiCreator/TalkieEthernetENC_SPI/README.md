@@ -37,7 +37,7 @@ A lightweight library for Arduino communication and control using JSON messages 
 >>> talk
         [talk spy]                 I'm a Spy and I spy the talkers' pings
         [talk test]                I test the JsonMessage class
-        [talk blue]                I have no Socket, but I turn led Blue on and off
+        [talk blue]                I turn led Blue on and off
         [talk nano]                Arduino Nano
         [talk mega]                I'm a Mega talker
         [talk uno]                 Arduino Uno
@@ -341,7 +341,7 @@ With the command `system` it's possible to get the board and the sockets associa
 >>> talk
 	[talk spy]           	   I'm a Spy and I spy the talkers' pings
 	[talk test]          	   I test the JsonMessage class
-	[talk blue]          	   I have no Socket, but I turn led Blue on and off
+	[talk blue]          	   I turn led Blue on and off
 	[talk green]         	   I'm a green talker
 	[talk buzzer]        	   I'm a buzzer that buzzes
 >>> system blue board
