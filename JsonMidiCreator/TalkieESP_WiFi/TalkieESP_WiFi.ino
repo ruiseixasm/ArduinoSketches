@@ -98,7 +98,7 @@ void setup() {
 		delay(250);
 		Serial.print(".");
 	}
-	Serial.println("\tWiFi connected!");
+	Serial.println("\n\tWiFi connected!");
 
     // STEP 2: Check connection status
     Serial.println("Step 2: Checking WiFi status...");
