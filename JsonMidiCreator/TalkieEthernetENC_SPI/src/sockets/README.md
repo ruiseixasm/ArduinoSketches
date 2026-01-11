@@ -172,7 +172,7 @@ it can be used via Wi-Fi too without the latency referred above, 6 instead of 10
 This socket is intended to be used with the boards ESP8266 or ESP32 that come with WiFi out of the box.
 
 Contrary to the socket implementation `BroadcastSocket_EtherCard` described above, this socket does *unicast*, so,
-it can be used via Wi-Fi too without the latency referred above, 6 instead of 106 milliseconds.
+it can be used via Wi-Fi too without the latency referred above, 3 instead of 106 milliseconds.
 ```
 >>> talk blue
 	[talk blue]          	   I turn led Blue on and off
