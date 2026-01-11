@@ -908,7 +908,7 @@ public:
      * @brief Get if it's not to be replied
      * @return true if it's not to be replied with echo
      */
-	bool has_no_reply() const {
+	bool is_no_reply() const {
 		return _get_colon_position('n') > 0;
 	}
 
