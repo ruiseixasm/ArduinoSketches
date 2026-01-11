@@ -168,17 +168,9 @@ it can be used via Wi-Fi too without the latency referred above, 6 instead of 10
 >>>
 ```
 ## WiFi
-### BroadcastSocket_Ethernet
-This socket is intended to be used with the original [Arduino Ethernet board](https://docs.arduino.cc/retired/shields/arduino-ethernet-shield-without-poe-module/),
-or other that has the chip `W5500` or `W5100`. Take note that depending on the board, the pins may vary, so read the
-following notes first.
-```
-Arduino communicates with both the W5100 and SD card using the SPI bus (through the ICSP header).
-This is on digital pins 10, 11, 12, and 13 on the Uno and pins 50, 51, and 52 on the Mega. On both boards,
-pin 10 is used to select the W5100 and pin 4 for the SD card. These pins cannot be used for general I/O.
-On the Mega, the hardware SS pin, 53, is not used to select either the W5100 or the SD card,
-but it must be kept as an output or the SPI interface won't work.
-```
+### BroadcastESP_WiFi
+This socket is intended to be used with the boards ESP8266 or ESP32 that come with WiFi out of the box.
+
 Contrary to the socket implementation `BroadcastSocket_EtherCard` described above, this socket does *unicast*, so,
 it can be used via Wi-Fi too without the latency referred above, 6 instead of 106 milliseconds.
 ```>>> talk blue
@@ -187,6 +179,8 @@ it can be used via Wi-Fi too without the latency referred above, 6 instead of 10
 	[ping blue]          	   3
 >>>
 ```
+One thing to take into consideration though, is that the fist ping can be sent in Broadcast mode because the first command is also
+used to get the Talker address and only then the messages are sent in unicast mode afterwards. Talker's name vs IP address.
 ## SPI
 SPI is among the most difficult protocols to implement, mainly in the Slave side. This happens because the SPI Arduino Slave is software based and the interrupts
 are done per byte and also they take their time, around, 12us. So, a message of 90 bytes long will take around 1 millisecond to be transmitted, this means that,
