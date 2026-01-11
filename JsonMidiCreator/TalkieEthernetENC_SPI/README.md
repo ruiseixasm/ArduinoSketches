@@ -10,7 +10,6 @@ A lightweight library for Arduino communication and control using JSON messages 
 - Automatic command discovery and documentation
 - Support for multiple devices on the same network
 
-
 ## Installation
 
 ### Arduino Library
@@ -24,7 +23,6 @@ A lightweight library for Arduino communication and control using JSON messages 
    - Download the latest release from GitHub
    - Extract to your Arduino libraries folder
    - Restart Arduino IDE
-
 
 ## Python Command Line
 ### JsonTalkiePy repository with command line as Talker
@@ -190,7 +188,6 @@ const char* class_name() const override { return "BlueManifesto"; }
 const Action* _getActionsArray() const override { return calls; }
 uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 ```
-
 ## The Broadcast Socket (interface)
 A Broadcast Socket **implementation** shall be able to receive and send in broadcast mode, this ability is required because the Talkers are recognizable by their names shown by the `talk` command, and thus, become able to auto configure the following direct connections (unicast). The broadcast communications are mainly intended to discover talkers or send to a channel (many) instead of talker name (single).
 
@@ -209,7 +206,6 @@ These are the member variables of the `BroadcastSocket`:
     uint16_t _last_message_timestamp = 0;
     uint16_t _drops_count = 0;
 ```
-
 And these are the methods which definition in the socket implementation is mandatory:
 ```
 virtual const char* class_name() const = 0;
@@ -268,10 +264,8 @@ void loop() {
     message_repeater.loop();
 }
 ```
-
 ### The included manifesto and socket
 The included manifesto and socket are in the folders [manifestos](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/manifestos) and [sockets](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/sockets) respectively, depending on the socket implemented being used, you may have more methods available specific for that socket.
-
 ### Interacting with the Talker
 This example uses a Serial socket, so, the interaction is always one-to-one, and here you have two options, using another Talker with a different Manifesto that sends commands to this one, or just for testing, do it in an easier way with the [JsonTalkerPy](https://github.com/ruiseixasm/JsonTalkiePy) command line in the computer. To do so just follow the instructions [here](https://github.com/ruiseixasm/JsonTalkiePy).
 
@@ -298,8 +292,6 @@ Then you can just type commands
 >>>
         Exiting...
 ```
-
-
 ## Use Cases
 Besides the simple examples shown above, there are other interesting use cases that are important to consider.
 ### One platform, multiple boards
@@ -324,7 +316,6 @@ By local communication one doesn't necessarily mean in the same board, it is pos
 +-------------------------------------------------------------------------------------------------+
 |                                    Local platform with two boards                               |
 +-------------------------------------------------------------------------------------------------+
-
 ```
 In the scheme above, the Arduino nano board has its SPI Socket configured as *bridged*, this means
 that not only remote messages are sent trough it, buy *also*, local messages. The SPI Socket in
@@ -354,7 +345,6 @@ With the command `system` it's possible to get the board and the sockets associa
 >>> system green socket
 	[system green socket]	   0	   SPI_Arduino_Slave
 >>>
-
 ```
 Note that you can have more than two boards, given that the SPI protocol allows more than a single
 connection.
