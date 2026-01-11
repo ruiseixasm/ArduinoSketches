@@ -85,7 +85,7 @@ bool Spy::_actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_me
 					if (json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_STRING) {
 						json_message.set_action_name(json_message.get_nth_value_string(1));
 					} else if (json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
-						json_message.set_action_number((uint8_t)json_message.get_nth_value_number(1));
+						json_message.set_action_index((uint8_t)json_message.get_nth_value_number(1));
 					} else {
 						return false;
 					}

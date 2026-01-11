@@ -1184,7 +1184,7 @@ public:
      * @brief Get action as number
      * @return Numeric action value, or 0 if not number
      */
-	uint32_t get_action_number() const {
+	uint32_t get_action_index() const {
 		return _get_value_number('a');
 	}
 
@@ -1370,7 +1370,7 @@ public:
      * @param number Action number
      * @return true if successful
      */
-	bool set_action_number(uint8_t number) {
+	bool set_action_index(uint8_t number) {
 		return _set_number('a', number);
 	}
 

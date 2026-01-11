@@ -338,7 +338,7 @@ public:
 								break;
 							
 							case ValueType::TALKIE_VT_INTEGER:
-								index_found_i = _manifesto->_actionIndex(json_message.get_action_number());
+								index_found_i = _manifesto->_actionIndex(json_message.get_action_index());
 								break;
 							
 							default: break;
