@@ -114,6 +114,7 @@ public:
 		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
 		JsonMessage message_copy(message);
 		message_copy.set_from_name("");
+		message_copy.set_no_reply();
 		return _talkerDownlink(dummy_talker, message_copy);
 	}
 
@@ -122,6 +123,7 @@ public:
 		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
 		JsonMessage message_copy(message);
 		message_copy.set_from_name("");
+		message_copy.set_no_reply();
 		return _talkerUplink(dummy_talker, message_copy);
 	}
 
