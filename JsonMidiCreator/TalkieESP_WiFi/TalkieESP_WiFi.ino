@@ -101,7 +101,7 @@ void setup() {
 	Serial.println("\tWiFi connected!");
 
     // STEP 2: Check connection status
-    Serial.println("Step 3: Checking WiFi status...");
+    Serial.println("Step 2: Checking WiFi status...");
     Serial.print("\tLocal IP: ");
     Serial.println(WiFi.localIP());
     Serial.print("\tSubnet Mask: ");
@@ -110,7 +110,7 @@ void setup() {
     Serial.println(WiFi.gatewayIP());
 
     // STEP 3: Initialize UDP and broadcast socket
-    Serial.println("Step 4: Initializing UDP...");
+    Serial.println("Step 3: Initializing UDP...");
     if (udp.begin(PORT)) {
         Serial.println("\tUDP started successfully on port " + String(PORT));
     } else {
@@ -118,7 +118,7 @@ void setup() {
     }
 
     // STEP 5: Setting up broadcast sockets
-    Serial.println("Step 5: Setting up broadcast sockets...");
+    Serial.println("Step 4: Setting up broadcast sockets...");
     ethernet_socket.set_port(PORT);
     ethernet_socket.set_udp(&udp);
 
