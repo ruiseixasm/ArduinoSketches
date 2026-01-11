@@ -127,6 +127,13 @@ public:
     }
 
 
+	/**
+     * @brief Method intended to be called directly inside a sketch
+	 *        without the need of using a Talker
+     * @param message A json message to be transmitted
+	 * 
+     * @note Transmits a downlink message to the Repeater.
+     */
 	bool downlinkMessage(const JsonMessage &message) {
 		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
 		JsonMessage message_copy(message);
@@ -137,6 +144,13 @@ public:
 	}
 
 
+	/**
+     * @brief Method intended to be called directly inside a sketch
+	 *        without the need of using a Talker
+     * @param message A json message to be transmitted
+	 * 
+     * @note Transmits a uplink message to the Repeater.
+     */
 	bool uplinkMessage(const JsonMessage &message) {
 		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
 		JsonMessage message_copy(message);
@@ -147,16 +161,32 @@ public:
 	}
 
 
+	/**
+     * @brief Returns the amount of uplinked sockets
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	uint8_t _uplinkedSocketsCount() const {
 		return _uplinked_sockets_count;
 	}
 
 
+	/**
+     * @brief Returns the amount of downlinked sockets
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	uint8_t _downlinkedSocketsCount() const {
 		return _downlinked_sockets_count;
 	}
 
 	
+	/**
+     * @brief Returns the uplinked socked selected via its index
+     * @param socket_index The index of the socket
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	BroadcastSocket* _getUplinkedSocket(uint8_t socket_index) const {
         if (socket_index < _uplinked_sockets_count) {
             return _uplinked_sockets[socket_index];
@@ -165,6 +195,12 @@ public:
 	}
 	
 
+	/**
+     * @brief Returns the downlinked socked selected via its index
+     * @param socket_index The index of the socket
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	BroadcastSocket* _getDownlinkedSocket(uint8_t socket_index) const {
         if (socket_index < _downlinked_sockets_count) {
             return _downlinked_sockets[socket_index];
@@ -173,6 +209,13 @@ public:
 	}
 
 
+	/**
+     * @brief Transmits to the Repeater downlink a json message
+     * @param socket The socket that is calling the method
+     * @param message A json message to be transmitted
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	void _socketDownlink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch talker_match = message.get_talker_match();
@@ -253,6 +296,13 @@ public:
 	}
 
 	
+	/**
+     * @brief Transmits to the Repeater uplink a json message
+     * @param talker The talker that is calling the method
+     * @param message A json message to be transmitted
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	bool _talkerUplink(JsonTalker &talker, JsonMessage &message) {
 
 		BroadcastValue broadcast = message.get_broadcast_value();
@@ -462,6 +512,13 @@ public:
 	}
 
 
+	/**
+     * @brief Transmits to the Repeater downlink a json message
+     * @param socket The socket that is calling the method
+     * @param message A json message to be transmitted
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	void _socketUplink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 		TalkerMatch talker_match = message.get_talker_match();
@@ -604,6 +661,13 @@ public:
 	}
 
 
+	/**
+     * @brief Transmits to the Repeater downlink a json message
+     * @param talker The talker that is calling the method
+     * @param message A json message to be transmitted
+	 * 
+     * @note This is intended to be called internally and not by the user code.
+     */
 	bool _talkerDownlink(JsonTalker &talker, JsonMessage &message) {
 
 		BroadcastValue broadcast = message.get_broadcast_value();
