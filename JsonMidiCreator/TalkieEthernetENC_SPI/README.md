@@ -336,7 +336,7 @@ The Repeater automatically sets the up linked sockets as up linked, so, in order
 ```
     spi_socket.setLinkType(LinkType::TALKIE_LT_UP_BRIDGED);  // Makes sure it accepts LOCAL messages too
 ```
-With the command `system` it's possible to get the board and the sockets associated to the a Talker.
+With the command `system` it's possible to get the board and the sockets associated to each Talker.
 ```
 >>> talk
 	[talk spy]           	   I'm a Spy and I spy the talkers' pings
