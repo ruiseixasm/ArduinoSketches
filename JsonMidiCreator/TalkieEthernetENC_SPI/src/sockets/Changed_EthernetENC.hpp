@@ -14,13 +14,10 @@ https://github.com/ruiseixasm/JsonTalkie
 #ifndef CHANGED_ETHERNETENC_HPP
 #define CHANGED_ETHERNETENC_HPP
 
-    // writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
-
-    // // Pattern matching disabled – not needed for broadcast
-
-    // // writeRegPair(EPMM0, 0x303f);
-
-    // // writeRegPair(EPMCSL, 0xf7f9);
+// // Pattern matching disabled – not needed for broadcast
+// // writeRegPair(EPMM0, 0x303f);
+// // writeRegPair(EPMCSL, 0xf7f9);
+// writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
 
 #include "../Changed_EthernetENC/src/EthernetENC.h"
 // #include <EthernetUdp.h>  // DON'T INCLUDE THIS ONE BECAUSE ARDUINO COMPILER CAN PICH THE WRONG ONE

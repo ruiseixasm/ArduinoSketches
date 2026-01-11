@@ -270,7 +270,7 @@ void loop() {
 ```
 
 ### The included manifesto and socket
-The included manifesto and socket are in the folders [manifestos](src/manifestos) and [sockets](src/sockets) respectively, depending on the socket implemented being used, you may have more methods available specific for that socket.
+The included manifesto and socket are in the folders [manifestos](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/manifestos) and [sockets](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/sockets) respectively, depending on the socket implemented being used, you may have more methods available specific for that socket.
 
 ### Interacting with the Talker
 This example uses a Serial socket, so, the interaction is always one-to-one, and here you have two options, using another Talker with a different Manifesto that sends commands to this one, or just for testing, do it in an easier way with the [JsonTalkerPy](https://github.com/ruiseixasm/JsonTalkiePy) command line in the computer. To do so just follow the instructions [here](https://github.com/ruiseixasm/JsonTalkiePy).
