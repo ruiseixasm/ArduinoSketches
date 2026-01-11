@@ -411,7 +411,6 @@ to do a call from inside the board's Talker itself. This is the case of the *spy
 >>> ping green
 	[ping green]         	   8
 >>>
-
 ```
 In the interaction above, we have the ping results, from inside the local *platform*, 1 and 4 milliseconds respectively. From the computer those results are greater because they reflect the wi-fi latency too.
 
