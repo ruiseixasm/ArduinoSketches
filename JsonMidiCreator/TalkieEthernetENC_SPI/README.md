@@ -359,11 +359,61 @@ With the command `system` it's possible to get the board and the sockets associa
 Note that you can have more than two boards, given that the SPI protocol allows more than a single
 connection.
 ### Unit testing
+One difficulty in dealing with embedded development, is the ability of testing and debugging single methods,
+this can be easily accomplished with the JsonTalkie. You can create a Manifesto that does just that.
 
-
-
+Bellow is an example of a series of unit tests done to the class `JsonMessage` during its development.
+```
+>>> talk test
+	[talk test]          	   I test the JsonMessage class
+>>> list test
+	[call test 0|all]    	   Tests all methods
+	[call test 1|deserialize]	   Test deserialize (fill up)
+	[call test 2|compare]	   Test if it's the same
+	[call test 3|has]    	   Test if it finds the given char
+	[call test 4|has_not]	   Test if DOESN't find the given char
+	[call test 5|length] 	   Test it has the right length
+	[call test 6|type]   	   Test the type of value
+	[call test 7|identity]	   Extract the message identity
+	[call test 8|value]  	   Checks if it has a value 0
+	[call test 9|message]	   Gets the message number
+	[call test 10|from]  	   Gets the from name string
+	[call test 11|remove]	   Removes a given field
+	[call test 12|set]   	   Sets a given field
+	[call test 13|edge]  	   Tests edge cases
+	[call test 14|copy]  	   Tests the copy constructor
+	[call test 15|string]	   Checks if it has a value 0 as string
+>>> call test edge
+	[call test edge]     	   roger
+>>> call test 0
+	[call test 0]        	   roger
+>>>
+```
+In the example above, specific edge cases are tested, the *roger* return means that the test passed, otherwise
+the return value would be *negative*. It is also possible to run all tests at once, with roger meaning all
+have passed. You can find the *test* Manifesto in the [manifestos folder](https://github.com/ruiseixasm/JsonTalkie/tree/main/src/manifestos).
 ### Inside calls
+So far we have been doing remote calls from a computer via Python, but there are cases that would be useful
+to do a call from inside the board's Talker itself. This is the case of the *spy* manifesto.
+```
+>>> talk spy
+	[talk spy]           	   I'm a Spy and I spy the talkers' pings
+>>> list spy
+	[call spy 0|ping]    	   I ping every talker, also by name or channel
+	[call spy 1|ping_self]	   I can even ping myself
+	[call spy 2|call]    	   Able to do [<talker> <action>]
+>>> call spy 0 blue
+	[call spy 0]         	   roger	   1	   blue
+>>> call spy 0 green
+	[call spy 0]         	   roger	   4	   green
+>>> ping blue
+	[ping blue]          	   3
+>>> ping green
+	[ping green]         	   8
+>>>
 
+```
+In the interaction above, we have the ping results, from inside the local *platform*, 1 and 4 milliseconds respectively. From the computer those results are greater because they reflect the wi-fi latency too.
 
-
+Nevertheless, with the help of the spy, we can see that the SPI connections represents an increase 0f 3 milliseconds in latency (4 - 1).
 
