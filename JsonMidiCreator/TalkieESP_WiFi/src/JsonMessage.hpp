@@ -391,6 +391,29 @@ private:
 
 
     /**
+     * @brief Set numeric value for a single digit field value
+     * @param key Key to set
+     * @param number Numeric value
+     * @param colon_position Optional hint for colon position
+     * @return true if successful, false if buffer too small
+     * 
+     * @note If key exists, the value is replaced. Otherwise, it's added before closing brace.
+     */
+	bool _set_single_digit_number(char key, uint32_t number, size_t colon_position = 4) {
+		if (number < 10) {
+			colon_position = _get_colon_position(key, colon_position);
+			if (colon_position) {
+				size_t value_position = _get_value_position(key, colon_position);
+				_json_payload[value_position] = '0' + number;
+			} else {
+				return _set_number(key, number);
+			}
+		}
+		return false;
+	}
+
+
+    /**
      * @brief Set string value for a key
      * @param key Key to set
      * @param in_string String value (null-terminated)
@@ -1296,12 +1319,7 @@ public:
      * @return true if field exists and was updated
      */
 	bool set_message_value(MessageValue message_value) {
-		size_t value_position = _get_value_position('m');
-		if (value_position) {
-			_json_payload[value_position] = '0' + static_cast<uint8_t>(message_value);
-			return true;
-		}
-		return false;
+		return _set_single_digit_number('m', static_cast<uint32_t>(message_value));
 	}
 
 
