@@ -110,6 +110,20 @@ public:
     }
 
 
+	bool downlinkMessage(const JsonMessage &message) {
+		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
+		JsonMessage message_copy(message);
+		return _talkerDownlink(dummy_talker, message_copy);
+	}
+
+
+	bool uplinkMessage(const JsonMessage &message) {
+		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
+		JsonMessage message_copy(message);
+		return _talkerUplink(dummy_talker, message_copy);
+	}
+
+
 	uint8_t _uplinkedSocketsCount() const {
 		return _uplinked_sockets_count;
 	}
@@ -215,6 +229,7 @@ public:
 		}
 	}
 
+	
 	bool _talkerUplink(JsonTalker &talker, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 
@@ -231,67 +246,57 @@ public:
 
 			case BroadcastValue::TALKIE_BC_REMOTE:		// To uplinked nodes
 			{
-				if (_uplinked_talkers_count) {
-					TalkerMatch talker_match = message.get_talker_match();
+				TalkerMatch talker_match = message.get_talker_match();
 
-					switch (talker_match) {
+				switch (talker_match) {
 
-						case TalkerMatch::TALKIE_MATCH_ANY:
-						{
-							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
+					case TalkerMatch::TALKIE_MATCH_ANY:
+					{
+						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count;) {
+							JsonMessage message_copy(message);
+							_uplinked_talkers[talker_i++]->_handleTransmission(message_copy, talker_match);
+						}
+					}
+					break;
+					
+					case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
+					{
+						uint8_t message_channel = message.get_to_channel();
+						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
+							uint8_t talker_channel = _uplinked_talkers[talker_i]->get_channel();
+							if (talker_channel == message_channel) {
 								JsonMessage message_copy(message);
-								_uplinked_talkers[talker_i++]->_handleTransmission(message_copy, talker_match);
+								_uplinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
 							}
 						}
-						break;
-						
-						case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
-						{
-							uint8_t message_channel = message.get_to_channel();
-							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
-								uint8_t talker_channel = _uplinked_talkers[talker_i]->get_channel();
-								if (talker_channel == message_channel) {
-									JsonMessage message_copy(message);
-									_uplinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
-								}
+					}
+					break;
+					
+					case TalkerMatch::TALKIE_MATCH_BY_NAME:
+					{
+						char message_to_name[TALKIE_NAME_LEN];
+						strcpy(message_to_name, message.get_to_name());
+						for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
+							const char* talker_name = _uplinked_talkers[talker_i]->get_name();
+							if (strcmp(talker_name, message_to_name) == 0) {
+								_uplinked_talkers[talker_i]->_handleTransmission(message, talker_match);
+								return true;
 							}
 						}
-						break;
-						
-						case TalkerMatch::TALKIE_MATCH_BY_NAME:
-						{
-							char message_to_name[TALKIE_NAME_LEN];
-							strcpy(message_to_name, message.get_to_name());
-							for (uint8_t talker_i = 0; talker_i < _uplinked_talkers_count; ++talker_i) {
-								const char* talker_name = _uplinked_talkers[talker_i]->get_name();
-								if (strcmp(talker_name, message_to_name) == 0) {
-									_uplinked_talkers[talker_i]->_handleTransmission(message, talker_match);
-									return true;
-								}
-							}
-						}
-						break;
-						
-						default: return false;
 					}
-					bool no_fails = true;
-					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						// Sockets ONLY manipulate the checksum ('c')
-						if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
-							no_fails = false;
-						}
-					}
-					return no_fails;
-				} else {
-					bool no_fails = true;
-					for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
-						// Sockets ONLY manipulate the checksum ('c')
-						if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
-							no_fails = false;
-						}
-					}
-					return no_fails;
+					break;
+
+					case TalkerMatch::TALKIE_MATCH_NONE: return true;
+					default: return false;
 				}
+				bool no_fails = true;
+				for (uint8_t socket_j = 0; socket_j < _uplinked_sockets_count; ++socket_j) {
+					// Sockets ONLY manipulate the checksum ('c')
+					if (!_uplinked_sockets[socket_j]->_finishTransmission(message)) {
+						no_fails = false;
+					}
+				}
+				return no_fails;
 			}
 			break;
 			
@@ -344,6 +349,7 @@ public:
 						}
 						break;
 						
+						case TalkerMatch::TALKIE_MATCH_NONE: return true;
 						default: return false;
 					}
 					bool no_fails = true;
@@ -420,6 +426,7 @@ public:
 					}
 					break;
 					
+					case TalkerMatch::TALKIE_MATCH_NONE: return true;
 					default: return false;
 				}
 			}
@@ -431,6 +438,7 @@ public:
 		}
 		return false;
 	}
+
 
 	void _socketUplink(BroadcastSocket &socket, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
@@ -573,6 +581,7 @@ public:
 		}
 	}
 
+
 	bool _talkerDownlink(JsonTalker &talker, JsonMessage &message) {
 		BroadcastValue broadcast = message.get_broadcast_value();
 
@@ -589,74 +598,61 @@ public:
 			// Uplink sockets or talkers can only process REMOTE messages
 			case BroadcastValue::TALKIE_BC_REMOTE:		// To downlinked nodes
 			{
-				if (_downlinked_talkers_count) {
-					TalkerMatch talker_match = message.get_talker_match();
-					// Talkers have no buffer, so a message copy will be necessary
-					JsonMessage original_message(message);
+				TalkerMatch talker_match = message.get_talker_match();
 
-					switch (talker_match) {
+				switch (talker_match) {
 
-						case TalkerMatch::TALKIE_MATCH_ANY:
-						{
-							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+					case TalkerMatch::TALKIE_MATCH_ANY:
+					{
+						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count;) {
+							JsonMessage message_copy(message);
+							_downlinked_talkers[talker_i++]->_handleTransmission(message_copy, talker_match);
+						}
+					}
+					break;
+					
+					case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
+					{
+						uint8_t message_channel = message.get_to_channel();
+						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
+							uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
+							if (talker_channel == message_channel) {
 								JsonMessage message_copy(message);
-								_downlinked_talkers[talker_i++]->_handleTransmission(message_copy, talker_match);
+								_downlinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
 							}
 						}
-						break;
-						
-						case TalkerMatch::TALKIE_MATCH_BY_CHANNEL:
-						{
-							uint8_t message_channel = message.get_to_channel();
-							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
-								uint8_t talker_channel = _downlinked_talkers[talker_i]->get_channel();
-								if (talker_channel == message_channel) {
-									JsonMessage message_copy(message);
-									_downlinked_talkers[talker_i]->_handleTransmission(message_copy, talker_match);
-								}
+					}
+					break;
+					
+					case TalkerMatch::TALKIE_MATCH_BY_NAME:
+					{
+						char message_to_name[TALKIE_NAME_LEN];
+						strcpy(message_to_name, message.get_to_name());
+						for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
+							const char* talker_name = _downlinked_talkers[talker_i]->get_name();
+							if (strcmp(talker_name, message_to_name) == 0) {
+								_downlinked_talkers[talker_i]->_handleTransmission(message, talker_match);
+								return true;
 							}
 						}
-						break;
-						
-						case TalkerMatch::TALKIE_MATCH_BY_NAME:
-						{
-							char message_to_name[TALKIE_NAME_LEN];
-							strcpy(message_to_name, message.get_to_name());
-							for (uint8_t talker_i = 0; talker_i < _downlinked_talkers_count; ++talker_i) {
-								const char* talker_name = _downlinked_talkers[talker_i]->get_name();
-								if (strcmp(talker_name, message_to_name) == 0) {
-									_downlinked_talkers[talker_i]->_handleTransmission(message, talker_match);
-									return true;
-								}
-							}
-						}
-						break;
-						
-						default: return false;
 					}
-					bool no_fails = true;
-					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						// Sockets ONLY manipulate the checksum ('c')
-						if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
-							no_fails = false;
-						}
-					}
-					return no_fails;
-				} else {
-					bool no_fails = true;
-					for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
-						// Sockets ONLY manipulate the checksum ('c')
-						if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
-							no_fails = false;
-						}
-					}
-					return no_fails;
+					break;
+					
+					case TalkerMatch::TALKIE_MATCH_NONE: return true;
+					default: return false;
 				}
+				bool no_fails = true;
+				for (uint8_t socket_j = 0; socket_j < _downlinked_sockets_count; ++socket_j) {
+					// Sockets ONLY manipulate the checksum ('c')
+					if (!_downlinked_sockets[socket_j]->_finishTransmission(message)) {
+						no_fails = false;
+					}
+				}
+				return no_fails;
 			}
 			break;
 			
 			case BroadcastValue::TALKIE_BC_NONE: return true;
-			
 			default: break;
 		}
 		return false;
