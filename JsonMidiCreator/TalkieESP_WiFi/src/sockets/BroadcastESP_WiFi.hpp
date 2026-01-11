@@ -16,10 +16,12 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #include "../BroadcastSocket.h"
+#include <WiFi.h>
+#include <WiFiUdp.h>
 
 
-// #define BROADCAST_ETHERNETENC_DEBUG
-// #define BROADCAST_ETHERNETENC_DEBUG_NEW
+// #define BROADCAST_ESP_WIFI_DEBUG
+// #define BROADCAST_ESP_WIFI_DEBUG_NEW
 
 #define ENABLE_DIRECT_ADDRESSING
 
@@ -27,14 +29,13 @@ https://github.com/ruiseixasm/JsonTalkie
 class BroadcastESP_WiFi : public BroadcastSocket {
 protected:
 
-    uint16_t _port = 5005;
-    EthernetUDP* _udp = nullptr;
+	static WiFiUDP* _udp;
 	// Source Talker info
 	char _from_name[TALKIE_NAME_LEN] = {'\0'};
-    IPAddress _from_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
-
+	IPAddress _from_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
     // ===== [SELF IP] cache our own IP =====
     IPAddress _local_ip;
+    uint16_t _port = 5005;
 
 	
     // Constructor
@@ -52,7 +53,7 @@ protected:
 				if (_udp->remoteIP() == _local_ip) {
 					_udp->flush();   // discard payload
 					
-					#ifdef BROADCAST_ETHERNETENC_DEBUG
+					#ifdef BROADCAST_ESP_WIFI_DEBUG
 					Serial.println(F("\treceive1: Dropped packet for being sent from this socket"));
 					Serial.print(F("\t\tRemote IP: "));
 					Serial.println(_udp->remoteIP());
@@ -63,7 +64,7 @@ protected:
 					return;
 				} else {
 					
-					#ifdef BROADCAST_ETHERNETENC_DEBUG
+					#ifdef BROADCAST_ESP_WIFI_DEBUG
 					Serial.println(F("\treceive1: Packet NOT sent from this socket"));
 					Serial.print(F("\t\tRemote IP: "));
 					Serial.println(_udp->remoteIP());
@@ -88,7 +89,7 @@ protected:
 							_from_ip = _udp->remoteIP();
 						}
 		
-						#ifdef BROADCAST_ETHERNETENC_DEBUG
+						#ifdef BROADCAST_ESP_WIFI_DEBUG
 						Serial.print(F("\treceive1: "));
 						Serial.print(packetSize);
 						Serial.print(F("B from "));
@@ -117,7 +118,7 @@ protected:
 
 			bool as_reply = json_message.is_to_name(_from_name);
 
-			#ifdef BROADCAST_ETHERNETENC_DEBUG_NEW
+			#ifdef BROADCAST_ESP_WIFI_DEBUG_NEW
 			Serial.print(F("\t\t\t\t\tsend orgn: "));
 			json_message.write_to(Serial);
 			Serial.println();
@@ -135,13 +136,13 @@ protected:
 			#endif
 
             if (!_udp->beginPacket(as_reply ? _from_ip : broadcastIP, _port)) {
-                #ifdef BROADCAST_ETHERNETENC_DEBUG
+                #ifdef BROADCAST_ESP_WIFI_DEBUG
                 Serial.println(F("\tFailed to begin packet"));
                 #endif
                 return false;
             } else {
 				
-				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				#ifdef BROADCAST_ESP_WIFI_DEBUG
 				if (as_reply && _from_ip != broadcastIP) {
 
 					Serial.print(F("\tsend1: --> Directly sent to the  "));
@@ -157,13 +158,13 @@ protected:
 			}
             #else
             if (!_udp->beginPacket(broadcastIP, _port)) {
-                #ifdef BROADCAST_ETHERNETENC_DEBUG
+                #ifdef BROADCAST_ESP_WIFI_DEBUG
                 Serial.println(F("\tFailed to begin packet"));
                 #endif
                 return false;
             } else {
 									
-				#ifdef BROADCAST_ETHERNETENC_DEBUG
+				#ifdef BROADCAST_ESP_WIFI_DEBUG
 				Serial.print(F("\tsend1: --> Broadcast sent to the 255.255.255.255 address --> "));
 				#endif
 
@@ -177,13 +178,13 @@ protected:
             (void)bytesSent; // Silence unused variable warning
 
             if (!_udp->endPacket()) {
-                #ifdef BROADCAST_ETHERNETENC_DEBUG
+                #ifdef BROADCAST_ESP_WIFI_DEBUG
                 Serial.println(F("\n\t\tERROR: Failed to end packet"));
                 #endif
                 return false;
             }
 
-            #ifdef BROADCAST_ETHERNETENC_DEBUG
+            #ifdef BROADCAST_ESP_WIFI_DEBUG
             Serial.write(
 				json_message._read_buffer(),
 				json_message._get_length()
@@ -209,7 +210,7 @@ public:
 
 
     void set_port(uint16_t port) { _port = port; }
-    void set_udp(EthernetUDP* udp) {
+    void set_udp(WiFiUDP* udp) {
         
         // ===== [SELF IP] store local IP for self-filtering =====
         _local_ip = Ethernet.localIP();
