@@ -113,6 +113,7 @@ public:
 	bool downlinkMessage(const JsonMessage &message) {
 		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
 		JsonMessage message_copy(message);
+		message_copy.set_from_name("");
 		return _talkerDownlink(dummy_talker, message_copy);
 	}
 
@@ -120,6 +121,7 @@ public:
 	bool uplinkMessage(const JsonMessage &message) {
 		JsonTalker dummy_talker = JsonTalker("", "", nullptr);
 		JsonMessage message_copy(message);
+		message_copy.set_from_name("");
 		return _talkerUplink(dummy_talker, message_copy);
 	}
 
