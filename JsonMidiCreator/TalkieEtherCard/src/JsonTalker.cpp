@@ -37,9 +37,10 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 				return _message_repeater->_talkerDownlink(*this, json_message);
 			case LinkType::TALKIE_LT_DOWN_LINKED:
 				return _message_repeater->_talkerUplink(*this, json_message);
-			default: return false;
+			default: break;
 		}
 	}
+	return false;
 }
 
 
