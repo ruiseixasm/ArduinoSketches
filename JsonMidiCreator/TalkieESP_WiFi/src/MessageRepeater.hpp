@@ -32,7 +32,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "BroadcastSocket.h"
 #include "JsonTalker.h"
 
-#define MESSAGE_REPEATER_DEBUG
+// #define MESSAGE_REPEATER_DEBUG
 
 using LinkType			= TalkieCodes::LinkType;
 using TalkerMatch 		= TalkieCodes::TalkerMatch;
