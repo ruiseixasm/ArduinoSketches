@@ -1089,15 +1089,18 @@ public:
      * Determines if message is for specific name, channel, broadcast, or invalid.
      */
 	TalkerMatch get_talker_match() const {
-		// Has to have a `from`, anonymous messages aren't acceptable
-		if (!_get_colon_position('f')) return TalkerMatch::TALKIE_MATCH_FAIL;
-		size_t colon_position = _get_colon_position('t');
-		if (colon_position) {
-			ValueType value_type = _get_value_type('t', colon_position);
+		// Has to have a valid `from`, anonymous messages aren't acceptable
+		size_t from_position = _get_colon_position('f');
+		if (!from_position || _get_value_type('f', from_position) != ValueType::TALKIE_VT_STRING) {
+			return TalkerMatch::TALKIE_MATCH_FAIL;
+		}
+		size_t to_position = _get_colon_position('t');
+		if (to_position) {
+			ValueType value_type = _get_value_type('t', to_position);
 			switch (value_type) {
 				case ValueType::TALKIE_VT_INTEGER:
 				{
-					uint8_t channel = _get_value_number('t', colon_position);
+					uint8_t channel = _get_value_number('t', to_position);
 					if (channel < 255) {
 						return TalkerMatch::TALKIE_MATCH_BY_CHANNEL;
 					} else {	// 255 is a NO response channel
