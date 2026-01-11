@@ -235,7 +235,7 @@ public:
 
 	
 	bool _talkerUplink(JsonTalker &talker, JsonMessage &message) {
-		
+
 		BroadcastValue broadcast = message.get_broadcast_value();
 
 		#ifdef MESSAGE_REPEATER_DEBUG
@@ -603,6 +603,13 @@ public:
 			case BroadcastValue::TALKIE_BC_LOCAL:
 			{
 				TalkerMatch talker_match = message.get_talker_match();
+
+				#ifdef MESSAGE_REPEATER_DEBUG
+				Serial.print(F("\t\t\t_talkerDownlink2: "));
+				message.write_to(Serial);
+				Serial.print(" | ");
+				Serial.println((int)talker_match);
+				#endif
 
 				switch (talker_match) {
 
