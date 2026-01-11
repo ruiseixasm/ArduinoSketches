@@ -46,8 +46,8 @@ bool JsonTalker::transmitToRepeater(JsonMessage& json_message) {
 
 uint8_t JsonTalker::_socketsCount() {
 	if (_message_repeater) {
-		uint8_t countUplinkedSockets = _message_repeater->uplinkedSocketsCount();
-		uint8_t countDownlinkedSockets = _message_repeater->downlinkedSocketsCount();
+		uint8_t countUplinkedSockets = _message_repeater->_uplinkedSocketsCount();
+		uint8_t countDownlinkedSockets = _message_repeater->_downlinkedSocketsCount();
 		return countUplinkedSockets + countDownlinkedSockets;
 	}
 	return 0;
@@ -56,11 +56,11 @@ uint8_t JsonTalker::_socketsCount() {
 
 BroadcastSocket* JsonTalker::_getSocket(uint8_t socket_index) {
 	if (_message_repeater) {
-		uint8_t countUplinkedSockets = _message_repeater->uplinkedSocketsCount();
+		uint8_t countUplinkedSockets = _message_repeater->_uplinkedSocketsCount();
 		if (socket_index < countUplinkedSockets) {
-			return _message_repeater->getUplinkedSocket(socket_index);
+			return _message_repeater->_getUplinkedSocket(socket_index);
 		} else {
-			return _message_repeater->getDownlinkedSocket(socket_index - countUplinkedSockets);
+			return _message_repeater->_getDownlinkedSocket(socket_index - countUplinkedSockets);
 		}
 	}
 	return nullptr;

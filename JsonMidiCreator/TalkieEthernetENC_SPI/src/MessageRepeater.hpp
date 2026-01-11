@@ -110,17 +110,17 @@ public:
     }
 
 
-	uint8_t uplinkedSocketsCount() const {
+	uint8_t _uplinkedSocketsCount() const {
 		return _uplinked_sockets_count;
 	}
 
 
-	uint8_t downlinkedSocketsCount() const {
+	uint8_t _downlinkedSocketsCount() const {
 		return _downlinked_sockets_count;
 	}
 
 	
-	BroadcastSocket* getUplinkedSocket(uint8_t socket_index) const {
+	BroadcastSocket* _getUplinkedSocket(uint8_t socket_index) const {
         if (socket_index < _uplinked_sockets_count) {
             return _uplinked_sockets[socket_index];
         }
@@ -128,7 +128,7 @@ public:
 	}
 	
 
-	BroadcastSocket* getDownlinkedSocket(uint8_t socket_index) const {
+	BroadcastSocket* _getDownlinkedSocket(uint8_t socket_index) const {
         if (socket_index < _downlinked_sockets_count) {
             return _downlinked_sockets[socket_index];
         }
