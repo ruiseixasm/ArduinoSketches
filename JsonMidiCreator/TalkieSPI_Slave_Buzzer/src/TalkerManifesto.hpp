@@ -27,8 +27,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define I_MANIFESTO_HPP
 
 #include <Arduino.h>
-#include "TalkieCodes.hpp"
-#include "JsonMessage.hpp"
+#include "JsonTalker.h"
 
 using LinkType			= TalkieCodes::LinkType;
 using TalkerMatch 		= TalkieCodes::TalkerMatch;
@@ -39,6 +38,7 @@ using RogerValue 		= TalkieCodes::RogerValue;
 using ErrorValue 		= TalkieCodes::ErrorValue;
 using ValueType 		= TalkieCodes::ValueType;
 using Original 			= JsonMessage::Original;
+using Action 			= JsonTalker::Action;
 
 class JsonTalker;
 
@@ -68,18 +68,6 @@ public:
     virtual ~TalkerManifesto() = default;
 
 
-	/**
-	 * @brief Represents an Action with a name and a description
-	 * 
-	 * An Action placed in a list has it's position matched with is
-	 * callable index number.
-	 */
-    struct Action {
-        const char* name;
-        const char* desc;
-    };
-
-	
 	/**
      * @brief Returns the total number of actions available to call
 	 * 
