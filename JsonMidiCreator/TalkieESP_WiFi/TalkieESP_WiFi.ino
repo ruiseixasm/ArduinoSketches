@@ -21,7 +21,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #endif
 
 #include "src/sockets/BroadcastESP_WiFi.hpp"
-#include "src/manifestos/Spy.h"
+#include "src/manifestos/Spy.hpp"
 #include "src/manifestos/BlueManifesto.hpp"
 #include "src/manifestos/MessageTester.hpp"
 #include "src/MessageRepeater.hpp"
