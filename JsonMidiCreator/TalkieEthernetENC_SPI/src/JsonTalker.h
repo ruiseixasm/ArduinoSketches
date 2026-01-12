@@ -216,6 +216,8 @@ private:
      */
 	BroadcastSocket* _getSocket(uint8_t socket_index);
 
+
+	const char* _manifesto_name() const;
 	uint8_t _actionsCount() const;
 	const Action* _getActionsArray() const;
 	uint8_t _actionIndex(const char* name) const;
@@ -414,8 +416,8 @@ public:
 			case MessageValue::TALKIE_MSG_LIST:
 				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
 				if (_manifesto) {
-					uint8_t total_actions = _manifesto->_actionsCount();	// This makes the access safe
-					const TalkerManifesto::Action* actions = _manifesto->_getActionsArray();
+					uint8_t total_actions = _actionsCount();	// This makes the access safe
+					const Action* actions = _getActionsArray();
 					for (uint8_t action_i = 0; action_i < total_actions; ++action_i) {
 						json_message.remove_all_nth_values();	// Makes sure there is space for each new action
 						json_message.set_nth_value_number(0, action_i);
@@ -530,7 +532,7 @@ public:
 
 						case SystemValue::TALKIE_SYS_MANIFESTO:
 							if (_manifesto) {
-								json_message.set_nth_value_string(0, _manifesto->class_name());
+								json_message.set_nth_value_string(0, _manifesto_name());
 							} else {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
 							}

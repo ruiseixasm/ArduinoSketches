@@ -68,6 +68,14 @@ BroadcastSocket* JsonTalker::_getSocket(uint8_t socket_index) {
 }
 
 
+const char* JsonTalker::_manifesto_name() const {
+	if (_manifesto) {
+		return _manifesto->class_name();
+	}
+	return nullptr;
+}
+
+
 void JsonTalker::_loop() {
 	if (_manifesto) _manifesto->_loop(*this);
 }
