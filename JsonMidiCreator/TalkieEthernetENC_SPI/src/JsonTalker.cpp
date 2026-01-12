@@ -67,3 +67,42 @@ BroadcastSocket* JsonTalker::_getSocket(uint8_t socket_index) {
 }
 
 
+void JsonTalker::_loop() {
+	if (_manifesto) _manifesto->_loop(*this);
+}
+
+
+uint8_t JsonTalker::_actionIndex(const char* name) const {
+	if (_manifesto) {
+		return _manifesto->_actionIndex(name);
+	}
+	return 255;
+}
+
+uint8_t JsonTalker::_actionIndex(uint8_t index) const {
+	if (_manifesto) {
+		return _manifesto->_actionIndex(index);
+	}
+	return 255;
+}
+
+bool JsonTalker::_actionByIndex(uint8_t index, JsonMessage& json_message, TalkerMatch talker_match) {
+	if (_manifesto) {
+		return _manifesto->_actionByIndex(index, *this, json_message, talker_match);
+	}
+	return false;
+}
+
+
+void JsonTalker::_echo(JsonMessage& json_message, TalkerMatch talker_match) {
+	if (_manifesto) _manifesto->_echo(*this, json_message, talker_match);
+}
+
+void JsonTalker::_error(JsonMessage& json_message, TalkerMatch talker_match) {
+	if (_manifesto) _manifesto->_error(*this, json_message, talker_match);
+}
+
+void JsonTalker::_noise(JsonMessage& json_message, TalkerMatch talker_match) {
+	if (_manifesto) _manifesto->_noise(*this, json_message, talker_match);
+}
+

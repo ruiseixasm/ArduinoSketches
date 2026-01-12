@@ -104,7 +104,7 @@ public:
 	 * 
      * @note This method being underscored means to be called internally only.
      */
-    virtual void _loop(JsonTalker* talker) {
+    virtual void _loop(JsonTalker& talker) {
         (void)talker;		// Silence unused parameter warning
 	}
 

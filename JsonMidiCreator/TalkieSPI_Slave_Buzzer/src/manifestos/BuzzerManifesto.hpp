@@ -48,7 +48,7 @@ public:
     uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
 
 
-	void _loop(JsonTalker* talker) override {
+	void _loop(JsonTalker& talker) override {
         (void)talker;		// Silence unused parameter warning
 		if ((uint16_t)millis() - _buzz_start > _buzz_duration_ms) {
 			#ifdef BUZZ_PIN

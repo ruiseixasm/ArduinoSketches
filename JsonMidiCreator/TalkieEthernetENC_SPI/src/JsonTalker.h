@@ -205,6 +205,13 @@ private:
      */
 	BroadcastSocket* _getSocket(uint8_t socket_index);
 
+	uint8_t _actionIndex(const char* name) const;
+	uint8_t _actionIndex(uint8_t index) const;
+	bool _actionByIndex(uint8_t index, JsonMessage& json_message, TalkerMatch talker_match);
+	void _echo(JsonMessage& json_message, TalkerMatch talker_match);
+	void _error(JsonMessage& json_message, TalkerMatch talker_match);
+	void _noise(JsonMessage& json_message, TalkerMatch talker_match);
+
 
 public:
 
@@ -220,9 +227,7 @@ public:
 	 * 
      * @note This method being underscored means to be called internally only.
      */
-    void _loop() {
-        if (_manifesto) _manifesto->_loop(this);
-    }
+    void _loop();
 
 
     // ============================================
@@ -330,11 +335,11 @@ public:
 						switch (value_type) {
 
 							case ValueType::TALKIE_VT_STRING:
-								index_found_i = _manifesto->_actionIndex(json_message.get_action_string());
+								index_found_i = _actionIndex(json_message.get_action_string());
 								break;
 							
 							case ValueType::TALKIE_VT_INTEGER:
-								index_found_i = _manifesto->_actionIndex(json_message.get_action_index());
+								index_found_i = _actionIndex(json_message.get_action_index());
 								break;
 							
 							default: break;
@@ -348,7 +353,7 @@ public:
 							#endif
 
 							// ROGER should be implicit for CALL to spare json string size for more data index value nth
-							if (!_manifesto->_actionByIndex(index_found_i, *this, json_message, talker_match)) {
+							if (!_actionByIndex(index_found_i, json_message, talker_match)) {
 								json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
 							}
 						} else {
@@ -542,15 +547,13 @@ public:
 					#endif
 
 					if (message_id == _original_message.identity) {
-						_manifesto->_echo(*this, json_message, talker_match);
+						_echo(json_message, talker_match);
 					}
 				}
 				break;
 			
 			case MessageValue::TALKIE_MSG_ERROR:
-				if (_manifesto) {
-					_manifesto->_error(*this, json_message, talker_match);
-				}
+				_error(json_message, talker_match);
 				break;
 			
 			case MessageValue::TALKIE_MSG_NOISE:
@@ -573,8 +576,8 @@ public:
 						if (!json_message.has_identity()) json_message.set_identity();
 						transmitToRepeater(json_message);
 					}
-				} else if (_manifesto) {
-					_manifesto->_noise(*this, json_message, talker_match);
+				} else {
+					_noise(json_message, talker_match);
 				}
 				break;
 			

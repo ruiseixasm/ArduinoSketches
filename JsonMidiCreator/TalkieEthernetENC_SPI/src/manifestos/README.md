@@ -130,7 +130,7 @@ in the same fashion as you would for the typical `loop` function in the Arduino,
 Here is an example of such programming, a buzzer that takes it's time that with the loop
 avoids the usage of `delay` calls that interrupt the normal flow of the program.
 ```
-	void _loop(JsonTalker* talker) override {
+	void _loop(JsonTalker& talker) override {
         (void)talker;		// Silence unused parameter warning
 		if ((uint16_t)millis() - _buzz_start > _buzz_duration_ms) {
 			#ifdef BUZZ_PIN
