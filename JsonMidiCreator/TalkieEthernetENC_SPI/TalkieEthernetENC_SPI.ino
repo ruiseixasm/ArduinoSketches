@@ -24,7 +24,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "src/sockets/Changed_EthernetENC.hpp"  // Go to: https://github.com/ruiseixasm/JsonTalkie/tree/main/src/sockets
 #include "src/sockets/SPI_ESP_Arduino_Master.hpp"
-#include "src/manifestos/Spy.h"
+#include "src/manifestos/Spy.hpp"
 #include "src/manifestos/LedManifesto.hpp"
 #include "src/manifestos/MessageTester.hpp"
 
