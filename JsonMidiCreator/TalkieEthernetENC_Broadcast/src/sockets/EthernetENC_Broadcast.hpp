@@ -11,20 +11,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef CHANGED_ETHERNETENC_HPP
-#define CHANGED_ETHERNETENC_HPP
-
-// // Pattern matching disabled – not needed for broadcast
-// // writeRegPair(EPMM0, 0x303f);
-// // writeRegPair(EPMCSL, 0xf7f9);
-// writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
-
-#include "../Changed_EthernetENC/src/EthernetENC.h"
-// #include <EthernetUdp.h>  // DON'T INCLUDE THIS ONE BECAUSE ARDUINO COMPILER CAN PICH THE WRONG ONE
-#include "../Changed_EthernetENC/src/EthernetUdp.h"    // Forces the correct usage of EthernetUdp.h
+#ifndef ETHERNETENC_BROADCAST_HPP
+#define ETHERNETENC_BROADCAST_HPP
 
 
 #include "../BroadcastSocket.h"
+#include "../EthernetENC_Broadcast/src/EthernetENC_Broadcast.h"
+#include "../EthernetENC_Broadcast/src/EthernetENC_BroadcastUdp.h"
+
 
 
 // #define BROADCAST_ETHERNETENC_DEBUG
@@ -33,11 +27,11 @@ https://github.com/ruiseixasm/JsonTalkie
 #define ENABLE_DIRECT_ADDRESSING
 
 
-class Changed_EthernetENC : public BroadcastSocket {
+class EthernetENC_Broadcast : public BroadcastSocket {
 protected:
 
     uint16_t _port = 5005;
-    EthernetUDP* _udp = nullptr;
+    EthernetENC_BroadcastUDP* _udp = nullptr;
 	// Source Talker info
 	char _from_name[TALKIE_NAME_LEN] = {'\0'};
     IPAddress _from_ip = IPAddress(255, 255, 255, 255);   // By default it's used the broadcast IP
@@ -47,7 +41,7 @@ protected:
 
 	
     // Constructor
-    Changed_EthernetENC() : BroadcastSocket() {}
+    EthernetENC_Broadcast() : BroadcastSocket() {}
 
 
     void _receive() override {
@@ -209,16 +203,16 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static Changed_EthernetENC& instance() {
-        static Changed_EthernetENC instance;
+    static EthernetENC_Broadcast& instance() {
+        static EthernetENC_Broadcast instance;
         return instance;
     }
 
-    const char* class_name() const override { return "Changed_EthernetENC"; }
+    const char* class_name() const override { return "EthernetENC_Broadcast"; }
 
 
     void set_port(uint16_t port) { _port = port; }
-    void set_udp(EthernetUDP* udp) {
+    void set_udp(EthernetENC_BroadcastUDP* udp) {
         
         // ===== [SELF IP] store local IP for self-filtering =====
         _local_ip = Ethernet.localIP();
@@ -227,4 +221,4 @@ public:
 
 };
 
-#endif // CHANGED_ETHERNETENC_HPP
+#endif // ETHERNETENC_BROADCAST_HPP

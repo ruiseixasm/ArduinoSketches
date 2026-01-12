@@ -31,7 +31,7 @@ UIPServer::UIPServer(uint16_t port) : _port(htons(port))
 
 UIPClient UIPServer::available()
 {
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   for ( uip_userdata_t* data = &UIPClient::all_data[0]; data < &UIPClient::all_data[UIP_CONNS]; data++ )
     {
       if (data->packets_in[0] != NOBLOCK
@@ -44,7 +44,7 @@ UIPClient UIPServer::available()
 
 UIPClient UIPServer::accept()
 {
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   for ( uip_userdata_t* data = &UIPClient::all_data[0]; data < &UIPClient::all_data[UIP_CONNS]; data++ )
     {
       if (!(data->state & UIP_CLIENT_ACCEPTED)
@@ -60,7 +60,7 @@ UIPClient UIPServer::accept()
 void UIPServer::begin()
 {
   uip_listen(_port);
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   listening = true;
 }
 

@@ -31,33 +31,33 @@ extern "C"
 
 #define ETH_HDR ((struct uip_eth_hdr *)&uip_buf[0])
 
-bool UIPEthernetClass::initialized = false;
-memhandle UIPEthernetClass::in_packet(NOBLOCK);
-memhandle UIPEthernetClass::uip_packet(NOBLOCK);
-uint8_t UIPEthernetClass::uip_hdrlen(0);
-uint8_t UIPEthernetClass::packetstate(0);
+bool UIPEthernetENC_BroadcastClass::initialized = false;
+memhandle UIPEthernetENC_BroadcastClass::in_packet(NOBLOCK);
+memhandle UIPEthernetENC_BroadcastClass::uip_packet(NOBLOCK);
+uint8_t UIPEthernetENC_BroadcastClass::uip_hdrlen(0);
+uint8_t UIPEthernetENC_BroadcastClass::packetstate(0);
 
-IPAddress UIPEthernetClass::_dnsServerAddress;
-DhcpClass* UIPEthernetClass::_dhcp(NULL);
+IPAddress UIPEthernetENC_BroadcastClass::_dnsServerAddress;
+DhcpClass* UIPEthernetENC_BroadcastClass::_dhcp(NULL);
 
-unsigned long UIPEthernetClass::periodic_timer;
-unsigned long UIPEthernetClass::arp_timer;
+unsigned long UIPEthernetENC_BroadcastClass::periodic_timer;
+unsigned long UIPEthernetENC_BroadcastClass::arp_timer;
 
 // Because uIP isn't encapsulated within a class we have to use global
 // variables, so we can only have one TCP/IP stack per program.
 
-UIPEthernetClass::UIPEthernetClass()
+UIPEthernetENC_BroadcastClass::UIPEthernetENC_BroadcastClass()
 {
 }
 
-void UIPEthernetClass::init(uint8_t csPin)
+void UIPEthernetENC_BroadcastClass::init(uint8_t csPin)
 {
   Enc28J60Network::setCsPin(csPin);
 }
 
 #if UIP_UDP
 void
-UIPEthernetClass::setHostname(const char* hostname)
+UIPEthernetENC_BroadcastClass::setHostname(const char* hostname)
 {
   if (_dhcp == NULL) {
     _dhcp = new DhcpClass();
@@ -66,7 +66,7 @@ UIPEthernetClass::setHostname(const char* hostname)
 }
 
 int
-UIPEthernetClass::begin(const uint8_t* mac, unsigned long timeout, unsigned long responseTimeout)
+UIPEthernetENC_BroadcastClass::begin(const uint8_t* mac, unsigned long timeout, unsigned long responseTimeout)
 {
   if (_dhcp == NULL) {
     _dhcp = new DhcpClass();
@@ -88,7 +88,7 @@ UIPEthernetClass::begin(const uint8_t* mac, unsigned long timeout, unsigned long
 #endif
 
 void
-UIPEthernetClass::begin(const uint8_t* mac, IPAddress ip)
+UIPEthernetENC_BroadcastClass::begin(const uint8_t* mac, IPAddress ip)
 {
   IPAddress dns = ip;
   dns[3] = 1;
@@ -96,7 +96,7 @@ UIPEthernetClass::begin(const uint8_t* mac, IPAddress ip)
 }
 
 void
-UIPEthernetClass::begin(const uint8_t* mac, IPAddress ip, IPAddress dns)
+UIPEthernetENC_BroadcastClass::begin(const uint8_t* mac, IPAddress ip, IPAddress dns)
 {
   IPAddress gateway = ip;
   gateway[3] = 1;
@@ -104,20 +104,20 @@ UIPEthernetClass::begin(const uint8_t* mac, IPAddress ip, IPAddress dns)
 }
 
 void
-UIPEthernetClass::begin(const uint8_t* mac, IPAddress ip, IPAddress dns, IPAddress gateway)
+UIPEthernetENC_BroadcastClass::begin(const uint8_t* mac, IPAddress ip, IPAddress dns, IPAddress gateway)
 {
   IPAddress subnet(255, 255, 255, 0);
   begin(mac, ip, dns, gateway, subnet);
 }
 
 void
-UIPEthernetClass::begin(const uint8_t* mac, IPAddress ip, IPAddress dns, IPAddress gateway, IPAddress subnet)
+UIPEthernetENC_BroadcastClass::begin(const uint8_t* mac, IPAddress ip, IPAddress dns, IPAddress gateway, IPAddress subnet)
 {
   init(mac);
   configure(ip,dns,gateway,subnet);
 }
 
-void UIPEthernetClass::end()
+void UIPEthernetENC_BroadcastClass::end()
 {
   //close all clients
   for (int i = 0; i < UIP_CONNS; i++)
@@ -137,7 +137,7 @@ void UIPEthernetClass::end()
   configure(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
 }
 
-int UIPEthernetClass::maintain(){
+int UIPEthernetENC_BroadcastClass::maintain(){
   if (!initialized)
     return 0;
   tick();
@@ -164,27 +164,27 @@ int UIPEthernetClass::maintain(){
   return rc;
 }
 
-EthernetLinkStatus UIPEthernetClass::linkStatus()
+EthernetLinkStatus UIPEthernetENC_BroadcastClass::linkStatus()
 {
   if (!Enc28J60Network::getrev())
     return Unknown;
   return Enc28J60Network::linkStatus() ? LinkON : LinkOFF;
 }
 
-EthernetHardwareStatus UIPEthernetClass::hardwareStatus()
+EthernetHardwareStatus UIPEthernetENC_BroadcastClass::hardwareStatus()
 {
   if (!Enc28J60Network::getrev())
     return EthernetNoHardware;
-  return EthernetENC28J60;
+  return EthernetENC_Broadcast28J60;
 }
 
-uint8_t* UIPEthernetClass::macAddress(uint8_t* mac)
+uint8_t* UIPEthernetENC_BroadcastClass::macAddress(uint8_t* mac)
 {
   memcpy(mac, uip_ethaddr.addr, 6);
   return mac;
 }
 
-IPAddress UIPEthernetClass::localIP()
+IPAddress UIPEthernetENC_BroadcastClass::localIP()
 {
   IPAddress ret;
   uip_ipaddr_t a;
@@ -192,7 +192,7 @@ IPAddress UIPEthernetClass::localIP()
   return ip_addr_uip(a);
 }
 
-IPAddress UIPEthernetClass::subnetMask()
+IPAddress UIPEthernetENC_BroadcastClass::subnetMask()
 {
   IPAddress ret;
   uip_ipaddr_t a;
@@ -200,7 +200,7 @@ IPAddress UIPEthernetClass::subnetMask()
   return ip_addr_uip(a);
 }
 
-IPAddress UIPEthernetClass::gatewayIP()
+IPAddress UIPEthernetENC_BroadcastClass::gatewayIP()
 {
   IPAddress ret;
   uip_ipaddr_t a;
@@ -208,16 +208,16 @@ IPAddress UIPEthernetClass::gatewayIP()
   return ip_addr_uip(a);
 }
 
-IPAddress UIPEthernetClass::dnsServerIP()
+IPAddress UIPEthernetENC_BroadcastClass::dnsServerIP()
 {
   return _dnsServerAddress;
 }
 
-IPAddress UIPEthernetClass::dnsIP(int n) {
+IPAddress UIPEthernetENC_BroadcastClass::dnsIP(int n) {
   return (n == 0) ? _dnsServerAddress : IPAddress();
 }
 
-int UIPEthernetClass::hostByName(const char* hostname, IPAddress& result)
+int UIPEthernetENC_BroadcastClass::hostByName(const char* hostname, IPAddress& result)
 {
   // Look up the host first
   int ret = 0;
@@ -230,7 +230,7 @@ int UIPEthernetClass::hostByName(const char* hostname, IPAddress& result)
 }
 
 void
-UIPEthernetClass::tick()
+UIPEthernetENC_BroadcastClass::tick()
 {
   if (!initialized)
     return;
@@ -325,14 +325,14 @@ UIPEthernetClass::tick()
           // uip_len is set to a value > 0. */
           if (uip_len > 0)
             {
-              EthernetUDP::_send(&uip_udp_conns[i]);
+              EthernetENC_BroadcastUDP::_send(&uip_udp_conns[i]);
             }
         }
 #endif /* UIP_UDP */
     }
 }
 
-boolean UIPEthernetClass::network_send()
+boolean UIPEthernetENC_BroadcastClass::network_send()
 {
   if (packetstate & UIPETHERNET_SENDPACKET)
     {
@@ -368,7 +368,7 @@ sendandfree:
   return success;
 }
 
-void UIPEthernetClass::init(const uint8_t* mac) {
+void UIPEthernetENC_BroadcastClass::init(const uint8_t* mac) {
   periodic_timer = millis() + UIP_PERIODIC_TIMER;
 
   initialized = Enc28J60Network::init((uint8_t*)mac);
@@ -378,7 +378,7 @@ void UIPEthernetClass::init(const uint8_t* mac) {
   uip_arp_init();
 }
 
-void UIPEthernetClass::configure(IPAddress ip, IPAddress dns, IPAddress gateway, IPAddress subnet) {
+void UIPEthernetENC_BroadcastClass::configure(IPAddress ip, IPAddress dns, IPAddress gateway, IPAddress subnet) {
   uip_ipaddr_t ipaddr;
 
   uip_ip_addr(ipaddr, ip);
@@ -394,7 +394,7 @@ void UIPEthernetClass::configure(IPAddress ip, IPAddress dns, IPAddress gateway,
 }
 
 void
-UIPEthernetClass::call_yield()
+UIPEthernetENC_BroadcastClass::call_yield()
 {
   static bool in_yield;
   static uint32_t last_call_millis;
@@ -409,7 +409,7 @@ UIPEthernetClass::call_yield()
 
 /*---------------------------------------------------------------------------*/
 uint16_t
-UIPEthernetClass::chksum(uint16_t sum, const uint8_t *data, uint16_t len)
+UIPEthernetENC_BroadcastClass::chksum(uint16_t sum, const uint8_t *data, uint16_t len)
 {
   uint16_t t;
   const uint8_t *dataptr;
@@ -442,7 +442,7 @@ UIPEthernetClass::chksum(uint16_t sum, const uint8_t *data, uint16_t len)
 /*---------------------------------------------------------------------------*/
 
 uint16_t
-UIPEthernetClass::ipchksum(void)
+UIPEthernetENC_BroadcastClass::ipchksum(void)
 {
   uint16_t sum;
 
@@ -453,7 +453,7 @@ UIPEthernetClass::ipchksum(void)
 /*---------------------------------------------------------------------------*/
 uint16_t
 #if UIP_UDP
-UIPEthernetClass::upper_layer_chksum(uint8_t proto)
+UIPEthernetENC_BroadcastClass::upper_layer_chksum(uint8_t proto)
 #else
 uip_tcpchksum(void)
 #endif
@@ -476,7 +476,7 @@ uip_tcpchksum(void)
   sum = upper_layer_len + UIP_PROTO_TCP;
 #endif
   /* Sum IP source and destination addresses. */
-  sum = UIPEthernetClass::chksum(sum, (u8_t *)&BUF->srcipaddr[0], 2 * sizeof(uip_ipaddr_t));
+  sum = UIPEthernetENC_BroadcastClass::chksum(sum, (u8_t *)&BUF->srcipaddr[0], 2 * sizeof(uip_ipaddr_t));
 
   uint8_t upper_layer_memlen;
 #if UIP_UDP
@@ -497,7 +497,7 @@ uip_tcpchksum(void)
     break;
   }
 #endif
-  sum = UIPEthernetClass::chksum(sum, &uip_buf[UIP_IPH_LEN + UIP_LLH_LEN], upper_layer_memlen);
+  sum = UIPEthernetENC_BroadcastClass::chksum(sum, &uip_buf[UIP_IPH_LEN + UIP_LLH_LEN], upper_layer_memlen);
 #ifdef UIPETHERNET_DEBUG_CHKSUM
   Serial.print(F("chksum uip_buf["));
   Serial.print(UIP_IPH_LEN + UIP_LLH_LEN);
@@ -510,8 +510,8 @@ uip_tcpchksum(void)
     {
       sum = Enc28J60Network::chksum(
           sum,
-          UIPEthernetClass::uip_packet,
-          (UIPEthernetClass::packetstate & UIPETHERNET_SENDPACKET ? UIP_IPH_LEN + UIP_LLH_LEN + UIP_SENDBUFFER_OFFSET : UIP_IPH_LEN + UIP_LLH_LEN) + upper_layer_memlen,
+          UIPEthernetENC_BroadcastClass::uip_packet,
+          (UIPEthernetENC_BroadcastClass::packetstate & UIPETHERNET_SENDPACKET ? UIP_IPH_LEN + UIP_LLH_LEN + UIP_SENDBUFFER_OFFSET : UIP_IPH_LEN + UIP_LLH_LEN) + upper_layer_memlen,
           upper_layer_len - upper_layer_memlen
       );
 #ifdef UIPETHERNET_DEBUG_CHKSUM
@@ -531,26 +531,26 @@ uip_tcpchksum(void)
 uint16_t
 uip_ipchksum(void)
 {
-  return UIPEthernetClass::ipchksum();
+  return UIPEthernetENC_BroadcastClass::ipchksum();
 }
 
 #if UIP_UDP
 uint16_t
 uip_tcpchksum(void)
 {
-  uint16_t sum = UIPEthernetClass::upper_layer_chksum(UIP_PROTO_TCP);
+  uint16_t sum = UIPEthernetENC_BroadcastClass::upper_layer_chksum(UIP_PROTO_TCP);
   return sum;
 }
 
 uint16_t
 uip_udpchksum(void)
 {
-  uint16_t sum = UIPEthernetClass::upper_layer_chksum(UIP_PROTO_UDP);
+  uint16_t sum = UIPEthernetENC_BroadcastClass::upper_layer_chksum(UIP_PROTO_UDP);
   return sum;
 }
 #endif
 
-UIPEthernetClass Ethernet;
+UIPEthernetENC_BroadcastClass Ethernet;
 
 extern "C" void serialPrint(int i);
 void serialPrint(int i) {

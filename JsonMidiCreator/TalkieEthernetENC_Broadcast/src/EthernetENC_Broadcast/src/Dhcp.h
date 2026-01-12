@@ -4,7 +4,7 @@
 #ifndef Dhcp_h
 #define Dhcp_h
 
-#include "EthernetUdp.h"
+#include "EthernetENC_BroadcastUDP.h"
 
 /* DHCP state machine. */
 #define STATE_DHCP_START 0
@@ -91,7 +91,7 @@ enum
 	staticRoute		=	33,
 	trailerEncapsulation	=	34,
 	arpCacheTimeout		=	35,
-	ethernetEncapsulation	=	36,
+	EthernetENC_Broadcastapsulation	=	36,
 	tcpDefaultTTL		=	37,
 	tcpKeepaliveInterval	=	38,
 	tcpKeepaliveGarbage	=	39,
@@ -164,7 +164,7 @@ private:
   unsigned long _responseTimeout;
   unsigned long _secTimeout;
   uint8_t _dhcp_state;
-  EthernetUDP _dhcpUdpSocket;
+  EthernetENC_BroadcastUDP _dhcpUdpSocket;
   
   int request_DHCP_lease();
   void reset_DHCP_lease();

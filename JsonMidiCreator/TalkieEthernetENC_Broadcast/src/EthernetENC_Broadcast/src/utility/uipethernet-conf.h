@@ -1,7 +1,7 @@
 #ifndef UIPETHERNET_CONF_H
 #define UIPETHERNET_CONF_H
 
-// https://github.com/jandrassy/EthernetENC/wiki/Settings
+// https://github.com/jandrassy/EthernetENC_Broadcast/wiki/Settings
 
 /* for TCP */
 #ifndef UIP_SOCKET_NUMPACKETS

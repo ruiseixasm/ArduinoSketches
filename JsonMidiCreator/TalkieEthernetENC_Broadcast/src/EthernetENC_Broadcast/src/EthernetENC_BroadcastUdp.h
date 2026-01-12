@@ -47,7 +47,7 @@ typedef struct {
   uint16_t remote_port = 0;
 } uip_udp_userdata_t;
 
-class EthernetUDP : public UDP
+class EthernetENC_BroadcastUDP : public UDP
 {
 
 private:
@@ -56,7 +56,7 @@ private:
   uip_udp_userdata_t appdata;
 
 public:
-  EthernetUDP();  // Constructor
+  EthernetENC_BroadcastUDP();  // Constructor
   uint8_t
   begin(uint16_t);// initialize, start listening on specified port. Returns 1 if successful, 0 if there are no sockets available to use
   void
@@ -128,7 +128,7 @@ private:
 
   friend void uipudp_appcall(void);
 
-  friend class UIPEthernetClass;
+  friend class UIPEthernetENC_BroadcastClass;
   static void _send(struct uip_udp_conn *uip_udp_conn);
 
   static uint8_t _newBlock(uip_udp_msg_rec_t* blocks);

@@ -100,7 +100,7 @@ private:
   static void _dumpAllData();
 #endif
 
-  friend class UIPEthernetClass;
+  friend class UIPEthernetENC_BroadcastClass;
   friend class EthernetServer;
 
   friend void uipclient_appcall(void);

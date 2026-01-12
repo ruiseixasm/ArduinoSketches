@@ -56,7 +56,7 @@ UIPClient::connect(IPAddress ip, uint16_t port)
 #endif
       while((conn->tcpstateflags & UIP_TS_MASK) != UIP_CLOSED)
         {
-          UIPEthernetClass::tick();
+          UIPEthernetENC_BroadcastClass::tick();
           if ((conn->tcpstateflags & UIP_TS_MASK) == UIP_ESTABLISHED)
             {
               data = (uip_userdata_t*) conn->appstate;
@@ -126,7 +126,7 @@ UIPClient::stop()
     }
 #endif
   data = NULL;
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
 }
 
 uint8_t
@@ -143,7 +143,7 @@ UIPClient::operator==(const UIPClient& rhs)
 
 UIPClient::operator bool()
 {
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   return data && (!(data->state & UIP_CLIENT_REMOTECLOSED) || data->packets_in[0] != NOBLOCK);
 }
 
@@ -163,7 +163,7 @@ UIPClient::write(const uint8_t *buf, size_t size)
   uint32_t timeout_start = millis();
 #endif
   repeat:
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   if (u && u->state && !(u->state & (UIP_CLIENT_CLOSE | UIP_CLIENT_REMOTECLOSED)))
     {
       uint8_t p = _currentBlock(u->packets_out);
@@ -233,7 +233,7 @@ int
 UIPClient::availableForWrite()
 {
   const int MAX_AVAILABLE = UIP_SOCKET_DATALEN * UIP_SOCKET_NUMPACKETS;
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   if (data->packets_out[0] == NOBLOCK)
     return MAX_AVAILABLE;
   uint8_t p = _currentBlock(data->packets_out);
@@ -244,7 +244,7 @@ UIPClient::availableForWrite()
 void
 UIPClient::flush()
 {
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
 
   if (data && data->packets_out[0] != NOBLOCK)
     {
@@ -255,7 +255,7 @@ UIPClient::flush()
           if (uip_len > 0)
             {
               uip_arp_out();
-              UIPEthernetClass::network_send();
+              UIPEthernetENC_BroadcastClass::network_send();
             }
         }
     }
@@ -415,14 +415,14 @@ uipclient_appcall(void)
                       u->packets_in[i] = Enc28J60Network::allocBlock(uip_len);
                       if (u->packets_in[i] != NOBLOCK)
                         {
-                          Enc28J60Network::copyPacket(u->packets_in[i],0,UIPEthernetClass::in_packet,((uint8_t*)uip_appdata)-uip_buf,uip_len);
+                          Enc28J60Network::copyPacket(u->packets_in[i],0,UIPEthernetENC_BroadcastClass::in_packet,((uint8_t*)uip_appdata)-uip_buf,uip_len);
                           if (i == UIP_SOCKET_NUMPACKETS-1)
                             uip_stop();
                           goto finish_newdata;
                         }
                     }
                 }
-              UIPEthernetClass::packetstate &= ~UIPETHERNET_FREEPACKET;
+              UIPEthernetENC_BroadcastClass::packetstate &= ~UIPETHERNET_FREEPACKET;
               uip_stop();
             }
         }
@@ -484,12 +484,12 @@ send:
                 send_len = Enc28J60Network::blockSize(u->packets_out[0]);
               if (send_len > 0)
                 {
-                  UIPEthernetClass::uip_hdrlen = ((uint8_t*)uip_appdata)-uip_buf;
-                  UIPEthernetClass::uip_packet = Enc28J60Network::allocBlock(UIPEthernetClass::uip_hdrlen+send_len + UIP_SENDBUFFER_OFFSET + UIP_SENDBUFFER_PADDING);
-                  if (UIPEthernetClass::uip_packet != NOBLOCK)
+                  UIPEthernetENC_BroadcastClass::uip_hdrlen = ((uint8_t*)uip_appdata)-uip_buf;
+                  UIPEthernetENC_BroadcastClass::uip_packet = Enc28J60Network::allocBlock(UIPEthernetENC_BroadcastClass::uip_hdrlen+send_len + UIP_SENDBUFFER_OFFSET + UIP_SENDBUFFER_PADDING);
+                  if (UIPEthernetENC_BroadcastClass::uip_packet != NOBLOCK)
                     {
-                      Enc28J60Network::copyPacket(UIPEthernetClass::uip_packet,UIPEthernetClass::uip_hdrlen + UIP_SENDBUFFER_OFFSET,u->packets_out[0],0,send_len);
-                      UIPEthernetClass::packetstate |= UIPETHERNET_SENDPACKET;
+                      Enc28J60Network::copyPacket(UIPEthernetENC_BroadcastClass::uip_packet,UIPEthernetENC_BroadcastClass::uip_hdrlen + UIP_SENDBUFFER_OFFSET,u->packets_out[0],0,send_len);
+                      UIPEthernetENC_BroadcastClass::packetstate |= UIPETHERNET_SENDPACKET;
                     }
                 }
               goto finish;

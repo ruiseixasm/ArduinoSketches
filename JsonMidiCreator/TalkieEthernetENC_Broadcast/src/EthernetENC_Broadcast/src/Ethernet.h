@@ -31,7 +31,7 @@
 #include "utility/Enc28J60Network.h"
 #include "EthernetClient.h"
 #include "EthernetServer.h"
-#include "EthernetUdp.h"
+#include "EthernetENC_BroadcastUDP.h"
 
 extern "C"
 {
@@ -69,13 +69,13 @@ enum EthernetHardwareStatus {
   EthernetW5100,
   EthernetW5200,
   EthernetW5500,
-  EthernetENC28J60 = 10
+  EthernetENC_Broadcast28J60 = 10
 };
 
-class UIPEthernetClass
+class UIPEthernetENC_BroadcastClass
 {
 public:
-  UIPEthernetClass();
+  UIPEthernetENC_BroadcastClass();
 
   void init(uint8_t csPin);
 
@@ -137,7 +137,7 @@ private:
 
   friend class EthernetClient;
 
-  friend class EthernetUDP;
+  friend class EthernetENC_BroadcastUDP;
 
   static uint16_t chksum(uint16_t sum, const uint8_t* data, uint16_t len);
   static uint16_t ipchksum(void);
@@ -156,6 +156,6 @@ private:
 #endif /* UIP_CONF_IPV6 */
 };
 
-extern UIPEthernetClass Ethernet;
+extern UIPEthernetENC_BroadcastClass Ethernet;
 
 #endif

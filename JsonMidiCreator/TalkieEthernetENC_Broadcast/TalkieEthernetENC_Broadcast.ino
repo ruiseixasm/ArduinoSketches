@@ -16,11 +16,11 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <SPI.h>
 
 
+#include "src/JsonTalkie.hpp"
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
-#include "src/sockets/Changed_EthernetENC.hpp"
+#include "src/sockets/EthernetENC_Broadcast.hpp"
 #include "src/manifestos/MegaManifesto.hpp"
-#include "src/JsonTalker.h"
-#include "src/MessageRepeater.hpp"
+
 
 const char mega_name[] = "mega";
 const char mega_desc[] = "I'm a Mega talker";
@@ -29,7 +29,7 @@ JsonTalker mega = JsonTalker(mega_name, mega_desc, &mega_manifesto);
 
 JsonTalker* downlinked_talkers[] = { &mega };    // Only an array of pointers preserves polymorphism!!
 // Singleton requires the & (to get a reference variable)
-auto& ethernet_socket = Changed_EthernetENC::instance();
+auto& ethernet_socket = EthernetENC_Broadcast::instance();
 BroadcastSocket* uplinked_sockets[] = { &ethernet_socket };	// list of pointers
 
 MessageRepeater message_repeater(
@@ -38,7 +38,7 @@ MessageRepeater message_repeater(
 	);
 
 
-EthernetUDP udp;
+EthernetENC_BroadcastUDP udp;
 
 // uint8_t mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};   // DEFAULT
 

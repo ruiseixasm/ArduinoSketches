@@ -18,7 +18,7 @@
  */
 
 #include "Ethernet.h"
-#include "EthernetUdp.h"
+#include "EthernetENC_BroadcastUDP.h"
 
 extern "C" {
 #include "utility/uip-conf.h"
@@ -30,7 +30,7 @@ extern "C" {
 #define UIP_ARPHDRSIZE 42
 #define UDPBUF ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
-#define UIPUDP EthernetUDP // to not pollute source code history with the rename
+#define UIPUDP EthernetENC_BroadcastUDP // to not pollute source code history with the rename
 
 // Constructor
 UIPUDP::UIPUDP() :
@@ -79,7 +79,7 @@ UIPUDP::stop()
 int
 UIPUDP::beginPacket(IPAddress ip, uint16_t port)
 {
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   if ((ip[0] || ip[1] || ip[2] || ip[3]) && port)
     {
       uip_ipaddr_t ripaddr;
@@ -201,7 +201,7 @@ UIPUDP::write(const uint8_t *buffer, size_t size)
 int
 UIPUDP::parsePacket()
 {
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
 #ifdef UIPETHERNET_DEBUG_UDP
   if (appdata.packet_in != NOBLOCK)
     {
@@ -238,7 +238,7 @@ UIPUDP::parsePacket()
 int
 UIPUDP::available()
 {
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   return Enc28J60Network::blockSize(appdata.packet_in);
 }
 
@@ -259,7 +259,7 @@ UIPUDP::read()
 int
 UIPUDP::read(unsigned char* buffer, size_t len)
 {
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   if (appdata.packet_in != NOBLOCK)
     {
       memaddress read = Enc28J60Network::readPacket(appdata.packet_in,0,buffer,len);
@@ -279,7 +279,7 @@ UIPUDP::read(unsigned char* buffer, size_t len)
 int
 UIPUDP::peek()
 {
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   if (appdata.packet_in != NOBLOCK)
     {
       unsigned char c;
@@ -293,7 +293,7 @@ UIPUDP::peek()
 void
 UIPUDP::discardReceived()
 {
-  UIPEthernetClass::tick();
+  UIPEthernetENC_BroadcastClass::tick();
   Enc28J60Network::freeBlock(appdata.packet_in);
   appdata.packet_in = NOBLOCK;
 }
@@ -330,7 +330,7 @@ uipudp_appcall(void) {
               if (data->packet_next[p].packet != NOBLOCK)
                 {
                   //discard Linklevel and IP and udp-header and any trailing bytes:
-                  Enc28J60Network::copyPacket(data->packet_next[p].packet,0,UIPEthernetClass::in_packet,UIP_UDP_PHYH_LEN,Enc28J60Network::blockSize(data->packet_next[p].packet));
+                  Enc28J60Network::copyPacket(data->packet_next[p].packet,0,UIPEthernetENC_BroadcastClass::in_packet,UIP_UDP_PHYH_LEN,Enc28J60Network::blockSize(data->packet_next[p].packet));
     #ifdef UIPETHERNET_DEBUG_UDP
                   Serial.print(F("udp, uip_newdata received packet: "));
                   Serial.print(data->packet_next[p].packet);
@@ -349,9 +349,9 @@ uipudp_appcall(void) {
           Serial.print(F(", size: "));
           Serial.println(Enc28J60Network::blockSize(data->packet_out));
 #endif
-          UIPEthernetClass::uip_packet = data->packet_out;
-          UIPEthernetClass::packetstate |= UIPETHERNET_SENDPACKET;
-          UIPEthernetClass::uip_hdrlen = UIP_UDP_PHYH_LEN;
+          UIPEthernetENC_BroadcastClass::uip_packet = data->packet_out;
+          UIPEthernetENC_BroadcastClass::packetstate |= UIPETHERNET_SENDPACKET;
+          UIPEthernetENC_BroadcastClass::uip_hdrlen = UIP_UDP_PHYH_LEN;
           uip_udp_send(data->out_pos - (UIP_UDP_PHYH_LEN + UIP_SENDBUFFER_OFFSET));
         }
     }
@@ -363,18 +363,18 @@ UIPUDP::_send(struct uip_udp_conn *uip_udp_conn) {
   uip_arp_out(); //add arp
   if (uip_len == UIP_ARPHDRSIZE)
     {
-      UIPEthernetClass::uip_packet = NOBLOCK;
-      UIPEthernetClass::packetstate &= ~UIPETHERNET_SENDPACKET;
+      UIPEthernetENC_BroadcastClass::uip_packet = NOBLOCK;
+      UIPEthernetENC_BroadcastClass::packetstate &= ~UIPETHERNET_SENDPACKET;
 #ifdef UIPETHERNET_DEBUG_UDP
       Serial.println(F("udp, uip_poll results in ARP-packet"));
 #endif
-      UIPEthernetClass::network_send();
+      UIPEthernetENC_BroadcastClass::network_send();
     }
   else
   //arp found ethaddr for ip (otherwise packet is replaced by arp-request)
     {
       uip_udp_userdata_t* data = (uip_udp_userdata_t *)(uip_udp_conn->appstate);
-      UIPEthernetClass::network_send();
+      UIPEthernetENC_BroadcastClass::network_send();
       data->send = false;
       data->packet_out = NOBLOCK;
 
@@ -386,7 +386,7 @@ UIPUDP::_send(struct uip_udp_conn *uip_udp_conn) {
 
 #ifdef UIPETHERNET_DEBUG_UDP
       Serial.print(F("udp, uip_packet to send: "));
-      Serial.println(UIPEthernetClass::uip_packet);
+      Serial.println(UIPEthernetENC_BroadcastClass::uip_packet);
 #endif
     }
 }

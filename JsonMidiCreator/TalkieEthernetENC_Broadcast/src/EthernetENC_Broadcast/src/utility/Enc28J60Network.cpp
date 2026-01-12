@@ -96,11 +96,28 @@ bool Enc28J60Network::init(uint8_t* macaddr)
   // in binary these poitions are:11 0000 0011 1111
   // This is hex 303F->EPMM0=0x3f,EPMM1=0x30
 
-    // IN ORDER TO BE HABLE TO RECEIVE UDP BROADCASTS ON 255.255.255.255
-    writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
-    // Pattern matching disabled – not needed for broadcast
-    // writeRegPair(EPMM0, 0x303f);
-    // writeRegPair(EPMCSL, 0xf7f9);
+
+
+  
+  // WHERE THE CHANGE TO ACCEPT BROADCAST UDP PACKAGES IS DONE
+
+//   writeReg(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN);
+//   writeRegPair(EPMM0, 0x303f);
+//   writeRegPair(EPMCSL, 0xf7f9);
+
+//   writeReg(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
+
+
+	// Enable all useful filters in OR mode (ANDOR = 0)
+	writeReg(ERXFCON, 
+		ERXFCON_UCEN  |   // 0x80 - Accept unicast to our MAC
+		ERXFCON_CRCEN |   // 0x20 - CRC check enabled  
+		ERXFCON_BCEN  |   // 0x01 - Accept MAC broadcasts (FF:FF:FF:FF:FF:FF → 255.255.255.255)
+		ERXFCON_MCEN      // 0x02 - Accept multicast
+		// ANDOR bit (0x40) = 0 (OR mode - default)
+		// This accepts packets if ANY filter matches
+	);
+
 
 
   //
