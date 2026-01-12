@@ -11,606 +11,593 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+
+/**
+ * @file JsonTalker.h
+ * @brief JSON message handler for Talkie communication protocol.
+ *        This class acts on the received JsonMessage accordingly
+ *        to its manifesto.
+ * 
+ * This class provides efficient, memory-safe JSON message manipulation 
+ * for embedded systems with constrained resources. It implements a 
+ * schema-driven JSON protocol optimized for Arduino environments.
+ * 
+ * @warning This class uses messages of the type JsonMessage.
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-03
+ * @version 1.0.0
+ */
+
 #ifndef JSON_TALKER_H
 #define JSON_TALKER_H
 
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
-#include <ArduinoJson.h>    // Include ArduinoJson Library
+#include "BroadcastSocket.h"
 
 
 // #define JSON_TALKER_DEBUG
+// #define JSON_TALKER_DEBUG_NEW
 
-// Readjust if absolutely necessary
-#define TALKIE_BUFFER_SIZE 128
+using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
+using BroadcastValue 	= TalkieCodes::BroadcastValue;
+using MessageValue 		= TalkieCodes::MessageValue;
+using SystemValue 		= TalkieCodes::SystemValue;
+using RogerValue 		= TalkieCodes::RogerValue;
+using ErrorValue 		= TalkieCodes::ErrorValue;
+using ValueType 		= TalkieCodes::ValueType;
+using Original 			= JsonMessage::Original;
 
 
-class BroadcastSocket;
+class TalkerManifesto;
+class MessageRepeater;
 
 
+/**
+ * @class JsonTalker
+ * @brief Represents a Talker, the Talker is the class that processes and generates
+ *        json messages based on its associated `Manifesto` and its linked place
+ * 
+ * A Talker handles transmissions based on its name and channel, a channel of `255`
+ * means a disabled channel, resulting in no response to any channel.
+ * 
+ * @note This class is the antitheses of the `BroadcastSocket` class in the sense that
+ *       it works with the Repeater in between and as response.
+ */
 class JsonTalker {
-private:
-    
-    // The socket can't be static becaus different talkers may use different sockets (remote)
-    BroadcastSocket* _socket = nullptr;
-    // Pointer PRESERVE the polymorphism while objects don't!
-    static JsonTalker** _json_talkers;  // It's capable of communicate with other talkers (local)
-    static uint8_t _talker_count;
-
 public:
-
-    virtual const char* class_name() const { return "JsonTalker"; }
-
-    enum MessageCode : int {
-        TALK,
-        LIST,
-        RUN,
-        SET,
-        GET,
-        SYS,
-        ECHO,
-        ERROR,
-        CHANNEL
-    };
-
-    
-    // Now without a method reference `bool (JsonTalker::*method)(JsonObject, uint32_t)`
-    struct Command {
+	
+	/**
+	 * @brief Represents an Action with a name and a description
+	 * 
+	 * An Action placed in a list has it's position matched with is
+	 * callable index number.
+	 */
+    struct Action {
         const char* name;
         const char* desc;
     };
 
-    struct Manifesto {
-        const Command* runs;
-        const Command* sets;
-        const Command* gets;
-        const uint8_t runs_count;
-        const uint8_t sets_count;
-        const uint8_t gets_count;
-    };
-
-protected:
+	
+private:
+    
+	MessageRepeater* _message_repeater = nullptr;
+	LinkType _link_type = LinkType::TALKIE_LT_NONE;
 
     const char* _name;      // Name of the Talker
     const char* _desc;      // Description of the Device
-    uint8_t _channel = 0;
-    bool _muted = false;
+	TalkerManifesto* _manifesto = nullptr;
+    uint8_t _channel = 255;	// Channel 255 means NO channel response
+	Original _original_message = {0, MessageValue::TALKIE_MSG_NOISE};
+    bool _muted_calls = false;
 
 
-    // Can't use method reference because these type of references are class designation dependent,
-    // so, they will prevent any possibility of inheritance, this way the only alternative is to
-    // do an indirect reference based on the command position with only a pair of strings and
-    // a following switch case sequence that picks the respective method and calls it directly.
+	/**
+     * @brief Returns the description of the board where the Talker is being run on
+     */
+	static const char* _board_description() {
+		
+		#ifdef __AVR__
+			#if (RAMEND - RAMSTART + 1) == 2048
+				return "Arduino Uno/Nano (ATmega328P)";
+			#elif (RAMEND - RAMSTART + 1) == 8192
+				return "Arduino Mega (ATmega2560)";
+			#else
+				return "Unknown AVR Board";
+			#endif
+			
+		#elif defined(ESP8266)
+			static char buffer[50];
+			snprintf(buffer, sizeof(buffer), "ESP8266 (Chip ID: %u)", ESP.getChipId());
+			return buffer;
+			
+		#elif defined(ESP32)
+			static char buffer[64];
+    		uint64_t chipId = ESP.getEfuseMac();
+			snprintf(buffer, sizeof(buffer),
+				"ESP32 (Rev: %d) (Chip ID: %08X%08X)",
+             	ESP.getChipRevision(),
+				(uint32_t)(chipId >> 32),  // Upper 32 bits
+				(uint32_t)chipId);         // Lower 32 bits
+			return buffer;
+			
+		#elif defined(TEENSYDUINO)
+			#if defined(__IMXRT1062__)
+				return "Teensy 4.0/4.1 (i.MX RT1062)";
+			#elif defined(__MK66FX1M0__)
+				return "Teensy 3.6 (MK66FX1M0)";
+			#elif defined(__MK64FX512__)
+				return "Teensy 3.5 (MK64FX512)";
+			#elif defined(__MK20DX256__)
+				return "Teensy 3.2/3.1 (MK20DX256)";
+			#elif defined(__MKL26Z64__)
+				return "Teensy LC (MKL26Z64)";
+			#else
+				return "Unknown Teensy Board";
+			#endif
 
-    // Virtual method that returns static manifesto (can't override class member variables)
-    virtual const Manifesto& get_manifesto() const {
+		#elif defined(__arm__)
+			return "ARM-based Board";
 
-        static const Manifesto _manifesto = {
-            (const Command[]){  // runs
-                {"mute", "Mutes this talker"},
-                {"unmute", "Unmutes this talker"},
-                {"on", "Turns led ON"},
-                {"off", "Turns led OFF"}
-            },
-            (const Command[]){  // sets 
-                {"delay", "Sets the socket max delay"}
-            },
-            (const Command[]){  // gets
-                {"muted", "Returns 1 if muted and 0 if not"},
-                {"delay", "Gets the socket max delay"},
-                {"drops", "Gets total drops count"},
-                {"runs", "Gets total runs"}
-            },
-            4,
-            1,
-            4
-        };
+		#else
+			return "Unknown Board";
 
-        return _manifesto;
-    }
-
-
-    bool remoteSend(JsonObject json_message, bool as_reply = false);
-
-
-    bool localSend(JsonObject json_message, bool as_reply = false) {
-        (void)as_reply; // Silence unused parameter warning
-
-        json_message["f"] = _name;
-        json_message["c"] = 1;  // 'c' = 1 means LOCAL communication
-        // Triggers all local Talkers to processes the json_message
-        bool pre_validated = false;
-        bool sent_message = false;
-        for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-            if (_json_talkers[talker_i] != this) {  // Can't send to myself
-                pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
-                sent_message = true;
-                if (!pre_validated) break;
-            }
-        }
-        return sent_message;
-    }
-
-
-    bool replyMessage(JsonObject json_message, bool as_reply = true) {
-        if (json_message["c"].is<uint16_t>()) {
-            uint16_t c = json_message["c"].as<uint16_t>();
-            if (c == 1) {   // c == 1 means a local message while 0 means a remote one
-                return localSend(json_message, as_reply);
-            }
-        }
-        return remoteSend(json_message, as_reply);
-    }
-
-    
-    uint16_t _total_runs = 0;
-    // static becaus it's a shared state among all other talkers, device (board) parameter
-    static bool _is_led_on;  // keep track of state yourself, by default it's off
+		#endif
+	}
 
 
-    uint8_t command_index(const MessageCode message_code, JsonObject json_message) {
-        const char* command_name = json_message["n"].as<const char*>();
-        const Command* command = nullptr;
-        uint8_t count = 0;
-        const Manifesto& my_manifesto = get_manifesto();
-        switch (message_code)
-        {
-        case MessageCode::RUN:
-            command = my_manifesto.runs;
-            count = my_manifesto.runs_count;
-            break;
-        case MessageCode::SET:
-            command = my_manifesto.sets;
-            count = my_manifesto.sets_count;
-            break;
-        case MessageCode::GET:
-            command = my_manifesto.gets;
-            count = my_manifesto.gets_count;
-            break;
-        default: return 255;    // 255 means not found!
-        }
-        for (uint8_t i = 0; i < count; i++) {
-            if (strcmp(command_name, command[i].name) == 0)
-                return i;
-        }
-        return 255; // 255 means not found!
-    }
+	/**
+     * @brief Verifies and sets the message fields before its following transmission
+     * @param json_message The json message being prepared to be sent
+     */
+	bool _prepareMessage(JsonMessage& json_message) {
+
+		if (json_message.has_from()) {
+			if (strcmp(json_message.get_from_name(), _name) != 0) {
+				// FROM is different from _name, must be swapped (replaces "f" with "t")
+				json_message.swap_from_with_to();
+				json_message.set_from_name(_name);
+			}
+		} else {
+			// FROM doesn't even exist (must have)
+			json_message.set_from_name(_name);
+		}
+
+		MessageValue message_value = json_message.get_message_value();
+		if (message_value < MessageValue::TALKIE_MSG_ECHO) {
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("socketSend1: Setting a new identifier (i) for :"));
+			json_message.write_to(Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			uint16_t message_id = (uint16_t)millis();
+			if (message_value < MessageValue::TALKIE_MSG_ECHO) {
+				_original_message.identity = message_id;
+				_original_message.message_value = message_value;
+			}
+			json_message.set_identity(message_id);
+		} else if (!json_message.has_identity()) { // Makes sure response messages have an "i" (identifier)
+
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("socketSend1: Response message with a wrong or without an identifier, now being set (i): "));
+			json_message.write_to(Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+			json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+			json_message.set_identity();
+			json_message.set_nth_value_number(0, static_cast<uint32_t>(ErrorValue::TALKIE_ERR_IDENTITY));
+
+		} else {
+			
+			#ifdef JSON_TALKER_DEBUG
+			Serial.print(F("socketSend1: Keeping the same identifier (i): "));
+			json_message.write_to(Serial);
+			Serial.println();  // optional: just to add a newline after the JSON
+			#endif
+
+		}
+		return true;
+	}
 
 
-    virtual bool command_run(const uint8_t command_index, JsonObject json_message) {
-        (void)json_message; // Silence unused parameter warning
-        switch (command_index)
-        {
-        case 0:
-            _muted = true;
-            break;
-        case 1:
-            _muted = false;
-            break;
-
-        case 2:
-            {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("Case 0 - Turning LED ON"));
-                #endif
-        
-                if (!_is_led_on) {
-                #ifdef LED_BUILTIN
-                    #ifdef JSON_TALKER_DEBUG
-                        Serial.print(F("LED_BUILTIN IS DEFINED as: "));
-                        Serial.println(LED_BUILTIN);
-                    #endif
-                    digitalWrite(LED_BUILTIN, HIGH);
-                #else
-                    #ifdef JSON_TALKER_DEBUG
-                        Serial.println(F("LED_BUILTIN IS NOT DEFINED in this context!"));
-                    #endif
-                #endif
-                    _is_led_on = true;
-                    _total_runs++;
-                } else {
-                    json_message["r"] = "Already On!";
-                    if (_socket != nullptr)
-                        this->replyMessage(json_message, false);
-                    return false;
-                }
-                return true;
-            }
-            break;
-        
-        case 3:
-            {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("Case 1 - Turning LED OFF"));
-                #endif
-        
-                if (_is_led_on) {
-                #ifdef LED_BUILTIN
-                    digitalWrite(LED_BUILTIN, LOW);
-                #endif
-                    _is_led_on = false;
-                    _total_runs++;
-                } else {
-                    json_message["r"] = "Already Off!";
-                    if (_socket != nullptr)
-                        this->replyMessage(json_message, false);
-                    return false;
-                }
-                return true;
-            }
-            break;
-        }
-		return false;  // Nothing done
-    }
-
-    
-    virtual bool command_set(const uint8_t command_index, JsonObject json_message) {
-        uint32_t json_value = json_message["v"].as<uint32_t>();
-        switch (command_index)
-        {
-        case 0:
-            {
-                this->set_delay(static_cast<uint8_t>(json_value));
-                return true;
-            }
-            break;
-        
-        default: return false;
-        }
-    }
-
-    
-    virtual uint32_t command_get(const uint8_t command_index, JsonObject json_message) {
-        (void)json_message; // Silence unused parameter warning
-        switch (command_index)
-        {
-        case 0:
-            return _muted;
-            break;
-        case 1:
-            {
-                return static_cast<uint32_t>(this->get_delay());
-            }
-            break;
-
-        case 2:
-            {
-                return this->get_total_drops();
-            }
-            break;
-
-        case 3:
-            {
-                return _total_runs;
-            }
-            break;
-        
-        default: return 0;  // Has to return something
-        }
-    }
-
-    bool echo(JsonObject json_message) {
-        Serial.print(json_message["f"].as<String>());
-        Serial.print(" - ");
-        if (json_message["r"].is<String>()) {
-            Serial.println(json_message["r"].as<String>());
-        } else if (json_message["d"].is<String>()) {
-            Serial.println(json_message["d"].as<String>());
-        } else {
-            Serial.println(F("Empty echo received!"));
-        }
-        return false;
-    }
-
-    bool error(JsonObject json_message) {
-        Serial.print(json_message["f"].as<String>());
-        Serial.print(" - ");
-        if (json_message["r"].is<String>()) {
-            Serial.println(json_message["r"].as<String>());
-        } else if (json_message["d"].is<String>()) {
-            Serial.println(json_message["d"].as<String>());
-        } else {
-            Serial.println(F("Empty error received!"));
-        }
-        return false;
-    }
+	/** @brief Gets the total number of sockets regardless the link type */
+	uint8_t _socketsCount();
 
 
-    void set_delay(uint8_t delay);
-    uint8_t get_delay();
-    uint16_t get_total_drops();
-    uint16_t get_total_runs() { return _total_runs; }
+	/**
+     * @brief Gets the socket pointer given by the socket index
+     * @param socket_index The index of the socket to get
+     * @return Returns the BroadcastSocket pointer or nullptr if none
+     */
+	BroadcastSocket* _getSocket(uint8_t socket_index);
+
+
+	const char* _manifesto_name() const;
+	uint8_t _actionsCount() const;
+	const Action* _getActionsArray() const;
+	uint8_t _actionIndex(const char* name) const;
+	uint8_t _actionIndex(uint8_t index) const;
+	bool _actionByIndex(uint8_t index, JsonMessage& json_message, TalkerMatch talker_match);
+	void _echo(JsonMessage& json_message, TalkerMatch talker_match);
+	void _error(JsonMessage& json_message, TalkerMatch talker_match);
+	void _noise(JsonMessage& json_message, TalkerMatch talker_match);
 
 
 public:
 
-    // Explicit default constructor
+    // Explicitly disabled the default constructor
     JsonTalker() = delete;
         
-    JsonTalker(const char* name, const char* desc)
-        : _name(name), _desc(desc) {
-            // Nothing to see here
-        }
+    JsonTalker(const char* name, const char* desc, TalkerManifesto* manifesto = nullptr, uint8_t channel = 255)
+        : _name(name), _desc(desc), _manifesto(manifesto), _channel(channel) {}
 
 
-    void setSocket(BroadcastSocket* socket) {
-        _socket = socket;
-    }
-
-    static void connectTalkers(JsonTalker** json_talkers, uint8_t talker_count) {
-        _json_talkers = json_talkers;
-        _talker_count = talker_count;
-    }
+	/**
+     * @brief Method intended to be called by the Repeater class by its public loop method
+	 * 
+     * @note This method being underscored means to be called internally only.
+     */
+    void _loop();
 
 
-    const char* get_name() { return _name; }
+    // ============================================
+    // GETTERS - FIELD VALUES
+    // ============================================
+	
+    /**
+	 * @brief Get the name of the Talker
+     * @return A pointer to the Talker name string
+     */
+	const char* get_name() const { return _name; }
+	
+	
+    /**
+	 * @brief Get the description of the Talker
+	 * @return A pointer to the Talker description string
+     */
+	const char* get_desc() const { return _desc; }
+
+	
+    /**
+     * @brief Get the channel of the Talker
+     * @return The channel number of the Talker
+     */
+	uint8_t get_channel() const { return _channel; }
+	
+	
+    /**
+     * @brief Get the muted state of the Talker
+     * @return Returns true if muted (muted calls)
+     * 
+     * @note This only mutes the echoes from the calls
+     */
+	bool get_muted() const { return _muted_calls; }
+
+
+    /**
+     * @brief Get the Link Type with the Message Repeater
+     * @return Returns the Link Type (ex. DOWN_LINKED)
+     */
+	LinkType getLinkType() const { return _link_type; }
+
+	
+    /**
+     * @brief Get the last, non echo message (original)
+     * @return Returns Original with the message id and value
+     * 
+     * @note This is used to pair the message id with its echo
+     */
+    const Original& get_original() const { return _original_message; }
+
+
+    // ============================================
+    // SETTERS - FIELD MODIFICATION
+    // ============================================
+
+    /**
+     * @brief Set channel number
+     * @param channel Channel number for which the Talker will respond
+     */
     void set_channel(uint8_t channel) { _channel = channel; }
-    uint8_t get_channel() { return _channel; }
+
+
+    /**
+     * @brief Intended to be used by the Message Repeater only
+     * @param message_repeater The Message Repeater pointer
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note This method is used by the Message Repeater to set up the Talker
+     */
+	void _setLink(MessageRepeater* message_repeater, LinkType link_type);
+
+
+    /**
+     * @brief Set the Talker as muted or not muted
+     * @param muted If true it mutes the call's echoes
+     * 
+     * @note This only mutes the echoes from the calls
+     */
+    void set_mute(bool muted) { _muted_calls = muted; }
+
+
+	bool transmitToRepeater(JsonMessage& json_message);
+	
     
-    JsonTalker& mute() {    // It does NOT make a copy!
-        _muted = true;
-        return *this;
-    }
+    void _handleTransmission(JsonMessage& json_message, TalkerMatch talker_match) {
 
-    JsonTalker& unmute() {
-        _muted = false;
-        return *this;
-    }
+		MessageValue message_value = json_message.get_message_value();
 
-    bool muted() { return _muted; }
+		#ifdef JSON_TALKER_DEBUG_NEW
+		Serial.print(F("\t\thandleTransmission1: "));
+		json_message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println(static_cast<int>( message_value ));
+		#endif
 
-    
-    bool processData(JsonObject json_message, bool pre_validated) {
+        switch (message_value) {
 
-        #ifdef JSON_TALKER_DEBUG
-        Serial.println(F("Processing..."));
-        #endif
-        
-        // Error types:
-        //     0 - Unknown sender   // Removed, useless kind of error report that results in UDP flooding
-        //     1 - Message missing the checksum
-        //     2 - Message corrupted
-        //     3 - Wrong message code
-        //     4 - Message NOT identified
-        //     5 - Set command arrived too late
+			case MessageValue::TALKIE_MSG_CALL:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
+				{
+					if (_manifesto) {
+						uint8_t index_found_i = 255;
+						ValueType value_type = json_message.get_action_type();
+						switch (value_type) {
 
-        if (!pre_validated) {
+							case ValueType::TALKIE_VT_STRING:
+								index_found_i = _actionIndex(json_message.get_action_string());
+								break;
+							
+							case ValueType::TALKIE_VT_INTEGER:
+								index_found_i = _actionIndex(json_message.get_action_index());
+								break;
+							
+							default: break;
+						}
+						if (index_found_i < 255) {
 
-            if (!json_message["f"].is<String>()) {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(0);
-                #endif
-                return false;
-            }
-            if (!json_message["i"].is<uint32_t>()) {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(4);
-                #endif
-                json_message["m"] = 7;   // error
-                json_message["t"] = json_message["f"];
-                json_message["e"] = 4;
-                
-                replyMessage(json_message, true);
-                return false;
-            }
+							#ifdef JSON_TALKER_DEBUG
+							Serial.print(F("\tRUN found at "));
+							Serial.print(index_found_i);
+							Serial.println(F(", now being processed..."));
+							#endif
+
+							// ROGER should be implicit for CALL to spare json string size for more data index value nth
+							if (!_actionByIndex(index_found_i, json_message, talker_match)) {
+								json_message.set_roger_value(RogerValue::TALKIE_RGR_NEGATIVE);
+							}
+						} else {
+							json_message.set_roger_value(RogerValue::TALKIE_RGR_SAY_AGAIN);
+						}
+					} else {
+						json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+					}
+					// In the end sends back the processed message (single message, one-to-one)
+					if (!(_muted_calls || json_message.is_no_reply())) {
+						transmitToRepeater(json_message);
+					}
+				}
+				break;
+			
+			case MessageValue::TALKIE_MSG_TALK:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
+				json_message.set_nth_value_string(0, _desc);
+				// In the end sends back the processed message (single message, one-to-one)
+				transmitToRepeater(json_message);
+				break;
+			
+			case MessageValue::TALKIE_MSG_CHANNEL:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
+				if (json_message.has_nth_value_number(0)) {
+
+					#ifdef JSON_TALKER_DEBUG
+					Serial.print(F("\tChannel B value is an <uint8_t>: "));
+					Serial.println(json_message.get_nth_value_number(0));
+					#endif
+
+					_channel = json_message.get_nth_value_number(0);
+				}
+				json_message.set_nth_value_number(0, _channel);
+				// In the end sends back the processed message (single message, one-to-one)
+				transmitToRepeater(json_message);
+				break;
+			
+			case MessageValue::TALKIE_MSG_PING:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
+				// Talker name already set in FROM (ready to transmit)
+				transmitToRepeater(json_message);
+				break;
+			
+			case MessageValue::TALKIE_MSG_LIST:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
+				if (_manifesto) {
+					uint8_t total_actions = _actionsCount();	// This makes the access safe
+					const Action* actions = _getActionsArray();
+					for (uint8_t action_i = 0; action_i < total_actions; ++action_i) {
+						json_message.remove_all_nth_values();	// Makes sure there is space for each new action
+						json_message.set_nth_value_number(0, action_i);
+						json_message.set_nth_value_string(1, actions[action_i].name);
+						json_message.set_nth_value_string(2, actions[action_i].desc);
+						transmitToRepeater(json_message);	// Many-to-One
+					}
+					if (!total_actions) {
+						json_message.set_roger_value(RogerValue::TALKIE_RGR_NIL);
+						transmitToRepeater(json_message);	// One-to-One
+					}
+				} else {
+					json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+					transmitToRepeater(json_message);		// One-to-One
+				}
+				break;
+			
+			case MessageValue::TALKIE_MSG_SYSTEM:
+				json_message.set_message_value(MessageValue::TALKIE_MSG_ECHO);
+				if (json_message.has_system()) {
+
+					SystemValue system_value = json_message.get_system_value();
+
+					switch (system_value) {
+
+						case SystemValue::TALKIE_SYS_BOARD:
+							json_message.set_nth_value_string(0, _board_description());
+							break;
+
+						case SystemValue::TALKIE_SYS_MUTE:
+							if (json_message.has_nth_value_number(0)) {
+								uint8_t mute = (uint8_t)json_message.get_nth_value_number(0);
+								if (mute) {
+									_muted_calls = true;
+								} else {
+									_muted_calls = false;
+								}
+							} else {
+								if (_muted_calls) {
+									json_message.set_nth_value_number(0, 1);
+								} else {
+									json_message.set_nth_value_number(0, 0);
+								}
+							}
+							break;
+
+						case SystemValue::TALKIE_SYS_DROPS:
+							{
+								uint8_t sockets_count = _socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = _getSocket(socket_i);	// Safe sockets_count already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_number(1, socket->get_drops_count());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								} else {
+									return;	// All transmissions already done by the if condition above
+								}
+							}
+							break;
+
+						case SystemValue::TALKIE_SYS_DELAY:
+							if (json_message.get_nth_value_type(0) == ValueType::TALKIE_VT_INTEGER) {
+								uint8_t socket_index = (uint8_t)json_message.get_nth_value_number(0);
+								BroadcastSocket* socket = _getSocket(socket_index);
+								if (socket) {
+									if (json_message.get_nth_value_type(1) == ValueType::TALKIE_VT_INTEGER) {
+										socket->set_max_delay( (uint8_t)json_message.get_nth_value_number(1) );
+									} else {
+										json_message.set_nth_value_number(1, socket->get_max_delay());
+									}
+								} else {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								}
+							} else {
+								uint8_t sockets_count = _socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = _getSocket(socket_i);	// Safe sockets_count already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_number(1, socket->get_max_delay());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								} else {
+									return;	// All transmissions already done by the if condition above
+								}
+							}
+							break;
+
+						case SystemValue::TALKIE_SYS_SOCKET:
+							{
+								uint8_t sockets_count = _socketsCount();
+								for (uint8_t socket_i = 0; socket_i < sockets_count; ++socket_i) {
+									const BroadcastSocket* socket = _getSocket(socket_i);	// Safe sockets_count already
+									uint16_t total_drops = socket->get_drops_count();
+									json_message.set_nth_value_number(0, socket_i);
+									json_message.set_nth_value_string(1, socket->class_name());
+									transmitToRepeater(json_message);	// Many-to-One
+								}
+								if (!sockets_count) {
+									json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+								} else {
+									return;	// All transmissions already done by the if condition above
+								}
+							}
+							break;
+
+						case SystemValue::TALKIE_SYS_MANIFESTO:
+							if (_manifesto) {
+								json_message.set_nth_value_string(0, _manifesto_name());
+							} else {
+								json_message.set_roger_value(RogerValue::TALKIE_RGR_NO_JOY);
+							}
+							break;
+
+						default: break;
+					}
+
+					// In the end sends back the processed message (single message, one-to-one)
+					transmitToRepeater(json_message);
+				}
+				break;
+			
+			case MessageValue::TALKIE_MSG_ECHO:
+				if (_manifesto) {
+
+					// Makes sure it has the same id first (echo condition)
+					uint16_t message_id = json_message.get_identity();
+
+					#ifdef JSON_TALKER_DEBUG_NEW
+					Serial.print(F("\t\thandleTransmission1: "));
+					json_message.write_to(Serial);
+					Serial.print(" | ");
+					Serial.print(message_id);
+					Serial.print(" | ");
+					Serial.println(_original_message.identity);
+					#endif
+
+					if (message_id == _original_message.identity) {
+						_echo(json_message, talker_match);
+					}
+				}
+				break;
+			
+			case MessageValue::TALKIE_MSG_ERROR:
+				_error(json_message, talker_match);
+				break;
+			
+			case MessageValue::TALKIE_MSG_NOISE:
+				if (json_message.has_error()) {
+					if (talker_match == TalkerMatch::TALKIE_MATCH_BY_NAME || talker_match == TalkerMatch::TALKIE_MATCH_BY_CHANNEL) {
+
+						ErrorValue error_value = json_message.get_error_value();
+						switch (error_value) {
+							case ErrorValue::TALKIE_ERR_DELAY:
+								if (_muted_calls) {
+									return;
+								}
+								break;
+							
+							default: break;
+						}
+
+						json_message.remove_all_nth_values();	// Keeps it small and clean of bad chars
+						json_message.set_message_value(MessageValue::TALKIE_MSG_ERROR);
+						if (!json_message.has_identity()) json_message.set_identity();
+						transmitToRepeater(json_message);
+					}
+				} else {
+					_noise(json_message, talker_match);
+				}
+				break;
+			
+			default: break;
         }
-
-        
-        bool dont_interrupt = true;   // Doesn't interrupt next talkers process
-
-        // Is it for me?
-        if (json_message["t"].is<uint8_t>()) {
-            if (json_message["t"].as<uint8_t>() != _channel)
-                return true;    // It's still validated (just not for me as a target)
-        } else if (json_message["t"].is<String>()) {
-            if (json_message["t"] != _name) {
-                #ifdef JSON_TALKER_DEBUG
-                Serial.println(F("Message NOT for me!"));
-                #endif
-                return true;    // It's still validated (just not for me as a target)
-            } else {
-                dont_interrupt = false; // Found by name, interrupts next Talkers process
-            }
-        }   // else: If it has no "t" it means for every Talkers
-
-
-        // Echo codes:
-        //     0 - ROGER
-        //     1 - UNKNOWN
-        //     2 - NONE
-
-        #ifdef JSON_TALKER_DEBUG
-        Serial.print(F("Process: "));
-        serializeJson(json_message, Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
-        #endif
-
-
-        MessageCode message_code = static_cast<MessageCode>(json_message["m"].as<int>());
-        json_message["w"] = json_message["m"].as<int>();
-        json_message["t"] = json_message["f"];
-        json_message["m"] = MessageCode::ECHO;
-
-        switch (message_code)
-        {
-        case MessageCode::TALK:
-            json_message["d"] = _desc;
-            replyMessage(json_message, true);
-            break;
-        
-        case MessageCode::LIST:
-            {   // Because of none_list !!!
-                bool none_list = true;
-
-                // In your list handler:
-                
-                #ifdef JSON_TALKER_DEBUG
-                Serial.print("=== This object is: ");
-                Serial.println(class_name());
-                #endif
-            
-                const Manifesto& my_manifesto = get_manifesto();
-
-                json_message["w"] = MessageCode::RUN;
-                for (size_t i = 0; i < my_manifesto.runs_count; ++i) {
-                    none_list = false;
-                    json_message["n"] = my_manifesto.runs[i].name;
-                    json_message["d"] = my_manifesto.runs[i].desc;
-                    replyMessage(json_message, true);
-                }
-                json_message["w"] = MessageCode::SET;
-                for (size_t i = 0; i < my_manifesto.sets_count; ++i) {
-                    none_list = false;
-                    json_message["n"] = my_manifesto.sets[i].name;
-                    json_message["d"] = my_manifesto.sets[i].desc;
-                    replyMessage(json_message, true);
-                }
-                json_message["w"] = MessageCode::GET;
-                for (size_t i = 0; i < my_manifesto.gets_count; ++i) {
-                    none_list = false;
-                    json_message["n"] = my_manifesto.gets[i].name;
-                    json_message["d"] = my_manifesto.gets[i].desc;
-                    replyMessage(json_message, true);
-                }
-                if(none_list) {
-                    json_message["g"] = 2;       // NONE
-                }
-            }
-            break;
-        
-        case MessageCode::RUN:
-            if (json_message["n"].is<String>()) {
-
-                const uint8_t command_found_i = command_index(MessageCode::RUN, json_message);
-                if (command_found_i < 255) {
-
-                    #ifdef JSON_TALKER_DEBUG
-                    Serial.println(F("RUN found, now being processed..."));
-                    #endif
-            
-                    json_message["g"] = 0;       // ROGER
-                    replyMessage(json_message, true);
-                    // No memory leaks because message_doc exists in the listen() method stack
-                    json_message.remove("g");
-                    command_run(command_found_i, json_message);
-                } else {
-                    json_message["g"] = 1;   // UNKNOWN
-                    replyMessage(json_message, true);
-                }
-            }
-            break;
-        
-        case MessageCode::SET:
-            if (json_message["n"].is<String>() && json_message["v"].is<uint32_t>()) {
-
-                const uint8_t command_found_i = command_index(MessageCode::SET, json_message);
-                if (command_found_i < 255) {
-                    json_message["g"] = 0;       // ROGER
-                    replyMessage(json_message, true);
-                    // No memory leaks because message_doc exists in the listen() method stack
-                    json_message.remove("g");
-                    command_set(command_found_i, json_message);
-                } else {
-                    json_message["g"] = 1;   // UNKNOWN
-                    replyMessage(json_message, true);
-                }
-            }
-            break;
-        
-        case MessageCode::GET:
-            if (json_message["n"].is<String>()) {
-
-                const uint8_t command_found_i = command_index(MessageCode::GET, json_message);
-                if (command_found_i < 255) {
-                    // No memory leaks because message_doc exists in the listen() method stack
-                    // The return of the value works as an implicit ROGER (avoids network flooding)
-                    json_message["v"] = command_get(command_found_i, json_message);
-                    replyMessage(json_message, true);
-                } else {
-                    json_message["g"] = 1;   // UNKNOWN
-                    replyMessage(json_message, true);
-                }
-            }
-            break;
-        
-        case MessageCode::SYS:
-            {
-            // AVR Boards (Uno, Nano, Mega) - Check RAM size
-            #ifdef __AVR__
-                uint16_t ramSize = RAMEND - RAMSTART + 1;
-                if (ramSize == 2048)
-                    json_message["d"] = F("Arduino Uno/Nano (ATmega328P)");
-                else if (ramSize == 8192)
-                    json_message["d"] = F("Arduino Mega (ATmega2560)");
-                else
-                    json_message["d"] = F("Unknown AVR Board");
-                
-            // ESP8266
-            #elif defined(ESP8266)
-                json_message["d"] = "ESP8266 (Chip ID: " + String(ESP.getChipId()) + ")";
-                
-            // ESP32
-            #elif defined(ESP32)
-                json_message["d"] = "ESP32 (Rev: " + String(ESP.getChipRevision()) + ")";
-                
-            // Teensy Boards
-            #elif defined(TEENSYDUINO)
-                #if defined(__IMXRT1062__)
-                    json_message["d"] = F("Teensy 4.0/4.1 (i.MX RT1062)");
-                #elif defined(__MK66FX1M0__)
-                    json_message["d"] = F("Teensy 3.6 (MK66FX1M0)");
-                #elif defined(__MK64FX512__)
-                    json_message["d"] = F("Teensy 3.5 (MK64FX512)");
-                #elif defined(__MK20DX256__)
-                    json_message["d"] = F("Teensy 3.2/3.1 (MK20DX256)");
-                #elif defined(__MKL26Z64__)
-                    json_message["d"] = F("Teensy LC (MKL26Z64)");
-                #else
-                    json_message["d"] = F("Unknown Teensy Board");
-                #endif
-
-            // ARM (Due, Zero, etc.)
-            #elif defined(__arm__)
-                json_message["d"] = F("ARM-based Board");
-
-            // Unknown Board
-            #else
-                json_message["d"] = F("Unknown Board");
-
-            #endif
-
-                replyMessage(json_message, true);
-
-                // TO INSERT SELF EXTRA DATA !!
-            }
-            break;
-        
-        case MessageCode::ECHO:
-            this->echo(json_message);
-            break;
-        
-        case MessageCode::ERROR:
-            this->error(json_message);
-            break;
-        
-        case MessageCode::CHANNEL:
-            if (json_message["b"].is<uint8_t>()) {
-
-                #ifdef JSON_TALKER_DEBUG
-                Serial.print(F("Channel B value is an <uint8_t>: "));
-                Serial.println(json_message["b"].is<uint8_t>());
-                #endif
-
-                _channel = json_message["b"].as<uint8_t>();
-            }
-            json_message["b"] = _channel;
-            replyMessage(json_message, true);
-            break;
-        
-        default:
-            break;
-        }
-
-        return dont_interrupt;
     }
 
 };

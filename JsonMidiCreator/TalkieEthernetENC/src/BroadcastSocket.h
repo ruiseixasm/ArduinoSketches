@@ -11,332 +11,195 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
+
+
+/**
+ * @file BroadcastSocket.h
+ * @brief Broadcast Socket interface for Talkie communication protocol
+ * 
+ * This class provides efficient, memory-safe input and output for the
+ * JSONmessages which processing is started and finished by it.
+ * 
+ * @warning This class does not use dynamic memory allocation.
+ *          All operations are performed on fixed-size buffers.
+ * 
+ * @author Rui Seixas Monteiro
+ * @date Created: 2026-01-03
+ * @version 1.0.0
+ */
+
+
 #ifndef BROADCAST_SOCKET_H
 #define BROADCAST_SOCKET_H
 
 #include <Arduino.h>    // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
-#include "JsonTalker.h"
+#include "JsonMessage.hpp"
 
 
 // #define BROADCASTSOCKET_DEBUG
+// #define BROADCASTSOCKET_DEBUG_NEW
 
-// Readjust if absolutely necessary
-#define TALKIE_BUFFER_SIZE 128
+// Readjust if necessary
 #define MAX_NETWORK_PACKET_LIFETIME_MS 256UL    // 256 milliseconds
 
+using LinkType			= TalkieCodes::LinkType;
+using TalkerMatch 		= TalkieCodes::TalkerMatch;
+using BroadcastValue 	= TalkieCodes::BroadcastValue;
+using MessageValue 		= TalkieCodes::MessageValue;
+using SystemValue 		= TalkieCodes::SystemValue;
+using RogerValue 		= TalkieCodes::RogerValue;
+using ErrorValue 		= TalkieCodes::ErrorValue;
+using ValueType 		= TalkieCodes::ValueType;
+using Original 			= JsonMessage::Original;
+
+class MessageRepeater;
+
+
+/**
+ * @class BroadcastSocket
+ * @brief An Interface to be implemented as a Socket to receive and send `JsonMessage` content
+ * 
+ * The implementation of this class requires de definition of the methods, `_receive`,
+ * `_send` and `class_name`. After receiving data, the method `_startTransmission`
+ * shall be called.
+ * 
+ * @note Find `BroadcastSocket` implementation in https://github.com/ruiseixasm/JsonTalkie/tree/main/src/sockets.
+ */
 class BroadcastSocket {
-private:
-
-
-    // Pointer PRESERVE the polymorphism while objects don't!
-    static JsonTalker** _json_talkers;   // It's a singleton, so, no need to be static
-    static uint8_t _talker_count;
-    static bool _control_timing;
-    static uint32_t _last_local_time;
-    static uint32_t _last_remote_time;
-    static uint16_t _drops_count;
-
-
-    static uint16_t _generateChecksum(const char* net_data, const size_t len) {
-        // 16-bit word and XORing
-        uint16_t checksum = 0;
-        for (size_t i = 0; i < len; i += 2) {
-            uint16_t chunk = net_data[i] << 8;
-            if (i + 1 < len) {
-                chunk |= net_data[i + 1];
-            }
-            checksum ^= chunk;
-        }
-        return checksum;
-    }
-
-
-    // ASCII byte values:
-    // 	'c' = 99
-    // 	':' = 58
-    // 	'"' = 34
-    // 	'0' = 48
-    // 	'9' = 57
-
-
-    static uint16_t extractChecksum(size_t* source_len, int* message_code_int, uint32_t* remote_time) {
-        
-        uint16_t data_checksum = 0;
-        // Has to be pre processed (linearly)
-        bool at_m = false;
-        bool at_c = false;
-        bool at_i = false;
-        size_t data_i = 3;
-        for (size_t i = data_i; i < *source_len; ++i) {
-            if (_receiving_buffer[i] == ':') {
-                if (_receiving_buffer[i - 2] == 'c' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
-                    at_c = true;
-                } else if (_receiving_buffer[i - 2] == 'i' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
-                    at_i = true;
-                } else if (_receiving_buffer[i - 2] == 'm' && _receiving_buffer[i - 3] == '"' && _receiving_buffer[i - 1] == '"') {
-                    at_m = true;
-                }
-            } else {
-                if (at_i) {
-                    if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
-                        at_i = false;
-                    } else {
-                        *remote_time *= 10;
-                        *remote_time += _receiving_buffer[i] - '0';
-                    }
-                } else if (at_c) {
-                    if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
-                        at_c = false;
-                    } else if (_receiving_buffer[i - 1] == ':') { // First number in the row
-                        data_checksum = _receiving_buffer[i] - '0';
-                        _receiving_buffer[i] = '0';
-                    } else {
-                        data_checksum *= 10;
-                        data_checksum += _receiving_buffer[i] - '0';
-                        continue;   // Avoids the copy of the char
-                    }
-                } else if (at_m) {
-                    if (_receiving_buffer[i] < '0' || _receiving_buffer[i] > '9') {
-                        at_m = false;
-                    } else if (_receiving_buffer[i - 1] == ':') { // First number in the row
-                        *message_code_int = _receiving_buffer[i] - '0';   // Message code found and it's a number
-                    } else {
-                        *message_code_int *= 10;
-                        *message_code_int += _receiving_buffer[i] - '0';
-                    }
-                }
-            }
-            _receiving_buffer[data_i++] = _receiving_buffer[i]; // Does a left offset
-        }
-        *source_len = data_i;
-        return data_checksum;
-    }
-
-
-    static size_t insertChecksum(size_t length) {
-
-        uint16_t checksum = _generateChecksum(_sending_buffer, length);
-
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("I: Checksum is: "));
-        Serial.println(checksum);
-        #endif
-
-        if (checksum > 0) { // It's already 0
-
-            // First, find how many digits
-            uint16_t temp = checksum;
-            uint8_t num_digits = 0;
-            while (temp > 0) {
-                temp /= 10;
-                num_digits++;
-            }
-            size_t data_i = length - 1;    // Old length (shorter)
-            length += num_digits - 1;      // Discount the digit '0' already placed
-            
-            if (length > TALKIE_BUFFER_SIZE)
-                return length;  // buffer overflow
-
-            bool at_c = false;
-            for (size_t i = length - 1; data_i > 5; --i) {
-                
-                if (_sending_buffer[data_i - 2] == ':') {
-                    if (_sending_buffer[data_i - 4] == 'c' && _sending_buffer[data_i - 5] == '"' && _sending_buffer[data_i - 3] == '"') {
-                        at_c = true;
-                    }
-                } else if (at_c) {
-                    if (checksum == 0) {
-                        return length;
-                    } else {
-                        _sending_buffer[i] = '0' + checksum % 10;
-                        checksum /= 10; // Truncates the number (does a floor)
-                        continue;       // Avoids the copy of the char
-                    }
-                }
-                _sending_buffer[i] = _sending_buffer[data_i--]; // Does an offset
-            }
-        }
-        return length;
-    }
-
-    
 protected:
 
-    static char _receiving_buffer[TALKIE_BUFFER_SIZE];
-    static char _sending_buffer[TALKIE_BUFFER_SIZE];
-    static uint8_t _max_delay_ms;
+	MessageRepeater* _message_repeater = nullptr;
+	LinkType _link_type = LinkType::TALKIE_LT_NONE;
+
+    // Pointer PRESERVE the polymorphism while objects don't!
+    uint8_t _max_delay_ms = 5;
+    bool _control_timing = false;
+    uint16_t _last_local_time = 0;
+    uint16_t _last_message_timestamp = 0;
+    uint16_t _drops_count = 0;
+
+	
+    // Constructor
+    BroadcastSocket() {
+		// Does nothing here
+	}
 
 
-    static size_t startTransmission(size_t length) {
+    /**
+     * @brief Sends the generated message by _startTransmission
+	 *        to the Repeater
+     */
+	void _transmitToRepeater(JsonMessage& json_message);
 
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("T: "));
-        Serial.write(_receiving_buffer, length);
-        Serial.println();
-        #endif
 
-        if (length > 3*4 + 2) {
-            
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("C: Total Talkers count: "));
-            Serial.println(_talker_count);
-            #endif
+    /**
+     * @brief Starts the transmission of the data received
+     * @param json_message A json message to be transmitted to the repeater
+	 * 
+     * @note Before calling this method, the `JsonMessage` methods `_validate_json` and `_process_checksum`
+	 *       shall be called first
+     */
+    void _startTransmission(JsonMessage& json_message) {
 
-            int message_code_int = 1000;    // There is no 1000 message code, meaning, it has none!
-            uint32_t remote_time = 0;
-            uint16_t received_checksum = extractChecksum(&length, &message_code_int, &remote_time);
-            uint16_t checksum = _generateChecksum(_receiving_buffer, length);
-            
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("C: Remote time: "));
-            Serial.println(remote_time);
-            #endif
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print("\n\t");
+		Serial.print(class_name());
+		Serial.print(": ");
+		#endif
+			
+		#ifdef BROADCASTSOCKET_DEBUG_NEW
+		Serial.print(F("\thandleTransmission1.1: "));
+		json_message.write_to(Serial);
+		Serial.print(" | ");
+		Serial.println(json_message._get_length());
+		#endif
+		
+		#ifdef BROADCASTSOCKET_DEBUG
+		Serial.print(F("handleTransmission4: Validated Checksum of "));
+		Serial.println(checksum);
+		#endif
+		
+		if (_max_delay_ms > 0) {
 
-            if (received_checksum == checksum) {
-                #ifdef BROADCASTSOCKET_DEBUG
-                Serial.print(F("C: Validated Checksum of "));
-                Serial.println(checksum);
-                #endif
+			MessageValue message_code = json_message.get_message_value();
+			if (message_code == MessageValue::TALKIE_MSG_CALL) {
 
-                if (message_code_int == 1000) { // Found no message code!
-                    #ifdef BROADCASTSOCKET_DEBUG
-                    Serial.println(F("C: No message code!"));
-                    #endif
+				uint16_t message_timestamp = json_message.get_timestamp();
 
-                    return length;
-                }
-                
-                if (_max_delay_ms > 0) {
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.print(F("handleTransmission6: Message code requires delay check: "));
+				Serial.println((int)message_code);
+				#endif
 
-                    JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(message_code_int);
+				#ifdef BROADCASTSOCKET_DEBUG
+				Serial.print(F("handleTransmission3: Remote time: "));
+				Serial.println(message_timestamp);
+				#endif
+			
+				const uint16_t local_time = (uint16_t)millis();
+				
+				if (_control_timing) {
+					
+					const uint16_t remote_delay = _last_message_timestamp - message_timestamp;  // Package received after
 
-                    if (!(message_code < JsonTalker::MessageCode::RUN || message_code > JsonTalker::MessageCode::GET)) {
+					if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
+						const uint16_t allowed_delay = static_cast<uint16_t>(_max_delay_ms);
+						const uint16_t local_delay = local_time - _last_local_time;
+						#ifdef BROADCASTSOCKET_DEBUG
+						Serial.print(F("handleTransmission7: Local delay: "));
+						Serial.println(local_delay);
+						#endif
+						if (remote_delay > allowed_delay || local_delay > allowed_delay) {
+							#ifdef BROADCASTSOCKET_DEBUG
+							Serial.print(F("handleTransmission8: Out of time package (remote delay): "));
+							Serial.println(remote_delay);
+							#endif
+							_drops_count++;
 
-                        #ifdef BROADCASTSOCKET_DEBUG
-                        Serial.print(F("C: Message code requires delay check: "));
-                        Serial.println(message_code_int);
-                        #endif
+							// Mark error message as noise and dispatch it to be processed by the respective Talker
+							json_message.set_message_value(MessageValue::TALKIE_MSG_NOISE);
+							json_message.set_error_value(ErrorValue::TALKIE_ERR_DELAY);
+							_transmitToRepeater(json_message);
+							return;
+						}
+					}
+				}
+				_last_local_time = local_time;
+				_last_message_timestamp = message_timestamp;
+				_control_timing = true;
+			}
+		}
 
-                        const uint32_t local_time = millis();
-                        
-                        if (_control_timing) {
-                            
-                            const uint32_t remote_delay = _last_remote_time - remote_time;  // Package received after
-
-                            if (remote_delay > 0 && remote_delay < MAX_NETWORK_PACKET_LIFETIME_MS) {    // Out of order package
-                                const uint32_t allowed_delay = static_cast<uint32_t>(_max_delay_ms);
-                                const uint32_t local_delay = local_time - _last_local_time;
-                                #ifdef BROADCASTSOCKET_DEBUG
-                                Serial.print(F("C: Local delay: "));
-                                Serial.println(local_delay);
-                                #endif
-                                if (remote_delay > allowed_delay || local_delay > allowed_delay) {
-                                    #ifdef BROADCASTSOCKET_DEBUG
-                                    Serial.print(F("C: Out of time package (remote delay): "));
-                                    Serial.println(remote_delay);
-                                    #endif
-                                    _drops_count++;
-                                    return length;  // Out of time package (too late)
-                                }
-                            }
-                        }
-                        _last_local_time = local_time;
-                        _last_remote_time = remote_time;
-                        _control_timing = true;
-                    }
-                }
-
-                // Triggers all Talkers to processes the received data
-                bool pre_validated = false;
-                for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-
-                    #ifdef BROADCASTSOCKET_DEBUG
-                    Serial.print(F("Creating new JsonObject for talker: "));
-                    Serial.println(_json_talkers[talker_i]->get_name());
-                    #endif
-                    
-                    // JsonDocument in the stack makes sure its memory is released (NOT GLOBAL)
-                    #if ARDUINOJSON_VERSION_MAJOR >= 7
-                    JsonDocument message_doc;
-                    #else
-                    StaticJsonDocument<TALKIE_BUFFER_SIZE> message_doc;
-                    #endif
-
-                    DeserializationError error = deserializeJson(message_doc, _receiving_buffer, length);
-                    if (error) {
-                        #ifdef BROADCASTSOCKET_DEBUG
-                        Serial.println(F("Failed to deserialize received data"));
-                        #endif
-                        return 0;
-                    }
-                    JsonObject json_message = message_doc.as<JsonObject>();
-
-					// A non static method
-                    pre_validated = _json_talkers[talker_i]->processData(json_message, pre_validated);
-                    if (!pre_validated) break;
-                }
-                
-            } else {
-                #ifdef BROADCASTSOCKET_DEBUG
-                Serial.print(F("C: Validation of Checksum FAILED!!"));
-                Serial.println(checksum);
-                #endif
-            }
-        }
-        return length;
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print(millis() - json_message._reference_time);
+		#endif
+		
+		_transmitToRepeater(json_message);
+		
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print(" | ");
+		Serial.print(millis() - json_message._reference_time);
+		#endif
     }
 
+	
+    /**
+     * @brief Pure abstract method that creates a new `JsonMessage` based on the
+	 *        receiving data by the socket
+	 * 
+     * @note This method shall call the method `_startTransmission` with the new created
+	 *       `JsonMessage`.
+     */
+    virtual void _receive() = 0;
 
-    BroadcastSocket(JsonTalker** json_talkers, uint8_t talker_count) {
-			_json_talkers = json_talkers;
-			_talker_count = talker_count;
-            // Each talker has its remote connections, ONLY local connections are static
-            for (uint8_t talker_i = 0; talker_i < _talker_count; ++talker_i) {
-                _json_talkers[talker_i]->setSocket(this);
-            }
-        }
 
-
-	// CAN'T BE STATIC
-    // NOT Pure virtual methods anymores (= 0;)
-    virtual size_t send(size_t length, bool as_reply = false) {
-        (void)as_reply; // Silence unused parameter warning
-
-        if (length < 3*4 + 2) {
-
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("Error: Serialization failed"));
-            #endif
-
-            return 0;
-        }
-
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("S: "));
-        Serial.write(_sending_buffer, length);
-        Serial.println();
-        #endif
-
-        length = insertChecksum(length);
-        
-        if (length > TALKIE_BUFFER_SIZE) {
-
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.println(F("Error: Message too big"));
-            #endif
-
-            return 0;
-        }
-
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("T: "));
-        Serial.write(_sending_buffer, length);
-        Serial.println();
-        #endif
-        
-
-        return length;
-    }
+	/**
+     * @brief Pure abstract method that sends via socket any received json message
+     * @param json_message A json message able to be accessed by the subclass socket
+	 * 
+     * @note This method marks the end of the message cycle with `_finishTransmission`.
+     */
+    virtual bool _send(const JsonMessage& json_message) = 0;
 
 
 public:
@@ -346,57 +209,126 @@ public:
     BroadcastSocket(BroadcastSocket&&) = delete;
     BroadcastSocket& operator=(BroadcastSocket&&) = delete;
 
+	
+	/** @brief A getter for the class name to be returned for the `system` command */
+    virtual const char* class_name() const = 0;
 
-	// CAN'T BE STATIC
-    virtual size_t receive() {
+	
+	/**
+     * @brief Method intended to be called by the Repeater class by its public loop method
+	 * 
+     * @note This method being underscored means to be called internally only.
+     */
+    virtual void _loop() {
         // In theory, a UDP packet on a local area network (LAN) could survive
         // for about 4.25 minutes (255 seconds).
         // BUT in practice it won't more that 256 milliseconds given that is a Ethernet LAN
-        if (_control_timing && millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
+        if (_control_timing && (uint16_t)millis() - _last_local_time > MAX_NETWORK_PACKET_LIFETIME_MS) {
             _control_timing = false;
         }
-        return 0;
+        _receive();
     }
 
-    
-    bool remoteSend(JsonObject json_message, bool as_reply = false) {
 
-        JsonTalker::MessageCode message_code = static_cast<JsonTalker::MessageCode>(json_message["m"].as<int>());
-        if (message_code != JsonTalker::MessageCode::ECHO && message_code != JsonTalker::MessageCode::ERROR) {
-            json_message["i"] = (uint32_t)millis();
+    // ============================================
+    // GETTERS - FIELD VALUES
+    // ============================================
+	
+    /**
+     * @brief Get the Link Type with the Message Repeater
+     * @return Returns the Link Type (ex. UP_LINKED)
+	 * 
+     * @note Usefull if intended to be bridged (ex. UP_BRIDGED),
+	 *       where the `LOCAL` messages are also broadcasted
+     */
+	LinkType getLinkType() const { return _link_type; }
 
-        } else if (!json_message["i"].is<uint32_t>()) { // Makes sure response messages have an "i" (identifier)
+	
+    /**
+     * @brief Get the maximum amount of delay a message can have before being dropped
+     * @return Returns the delay in microseconds
+     * 
+     * @note A max delay of `0` means no message will be dropped,
+	 *       this only applies to `CALL` messages value
+     */
+    uint8_t get_max_delay() const { return _max_delay_ms; }
 
-            #ifdef BROADCASTSOCKET_DEBUG
-            Serial.print(F("R: Response message without an identifier (i)"));
-            serializeJson(json_message, Serial);
-            Serial.println();  // optional: just to add a newline after the JSON
-            #endif
 
-            return false;
-        }
+    /**
+     * @brief Get the total amount of call messages already dropped
+     * @return Returns the number of dropped call messages
+     */
+    uint16_t get_drops_count() const { return _drops_count; }
 
-        json_message["c"] = 0;  // Makes sure `c` is set
 
-        size_t length = serializeJson(json_message, _sending_buffer, TALKIE_BUFFER_SIZE);
+    // ============================================
+    // SETTERS - FIELD MODIFICATION
+    // ============================================
 
-        #ifdef BROADCASTSOCKET_DEBUG
-        Serial.print(F("R: "));
-        serializeJson(json_message, Serial);
-        Serial.println();  // optional: just to add a newline after the JSON
-        #endif
+    /**
+     * @brief Intended to be used by the Message Repeater only
+     * @param message_repeater The Message Repeater pointer
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note This method is used by the Message Repeater to set up the Socket
+     */
+	void _setLink(MessageRepeater* message_repeater, LinkType link_type);
 
-        return send(length, as_reply);	// send is internally triggered, so, this method can hardly be static
-    }
-    
 
+    /**
+     * @brief Sets the Link Type of the Talker directly
+     * @param link_type The Link Type with the Message Repeater
+     * 
+     * @note Only usefull if intended to be bridged (ex. UP_BRIDGED),
+	 *       where the `LOCAL` messages are also broadcasted
+     */
+	void setLinkType(LinkType link_type) { _link_type = link_type; }
+
+
+    /**
+     * @brief Sets the maximum amount of delay a message can have before being dropped
+     * @param max_delay_ms The maximum amount of delay in milliseconds
+     * 
+     * @note A max delay of `0` means no message will be dropped,
+	 *       this only applies to `CALL` messages value
+     */
     void set_max_delay(uint8_t max_delay_ms = 5) { _max_delay_ms = max_delay_ms; }
-    uint8_t get_max_delay() { return _max_delay_ms; }
-    uint16_t get_drops_count() { return _drops_count; }
+	
+
+	/**
+     * @brief The final step in a cycle of processing a json message in which the
+	 *        json message content is sent accordingly to the `_send` method implementation
+     * @param json_message A json message which buffer is to be sent
+	 * 
+     * @note This method marks the end of the message transmission cycle.
+     */
+    bool _finishTransmission(JsonMessage& json_message) {
+
+		bool message_sent = false;
+
+		#ifdef BROADCASTSOCKET_DEBUG_NEW
+		Serial.print(F("socketSend1: "));
+		json_message.write_to(Serial);
+		Serial.println();  // optional: just to add a newline after the JSON
+		#endif
+
+		#ifdef MESSAGE_DEBUG_TIMING
+		Serial.print(" | ");
+		Serial.print(millis() - json_message._reference_time);
+		#endif
+			
+		if (json_message._get_length() && json_message._insert_checksum()) {
+			
+			message_sent = _send(json_message);
+
+			#ifdef MESSAGE_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - json_message._reference_time);
+			#endif
+		}
+		return message_sent;
+    }
 
 };
-
-
-
 
 #endif // BROADCAST_SOCKET_H
