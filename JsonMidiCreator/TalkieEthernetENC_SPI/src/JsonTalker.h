@@ -34,9 +34,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #define JSON_TALKER_H
 
 #include <Arduino.h>        // Needed for Serial given that Arduino IDE only includes Serial in .ino files!
-#include "TalkerManifesto.hpp"
-#include "TalkieCodes.hpp"
-#include "JsonMessage.hpp"
 #include "BroadcastSocket.h"
 
 
@@ -54,8 +51,8 @@ using ValueType 		= TalkieCodes::ValueType;
 using Original 			= JsonMessage::Original;
 
 
+class TalkerManifesto;
 class MessageRepeater;
-class BroadcastSocket;
 
 
 /**
@@ -70,6 +67,20 @@ class BroadcastSocket;
  *       it works with the Repeater in between and as response.
  */
 class JsonTalker {
+public:
+	
+	/**
+	 * @brief Represents an Action with a name and a description
+	 * 
+	 * An Action placed in a list has it's position matched with is
+	 * callable index number.
+	 */
+    struct Action {
+        const char* name;
+        const char* desc;
+    };
+
+	
 private:
     
 	MessageRepeater* _message_repeater = nullptr;
@@ -205,6 +216,8 @@ private:
      */
 	BroadcastSocket* _getSocket(uint8_t socket_index);
 
+	uint8_t _actionsCount() const;
+	const Action* _getActionsArray() const;
 	uint8_t _actionIndex(const char* name) const;
 	uint8_t _actionIndex(uint8_t index) const;
 	bool _actionByIndex(uint8_t index, JsonMessage& json_message, TalkerMatch talker_match);

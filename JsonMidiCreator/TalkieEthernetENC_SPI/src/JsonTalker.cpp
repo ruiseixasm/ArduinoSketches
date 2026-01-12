@@ -13,6 +13,7 @@ https://github.com/ruiseixasm/JsonTalkie
 */
 
 #include "JsonTalker.h"
+#include "TalkerManifesto.hpp"
 #include "MessageRepeater.hpp"
 
 
