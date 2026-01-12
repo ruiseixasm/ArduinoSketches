@@ -73,6 +73,21 @@ void JsonTalker::_loop() {
 }
 
 
+uint8_t JsonTalker::_actionsCount() const {
+	if (_manifesto) {
+		return _manifesto->_actionsCount();
+	}
+	return 0;
+}
+
+const Action* JsonTalker::_getActionsArray() const {
+	if (_manifesto) {
+		return _manifesto->_getActionsArray();
+	}
+	return nullptr;
+}
+
+
 uint8_t JsonTalker::_actionIndex(const char* name) const {
 	if (_manifesto) {
 		return _manifesto->_actionIndex(name);
