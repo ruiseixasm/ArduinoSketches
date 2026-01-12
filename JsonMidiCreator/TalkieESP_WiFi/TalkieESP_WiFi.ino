@@ -33,19 +33,19 @@ const char password[] = "wifiPassword";
 // TALKERS 
 // Ethernet Socket Repeater
 // Spy Talker (being sockless devoids it of answering direct remote calls, and that also works, but differently)
-const char t_spy_name[] = "spy";
+const char t_spy_name[] = "spy2";
 const char t_spy_desc[] = "I'm a Spy and I spy the talkers' pings";
 Spy spy_manifesto;
 JsonTalker t_spy = JsonTalker(t_spy_name, t_spy_desc, &spy_manifesto);
 
 // Sockless Talker (blue led)
-const char l_blue_name[] = "blue";
+const char l_blue_name[] = "blue2";
 const char l_blue_desc[] = "I turn led Blue on and off";
 BlueManifesto blue_manifesto(2);
 JsonTalker l_blue = JsonTalker(l_blue_name, l_blue_desc, &blue_manifesto);
 
 // Sockless Talker (JsonMessage tester)
-const char t_tester_name[] = "test";
+const char t_tester_name[] = "test2";
 const char t_tester_desc[] = "I test the JsonMessage class";
 MessageTester message_tester;
 JsonTalker t_tester = JsonTalker(t_tester_name, t_tester_desc, &message_tester);
