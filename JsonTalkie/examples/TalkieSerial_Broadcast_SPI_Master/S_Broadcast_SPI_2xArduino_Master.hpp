@@ -254,6 +254,7 @@ protected:
 
 					if (c < 128) {
 						message_buffer[receiving_index++] = c;
+						continue;
 					} else if (c == TALKIE_SB_END) {
 						for (uint8_t end_tries = 0; end_tries < 5; ++end_tries) {
 							delayMicroseconds(receive_delay_us);
@@ -264,12 +265,9 @@ protected:
 								break;
 							}
 						}
-						_spi_instance->transfer(TALKIE_SB_ERROR);
-						break;
-					} else {
-						_spi_instance->transfer(TALKIE_SB_ERROR);
-						break;
 					}
+					_spi_instance->transfer(TALKIE_SB_ERROR);
+					break;
 				} else {
 					delayMicroseconds(receive_delay_us);
 					_spi_instance->transfer(TALKIE_SB_FULL);
