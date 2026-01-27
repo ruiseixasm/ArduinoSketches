@@ -196,7 +196,7 @@ protected:
 			
 			digitalWrite(ss_pin, LOW);
 
-			for (uint8_t receive_sends = 0; receive_sends < 3; ++receive_sends) {
+			for (uint8_t receive_sends = 0; receive_sends < 2; ++receive_sends) {
 				delayMicroseconds(send_delay_us);
 				_spi_instance->transfer(TALKIE_SB_RECEIVE);
 			}
@@ -206,7 +206,7 @@ protected:
 				_spi_instance->transfer(message_buffer[sending_index]);
 			}
 
-			for (uint8_t end_sends = 0; end_sends < 3; ++end_sends) {
+			for (uint8_t end_sends = 0; end_sends < 2; ++end_sends) {
 				delayMicroseconds(send_delay_us);
 				_spi_instance->transfer(TALKIE_SB_END);
 			}
