@@ -107,131 +107,48 @@ protected:
 		if (length > 0) {	// Don't send empty strings
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
+			bool receiving_mode = true;
 
-			for (uint8_t s = 0; size == 0 && s < 3; s++) {
+			for (uint8_t s = 0; receiving_mode && s < 3; s++) {
 		
+				receiving_mode = false;
 				digitalWrite(ss_pin, LOW);
 				delayMicroseconds(5);
 
-				// Asks the Slave to start receiving
-				c = _spi_instance->transfer(TALKIE_SB_RECEIVE);
-
-				if (c != TALKIE_SB_VOID) {
-
-					delayMicroseconds(12);	// Makes sure it's processed by the slave (12us) (critical path)
-					c = _spi_instance->transfer(message_buffer[0]);
-
-					if (c == TALKIE_SB_READY) {	// Makes sure the Slave it's ready first
+				for (uint8_t receive_tries = 0; receive_tries < 5; ++receive_tries) {
 					
-						for (uint8_t i = 1; i < length; i++) {
-							delayMicroseconds(send_delay_us);
-							c = _spi_instance->transfer(message_buffer[i]);	// Receives the echoed message_buffer[i - 1]
-							if (c < 128) {
-								// Offset of 2 picks all mismatches than an offset of 1
-								if (i > 1 && c != message_buffer[i - 2]) {
-									#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-									Serial.print(F("\t\tERROR: Char mismatch at index: "));
-									Serial.println(i - 2);
-									#endif
+					c = _spi_instance->transfer(TALKIE_SB_RECEIVE);
+					if (c == TALKIE_SB_READY) {
+						receiving_mode = true;
+						break;
+					}
+				}
+
+				if (receiving_mode) {
+					
+					size_t receiving_index = 0;
+					for (uint8_t receive_tries = 0; receive_tries < 5; ++receive_tries) {
+						
+						if (receiving_index < length) {
+							c = _spi_instance->transfer(message_buffer[receiving_index++]);
+							receive_tries = 0;
+						} else {
+							for (uint8_t end_tries = 0; end_tries < 5; ++end_tries) {
+								
+								c = _spi_instance->transfer(TALKIE_SB_END);
+								if (c == TALKIE_SB_DONE) {
 									break;
 								}
-							} else if (c == TALKIE_SB_FULL) {
-								#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-								Serial.println(F("\t\tERROR: Slave buffer overflow"));
-								#endif
-							} else {
-								#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-								Serial.print(F("\t\tERROR: Not an ASCII char at loop: "));
-								Serial.println(i);
-								#endif
-								break;
 							}
+							receiving_mode = false;
+							break;
 						}
-						// Checks the last 2 chars still to be checked
-						delayMicroseconds(12);    // Makes sure the Status Byte is sent
-						c = _spi_instance->transfer(TALKIE_SB_LAST);
-						if (c == message_buffer[length - 2]) {
-							delayMicroseconds(12);    // Makes sure the Status Byte is sent
-							c = _spi_instance->transfer(TALKIE_SB_END);
-							if (c == message_buffer[length - 1]) {	// Last char
-								size = length + 1;	// Just for error catch
-								// Makes sure Slave does the respective sets
-								for (uint8_t end_r = 0; c != TALKIE_SB_DONE && end_r < 3; end_r++) {	// Makes sure the receiving buffer of the Slave is deleted, for sure!
-									delayMicroseconds(10);
-									c = _spi_instance->transfer(TALKIE_SB_END);
-								}
-								#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-								Serial.println(F("\t\tSend completed"));
-								#endif
-							} else {
-								#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-								Serial.print(F("\t\tERROR: Last char mismatch at index: "));
-								Serial.println(length - 1);
-								#endif
-							}
-						} else {
-							#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-							Serial.print(F("\t\tERROR: Penultimate Char mismatch at index: "));
-							Serial.println(length - 2);
-							#endif
-						}
-					} else if (c == TALKIE_SB_BUSY) {
-						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-						Serial.println(F("\t\tBUSY: Slave is busy, waiting a little."));
-						#endif
-						if (s < 2) {
-							delay(2);	// Waiting 2ms
-						}
-					} else if (c == TALKIE_SB_ERROR) {
-						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-						Serial.println(F("\t\tERROR: Slave sent a transmission ERROR"));
-						#endif
-					} else if (c == TALKIE_SB_RECEIVE) {
-						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-						Serial.println(F("\t\tERROR: Received RECEIVE back, need to retry"));
-						#endif
-					} else {
-						size = 1;	// Nothing to be sent
-						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-						Serial.print(F("\t\tERROR: Device NOT ready wit the reply: "));
-						Serial.println(c, HEX);
-						#endif
 					}
-
-				} else {
-					size = 1; // Avoids another try
-					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-					Serial.println(F("\t\tERROR: Received VOID"));
-					#endif
 				}
 
-				if (size == 0) {
-					delayMicroseconds(12);    // Makes sure the Status Byte is sent
-					_spi_instance->transfer(TALKIE_SB_ERROR);
-					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-					Serial.println(F("\t\t\tSent ERROR back to the Slave"));
-					#endif
-				}
 
 				delayMicroseconds(5);
 				digitalWrite(ss_pin, HIGH);
-
-				if (size > 0) {
-					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-					if (size > 1) {
-						Serial.print("Sent message: ");
-						Serial.write(json_message._read_buffer(), length);
-						Serial.println();
-					} else {
-						Serial.println("\tNothing sent");
-					}
-					#endif
-				} else {
-					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-					Serial.print("\t\tMessage NOT successfully sent on try: ");
-					Serial.println(s + 1);
-					#endif
-				}
 			}
 
         } else {
