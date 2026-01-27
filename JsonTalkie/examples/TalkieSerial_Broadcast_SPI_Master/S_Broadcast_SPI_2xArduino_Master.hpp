@@ -197,87 +197,38 @@ protected:
     }
 
 
-    bool acknowledgeSPI(int ss_pin) {
-        uint8_t c; // Avoid using 'char' while using values above 127
-        bool acknowledge = false;
-
-		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-		Serial.print(F("\tAcknowledging on pin: "));
-		Serial.println(ss_pin);
-		#endif
-
-        for (uint8_t a = 0; !acknowledge && a < 3; a++) {
-    
-            digitalWrite(ss_pin, LOW);
-            delayMicroseconds(5);
-
-            // Asks the Slave to acknowledge readiness
-            c = _spi_instance->transfer(TALKIE_SB_ACK);
-
-			if (c != TALKIE_SB_VOID) {
-
-				delayMicroseconds(12);
-				c = _spi_instance->transfer(TALKIE_SB_ACK);  // When the response is collected
-				
-				if (c == TALKIE_SB_ACK) {
-                	#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-                	Serial.println(F("\t\tAcknowledged"));
-					#endif
-					acknowledge = true;
-				}
-				#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-				else {
-					Serial.println(F("\t\tNOT acknowledged"));
-				}
-				#endif
-			}
-            #ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-			else {
-                Serial.println(F("\t\tReceived VOID"));
-			}
-			#endif
-
-            delayMicroseconds(5);
-            digitalWrite(ss_pin, HIGH);
-        }
-
-        #ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-        if (acknowledge) {
-            Serial.println(F("Slave is ready!"));
-        } else {
-            Serial.println(F("Slave is NOT ready!"));
-        }
-        #endif
-
-        return acknowledge;
-    }
-
-
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
 
-		if (_spi_instance) {
+		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
+		static uint16_t timeout = (uint16_t)micros();
 
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
-			_reference_time = millis();
-			#endif
+		if (micros() - timeout > 250) {
+			timeout = (uint16_t)micros();
 
-			JsonMessage new_message;
-			char* message_buffer = new_message._write_buffer();
-			size_t length = receiveSPI(_ss_pin, message_buffer);
+			if (_spi_instance) {
 
-			if (length > 0) {
-				
-				new_message._set_length(length);
-
-				#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
-				Serial.print(F("\t\t\t\t\treceive1: Received message: "));
-				new_message.write_to(Serial);
-				Serial.print(" | ");
-				Serial.println(new_message.get_length());
+				#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+				_reference_time = millis();
 				#endif
 
-				_startTransmission(new_message);
+				JsonMessage new_message;
+				char* message_buffer = new_message._write_buffer();
+				size_t length = receiveSPI(_ss_pin, message_buffer);
+
+				if (length > 0) {
+					
+					new_message._set_length(length);
+
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
+					Serial.print(F("\t\t\t\t\treceive1: Received message: "));
+					new_message.write_to(Serial);
+					Serial.print(" | ");
+					Serial.println(new_message.get_length());
+					#endif
+
+					_startTransmission(new_message);
+				}
 			}
 		}
     }
