@@ -127,8 +127,10 @@ protected:
 
 			delayMicroseconds(5);
 			digitalWrite(ss_pin, HIGH);
+			
+        	return true;
 		}
-        return transmission_done;
+        return false;
     }
 
 
