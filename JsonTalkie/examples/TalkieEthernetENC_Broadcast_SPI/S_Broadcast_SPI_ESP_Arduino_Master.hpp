@@ -25,9 +25,6 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 
-#define ENABLE_DIRECT_ADDRESSING
-
-
 #define send_delay_us 10
 #define receive_delay_us 20
 #define TALKIE_MAX_NAMES 8
