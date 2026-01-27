@@ -18,7 +18,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <BroadcastSocket.h>
 #include <SPI.h>
 
-// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG
+#define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
+// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
 // #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 // #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_2
 // #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_NEW
@@ -286,6 +287,15 @@ protected:
 			if (length > 0) {
 				
 				new_message._set_length(length);
+
+				#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
+				Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
+				Serial.write(message_buffer, length);
+				Serial.println();
+				Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
+				Serial.println(length);
+				#endif
+
 				_startTransmission(new_message);
 			}
 		}
@@ -305,9 +315,9 @@ protected:
 			_reference_time = millis();
 			#endif
 
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
 			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
-			Serial.write(_sending_buffer, json_message.get_length());
+			Serial.write(message_buffer, json_message.get_length());
 			Serial.println();
 			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
 			Serial.println(json_message.get_length());
@@ -315,6 +325,15 @@ protected:
 			
 			const char* message_buffer = json_message._read_buffer();
 			size_t message_length = json_message.get_length();
+
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
+			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
+			Serial.write(message_buffer, message_length);
+			Serial.println();
+			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
+			Serial.println(message_length);
+			#endif
+			
 			sendSPI(_ss_pin, message_buffer, message_length);
 
 			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
