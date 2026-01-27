@@ -189,7 +189,7 @@ public:
 
             switch (c) {
                 case TALKIE_SB_RECEIVE:
-					if (!_received_length) {
+					if (_received_length == 0) {
 						_transmission_mode = TALKIE_SB_RECEIVE;
 						_receiving_index = 0;
 					} else {
