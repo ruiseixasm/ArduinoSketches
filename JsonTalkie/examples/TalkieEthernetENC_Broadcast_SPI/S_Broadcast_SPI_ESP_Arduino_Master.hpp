@@ -173,12 +173,6 @@ protected:
 			}
 
 			_initiated = true;
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				if (!acknowledgeSPI(_ss_pins[ss_pin_i])) {
-					_initiated = false;
-					break;
-				}
-			}
 		}
 
 		#ifdef BROADCAST_SPI_DEBUG
@@ -318,62 +312,7 @@ protected:
         }
         return length;
     }
-
-
-    bool acknowledgeSPI(int ss_pin) {
-        uint8_t c; // Avoid using 'char' while using values above 127
-        bool acknowledge = false;
-
-		#ifdef BROADCAST_SPI_DEBUG_1
-		Serial.print(F("\tAcknowledging on pin: "));
-		Serial.println(ss_pin);
-		#endif
-
-        for (uint8_t a = 0; !acknowledge && a < 3; a++) {
-    
-            digitalWrite(ss_pin, LOW);
-            delayMicroseconds(5);
-
-            // Asks the Slave to acknowledge readiness
-            c = _spi_instance->transfer(TALKIE_SB_ACK);
-
-			if (c != TALKIE_SB_VOID) {
-
-				delayMicroseconds(18);
-				c = _spi_instance->transfer(TALKIE_SB_ACK);  // When the response is collected
-				
-				if (c == TALKIE_SB_ACK) {
-                	#ifdef BROADCAST_SPI_DEBUG_1
-                	Serial.println(F("\t\tAcknowledged"));
-					#endif
-					acknowledge = true;
-				}
-				#ifdef BROADCAST_SPI_DEBUG_1
-				else {
-					Serial.println(F("\t\tNOT acknowledged"));
-				}
-				#endif
-			}
-            #ifdef BROADCAST_SPI_DEBUG_1
-			else {
-                Serial.println(F("\t\tReceived VOID"));
-			}
-			#endif
-
-            delayMicroseconds(5);
-            digitalWrite(ss_pin, HIGH);
-        }
-
-        #ifdef BROADCAST_SPI_DEBUG_1
-        if (acknowledge) {
-            Serial.println(F("Slave is ready!"));
-        } else {
-            Serial.println(F("Slave is NOT ready!"));
-        }
-        #endif
-
-        return acknowledge;
-    }
+	
 
 public:
 
