@@ -204,6 +204,10 @@ protected:
 						}
 						message_buffer[receiving_index++] = c;
 						transmission_tries = 0;
+					} else {
+						delayMicroseconds(receive_delay_us);
+						c = _spi_instance->transfer(TALKIE_SB_FULL);
+						break;
 					}
 				}
 			}

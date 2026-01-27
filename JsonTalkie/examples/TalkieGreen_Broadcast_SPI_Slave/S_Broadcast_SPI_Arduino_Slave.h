@@ -190,13 +190,6 @@ public:
 						#endif
                     }
                     break;
-                case TALKIE_SB_SEND:
-					if (_sending_index < _sending_length) {
-						SPDR = _sending_buffer[_sending_index++];
-					} else {	// Less missed sends this way
-						SPDR = TALKIE_SB_END;		// All chars have been checked
-					}
-                    break;
                 default:
                     SPDR = TALKIE_SB_NACK;
             }
@@ -219,7 +212,13 @@ public:
 					}
                     break;
                 case TALKIE_SB_SEND:
-					if (_sending_length) {
+					if (_transmission_mode == TALKIE_SB_SEND) {
+						if (_sending_index < _sending_length) {
+							SPDR = _sending_buffer[_sending_index++];
+						} else {	// Less missed sends this way
+							SPDR = TALKIE_SB_END;		// All chars have been checked
+						}
+					} else if (_sending_length) {
 						if (_sending_length > TALKIE_BUFFER_SIZE) {
 							_sending_length = 0;
 							SPDR = TALKIE_SB_FULL;
