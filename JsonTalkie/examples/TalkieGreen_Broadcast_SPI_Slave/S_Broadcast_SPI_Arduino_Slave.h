@@ -56,11 +56,10 @@ protected:
 	static char _received_buffer[TALKIE_BUFFER_SIZE];
 	static char _sending_buffer[TALKIE_BUFFER_SIZE];
 
-    volatile static uint8_t _receiving_index;
-	volatile static uint8_t _received_length;
-    volatile static uint8_t _sending_index;
-    volatile static uint8_t _validation_index;
-	volatile static uint8_t _sending_length;
+    volatile static size_t _receiving_index;
+	volatile static size_t _received_length;
+    volatile static size_t _sending_index;
+	volatile static size_t _sending_length;
     volatile static StatusByte _transmission_mode;
 
 

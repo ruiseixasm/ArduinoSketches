@@ -36,6 +36,10 @@ https://github.com/ruiseixasm/JsonTalkie
 class S_Broadcast_SPI_2xArduino_Master : public BroadcastSocket {
 public:
 
+	// The Socket class description shouldn't be greater than 35 chars
+	// {"m":7,"f":"","s":3,"b":1,"t":"","i":58485,"0":1,"1":"","2":11,"c":11266} <-- 128 - (73 + 2*10) = 35
+    const char* class_description() const override { return "Broadcast_SPI_2xArduino_Master"; }
+
     enum StatusByte : uint8_t {
         TALKIE_SB_ACK		= 0xF0, // Acknowledge
         TALKIE_SB_NACK		= 0xF1, // Not acknowledged
@@ -84,9 +88,91 @@ protected:
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
         }
 
+
+
+    // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
+    void _receive() override {
+
+		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
+		static uint16_t timeout = (uint16_t)micros();
+
+		if (micros() - timeout > 250) {
+			timeout = (uint16_t)micros();
+
+			if (_spi_instance) {
+
+				#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+				_reference_time = millis();
+				#endif
+
+				JsonMessage new_message;
+				char* message_buffer = new_message._write_buffer();
+				size_t length = receiveSPI(_ss_pin, message_buffer);
+
+				if (length > 0) {
+					
+					new_message._set_length(length);
+
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
+					Serial.print(F("\t\t\t\t\treceive1: Received message: "));
+					new_message.write_to(Serial);
+					Serial.print(" | ");
+					Serial.println(new_message.get_length());
+					#endif
+
+					_startTransmission(new_message);
+				}
+			}
+		}
+    }
+
+    
+    // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
+    bool _send(const JsonMessage& json_message) override {
+
+		if (_spi_instance) {
+			
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+			Serial.print("\n\tsend: ");
+			#endif
+				
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+			_reference_time = millis();
+			#endif
+
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
+			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
+			Serial.write(message_buffer, json_message.get_length());
+			Serial.println();
+			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
+			Serial.println(json_message.get_length());
+			#endif
+			
+			const char* message_buffer = json_message._read_buffer();
+			size_t message_length = json_message.get_length();
+
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
+			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
+			Serial.write(message_buffer, message_length);
+			Serial.println();
+			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
+			Serial.println(message_length);
+			#endif
+			
+			sendSPI(_ss_pin, message_buffer, message_length);
+
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - _reference_time);
+			#endif
+
+			return true;
+		}
+        return false;
+    }
+
     
     // Specific methods associated to Arduino SPI as Master
-
 	
     bool sendSPI(int ss_pin, const char* message_buffer, size_t length) {
 		
@@ -197,88 +283,6 @@ protected:
     }
 
 
-    // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    void _receive() override {
-
-		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
-		static uint16_t timeout = (uint16_t)micros();
-
-		if (micros() - timeout > 250) {
-			timeout = (uint16_t)micros();
-
-			if (_spi_instance) {
-
-				#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
-				_reference_time = millis();
-				#endif
-
-				JsonMessage new_message;
-				char* message_buffer = new_message._write_buffer();
-				size_t length = receiveSPI(_ss_pin, message_buffer);
-
-				if (length > 0) {
-					
-					new_message._set_length(length);
-
-					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
-					Serial.print(F("\t\t\t\t\treceive1: Received message: "));
-					new_message.write_to(Serial);
-					Serial.print(" | ");
-					Serial.println(new_message.get_length());
-					#endif
-
-					_startTransmission(new_message);
-				}
-			}
-		}
-    }
-
-    
-    // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
-    bool _send(const JsonMessage& json_message) override {
-
-		if (_spi_instance) {
-			
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
-			Serial.print("\n\tsend: ");
-			#endif
-				
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
-			_reference_time = millis();
-			#endif
-
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
-			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
-			Serial.write(message_buffer, json_message.get_length());
-			Serial.println();
-			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
-			Serial.println(json_message.get_length());
-			#endif
-			
-			const char* message_buffer = json_message._read_buffer();
-			size_t message_length = json_message.get_length();
-
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
-			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
-			Serial.write(message_buffer, message_length);
-			Serial.println();
-			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
-			Serial.println(message_length);
-			#endif
-			
-			sendSPI(_ss_pin, message_buffer, message_length);
-
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
-			Serial.print(" | ");
-			Serial.print(millis() - _reference_time);
-			#endif
-
-			return true;
-		}
-        return false;
-    }
-
-
 public:
 
     // Move ONLY the singleton instance method to subclass
@@ -287,10 +291,6 @@ public:
 
         return instance;
     }
-
-	// The Socket class description shouldn't be greater than 35 chars
-	// {"m":7,"f":"","s":3,"b":1,"t":"","i":58485,"0":1,"1":"","2":11,"c":11266} <-- 128 - (73 + 2*10) = 35
-    const char* class_description() const override { return "Broadcast_SPI_2xArduino_Master"; }
 
 };
 

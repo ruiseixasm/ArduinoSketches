@@ -18,11 +18,10 @@ https://github.com/ruiseixasm/JsonTalkie
 char S_Broadcast_SPI_Arduino_Slave::_received_buffer[TALKIE_BUFFER_SIZE];
 char S_Broadcast_SPI_Arduino_Slave::_sending_buffer[TALKIE_BUFFER_SIZE];
 
-volatile uint8_t S_Broadcast_SPI_Arduino_Slave::_receiving_index = 0;
-volatile uint8_t S_Broadcast_SPI_Arduino_Slave::_received_length = 0;
-volatile uint8_t S_Broadcast_SPI_Arduino_Slave::_sending_index = 0;
-volatile uint8_t S_Broadcast_SPI_Arduino_Slave::_validation_index = 0;
-volatile uint8_t S_Broadcast_SPI_Arduino_Slave::_sending_length = 0;
+volatile size_t S_Broadcast_SPI_Arduino_Slave::_receiving_index = 0;
+volatile size_t S_Broadcast_SPI_Arduino_Slave::_received_length = 0;
+volatile size_t S_Broadcast_SPI_Arduino_Slave::_sending_index = 0;
+volatile size_t S_Broadcast_SPI_Arduino_Slave::_sending_length = 0;
 volatile S_Broadcast_SPI_Arduino_Slave::StatusByte S_Broadcast_SPI_Arduino_Slave::_transmission_mode 
 									= S_Broadcast_SPI_Arduino_Slave::StatusByte::TALKIE_SB_NONE;
 
