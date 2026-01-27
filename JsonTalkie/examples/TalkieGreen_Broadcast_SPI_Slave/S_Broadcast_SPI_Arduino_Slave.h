@@ -226,48 +226,34 @@ public:
 
             switch (c) {
                 case TALKIE_SB_RECEIVE:
-                    if (_received_buffer) {
-						if (!_received_length) {
-							_transmission_mode = TALKIE_SB_RECEIVE;
-							_receiving_index = 0;
-							SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
-						} else {
-                        	SPDR = TALKIE_SB_BUSY;
-							#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
-							Serial.println(F("\t\tBUSY: I'm busy (TALKIE_SB_RECEIVE)"));
-							#endif
-						}
-                    } else {
-                        SPDR = TALKIE_SB_VOID;
+					if (!_received_length) {
+						_transmission_mode = TALKIE_SB_RECEIVE;
+						_receiving_index = 0;
+						SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
+					} else {
+						SPDR = TALKIE_SB_BUSY;
 						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
-						Serial.println(F("\t\tERROR: Receiving buffer pointer NOT set"));
+						Serial.println(F("\t\tBUSY: I'm busy (TALKIE_SB_RECEIVE)"));
 						#endif
-                    }
+					}
                     break;
                 case TALKIE_SB_SEND:
-                    if (_sending_buffer) {
-                        if (_sending_length) {
-							if (_sending_length > TALKIE_BUFFER_SIZE) {
-								_sending_length = 0;
-								SPDR = TALKIE_SB_FULL;
-							} else {
-								_transmission_mode = TALKIE_SB_SEND;
-								_sending_index = 0;
-								_validation_index = 0;
-								SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
-							}
-                        } else {
-                            SPDR = TALKIE_SB_NONE;
-							#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
-							Serial.println(F("\tNothing to be sent"));
-							#endif
-                        }
-                    } else {
-                        SPDR = TALKIE_SB_VOID;
-						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
-						Serial.println(F("\t\tERROR: Sending buffer pointer NOT set"));
+					if (_sending_length) {
+						if (_sending_length > TALKIE_BUFFER_SIZE) {
+							_sending_length = 0;
+							SPDR = TALKIE_SB_FULL;
+						} else {
+							_transmission_mode = TALKIE_SB_SEND;
+							_sending_index = 0;
+							_validation_index = 0;
+							SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
+						}
+					} else {
+						SPDR = TALKIE_SB_NONE;
+						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
+						Serial.println(F("\tNothing to be sent"));
 						#endif
-                    }
+					}
                     break;
                 case TALKIE_SB_LAST:
 					if (_transmission_mode == TALKIE_SB_RECEIVE) {
