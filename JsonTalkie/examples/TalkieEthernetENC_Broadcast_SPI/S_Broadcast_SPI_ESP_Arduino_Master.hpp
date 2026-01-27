@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef SPI_ESP_ARDUINO_MASTER_HPP
-#define SPI_ESP_ARDUINO_MASTER_HPP
+#ifndef BROADCAST_SPI_ESP_ARDUINO_MASTER_HPP
+#define BROADCAST_SPI_ESP_ARDUINO_MASTER_HPP
 
 
 #include <BroadcastSocket.h>
@@ -658,4 +658,4 @@ public:
 
 
 
-#endif // SPI_ESP_ARDUINO_MASTER_HPP
+#endif // BROADCAST_SPI_ESP_ARDUINO_MASTER_HPP
