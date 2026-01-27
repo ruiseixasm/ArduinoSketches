@@ -19,7 +19,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <SPI.h>
 
 
-#define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG
+#define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_RECEIVE
+// #define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_SEND
 // #define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
 // #define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
 
@@ -96,7 +97,7 @@ protected:
 			JsonMessage new_message;
 			if (new_message.deserialize_buffer(_received_buffer, _received_length)) {
 				
-				#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG
+				#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_RECEIVE
 				Serial.print(F("\treceive1: Received message: "));
 				Serial.write(_received_buffer, _received_length);
 				Serial.println();
@@ -117,7 +118,7 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     bool _send(const JsonMessage& json_message) override {
 
-		#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG
+		#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_SEND
 		Serial.print(F("\tsend1: Sent message: "));
 		Serial.write(_sending_buffer, json_message.get_length());
 		Serial.println();
