@@ -69,8 +69,6 @@ protected:
 	bool _initiated = false;
     int* _ss_pins;
     uint8_t _ss_pins_count = 0;
-	char _names[TALKIE_MAX_NAMES][TALKIE_NAME_LEN];
-	uint8_t _actual_ss_pin_i = 0;
 
 
     // Constructor
@@ -78,9 +76,6 @@ protected:
             
         	_ss_pins = ss_pins;
         	_ss_pins_count = ss_pins_count;
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count && ss_pin_i < TALKIE_MAX_NAMES; ++ss_pin_i) {
-				_names[ss_pin_i][0] = '\0';
-			}
             _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
         }
 
@@ -110,31 +105,12 @@ protected:
 					if (length > 0) {
 						
 						new_message._set_length(length);
-						_actual_ss_pin_i = ss_pin_i;
 						_startTransmission(new_message);
 					}
 				}
 			}
 		}
     }
-
-
-	void _showMessage(const JsonMessage& json_message) override {
-
-		if (_names[_actual_ss_pin_i][0] == '\0') {
-			json_message.get_from_name(_names[_actual_ss_pin_i]);
-			
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\t_showMessage1: Saved actual named pin index i: "));
-			Serial.println(_actual_ss_pin_i);
-			Serial.print(F("\t_showMessage2: Saved name: "));
-			Serial.println(_names[_actual_ss_pin_i]);
-			Serial.print(F("\t_showMessage3: Concerning actual pin: "));
-			Serial.println(_ss_pins[_actual_ss_pin_i]);
-			#endif
-
-		}
-	}
 
     
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
@@ -157,36 +133,6 @@ protected:
 			Serial.println(json_message.get_length());
 			#endif
 			
-			#ifdef ENABLE_DIRECT_ADDRESSING
-
-			bool as_reply = false;
-			char to_name[TALKIE_NAME_LEN];
-			if (json_message.get_to_name(to_name)) {
-
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\t\t\t\t\tsend3: json_message TO is a String"));
-				Serial.print(F("\t\t\t\t\tsend4: Message name TO: "));
-				Serial.println(to_name);
-				#endif
-
-				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count && ss_pin_i < TALKIE_MAX_NAMES; ++ss_pin_i) {
-					
-					#ifdef BROADCAST_SPI_DEBUG
-					Serial.print(F("\t\t\t\t\tsend5: Comparing to the name: "));
-					Serial.println(_names[ss_pin_i]);
-					#endif
-
-					if (strcmp(to_name, _names[ss_pin_i]) == 0) {
-						as_reply = true;
-						_actual_ss_pin_i = ss_pin_i;
-						break;
-					}
-				}
-			} else {
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\t\t\t\t\tsend3: json_message TO is NOT a String or doesn't exist"));
-				#endif
-			}
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print(" | ");
 			Serial.print(millis() - _reference_time);
@@ -195,31 +141,12 @@ protected:
 			const char* message_buffer = json_message._read_buffer();
 			size_t message_length = json_message.get_length();
 
-			if (as_reply) {
-				sendSPI(_ss_pins[_actual_ss_pin_i], message_buffer, message_length);
-
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.print(F("\t\t\t\t\tsend4: --> Directly sent for the received pin --> "));
-				Serial.println(_actual_ss_pin_i);
-				#endif
-
-			} else {    // Broadcast mode
-				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-					sendSPI(_ss_pins[ss_pin_i], message_buffer, message_length);
-				}
-				
-				#ifdef BROADCAST_SPI_DEBUG
-				Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
-				#endif
-
-			}
-			#else
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				sendSPI(_ss_pins[ss_pin_i], message_buffer, message_length);
 			}
+			sendSPI(_ss_pins[ss_pin_i], message_buffer, message_length);
+			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
-			#endif
 			#endif
 
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
