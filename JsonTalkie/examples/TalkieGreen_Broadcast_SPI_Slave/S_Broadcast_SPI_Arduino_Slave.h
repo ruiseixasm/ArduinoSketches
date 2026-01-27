@@ -127,7 +127,7 @@ protected:
 
 		uint16_t start_waiting = (uint16_t)millis();
 		while (_sending_length) {
-			if ((uint16_t)millis() - start_waiting > 1000 * 3) {
+			if ((uint16_t)millis() - start_waiting > 1 * 1000) {
 
 				#ifdef BROADCASTSOCKET_DEBUG
 				Serial.println(F("\t_unlockSendingBuffer: NOT available sending buffer"));
