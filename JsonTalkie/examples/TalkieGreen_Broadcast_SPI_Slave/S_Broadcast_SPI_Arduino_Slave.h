@@ -200,22 +200,26 @@ public:
                     break;
                 case TALKIE_SB_SEND:
 					if (_transmission_mode == TALKIE_SB_SEND) {
-						if (_sending_length == 0) {
-							_transmission_mode = TALKIE_SB_NONE;
-							SPDR = TALKIE_SB_NONE;
-							#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
-							Serial.println(F("\tNothing to be sent"));
-							#endif
-						} else if (_sending_length > TALKIE_BUFFER_SIZE) {
-							_sending_length = 0;	// Makes sure the sending buffer is zeroed
-							_transmission_mode = TALKIE_SB_NONE;
-							SPDR = TALKIE_SB_FULL;
+						if (_sending_index == 0) {
+							if (_sending_length == 0) {
+								_transmission_mode = TALKIE_SB_NONE;
+								SPDR = TALKIE_SB_NONE;
+								#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
+								Serial.println(F("\tNothing to be sent"));
+								#endif
+							} else if (_sending_length > TALKIE_BUFFER_SIZE) {
+								_sending_length = 0;	// Makes sure the sending buffer is zeroed
+								_transmission_mode = TALKIE_SB_NONE;
+								SPDR = TALKIE_SB_FULL;
+							} else {
+								SPDR = _sending_buffer[_sending_index++];
+							}
 						} else if (_sending_index < _sending_length) {
 							SPDR = _sending_buffer[_sending_index++];
 						} else {	// Less missed sends this way
 							SPDR = TALKIE_SB_END;
 						}
-					} else {
+					} else {	// READY works as a gate keeper (safer)
 						_transmission_mode = TALKIE_SB_SEND;
 						_sending_index = 0;
 						SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
