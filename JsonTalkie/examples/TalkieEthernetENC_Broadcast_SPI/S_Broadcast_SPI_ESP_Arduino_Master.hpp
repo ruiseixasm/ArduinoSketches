@@ -276,38 +276,33 @@ protected:
 				}
 			}
 
-			if (receiving_mode) {
+			size_t receiving_index = 0;
+			while (receiving_mode) {
 				
-				size_t receiving_index = 0;
-				for (uint8_t transmission_tries = 0; transmission_tries < 5; ++transmission_tries) {
-					
-					if (receiving_index < buffer_size) {
-						delayMicroseconds(receive_delay_us);
-						c = _spi_instance->transfer(TALKIE_SB_SEND);
+				if (receiving_index < buffer_size) {
+					delayMicroseconds(receive_delay_us);
+					c = _spi_instance->transfer(TALKIE_SB_SEND);
 
-						if (c < 128) {
-							message_buffer[receiving_index++] = c;
-							transmission_tries = 0;
-						} else if (c == TALKIE_SB_END) {
-							for (uint8_t end_tries = 0; end_tries < 5; ++end_tries) {
-								delayMicroseconds(receive_delay_us);
-								c = _spi_instance->transfer(TALKIE_SB_END);
-								if (c == TALKIE_SB_DONE) {
-									length = receiving_index;
-									break;
-								}
+					if (c < 128) {
+						message_buffer[receiving_index++] = c;
+					} else if (c == TALKIE_SB_END) {
+						for (uint8_t end_tries = 0; end_tries < 5; ++end_tries) {
+							delayMicroseconds(receive_delay_us);
+							c = _spi_instance->transfer(TALKIE_SB_END);
+							if (c == TALKIE_SB_DONE) {
+								length = receiving_index;
+								break;
 							}
-							receiving_mode = false;
-							break;
-						} else {
-							_spi_instance->transfer(TALKIE_SB_ERROR);
-							break;
 						}
+						receiving_mode = false;
 					} else {
-						delayMicroseconds(receive_delay_us);
-						c = _spi_instance->transfer(TALKIE_SB_FULL);
+						_spi_instance->transfer(TALKIE_SB_ERROR);
 						break;
 					}
+				} else {
+					delayMicroseconds(receive_delay_us);
+					_spi_instance->transfer(TALKIE_SB_FULL);
+					break;
 				}
 			}
 

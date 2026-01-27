@@ -238,13 +238,14 @@ public:
                 case TALKIE_SB_ACK:
                     SPDR = TALKIE_SB_ACK;
                     break;
-                case TALKIE_SB_ERROR:
-                case TALKIE_SB_FULL:
+				case TALKIE_SB_FULL:
+					_transmission_mode = TALKIE_SB_NONE;
+					_sending_length = 0;
+					SPDR = TALKIE_SB_ACK;
+                    break;
+				case TALKIE_SB_ERROR:
 					_transmission_mode = TALKIE_SB_NONE;
 					SPDR = TALKIE_SB_ACK;
-					#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
-					Serial.println(F("\tTransmission ended with received TALKIE_SB_ERROR or TALKIE_SB_FULL"));
-					#endif
                     break;
                 default:
                     SPDR = TALKIE_SB_NACK;
