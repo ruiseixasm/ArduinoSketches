@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <SPI.h>
 
 
-// #define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG
+#define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG
 // #define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
 // #define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
 
