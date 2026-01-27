@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <BroadcastSocket.h>
 #include <SPI.h>
 
-#define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
+// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
 // #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
 // #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 // #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_2
@@ -27,7 +27,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #define send_delay_us 10
-#define receive_delay_us 15
+#define receive_delay_us 18
 
 
 #define TALKIE_MAX_NAMES 8
