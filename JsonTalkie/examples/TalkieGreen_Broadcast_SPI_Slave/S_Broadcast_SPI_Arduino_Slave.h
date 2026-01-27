@@ -173,25 +173,16 @@ public:
 
         uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
 
-        if (c < 128) {  // Only ASCII chars shall be transmitted as data
+        if (c < 128 && _transmission_mode == TALKIE_SB_RECEIVE) {  // Only ASCII chars shall be transmitted as data
 
-            // switch O(1) is more efficient than an if-else O(n) sequence because the compiler uses a jump table
-
-            switch (_transmission_mode) {
-                case TALKIE_SB_RECEIVE:
-                    if (_receiving_index < TALKIE_BUFFER_SIZE) {
-                        _received_buffer[_receiving_index++] = c;
-                    } else {
-						_transmission_mode = TALKIE_SB_NONE;
-                        SPDR = TALKIE_SB_FULL;
-						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
-						Serial.println(F("\t\tERROR: Slave buffer overflow"));
-						#endif
-                    }
-                    break;
-                default:
-                    SPDR = TALKIE_SB_NACK;
-            }
+			if (_receiving_index < TALKIE_BUFFER_SIZE) {
+				_received_buffer[_receiving_index++] = c;
+			} else {
+				_transmission_mode = TALKIE_SB_NONE;
+				#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
+				Serial.println(F("\t\tERROR: Slave buffer overflow"));
+				#endif
+			}
 
         } else {    // It's a control message 0xFX
             
@@ -202,9 +193,7 @@ public:
 					if (!_received_length) {
 						_transmission_mode = TALKIE_SB_RECEIVE;
 						_receiving_index = 0;
-						SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
 					} else {
-						SPDR = TALKIE_SB_BUSY;
 						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
 						Serial.println(F("\t\tBUSY: I'm busy (TALKIE_SB_RECEIVE)"));
 						#endif
@@ -241,12 +230,12 @@ public:
 						#endif
                     } else if (_transmission_mode == TALKIE_SB_SEND) {
                         _sending_length = 0;	// Makes sure the sending buffer is zeroed
+						SPDR = TALKIE_SB_DONE;	// Doing it at the end makes sure everything above was actually set
 						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
 						Serial.println(F("\tSent message"));
 						#endif
 					}
                     _transmission_mode = TALKIE_SB_NONE;
-					SPDR = TALKIE_SB_DONE;	// Doing it at the end makes sure everything above was actually set
                     break;
                 case TALKIE_SB_ACK:
                     SPDR = TALKIE_SB_ACK;

@@ -104,53 +104,29 @@ protected:
 			return false;
 		}
 
-		bool transmission_done = false;
+		// SENDS IN BROADCAST MODE, NO REPLY CONTROL (c = ...) !!
+
 		if (length > 0) {	// Don't send empty strings
 			
-			uint8_t c; // Avoid using 'char' while using values above 127
-			bool sending_mode = true;
+			digitalWrite(ss_pin, LOW);
 
-			for (uint8_t s = 0; sending_mode && s < 3; s++) {
-		
-				sending_mode = false;
-				digitalWrite(ss_pin, LOW);
-
-				for (uint8_t transmission_tries = 0; transmission_tries < 5; ++transmission_tries) {
-					delayMicroseconds(send_delay_us);
-					c = _spi_instance->transfer(TALKIE_SB_RECEIVE);
-					if (c == TALKIE_SB_READY) {
-						sending_mode = true;
-						break;
-					}
-				}
-
-				if (sending_mode) {
-					
-					size_t sending_index = 0;
-					for (uint8_t transmission_tries = 0; transmission_tries < 5; ++transmission_tries) {
-						
-						if (sending_index < length) {
-							delayMicroseconds(send_delay_us);
-							c = _spi_instance->transfer(message_buffer[sending_index++]);
-							transmission_tries = 0;
-						} else {
-							for (uint8_t end_tries = 0; end_tries < 5; ++end_tries) {
-								delayMicroseconds(send_delay_us);
-								c = _spi_instance->transfer(TALKIE_SB_END);
-								if (c == TALKIE_SB_DONE) {
-									transmission_done = true;
-									break;
-								}
-							}
-							sending_mode = false;
-							break;
-						}
-					}
-				}
-
-				delayMicroseconds(5);
-				digitalWrite(ss_pin, HIGH);
+			for (uint8_t receive_sends = 0; receive_sends < 4; ++receive_sends) {
+				delayMicroseconds(send_delay_us);
+				_spi_instance->transfer(TALKIE_SB_RECEIVE);
 			}
+
+			for (size_t sending_index = 0; sending_index < length; ++sending_index) {
+				delayMicroseconds(send_delay_us);
+				_spi_instance->transfer(message_buffer[sending_index++]);
+			}
+
+			for (uint8_t end_sends = 0; end_sends < 4; ++end_sends) {
+				delayMicroseconds(send_delay_us);
+				_spi_instance->transfer(TALKIE_SB_END);
+			}
+
+			delayMicroseconds(5);
+			digitalWrite(ss_pin, HIGH);
 		}
         return transmission_done;
     }
