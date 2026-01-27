@@ -27,7 +27,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #define send_delay_us 10
-#define receive_delay_us 20
+#define receive_delay_us 18
 
 
 #define TALKIE_MAX_NAMES 8
