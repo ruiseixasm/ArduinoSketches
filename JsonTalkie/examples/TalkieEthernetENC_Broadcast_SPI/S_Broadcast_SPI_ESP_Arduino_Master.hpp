@@ -36,6 +36,10 @@ https://github.com/ruiseixasm/JsonTalkie
 class S_Broadcast_SPI_ESP_Arduino_Master : public BroadcastSocket {
 public:
 
+	// The Socket class description shouldn't be greater than 35 chars
+	// {"m":7,"f":"","s":3,"b":1,"t":"","i":58485,"0":1,"1":"","2":11,"c":11266} <-- 128 - (73 + 2*10) = 35
+    const char* class_description() const override { return "Broadcast_SPI_ESP_Arduino_Master"; }
+
     enum StatusByte : uint8_t {
         TALKIE_SB_ACK		= 0xF0, // Acknowledge
         TALKIE_SB_NACK		= 0xF1, // Not acknowledged
@@ -643,10 +647,6 @@ public:
 
         return instance;
     }
-
-	// The Socket class description shouldn't be greater than 35 chars
-	// {"m":7,"f":"","s":3,"b":1,"t":"","i":58485,"0":1,"1":"","2":11,"c":11266} <-- 128 - (73 + 2*10) = 35
-    const char* class_description() const override { return "SPI_ESP_Arduino_Master"; }
 
 
     virtual void begin(SPIClass* spi_instance) {
