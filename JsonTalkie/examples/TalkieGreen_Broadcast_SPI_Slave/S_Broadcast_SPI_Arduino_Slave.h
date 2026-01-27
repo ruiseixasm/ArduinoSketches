@@ -120,9 +120,8 @@ protected:
 
 		#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_SEND
 		Serial.print(F("\tsend1: Sent message: "));
-		Serial.write(_sending_buffer, json_message.get_length());
-		Serial.println();
-		Serial.print(F("\tsend2: Sent length: "));
+		json_message.write_to(Serial);
+		Serial.print(" | ");
 		Serial.println(json_message.get_length());
 		#endif
 
