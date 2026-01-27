@@ -273,6 +273,8 @@ protected:
 				if (c == TALKIE_SB_READY) {
 					receiving_mode = true;
 					break;
+				} else if (c == TALKIE_SB_NONE) {
+					break;
 				}
 			}
 

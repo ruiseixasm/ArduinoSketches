@@ -214,7 +214,7 @@ public:
 							SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
 						}
 					} else {
-						SPDR = TALKIE_SB_END;
+						SPDR = TALKIE_SB_NONE;
 						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
 						Serial.println(F("\tNothing to be sent"));
 						#endif
