@@ -104,6 +104,7 @@ protected:
 			return false;
 		}
 
+		bool transmission_done = false;
 		if (length > 0) {	// Don't send empty strings
 			
 			uint8_t c; // Avoid using 'char' while using values above 127
@@ -137,6 +138,7 @@ protected:
 								
 								c = _spi_instance->transfer(TALKIE_SB_END);
 								if (c == TALKIE_SB_DONE) {
+									transmission_done = true;
 									break;
 								}
 							}
@@ -150,16 +152,8 @@ protected:
 				delayMicroseconds(5);
 				digitalWrite(ss_pin, HIGH);
 			}
-
-        } else {
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-			Serial.println(F("\t\tNothing to be sent"));
-			#endif
-			size = 1; // Nothing to be sent
 		}
-
-        if (size > 1) return true;
-        return false;
+        return transmission_done;
     }
 
 
