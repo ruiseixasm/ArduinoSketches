@@ -117,7 +117,7 @@ protected:
 
 			for (size_t sending_index = 0; sending_index < length; ++sending_index) {
 				delayMicroseconds(send_delay_us);
-				_spi_instance->transfer(message_buffer[sending_index++]);
+				_spi_instance->transfer(message_buffer[sending_index]);
 			}
 
 			for (uint8_t end_sends = 0; end_sends < 4; ++end_sends) {
