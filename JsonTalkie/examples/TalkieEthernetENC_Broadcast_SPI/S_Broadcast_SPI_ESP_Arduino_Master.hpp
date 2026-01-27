@@ -291,10 +291,12 @@ protected:
 							c = _spi_instance->transfer(TALKIE_SB_END);
 							if (c == TALKIE_SB_DONE) {
 								length = receiving_index;
+								receiving_mode = false;
 								break;
 							}
 						}
-						receiving_mode = false;
+						_spi_instance->transfer(TALKIE_SB_ERROR);
+						break;
 					} else {
 						_spi_instance->transfer(TALKIE_SB_ERROR);
 						break;
