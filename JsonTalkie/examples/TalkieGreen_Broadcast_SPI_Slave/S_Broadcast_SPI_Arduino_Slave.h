@@ -180,11 +180,7 @@ public:
             switch (_transmission_mode) {
                 case TALKIE_SB_RECEIVE:
                     if (_receiving_index < TALKIE_BUFFER_SIZE) {
-                        _received_buffer[_receiving_index] = c;
-						if (_receiving_index > 0) {
-							SPDR = _received_buffer[_receiving_index - 1];	// Char sent with an offset to guarantee matching
-						}
-						_receiving_index++;
+                        _received_buffer[_receiving_index++] = c;
                     } else {
 						_transmission_mode = TALKIE_SB_NONE;
                         SPDR = TALKIE_SB_FULL;
@@ -195,26 +191,10 @@ public:
                     break;
                 case TALKIE_SB_SEND:
 					if (_sending_index < _sending_length) {
-						SPDR = _sending_buffer[_sending_index];		// This way avoids being the critical path (in advance)
-					} else if (_sending_index == _sending_length) {
-						SPDR = TALKIE_SB_LAST;	// Asks for the TALKIE_SB_LAST char
+						SPDR = _sending_buffer[_sending_index++];
 					} else {	// Less missed sends this way
 						SPDR = TALKIE_SB_END;		// All chars have been checked
 					}
-					// Starts checking 2 indexes after
-					if (_sending_index > 1) {    // Two positions of delay
-						if (c == _sending_buffer[_validation_index]) {	// Checks all chars
-							_validation_index++; // Starts checking after two sent
-						} else {
-							_transmission_mode = TALKIE_SB_NONE;  // Makes sure no more communication is done, regardless
-							SPDR = TALKIE_SB_ERROR;
-							#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
-							Serial.println(F("\t\tERROR: Sent char mismatch"));
-							#endif
-							break;
-						}
-					}
-					_sending_index++;
                     break;
                 default:
                     SPDR = TALKIE_SB_NACK;
@@ -245,23 +225,13 @@ public:
 						} else {
 							_transmission_mode = TALKIE_SB_SEND;
 							_sending_index = 0;
-							_validation_index = 0;
 							SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
 						}
 					} else {
-						SPDR = TALKIE_SB_NONE;
+						SPDR = TALKIE_SB_END;
 						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
 						Serial.println(F("\tNothing to be sent"));
 						#endif
-					}
-                    break;
-                case TALKIE_SB_LAST:
-					if (_transmission_mode == TALKIE_SB_RECEIVE) {
-						SPDR = _received_buffer[_receiving_index - 1];
-                    } else if (_transmission_mode == TALKIE_SB_SEND && _sending_length > 0) {
-						SPDR = _sending_buffer[_sending_length - 1];
-                    } else {
-						SPDR = TALKIE_SB_NONE;
 					}
                     break;
                 case TALKIE_SB_END:
