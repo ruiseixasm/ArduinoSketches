@@ -11,18 +11,18 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef SPI_ARDUINO_ARDUINO_MASTER_SINGLE_HPP
-#define SPI_ARDUINO_ARDUINO_MASTER_SINGLE_HPP
+#ifndef BROADCAST_SPI_ARDUINO2X_MASTER_HPP
+#define BROADCAST_SPI_ARDUINO2X_MASTER_HPP
 
 
 #include <BroadcastSocket.h>
 #include <SPI.h>
 
-// #define BROADCAST_SPI_DEBUG
-// #define BROADCAST_SPI_DEBUG_1
-// #define BROADCAST_SPI_DEBUG_2
-// #define BROADCAST_SPI_DEBUG_NEW
-// #define BROADCAST_SPI_DEBUG_TIMING
+// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG
+// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
+// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_2
+// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_NEW
+// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
 
 
 #define send_delay_us 10
@@ -54,7 +54,7 @@ public:
     };
 
 
-	#ifdef BROADCAST_SPI_DEBUG_TIMING
+	#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
 	unsigned long _reference_time = millis();
 	#endif
 
@@ -90,14 +90,14 @@ protected:
     bool sendSPI(int ss_pin, const char* message_buffer, size_t length) {
         size_t size = 0;	// No interrupts, so, not volatile
 		
-		#ifdef BROADCAST_SPI_DEBUG_1
+		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 		Serial.print(F("\tSending on pin: "));
 		Serial.println(ss_pin);
 		#endif
 
 		if (length > TALKIE_BUFFER_SIZE) {
 			
-			#ifdef BROADCAST_SPI_DEBUG_1
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 			Serial.println(F("\tlength > TALKIE_BUFFER_SIZE"));
 			#endif
 
@@ -129,18 +129,18 @@ protected:
 							if (c < 128) {
 								// Offset of 2 picks all mismatches than an offset of 1
 								if (i > 1 && c != message_buffer[i - 2]) {
-									#ifdef BROADCAST_SPI_DEBUG_1
+									#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 									Serial.print(F("\t\tERROR: Char mismatch at index: "));
 									Serial.println(i - 2);
 									#endif
 									break;
 								}
 							} else if (c == TALKIE_SB_FULL) {
-								#ifdef BROADCAST_SPI_DEBUG_1
+								#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 								Serial.println(F("\t\tERROR: Slave buffer overflow"));
 								#endif
 							} else {
-								#ifdef BROADCAST_SPI_DEBUG_1
+								#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 								Serial.print(F("\t\tERROR: Not an ASCII char at loop: "));
 								Serial.println(i);
 								#endif
@@ -160,39 +160,39 @@ protected:
 									delayMicroseconds(10);
 									c = _spi_instance->transfer(TALKIE_SB_END);
 								}
-								#ifdef BROADCAST_SPI_DEBUG_1
+								#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 								Serial.println(F("\t\tSend completed"));
 								#endif
 							} else {
-								#ifdef BROADCAST_SPI_DEBUG_1
+								#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 								Serial.print(F("\t\tERROR: Last char mismatch at index: "));
 								Serial.println(length - 1);
 								#endif
 							}
 						} else {
-							#ifdef BROADCAST_SPI_DEBUG_1
+							#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 							Serial.print(F("\t\tERROR: Penultimate Char mismatch at index: "));
 							Serial.println(length - 2);
 							#endif
 						}
 					} else if (c == TALKIE_SB_BUSY) {
-						#ifdef BROADCAST_SPI_DEBUG_1
+						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 						Serial.println(F("\t\tBUSY: Slave is busy, waiting a little."));
 						#endif
 						if (s < 2) {
 							delay(2);	// Waiting 2ms
 						}
 					} else if (c == TALKIE_SB_ERROR) {
-						#ifdef BROADCAST_SPI_DEBUG_1
+						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 						Serial.println(F("\t\tERROR: Slave sent a transmission ERROR"));
 						#endif
 					} else if (c == TALKIE_SB_RECEIVE) {
-						#ifdef BROADCAST_SPI_DEBUG_1
+						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 						Serial.println(F("\t\tERROR: Received RECEIVE back, need to retry"));
 						#endif
 					} else {
 						size = 1;	// Nothing to be sent
-						#ifdef BROADCAST_SPI_DEBUG_1
+						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 						Serial.print(F("\t\tERROR: Device NOT ready wit the reply: "));
 						Serial.println(c, HEX);
 						#endif
@@ -200,7 +200,7 @@ protected:
 
 				} else {
 					size = 1; // Avoids another try
-					#ifdef BROADCAST_SPI_DEBUG_1
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 					Serial.println(F("\t\tERROR: Received VOID"));
 					#endif
 				}
@@ -208,7 +208,7 @@ protected:
 				if (size == 0) {
 					delayMicroseconds(12);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(TALKIE_SB_ERROR);
-					#ifdef BROADCAST_SPI_DEBUG_1
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 					Serial.println(F("\t\t\tSent ERROR back to the Slave"));
 					#endif
 				}
@@ -217,7 +217,7 @@ protected:
 				digitalWrite(ss_pin, HIGH);
 
 				if (size > 0) {
-					#ifdef BROADCAST_SPI_DEBUG_1
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 					if (size > 1) {
 						Serial.print("Sent message: ");
 						Serial.write(json_message._read_buffer(), length);
@@ -227,7 +227,7 @@ protected:
 					}
 					#endif
 				} else {
-					#ifdef BROADCAST_SPI_DEBUG_1
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 					Serial.print("\t\tMessage NOT successfully sent on try: ");
 					Serial.println(s + 1);
 					#endif
@@ -235,7 +235,7 @@ protected:
 			}
 
         } else {
-			#ifdef BROADCAST_SPI_DEBUG_1
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 			Serial.println(F("\t\tNothing to be sent"));
 			#endif
 			size = 1; // Nothing to be sent
@@ -250,7 +250,7 @@ protected:
         size_t size = 0;	// No interrupts, so, not volatile
         uint8_t c;			// Avoid using 'char' while using values above 127
 
-		#ifdef BROADCAST_SPI_DEBUG_2
+		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_2
 		Serial.print(F("\tReceiving on pin: "));
 		Serial.println(ss_pin);
 		#endif
@@ -284,7 +284,7 @@ protected:
 					if (c == TALKIE_SB_LAST) {
 						delayMicroseconds(receive_delay_us);    // Makes sure the Status Byte is sent
 						c = _spi_instance->transfer(message_buffer[size]);  // Replies the last char to trigger END in return
-						#ifdef BROADCAST_SPI_DEBUG_1
+						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 						Serial.println(F("\t\tReceived LAST"));
 						#endif
 						if (c == TALKIE_SB_END) {
@@ -294,13 +294,13 @@ protected:
 								delayMicroseconds(10);
 								c = _spi_instance->transfer(TALKIE_SB_END);
 							}
-							#ifdef BROADCAST_SPI_DEBUG_1
+							#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 							Serial.println(F("\t\tReceive completed"));
 							#endif
 							size += 1;	// size equivalent to 'i + 2'
 						} else {
 							size = 0;	// Try again
-							#ifdef BROADCAST_SPI_DEBUG_1
+							#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 							Serial.println(F("\t\tERROR: END NOT received"));
 							#endif
 						}
@@ -308,34 +308,34 @@ protected:
 						delayMicroseconds(12);    // Makes sure the Status Byte is sent
 						_spi_instance->transfer(TALKIE_SB_FULL);
 						size = 1;	// Try no more
-						#ifdef BROADCAST_SPI_DEBUG_1
+						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 						Serial.println(F("\t\tFULL: Master buffer overflow"));
 						#endif
 					} else {
 						size = 0;	// Try again
-						#ifdef BROADCAST_SPI_DEBUG_1
+						#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 						Serial.println(F("\t\tERROR: Receiving sequence wasn't followed"));
 						#endif
 					}
 				} else if (c == TALKIE_SB_NONE) {
 					size = 1; // Nothing received
-					#ifdef BROADCAST_SPI_DEBUG_2
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_2
 					Serial.println(F("\t\tThere is nothing to be received"));
 					#endif
 				} else if (c == TALKIE_SB_ERROR) {
-					#ifdef BROADCAST_SPI_DEBUG_1
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 					Serial.println(F("\t\tERROR: Transmission ERROR received from Slave"));
 					#endif
 				} else if (c == TALKIE_SB_SEND) {
-					#ifdef BROADCAST_SPI_DEBUG_1
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 					Serial.println(F("\t\tERROR: Received SEND back, need to retry"));
 					#endif
 				} else if (c == TALKIE_SB_FULL) {
-					#ifdef BROADCAST_SPI_DEBUG_1
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 					Serial.println(F("\t\tERROR: Slave buffer overflow"));
 					#endif
 				} else {
-					#ifdef BROADCAST_SPI_DEBUG_1
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 					Serial.print(F("\t\tERROR: Device NOT ready, received status message: "));
 					Serial.println(c, HEX);
 					#endif
@@ -345,13 +345,13 @@ protected:
 				if (size == 0) {
 					delayMicroseconds(12);    // Makes sure the Status Byte is sent
 					_spi_instance->transfer(TALKIE_SB_ERROR);    // Results from ERROR or NACK send by the Slave and makes Slave reset to NONE
-					#ifdef BROADCAST_SPI_DEBUG_1
+					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 					Serial.println(F("\t\t\tSent ERROR back to the Slave"));
 					#endif
 				}
 
 			} else {
-				#ifdef BROADCAST_SPI_DEBUG_1
+				#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 				Serial.println(F("\t\tReceived VOID"));
 				#endif
 				size = 1; // Avoids another try
@@ -361,19 +361,19 @@ protected:
             digitalWrite(ss_pin, HIGH);
 
             if (size > 0) {
-                #ifdef BROADCAST_SPI_DEBUG_1
+                #ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
                 if (size > 1) {
                     Serial.print("Received message: ");
 					Serial.write(message_buffer, size - 1);
                     Serial.println();
                 } else {
-                	#ifdef BROADCAST_SPI_DEBUG_2
+                	#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_2
                     Serial.println("\tNothing received");
                 	#endif
                 }
                 #endif
             } else {
-                #ifdef BROADCAST_SPI_DEBUG_1
+                #ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
                 Serial.print("\t\tMessage NOT successfully received on try: ");
                 Serial.println(r + 1);
                 #endif
@@ -389,7 +389,7 @@ protected:
         uint8_t c; // Avoid using 'char' while using values above 127
         bool acknowledge = false;
 
-		#ifdef BROADCAST_SPI_DEBUG_1
+		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 		Serial.print(F("\tAcknowledging on pin: "));
 		Serial.println(ss_pin);
 		#endif
@@ -408,18 +408,18 @@ protected:
 				c = _spi_instance->transfer(TALKIE_SB_ACK);  // When the response is collected
 				
 				if (c == TALKIE_SB_ACK) {
-                	#ifdef BROADCAST_SPI_DEBUG_1
+                	#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
                 	Serial.println(F("\t\tAcknowledged"));
 					#endif
 					acknowledge = true;
 				}
-				#ifdef BROADCAST_SPI_DEBUG_1
+				#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 				else {
 					Serial.println(F("\t\tNOT acknowledged"));
 				}
 				#endif
 			}
-            #ifdef BROADCAST_SPI_DEBUG_1
+            #ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 			else {
                 Serial.println(F("\t\tReceived VOID"));
 			}
@@ -429,7 +429,7 @@ protected:
             digitalWrite(ss_pin, HIGH);
         }
 
-        #ifdef BROADCAST_SPI_DEBUG_1
+        #ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
         if (acknowledge) {
             Serial.println(F("Slave is ready!"));
         } else {
@@ -446,7 +446,7 @@ protected:
 
 		if (_spi_instance) {
 
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
 			_reference_time = millis();
 			#endif
 
@@ -468,15 +468,15 @@ protected:
 
 		if (_spi_instance) {
 			
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
 			Serial.print("\n\tsend: ");
 			#endif
 				
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
 			_reference_time = millis();
 			#endif
 
-			#ifdef BROADCAST_SPI_DEBUG
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG
 			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
 			Serial.write(_sending_buffer, json_message.get_length());
 			Serial.println();
@@ -488,7 +488,7 @@ protected:
 			size_t message_length = json_message.get_length();
 			sendSPI(_ss_pin, message_buffer, message_length);
 
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
 			Serial.print(" | ");
 			Serial.print(millis() - _reference_time);
 			#endif
@@ -510,10 +510,10 @@ public:
 
 	// The Socket class description shouldn't be greater than 35 chars
 	// {"m":7,"f":"","s":3,"b":1,"t":"","i":58485,"0":1,"1":"","2":11,"c":11266} <-- 128 - (73 + 2*10) = 35
-    const char* class_description() const override { return "SPI_Arduino_x2_Master_S"; }
+    const char* class_description() const override { return "Broadcast_SPI_2xArduino_Master"; }
 
 };
 
 
 
-#endif // SPI_ARDUINO_ARDUINO_MASTER_SINGLE_HPP
+#endif // BROADCAST_SPI_ARDUINO2X_MASTER_HPP
