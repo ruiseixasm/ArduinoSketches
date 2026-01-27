@@ -242,8 +242,6 @@ protected:
 				if (c == TALKIE_SB_READY) {
 					receiving_mode = true;
 					break;
-				} else if (c == TALKIE_SB_NONE) {
-					break;
 				}
 			}
 
@@ -267,6 +265,9 @@ protected:
 								break;
 							}
 						}
+					} else if (c == TALKIE_SB_NONE || c == TALKIE_SB_FULL) {
+						receiving_mode = false;
+						break;
 					}
 					_spi_instance->transfer(TALKIE_SB_ERROR);
 					break;

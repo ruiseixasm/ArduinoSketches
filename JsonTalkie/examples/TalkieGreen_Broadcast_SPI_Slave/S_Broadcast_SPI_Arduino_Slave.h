@@ -200,24 +200,23 @@ public:
                     break;
                 case TALKIE_SB_SEND:
 					if (_transmission_mode == TALKIE_SB_SEND) {
-						if (_sending_index < _sending_length) {
+						if (_sending_length == 0) {
+							SPDR = TALKIE_SB_NONE;
+							#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
+							Serial.println(F("\tNothing to be sent"));
+							#endif
+						} else if (_sending_index < _sending_length) {
 							SPDR = _sending_buffer[_sending_index++];
 						} else {	// Less missed sends this way
 							SPDR = TALKIE_SB_END;
 						}
-					} else if (_sending_length) {
-						if (_sending_length > TALKIE_BUFFER_SIZE) {
-							SPDR = TALKIE_SB_FULL;
-						} else {
-							_transmission_mode = TALKIE_SB_SEND;
-							_sending_index = 0;
-							SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
-						}
+					} else if (_sending_length > TALKIE_BUFFER_SIZE) {
+                        _sending_length = 0;	// Makes sure the sending buffer is zeroed
+						SPDR = TALKIE_SB_FULL;
 					} else {
-						SPDR = TALKIE_SB_NONE;
-						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
-						Serial.println(F("\tNothing to be sent"));
-						#endif
+						_transmission_mode = TALKIE_SB_SEND;
+						_sending_index = 0;
+						SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
 					}
                     break;
                 case TALKIE_SB_END:
