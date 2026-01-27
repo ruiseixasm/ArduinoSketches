@@ -27,7 +27,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #define send_delay_us 10
-#define receive_delay_us 10
+#define receive_delay_us 12
 
 
 #define TALKIE_MAX_NAMES 8
@@ -293,10 +293,10 @@ protected:
 				new_message._set_length(length);
 
 				#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
-				Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
+				Serial.print(F("\t\t\t\t\tsend1: Received message: "));
 				Serial.write(message_buffer, length);
 				Serial.println();
-				Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
+				Serial.print(F("\t\t\t\t\tsend2: Received length: "));
 				Serial.println(length);
 				#endif
 
