@@ -71,12 +71,11 @@ protected:
     // Constructor
     S_Broadcast_SPI_ESP_Arduino_Master(int* ss_pins, uint8_t ss_pins_count) : BroadcastSocket() {
             
-        	_ss_pins = ss_pins;
-        	_ss_pins_count = ss_pins_count;
-            _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
-        }
+		_ss_pins = ss_pins;
+		_ss_pins_count = ss_pins_count;
+		_max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
+	}
 
-    
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
@@ -138,9 +137,7 @@ protected:
 			const char* message_buffer = json_message._read_buffer();
 			size_t message_length = json_message.get_length();
 
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-			}
-			sendSPI(_ss_pins[ss_pin_i], message_buffer, message_length);
+			sendBroadcastSPI(_ss_pins, _ss_pins_count, message_buffer, message_length);
 			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
@@ -210,7 +207,7 @@ protected:
 	
     // Specific methods associated to Arduino SPI as Master
 	
-    bool sendSPI(int ss_pin, const char* message_buffer, size_t length) {
+    bool sendBroadcastSPI(int* ss_pins, uint8_t ss_pins_count, const char* message_buffer, size_t length) {
 		
 		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 		Serial.print(F("\tSending on pin: "));
@@ -230,7 +227,9 @@ protected:
 
 		if (length > 0) {	// Don't send empty strings
 			
-			digitalWrite(ss_pin, LOW);
+			for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+				digitalWrite(ss_pins[ss_pin_i], LOW);
+			}
 
 			for (uint8_t receive_sends = 0; receive_sends < 4; ++receive_sends) {
 				delayMicroseconds(send_delay_us);
@@ -248,7 +247,9 @@ protected:
 			}
 
 			delayMicroseconds(5);
-			digitalWrite(ss_pin, HIGH);
+			for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+				digitalWrite(ss_pins[ss_pin_i], HIGH);
+			}
 			
         	return true;
 		}
