@@ -203,11 +203,10 @@ public:
 						if (_sending_index < _sending_length) {
 							SPDR = _sending_buffer[_sending_index++];
 						} else {	// Less missed sends this way
-							SPDR = TALKIE_SB_END;		// All chars have been checked
+							SPDR = TALKIE_SB_END;
 						}
 					} else if (_sending_length) {
 						if (_sending_length > TALKIE_BUFFER_SIZE) {
-							_sending_length = 0;
 							SPDR = TALKIE_SB_FULL;
 						} else {
 							_transmission_mode = TALKIE_SB_SEND;
