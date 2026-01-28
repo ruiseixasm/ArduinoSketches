@@ -259,13 +259,13 @@ protected:
 		Serial.print(F("\tReceiving on pin: "));
 		Serial.println(ss_pin);
 		#endif
-		
+
 		size_t receiving_index = 0;
 		for (uint8_t receive_tries = 0; receiving_index == 0 && receive_tries < 3; receive_tries++) {
 			
 			digitalWrite(ss_pin, LOW);
 			
-			for (uint8_t get_ready_tries = 0; get_ready_tries < 5; ++get_ready_tries) {
+			for (uint8_t get_ready_tries = 0; get_ready_tries < 3; ++get_ready_tries) {
 				delayMicroseconds(receive_delay_us);
 				c = _spi_instance->transfer(TALKIE_SB_SEND);
 				if (c == TALKIE_SB_READY) {
