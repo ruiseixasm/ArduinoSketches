@@ -236,7 +236,7 @@ protected:
 			
 			for (uint8_t get_ready_tries = 0; get_ready_tries < 3; ++get_ready_tries) {
 				delayMicroseconds(receive_delay_us);
-				c = _spi_instance->transfer(TALKIE_SB_SEND);
+				c = _spi_instance->transfer(TALKIE_SB_START);
 				if (c == TALKIE_SB_READY) {
 					
 					while (1) {
