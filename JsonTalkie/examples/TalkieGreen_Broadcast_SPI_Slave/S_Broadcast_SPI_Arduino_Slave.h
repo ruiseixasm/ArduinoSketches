@@ -217,8 +217,10 @@ public:
 							_sending_length = 0;	// Makes sure the sending buffer is zeroed
 							_transmission_mode = TALKIE_SB_NONE;
 							SPDR = TALKIE_SB_FULL;
-						} else {
+						} else if (_sending_index < _sending_length) {	// Safe code
 							SPDR = _sending_buffer[_sending_index++];
+						} else {
+							SPDR = TALKIE_SB_END;
 						}
 					} else {
 						_transmission_mode = TALKIE_SB_SEND;
