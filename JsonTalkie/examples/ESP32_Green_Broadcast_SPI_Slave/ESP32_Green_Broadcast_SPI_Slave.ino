@@ -27,7 +27,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <JsonTalkie.hpp>
 #include "M_GreenManifesto.hpp"
 #include "M_LedManifesto.hpp"
-#include "Broadcast_SPI_ESP_Slave.h"
+#include "S_Broadcast_SPI_ESP_Slave.h"
 
 
 const char green_name[] = "green";
@@ -41,7 +41,7 @@ M_LedManifesto yellow_manifesto(YELLOW_LED_PIN);
 JsonTalker yellow = JsonTalker(yellow_name, yellow_desc, &yellow_manifesto);
 
 // Singleton requires the & (to get a reference variable)
-auto& spi_socket = Broadcast_SPI_ESP_Slave::instance();
+auto& spi_socket = S_Broadcast_SPI_ESP_Slave::instance();
 
 // SETTING THE REPEATER
 BroadcastSocket* uplinked_sockets[] = { &spi_socket };

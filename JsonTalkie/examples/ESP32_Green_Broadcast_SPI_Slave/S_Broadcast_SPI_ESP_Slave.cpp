@@ -12,24 +12,24 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-#include "S_Broadcast_SPI_Arduino_Slave.h"
+#include "S_Broadcast_SPI_ESP_Slave.h"
 
 
-char S_Broadcast_SPI_Arduino_Slave::_received_buffer[TALKIE_BUFFER_SIZE];
-char S_Broadcast_SPI_Arduino_Slave::_sending_buffer[TALKIE_BUFFER_SIZE];
+char S_Broadcast_SPI_ESP_Slave::_received_buffer[TALKIE_BUFFER_SIZE];
+char S_Broadcast_SPI_ESP_Slave::_sending_buffer[TALKIE_BUFFER_SIZE];
 
-volatile size_t S_Broadcast_SPI_Arduino_Slave::_receiving_index = 0;
-volatile size_t S_Broadcast_SPI_Arduino_Slave::_received_length = 0;
-volatile size_t S_Broadcast_SPI_Arduino_Slave::_sending_index = 0;
-volatile size_t S_Broadcast_SPI_Arduino_Slave::_sending_length = 0;
-volatile S_Broadcast_SPI_Arduino_Slave::StatusByte S_Broadcast_SPI_Arduino_Slave::_transmission_mode 
-									= S_Broadcast_SPI_Arduino_Slave::StatusByte::TALKIE_SB_NONE;
+volatile size_t S_Broadcast_SPI_ESP_Slave::_receiving_index = 0;
+volatile size_t S_Broadcast_SPI_ESP_Slave::_received_length = 0;
+volatile size_t S_Broadcast_SPI_ESP_Slave::_sending_index = 0;
+volatile size_t S_Broadcast_SPI_ESP_Slave::_sending_length = 0;
+volatile S_Broadcast_SPI_ESP_Slave::StatusByte S_Broadcast_SPI_ESP_Slave::_transmission_mode 
+									= S_Broadcast_SPI_ESP_Slave::StatusByte::TALKIE_SB_NONE;
 
 
 // Define ISR at GLOBAL SCOPE (outside the class)
 ISR(SPI_STC_vect) {
     // You need a way to call your class method from here
     // Possibly using a static method or singleton pattern
-    S_Broadcast_SPI_Arduino_Slave::handleSPI_Interrupt();
+    S_Broadcast_SPI_ESP_Slave::handleSPI_Interrupt();
 }
 
