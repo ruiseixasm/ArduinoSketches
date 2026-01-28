@@ -254,25 +254,24 @@ protected:
 									c = _spi_instance->transfer(TALKIE_SB_END);
 									if (c == TALKIE_SB_DONE) {
 										length = receiving_index;
-										receiving_index = 1;
+										receiving_index = 1;	// Finish transmission
 										goto close_transmission;
 									}
 								}
 							} else if (c == TALKIE_SB_NONE || c == TALKIE_SB_FULL) {
-								receiving_index = 1;
+								receiving_index = 1;	// Finish transmission
 								goto close_transmission;
 							}
 							_spi_instance->transfer(TALKIE_SB_ERROR);
-							receiving_index = 0;
-							break;	// Retry transmission
+							receiving_index = 0;	// Retry transmission
+							goto close_transmission;
 						} else {
 							delayMicroseconds(receive_delay_us);
 							_spi_instance->transfer(TALKIE_SB_FULL);
-							receiving_index = 1;
+							receiving_index = 1;	// Finish transmission
 							goto close_transmission;
 						}
 					}
-					break;
 				}
 			}
 
