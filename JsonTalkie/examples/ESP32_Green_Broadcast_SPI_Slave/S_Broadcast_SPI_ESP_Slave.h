@@ -11,26 +11,26 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SPI_ARDUINO_SLAVE_HPP
-#define BROADCAST_SPI_ARDUINO_SLAVE_HPP
+#ifndef BROADCAST_SPI_ESP_SLAVE_HPP
+#define BROADCAST_SPI_ESP_SLAVE_HPP
 
 
 #include <BroadcastSocket.h>
 #include <SPI.h>
 
 
-// #define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_RECEIVE
-// #define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_SEND
-// #define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
-// #define BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
+// #define BROADCAST_SPI_ESP_SLAVE_DEBUG_RECEIVE
+// #define BROADCAST_SPI_ESP_SLAVE_DEBUG_SEND
+// #define BROADCAST_SPI_ESP_SLAVE_DEBUG_1
+// #define BROADCAST_SPI_ESP_SLAVE_DEBUG_2
 
 
-class S_Broadcast_SPI_Arduino_Slave : public BroadcastSocket {
+class S_Broadcast_SPI_ESP_Slave : public BroadcastSocket {
 public:
 
 	// The Socket class description shouldn't be greater than 35 chars
 	// {"m":7,"f":"","s":3,"b":1,"t":"","i":58485,"0":1,"1":"","2":11,"c":11266} <-- 128 - (73 + 2*10) = 35
-    const char* class_description() const override { return "Broadcast_SPI_Arduino_Slave"; }
+    const char* class_description() const override { return "Broadcast_SPI_ESP_Slave"; }
 
     enum StatusByte : uint8_t {
         TALKIE_SB_ACK		= 0xF0, // Acknowledge
@@ -65,7 +65,7 @@ protected:
 
     // Needed for the compiler, the base class is the one being called though
     // ADD THIS CONSTRUCTOR - it calls the base class constructor
-    S_Broadcast_SPI_Arduino_Slave() : BroadcastSocket() {
+    S_Broadcast_SPI_ESP_Slave() : BroadcastSocket() {
             
 			// Initialize SPI
 			SPI.begin();
@@ -96,7 +96,7 @@ protected:
 			JsonMessage new_message;
 			if (new_message.deserialize_buffer(_received_buffer, _received_length)) {
 				
-				#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_RECEIVE
+				#ifdef BROADCAST_SPI_ESP_SLAVE_DEBUG_RECEIVE
 				Serial.print(F("\treceive1: Received message: "));
 				Serial.write(_received_buffer, _received_length);
 				Serial.println();
@@ -117,7 +117,7 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     bool _send(const JsonMessage& json_message) override {
 
-		#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_SEND
+		#ifdef BROADCAST_SPI_ESP_SLAVE_DEBUG_SEND
 		Serial.print(F("\tsend1: Sent message: "));
 		json_message.write_to(Serial);
 		Serial.print(" | ");
@@ -144,9 +144,9 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static S_Broadcast_SPI_Arduino_Slave& instance() {
+    static S_Broadcast_SPI_ESP_Slave& instance() {
 
-        static S_Broadcast_SPI_Arduino_Slave instance;
+        static S_Broadcast_SPI_ESP_Slave instance;
         return instance;
     }
 
@@ -167,7 +167,7 @@ public:
 		//     TO MAKE SURE THEY ARE REALLY SET WHEN THE `SPDR` REPORTS A SET CONDITION!
 
 		// WARNING 4:
-		//     FOR FINALLY USAGE MAKE SURE TO COMMENT OUT THE BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1 AND BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
+		//     FOR FINALLY USAGE MAKE SURE TO COMMENT OUT THE BROADCAST_SPI_ESP_SLAVE_DEBUG_1 AND BROADCAST_SPI_ESP_SLAVE_DEBUG_1
 		// 	   DEFINITIONS OR ELSE THE SLAVE WONT RESPOND IN TIME AND ERRORS WILL RESULT DUE TO IT!
 
         uint8_t c = SPDR;    // Avoid using 'char' while using values above 127
@@ -178,7 +178,7 @@ public:
 				_received_buffer[_receiving_index++] = c;
 			} else {
 				_transmission_mode = TALKIE_SB_NONE;
-				#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
+				#ifdef BROADCAST_SPI_ESP_SLAVE_DEBUG_1
 				Serial.println(F("\t\tERROR: Slave buffer overflow"));
 				#endif
 			}
@@ -193,7 +193,7 @@ public:
 						_transmission_mode = TALKIE_SB_RECEIVE;
 						_receiving_index = 0;
 					} else {
-						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
+						#ifdef BROADCAST_SPI_ESP_SLAVE_DEBUG_1
 						Serial.println(F("\t\tBUSY: I'm busy (TALKIE_SB_RECEIVE)"));
 						#endif
 					}
@@ -216,7 +216,7 @@ public:
 						if (_sending_length == 0) {
 							_transmission_mode = TALKIE_SB_NONE;
 							SPDR = TALKIE_SB_NONE;
-							#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
+							#ifdef BROADCAST_SPI_ESP_SLAVE_DEBUG_2
 							Serial.println(F("\tNothing to be sent"));
 							#endif
 						} else if (_sending_index < TALKIE_BUFFER_SIZE) {	// Safe code
@@ -235,13 +235,13 @@ public:
                 case TALKIE_SB_END:
 					if (_transmission_mode == TALKIE_SB_RECEIVE) {
 						_received_length = _receiving_index;
-						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
+						#ifdef BROADCAST_SPI_ESP_SLAVE_DEBUG_1
 						Serial.println(F("\tReceived message"));
 						#endif
                     } else if (_transmission_mode == TALKIE_SB_SEND) {
                         _sending_length = 0;	// Makes sure the sending buffer is zeroed
 						SPDR = TALKIE_SB_DONE;	// Doing it at the end makes sure everything above was actually set
-						#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_1
+						#ifdef BROADCAST_SPI_ESP_SLAVE_DEBUG_1
 						Serial.println(F("\tSent message"));
 						#endif
 					}
@@ -268,4 +268,4 @@ public:
 };
 
 
-#endif // BROADCAST_SPI_ARDUINO_SLAVE_HPP
+#endif // BROADCAST_SPI_ESP_SLAVE_HPP
