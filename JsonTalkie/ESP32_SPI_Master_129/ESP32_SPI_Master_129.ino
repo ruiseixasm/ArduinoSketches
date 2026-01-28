@@ -15,6 +15,9 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>
 #include "driver/spi_master.h"
 
+#define FRAME_SIZE 129
+#define MAX_PAYLOAD 128
+
 #define HSPI_CS 5
 
 spi_device_handle_t spi;
