@@ -229,12 +229,12 @@ protected:
 		Serial.println(ss_pin);
 		#endif
 
-		for (uint8_t r = 0; r < 3; r++) {
+		for (uint8_t receive_tries = 0; receive_tries < 3; receive_tries++) {
 			
 			size_t receiving_index = 0;
 			digitalWrite(ss_pin, LOW);
 			
-			for (uint8_t transmission_tries = 0; transmission_tries < 5; ++transmission_tries) {
+			for (uint8_t get_ready_tries = 0; get_ready_tries < 5; ++get_ready_tries) {
 				delayMicroseconds(receive_delay_us);
 				c = _spi_instance->transfer(TALKIE_SB_SEND);
 				if (c == TALKIE_SB_READY) {
