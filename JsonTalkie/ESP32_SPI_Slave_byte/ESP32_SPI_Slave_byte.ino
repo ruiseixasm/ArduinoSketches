@@ -18,8 +18,9 @@ https://github.com/ruiseixasm/JsonTalkie
 #define VSPI_CS 5
 #define DATA_SIZE 128
 
-uint8_t rx_buffer[DATA_SIZE];
-uint8_t tx_buffer[DATA_SIZE];
+// DMA-capable, 4-byte aligned buffers
+uint8_t rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
+uint8_t tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
 
 void setup() {
     Serial.begin(115200);
