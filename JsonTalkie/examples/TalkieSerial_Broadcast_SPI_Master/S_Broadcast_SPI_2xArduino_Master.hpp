@@ -239,8 +239,6 @@ protected:
 				c = _spi_instance->transfer(TALKIE_SB_START);
 				if (c == TALKIE_SB_READY) {
 
-					_spi_instance->transfer(TALKIE_SB_SEND);	// Consumes a non replied
-
 					while (1) {
 						
 						if (receiving_index < buffer_size) {
