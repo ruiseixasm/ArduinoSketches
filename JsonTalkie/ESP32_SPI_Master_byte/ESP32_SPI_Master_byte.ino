@@ -99,6 +99,7 @@ void receive128Bytes() {
     spi_device_transmit(spi, &t);
 }
 
+
 void loop() {
     static uint32_t cycle = 0;
     
@@ -107,29 +108,34 @@ void loop() {
     // 10% chance Master has data
     bool master_has_data = (random(100) < 10);
     
+
     uint8_t cmd_byte;
-    
-    if (master_has_data) {
-        // Master has data → D=0, L>0
-        cmd_byte = 0x01;  // D=0, L=1 (Master has data)
-        Serial.println("[Master] Has data: D=0, L=1 (M→S)");
-        
-        // Prepare data
-        snprintf((char*)data_buffer, DATA_SIZE,
-                 "MasterData_%lu:Value=%d", millis(), random(10000));
-        
-        // Send command byte
-        send1Byte(cmd_byte);
-        delayMicroseconds(50);
-        
-        // Send 128 bytes
-        send128Bytes();
-        Serial.print("  Sent: ");
-        for (int i = 0; i < 40 && data_buffer[i] != 0; i++) {
-            Serial.print((char)data_buffer[i]);
-        }
-        Serial.println();
-        
+
+		if (master_has_data) {
+		// Create the string first
+		char temp_str[128];
+		int str_len = snprintf(temp_str, sizeof(temp_str),
+							"MasterData_%lu:Value=%d", 
+							millis(), random(10000));
+		
+		if (str_len > 127) str_len = 127;  // Cap at 127
+		
+		// Command byte: D=0, L=str_len
+		cmd_byte = str_len;  // D=0 (bit7=0), L=str_len
+		
+		Serial.printf("[Master] Sending %d bytes: %s\n", str_len, temp_str);
+		
+		// Copy string to buffer (no null terminator needed)
+		memset(data_buffer, 0, DATA_SIZE);  // Clear buffer
+		memcpy(data_buffer, temp_str, str_len);  // Copy exactly L bytes
+		
+		// Send command
+		send1Byte(cmd_byte);
+		delayMicroseconds(50);
+		
+		// Send 128 bytes (string + padding)
+		send128Bytes();
+
     } else {
         // Master has NO data → D=1, L>0 (poll Slave)
         cmd_byte = 0x81;  // D=1, L=1 (Master polling, expects Slave response)

@@ -54,6 +54,7 @@ void setup() {
     Serial.println("Slave ready.");
 }
 
+
 void loop() {
     // 10% chance Slave has data
     bool slave_has_data = (random(100) < 10);
@@ -65,53 +66,54 @@ void loop() {
         memset(tx_buffer, 0, DATA_SIZE);
     }
     
-    // Wait for master's command - uses global aligned variable
+    // Wait for master's command
     spi_slave_transaction_t t1 = {};
     t1.length = 8;
-    t1.rx_buffer = &cmd_byte;  // <-- Uses global aligned variable
+    t1.rx_buffer = &cmd_byte;
     t1.tx_buffer = nullptr;
     
     spi_slave_transmit(VSPI_HOST, &t1, portMAX_DELAY);
-    
+
     uint8_t direction = (cmd_byte >> 7) & 0x01;
-    uint8_t length = cmd_byte & 0x7F;
-    
-    Serial.printf("\n[Slave] Cmd: 0x%02X (D=%d, L=%d) ", cmd_byte, direction, length);
+    uint8_t string_length = cmd_byte & 0x7F;
+
+    // FIX 1: Use correct variable name
+    Serial.printf("\n[Slave] Cmd: 0x%02X (D=%d, L=%d) ", cmd_byte, direction, string_length);
     
     if (direction == 0) {
-        Serial.print("M→S - ");
-        
-        if (length > 0) {
-            Serial.println("Master has data, receiving...");
+        // Master → Slave direction
+        if (string_length > 0) {
+            Serial.printf("Receiving %d byte string from Master\n", string_length);
             
-            delayMicroseconds(50);
-            
+            // Receive 128 bytes
             spi_slave_transaction_t t2 = {};
             t2.length = DATA_SIZE * 8;
             t2.rx_buffer = rx_buffer;
             t2.tx_buffer = nullptr;
             spi_slave_transmit(VSPI_HOST, &t2, portMAX_DELAY);
             
-            Serial.print("  Received: ");
-            for (int i = 0; i < 40 && rx_buffer[i] != 0; i++) {
+            // Extract string
+            Serial.print("String: ");
+            for (int i = 0; i < string_length; i++) {
                 Serial.print((char)rx_buffer[i]);
             }
             Serial.println();
-            
         } else {
-            Serial.println("Master has no data");
+            Serial.println("Master direction ping (no data)");
         }
         
     } else {
+        // Slave → Master direction
         Serial.print("S→M - ");
         
-        uint8_t slave_response_byte = slave_has_data ? 0x81 : 0x80;
+        // FIX 2: Add alignment
+        uint8_t slave_response_byte __attribute__((aligned(4))) = slave_has_data ? 0x81 : 0x80;
         Serial.println(slave_has_data ? "I have data" : "I have no data");
         
         spi_slave_transaction_t t2 = {};
         t2.length = 8;
         t2.rx_buffer = nullptr;
-        t2.tx_buffer = &slave_response_byte;  // <-- This might also need alignment!
+        t2.tx_buffer = &slave_response_byte;
         spi_slave_transmit(VSPI_HOST, &t2, portMAX_DELAY);
         
         if (slave_has_data) {
