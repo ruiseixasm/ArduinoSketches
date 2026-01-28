@@ -199,7 +199,14 @@ public:
 					}
                     break;
                 case TALKIE_SB_SEND:
-					if (_sending_index == 0) {
+					if (_sending_index < _sending_length) {
+						SPDR = _sending_buffer[_sending_index++];
+					} else {	// Less missed sends this way
+						SPDR = TALKIE_SB_END;
+					}
+                    break;
+                case TALKIE_SB_START:
+					if (_transmission_mode == TALKIE_SB_SEND) {	// First char to be sent
 						if (_sending_length == 0) {
 							_transmission_mode = TALKIE_SB_NONE;
 							SPDR = TALKIE_SB_NONE;
@@ -213,16 +220,11 @@ public:
 						} else {
 							SPDR = _sending_buffer[_sending_index++];
 						}
-					} else if (_sending_index < _sending_length) {
-						SPDR = _sending_buffer[_sending_index++];
-					} else {	// Less missed sends this way
-						SPDR = TALKIE_SB_END;
+					} else {
+						_transmission_mode = TALKIE_SB_SEND;
+						_sending_index = 0;
+						SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
 					}
-                    break;
-                case TALKIE_SB_START:
-					_transmission_mode = TALKIE_SB_SEND;
-					_sending_index = 0;
-					SPDR = TALKIE_SB_READY;	// Doing it at the end makes sure everything above was actually set
                     break;
                 case TALKIE_SB_END:
 					if (_transmission_mode == TALKIE_SB_RECEIVE) {
