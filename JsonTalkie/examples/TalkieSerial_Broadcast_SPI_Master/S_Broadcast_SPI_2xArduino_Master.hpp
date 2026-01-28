@@ -229,9 +229,9 @@ protected:
 		Serial.println(ss_pin);
 		#endif
 
-		for (uint8_t receive_tries = 0; receive_tries < 3; receive_tries++) {
+		size_t receiving_index = 0;
+		for (uint8_t receive_tries = 0; receiving_index == 0 && receive_tries < 3; receive_tries++) {
 			
-			size_t receiving_index = 0;
 			digitalWrite(ss_pin, LOW);
 			
 			for (uint8_t get_ready_tries = 0; get_ready_tries < 5; ++get_ready_tries) {
@@ -254,17 +254,21 @@ protected:
 									c = _spi_instance->transfer(TALKIE_SB_END);
 									if (c == TALKIE_SB_DONE) {
 										length = receiving_index;
+										receiving_index = 1;
 										goto close_transmission;
 									}
 								}
 							} else if (c == TALKIE_SB_NONE || c == TALKIE_SB_FULL) {
+								receiving_index = 1;
 								goto close_transmission;
 							}
 							_spi_instance->transfer(TALKIE_SB_ERROR);
+							receiving_index = 0;
 							break;	// Retry transmission
 						} else {
 							delayMicroseconds(receive_delay_us);
 							_spi_instance->transfer(TALKIE_SB_FULL);
+							receiving_index = 1;
 							goto close_transmission;
 						}
 					}
