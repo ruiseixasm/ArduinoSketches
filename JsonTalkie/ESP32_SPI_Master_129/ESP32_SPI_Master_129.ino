@@ -18,7 +18,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define FRAME_SIZE 129
 #define MAX_PAYLOAD 128
 
-#define HSPI_CS 5
+#define HSPI_CS 15  // HSPI CS is typically GPIO15
 
 spi_device_handle_t spi;
 uint8_t tx_frame[FRAME_SIZE];
@@ -27,14 +27,14 @@ uint8_t rx_frame[FRAME_SIZE];
 void setup() {
 	Serial.begin(115200);
 
-	// SPI bus configuration
-	spi_bus_config_t buscfg = {};
-	buscfg.mosi_io_num = 23;
-	buscfg.miso_io_num = 19;
-	buscfg.sclk_io_num = 18;
-	buscfg.quadwp_io_num = -1;
-	buscfg.quadhd_io_num = -1;
-	buscfg.max_transfer_sz = FRAME_SIZE;
+    // SPI bus configuration - USING HSPI PINS
+    spi_bus_config_t buscfg = {};
+    buscfg.mosi_io_num = 13;  // HSPI MOSI (NOT 23!)
+    buscfg.miso_io_num = 12;  // HSPI MISO (NOT 19!)
+    buscfg.sclk_io_num = 14;  // HSPI SCLK (NOT 18!)
+    buscfg.quadwp_io_num = -1;
+    buscfg.quadhd_io_num = -1;
+    buscfg.max_transfer_sz = FRAME_SIZE;
 
 	// SPI device configuration
 	spi_device_interface_config_t devcfg = {};
