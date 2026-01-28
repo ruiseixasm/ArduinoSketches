@@ -19,19 +19,57 @@ https://github.com/ruiseixasm/JsonTalkie
 #define DATA_SIZE 128
 
 spi_device_handle_t spi;
-uint8_t data_buffer[DATA_SIZE];
+uint8_t data_buffer[DATA_SIZE] __attribute__((aligned(4)));
+
+void send1Byte(uint8_t data) {
+    static uint8_t tx_byte __attribute__((aligned(4))) = 0;
+    tx_byte = data;
+    spi_transaction_t t = {};
+    t.length = 8;
+    t.tx_buffer = &tx_byte;
+    t.rx_buffer = nullptr;
+    spi_device_transmit(spi, &t);
+}
+
+uint8_t receive1Byte() {
+    static uint8_t rx_byte __attribute__((aligned(4))) = 0;
+    spi_transaction_t t = {};
+    t.length = 8;
+    t.tx_buffer = nullptr;
+    t.rx_buffer = &rx_byte;
+    spi_device_transmit(spi, &t);
+    return rx_byte;
+}
+
+void send128Bytes() {
+	
+    // DEBUG: Print first 10 bytes before sending
+    Serial.print("send128Bytes() first 10: ");
+    for(int i = 0; i < 10; i++) {
+        Serial.printf("%02X ", data_buffer[i]);
+    }
+    Serial.println();
+
+    spi_transaction_t t = {};
+    t.length = DATA_SIZE * 8;
+    t.tx_buffer = data_buffer;
+    t.rx_buffer = nullptr;
+    spi_device_transmit(spi, &t);
+}
+
+void receive128Bytes() {
+    spi_transaction_t t = {};
+    t.length = DATA_SIZE * 8;
+    t.tx_buffer = nullptr;
+    t.rx_buffer = data_buffer;
+    spi_device_transmit(spi, &t);
+}
 
 void setup() {
     Serial.begin(115200);
     delay(2000);
     randomSeed(analogRead(0));
     
-    Serial.println("\n=== SPI MASTER ===");
-    Serial.println("Protocol: L field = sender data availability");
-    Serial.println("If Master has data: D=0, L>0");
-    Serial.println("If Master has NO data: D=1, L>0 (poll Slave)");
-    
-    // HSPI Master config
     spi_bus_config_t buscfg = {};
     buscfg.mosi_io_num = 13;
     buscfg.miso_io_num = 12;
@@ -46,139 +84,49 @@ void setup() {
     devcfg.spics_io_num = HSPI_CS;
     devcfg.queue_size = 3;
     
-    esp_err_t ret = spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
-    if (ret != ESP_OK) {
-        Serial.printf("SPI Bus init failed: 0x%X\n", ret);
-        while(1);
-    }
+    spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
     
-    ret = spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
-    if (ret != ESP_OK) {
-        Serial.printf("SPI Device add failed: 0x%X\n", ret);
-        while(1);
-    }
-    
-    Serial.println("Master ready. Starting 1-second cycles...");
+    Serial.println("Master ready");
 }
-
-// Send 1 byte
-void send1Byte(uint8_t data) {
-    spi_transaction_t t = {};
-    t.length = 8;
-    t.tx_buffer = &data;
-    t.rx_buffer = nullptr;
-    spi_device_transmit(spi, &t);
-}
-
-// Send 128 bytes
-void send128Bytes() {
-    spi_transaction_t t = {};
-    t.length = DATA_SIZE * 8;
-    t.tx_buffer = data_buffer;
-    t.rx_buffer = nullptr;
-    spi_device_transmit(spi, &t);
-}
-
-// Receive 1 byte
-uint8_t receive1Byte() {
-    uint8_t response;
-    spi_transaction_t t = {};
-    t.length = 8;
-    t.tx_buffer = nullptr;
-    t.rx_buffer = &response;
-    spi_device_transmit(spi, &t);
-    return response;
-}
-
-// Receive 128 bytes
-void receive128Bytes() {
-    spi_transaction_t t = {};
-    t.length = DATA_SIZE * 8;
-    t.tx_buffer = nullptr;
-    t.rx_buffer = data_buffer;
-    spi_device_transmit(spi, &t);
-}
-
 
 void loop() {
     static uint32_t cycle = 0;
-    
     Serial.printf("\n=== Cycle %lu ===\n", cycle++);
     
-    // 10% chance Master has data
-    bool master_has_data = (random(100) < 10);
-    
-
-    uint8_t cmd_byte;
-
-		if (master_has_data) {
-		// Create the string first
-		char temp_str[128];
-		int str_len = snprintf(temp_str, sizeof(temp_str),
-							"MasterData_%lu:Value=%d", 
-							millis(), random(10000));
-		
-		if (str_len > 127) str_len = 127;  // Cap at 127
-		
-		// Command byte: D=0, L=str_len
-		cmd_byte = str_len;  // D=0 (bit7=0), L=str_len
-		
-		Serial.printf("[Master] Sending %d bytes: %s\n", str_len, temp_str);
-		
-		// Copy string to buffer (no null terminator needed)
-		memset(data_buffer, 0, DATA_SIZE);  // Clear buffer
-		memcpy(data_buffer, temp_str, str_len);  // Copy exactly L bytes
-		
-		// Send command
-		send1Byte(cmd_byte);
-		delayMicroseconds(50);
-		
-		// Send 128 bytes (string + padding)
-		send128Bytes();
-
+    if (random(100) < 10) {
+        char temp[128];
+        int len = snprintf(temp, 128, "MasterData_%lu:Value=%ld", millis(), random(10000));
+        if (len > 127) len = 127;
+        
+        memset(data_buffer, 0, DATA_SIZE);
+        memcpy(data_buffer, temp, len);
+        
+        send1Byte(len); // D=0, L=len
+        delayMicroseconds(200);
+        send128Bytes();
+        
+        Serial.printf("[Master] Sent %d bytes\n", len);
     } else {
-        // Master has NO data → D=1, L>0 (poll Slave)
-        cmd_byte = 0x81;  // D=1, L=1 (Master polling, expects Slave response)
-        Serial.println("[Master] No data: D=1, L=1 (poll Slave)");
+        send1Byte(0x81); // D=1, L=1
+        delayMicroseconds(200);
         
-        // Send command byte
-        send1Byte(cmd_byte);
-        delayMicroseconds(50);
+        uint8_t response = receive1Byte();
+        uint8_t d = (response >> 7) & 0x01;
+        uint8_t l = response & 0x7F;
         
-        // Get Slave's response byte
-        uint8_t slave_response = receive1Byte();
-        uint8_t slave_direction = (slave_response >> 7) & 0x01;
-        uint8_t slave_length = slave_response & 0x7F;
+        Serial.printf("[Master] Slave: 0x%02X D=%d L=%d\n", response, d, l);
         
-        Serial.printf("  Slave response: 0x%02X (D=%d, L=%d) ", 
-                     slave_response, slave_direction, slave_length);
-        
-        if (slave_direction == 1 && slave_length > 0) {
-            // Slave indicates it has data (D=1, L>0)
-            Serial.println("Slave has data, receiving...");
-            
-            delayMicroseconds(50);
+        if (d == 1 && l > 0) {
+            delayMicroseconds(200);
             receive128Bytes();
-            
-            Serial.print("  Received: ");
-            for (int i = 0; i < 40 && data_buffer[i] != 0; i++) {
+            Serial.print("Received: ");
+            for (int i = 0; i < l && i < 40; i++) {
                 Serial.print((char)data_buffer[i]);
             }
             Serial.println();
-            
-        } else if (slave_direction == 1 && slave_length == 0) {
-            // Slave has no data (D=1, L=0)
-            Serial.println("Slave has no data");
-            
-        } else {
-            // Unexpected response
-            Serial.printf("Unexpected response from Slave!\n");
         }
     }
     
-    // Clear buffer
-    memset(data_buffer, 0, DATA_SIZE);
-    
-    // 1-second cycle
     delay(1000);
 }
