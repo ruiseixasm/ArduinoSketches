@@ -11,19 +11,19 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SPI_ARDUINO2X_MASTER_HPP
-#define BROADCAST_SPI_ARDUINO2X_MASTER_HPP
+#ifndef BROADCAST_SPI_ESP2X_MASTER_HPP
+#define BROADCAST_SPI_ESP2X_MASTER_HPP
 
 
 #include <BroadcastSocket.h>
 #include <SPI.h>
 
-// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
-// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
-// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_2
-// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_NEW
-// #define BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_RECEIVE
+// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_SEND
+// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_1
+// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_2
+// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_NEW
+// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
 
 
 #define send_delay_us 10
@@ -33,12 +33,12 @@ https://github.com/ruiseixasm/JsonTalkie
 #define TALKIE_MAX_NAMES 8
 
 
-class S_Broadcast_SPI_2xArduino_Master : public BroadcastSocket {
+class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
 public:
 
 	// The Socket class description shouldn't be greater than 35 chars
 	// {"m":7,"f":"","s":3,"b":1,"t":"","i":58485,"0":1,"1":"","2":11,"c":11266} <-- 128 - (73 + 2*10) = 35
-    const char* class_description() const override { return "Broadcast_SPI_2xArduino_Master"; }
+    const char* class_description() const override { return "Broadcast_SPI_2xESP_Master"; }
 
     enum StatusByte : uint8_t {
         TALKIE_SB_ACK		= 0xF0, // Acknowledge
@@ -59,7 +59,7 @@ public:
     };
 
 
-	#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+	#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
 	unsigned long _reference_time = millis();
 	#endif
 
@@ -71,7 +71,7 @@ protected:
 
 
     // Constructor
-    S_Broadcast_SPI_2xArduino_Master(int ss_pin) : BroadcastSocket() {
+    S_Broadcast_SPI_2xESP_Master(int ss_pin) : BroadcastSocket() {
 		
 			_ss_pin = ss_pin;
 			if (_spi_instance) {
@@ -101,7 +101,7 @@ protected:
 
 			if (_spi_instance) {
 
-				#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+				#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
 				_reference_time = millis();
 				#endif
 
@@ -113,7 +113,7 @@ protected:
 					
 					new_message._set_length(length);
 
-					#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_RECEIVE
+					#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_RECEIVE
 					Serial.print(F("\t\t\t\t\treceive1: Received message: "));
 					new_message.write_to(Serial);
 					Serial.print(" | ");
@@ -132,15 +132,15 @@ protected:
 
 		if (_spi_instance) {
 			
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
 			Serial.print("\n\tsend: ");
 			#endif
 				
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
 			_reference_time = millis();
 			#endif
 
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
+			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_SEND
 			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
 			Serial.write(message_buffer, json_message.get_length());
 			Serial.println();
@@ -151,7 +151,7 @@ protected:
 			const char* message_buffer = json_message._read_buffer();
 			size_t message_length = json_message.get_length();
 
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_SEND
+			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_SEND
 			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
 			Serial.write(message_buffer, message_length);
 			Serial.println();
@@ -161,7 +161,7 @@ protected:
 			
 			sendSPI(_ss_pin, message_buffer, message_length);
 
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_TIMING
+			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
 			Serial.print(" | ");
 			Serial.print(millis() - _reference_time);
 			#endif
@@ -176,14 +176,14 @@ protected:
 	
     bool sendSPI(int ss_pin, const char* message_buffer, size_t length) {
 		
-		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
+		#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_1
 		Serial.print(F("\tSending on pin: "));
 		Serial.println(ss_pin);
 		#endif
 
 		if (length > TALKIE_BUFFER_SIZE) {
 			
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
+			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_1
 			Serial.println(F("\tlength > TALKIE_BUFFER_SIZE"));
 			#endif
 
@@ -224,7 +224,7 @@ protected:
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c;			// Avoid using 'char' while using values above 127
 
-		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_2
+		#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_2
 		Serial.print(F("\tReceiving on pin: "));
 		Serial.println(ss_pin);
 		#endif
@@ -286,8 +286,8 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static S_Broadcast_SPI_2xArduino_Master& instance(int ss_pin) {
-        static S_Broadcast_SPI_2xArduino_Master instance(ss_pin);
+    static S_Broadcast_SPI_2xESP_Master& instance(int ss_pin) {
+        static S_Broadcast_SPI_2xESP_Master instance(ss_pin);
 
         return instance;
     }
@@ -296,4 +296,4 @@ public:
 
 
 
-#endif // BROADCAST_SPI_ARDUINO2X_MASTER_HPP
+#endif // BROADCAST_SPI_ESP2X_MASTER_HPP
