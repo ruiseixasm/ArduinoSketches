@@ -18,10 +18,11 @@ https://github.com/ruiseixasm/JsonTalkie
 #define FRAME_SIZE 129
 #define MAX_PAYLOAD 128
 
-#define HSPI_CS 5
+#define VSPI_CS 5
 
-uint8_t rx_frame[FRAME_SIZE];
-uint8_t tx_frame[FRAME_SIZE];
+// DMA-capable, 4-byte aligned
+uint8_t rx_frame[FRAME_SIZE] __attribute__((aligned(4)));
+uint8_t tx_frame[FRAME_SIZE] __attribute__((aligned(4)));
 
 void setup() {
   Serial.begin(115200);
@@ -36,10 +37,10 @@ void setup() {
   buscfg.max_transfer_sz = FRAME_SIZE;
 
   spi_slave_interface_config_t slvcfg = {};
-  slvcfg.spics_io_num = HSPI_CS;
+  slvcfg.spics_io_num = VSPI_CS;
   slvcfg.queue_size = 1;
 
-  spi_slave_initialize(HSPI_HOST, &buscfg, &slvcfg, 1);
+  spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, 1);
 
   // prefill tx_frame with default reply
   const char *reply = "Hello from SLAVE!";
@@ -55,7 +56,7 @@ void loop() {
   t.length = FRAME_SIZE * 8;
   t.rx_buffer = rx_frame;
   t.tx_buffer = tx_frame;
-  spi_slave_transmit(HSPI_HOST, &t, portMAX_DELAY);
+  spi_slave_transmit(VSPI_HOST, &t, portMAX_DELAY);
 
   uint8_t len = rx_frame[0];
 
