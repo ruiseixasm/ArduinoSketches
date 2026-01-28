@@ -108,7 +108,7 @@ void loop() {
         
         Serial.printf("[Master] Sent %d bytes\n", len);
     } else {
-        send1Byte(0x81); // D=1, L=1
+        send1Byte(0b10000000); // D=1, L=0
         delayMicroseconds(200);
         
         uint8_t response = receive1Byte();
