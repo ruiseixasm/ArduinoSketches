@@ -201,7 +201,7 @@ public:
                 case TALKIE_SB_SEND:
 					if (_sending_index < _sending_length) {
 						SPDR = _sending_buffer[_sending_index++];
-					} else {	// Less missed sends this way
+					} else {
 						SPDR = TALKIE_SB_END;
 					}
                     break;
