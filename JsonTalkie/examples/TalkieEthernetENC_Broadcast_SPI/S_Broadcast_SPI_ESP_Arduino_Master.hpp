@@ -260,56 +260,50 @@ protected:
 		Serial.println(ss_pin);
 		#endif
 
-		bool receiving_mode = true;
-
-		for (uint8_t r = 0; receiving_mode && r < 3; r++) {
-	
-			receiving_mode = false;
+		for (uint8_t r = 0; r < 3; r++) {
+			
+			size_t receiving_index = 0;
 			digitalWrite(ss_pin, LOW);
-
+			
 			for (uint8_t transmission_tries = 0; transmission_tries < 5; ++transmission_tries) {
 				delayMicroseconds(receive_delay_us);
 				c = _spi_instance->transfer(TALKIE_SB_SEND);
 				if (c == TALKIE_SB_READY) {
-					receiving_mode = true;
-					break;
-				}
-			}
-
-			size_t receiving_index = 0;
-			while (receiving_mode) {
-				
-				if (receiving_index < buffer_size) {
-					delayMicroseconds(receive_delay_us);
-					c = _spi_instance->transfer(TALKIE_SB_SEND);
-
-					if (c < 128) {
-						message_buffer[receiving_index++] = c;
-						continue;
-					} else if (c == TALKIE_SB_END) {
-						for (uint8_t end_tries = 0; end_tries < 5; ++end_tries) {
+					
+					while (1) {
+						
+						if (receiving_index < buffer_size) {
 							delayMicroseconds(receive_delay_us);
-							c = _spi_instance->transfer(TALKIE_SB_END);
-							if (c == TALKIE_SB_DONE) {
-								length = receiving_index;
-								receiving_mode = false;
-								break;
+							c = _spi_instance->transfer(TALKIE_SB_SEND);
+
+							if (c < 128) {
+								message_buffer[receiving_index++] = c;
+								continue;
+							} else if (c == TALKIE_SB_END) {
+								for (uint8_t end_tries = 0; end_tries < 5; ++end_tries) {
+									delayMicroseconds(receive_delay_us);
+									c = _spi_instance->transfer(TALKIE_SB_END);
+									if (c == TALKIE_SB_DONE) {
+										length = receiving_index;
+										goto finish_transmission;
+									}
+								}
+							} else if (c == TALKIE_SB_NONE || c == TALKIE_SB_FULL) {
+								goto finish_transmission;
 							}
+							_spi_instance->transfer(TALKIE_SB_ERROR);
+							break;	// Retry transmission
+						} else {
+							delayMicroseconds(receive_delay_us);
+							_spi_instance->transfer(TALKIE_SB_FULL);
+							goto finish_transmission;
 						}
-						continue;
-					} else if (c == TALKIE_SB_NONE || c == TALKIE_SB_FULL) {
-						receiving_mode = false;
-						break;
 					}
-					_spi_instance->transfer(TALKIE_SB_ERROR);
-					break;
-				} else {
-					delayMicroseconds(receive_delay_us);
-					_spi_instance->transfer(TALKIE_SB_FULL);
 					break;
 				}
 			}
 
+			finish_transmission:
             delayMicroseconds(5);
             digitalWrite(ss_pin, HIGH);
         }
