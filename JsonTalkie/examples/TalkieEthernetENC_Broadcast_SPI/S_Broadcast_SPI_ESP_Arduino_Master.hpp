@@ -296,6 +296,7 @@ protected:
 								break;
 							}
 						}
+						continue;
 					} else if (c == TALKIE_SB_NONE || c == TALKIE_SB_FULL) {
 						receiving_mode = false;
 						break;
