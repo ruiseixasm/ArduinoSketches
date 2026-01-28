@@ -199,10 +199,16 @@ public:
 					}
                     break;
                 case TALKIE_SB_SEND:
-					if (_sending_index < _sending_length) {
-						SPDR = _sending_buffer[_sending_index++];
+					if (_sending_index < TALKIE_BUFFER_SIZE) {	// Safe code
+						if (_sending_index < _sending_length) {
+							SPDR = _sending_buffer[_sending_index++];
+						} else {
+							SPDR = TALKIE_SB_END;
+						}
 					} else {
-						SPDR = TALKIE_SB_END;
+						_sending_length = 0;	// Makes sure the sending buffer is zeroed
+						_transmission_mode = TALKIE_SB_NONE;
+						SPDR = TALKIE_SB_FULL;
 					}
                     break;
                 case TALKIE_SB_START:
@@ -213,14 +219,12 @@ public:
 							#ifdef BROADCAST_SPI_ARDUINO_SLAVE_DEBUG_2
 							Serial.println(F("\tNothing to be sent"));
 							#endif
-						} else if (_sending_length > TALKIE_BUFFER_SIZE) {
+						} else if (_sending_index < TALKIE_BUFFER_SIZE) {	// Safe code
+							SPDR = _sending_buffer[_sending_index++];
+						} else {
 							_sending_length = 0;	// Makes sure the sending buffer is zeroed
 							_transmission_mode = TALKIE_SB_NONE;
 							SPDR = TALKIE_SB_FULL;
-						} else if (_sending_index < _sending_length) {	// Safe code
-							SPDR = _sending_buffer[_sending_index++];
-						} else {
-							SPDR = TALKIE_SB_END;
 						}
 					} else {
 						_transmission_mode = TALKIE_SB_SEND;
