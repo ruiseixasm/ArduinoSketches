@@ -20,7 +20,7 @@ const char* string_off = "{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':354075
 // Use HSPI (SPI2) instead of default VSPI (SPI3)
 SPIClass hspi(HSPI);
 
-uint8_t tx_buffer[BUFFER_SIZE];
+uint8_t _tx_buffer[BUFFER_SIZE];
 uint32_t counter = 0;
 bool send_on_string = true;  // Start with ON string
 
@@ -172,13 +172,13 @@ void setup() {
 
 void loop() {
     // Fill buffer with appropriate string
-    fill_buffer(tx_buffer, counter, send_on_string);
+    fill_buffer(_tx_buffer, counter, send_on_string);
     
     // Show preview
-    print_buffer_preview(tx_buffer, counter, send_on_string);
+    print_buffer_preview(_tx_buffer, counter, send_on_string);
     
     // Send the 128-byte buffer with LED indication
-    send_128byte_buffer_with_led(tx_buffer);
+    send_128byte_buffer_with_led(_tx_buffer);
     
     counter++;
     

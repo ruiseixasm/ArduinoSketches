@@ -18,13 +18,13 @@ https://github.com/ruiseixasm/JsonTalkie
 #define VSPI_CS   5
 #define DATA_SIZE 128
 
-uint8_t rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
-uint8_t tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
-uint8_t cmd_byte __attribute__((aligned(4)));
-uint8_t sending_length __attribute__((aligned(4))) = 0;
+uint8_t _rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
+uint8_t _tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
+uint8_t _cmd_byte __attribute__((aligned(4)));
+uint8_t _sending_length __attribute__((aligned(4))) = 0;
 
-spi_slave_transaction_t cmd_trans;
-spi_slave_transaction_t data_trans;
+spi_slave_transaction_t _cmd_trans;
+spi_slave_transaction_t _data_trans;
 
 enum SpiState {
     WAIT_CMD,
@@ -36,26 +36,26 @@ SpiState spi_state = WAIT_CMD;
 uint8_t active_length = 0;
 
 static inline void queue_cmd() {
-    spi_slave_transaction_t *t = &cmd_trans;
+    spi_slave_transaction_t *t = &_cmd_trans;
     t->length    = 8;
-    t->rx_buffer = &cmd_byte;
-    t->tx_buffer = &sending_length;
+    t->rx_buffer = &_cmd_byte;
+    t->tx_buffer = &_sending_length;
     spi_slave_queue_trans(VSPI_HOST, t, portMAX_DELAY);
 }
 
 static inline void queue_rx(uint8_t len) {
-    spi_slave_transaction_t *t = &data_trans;
+    spi_slave_transaction_t *t = &_data_trans;
     t->length    = (size_t)len * 8;
-    t->rx_buffer = rx_buffer;
+    t->rx_buffer = _rx_buffer;
     t->tx_buffer = nullptr;
     spi_slave_queue_trans(VSPI_HOST, t, portMAX_DELAY);
 }
 
 static inline void queue_tx(uint8_t len) {
-    spi_slave_transaction_t *t = &data_trans;
+    spi_slave_transaction_t *t = &_data_trans;
     t->length    = (size_t)len * 8;
     t->rx_buffer = nullptr;
-    t->tx_buffer = tx_buffer;
+    t->tx_buffer = _tx_buffer;
     spi_slave_queue_trans(VSPI_HOST, t, portMAX_DELAY);
 }
 
@@ -84,16 +84,16 @@ void loop() {
     spi_slave_transaction_t *ret;
 
     /* === ORIGINAL DATA GENERATION LOGIC (UNCHANGED) === */
-    if (sending_length == 0) {
+    if (_sending_length == 0) {
         int data_len = 0;
         bool slave_has_data = (random(100) < 10);
         if (slave_has_data) {
-            data_len = snprintf((char*)tx_buffer,
+            data_len = snprintf((char*)_tx_buffer,
                                 DATA_SIZE,
                                 "SlaveData_%lu",
                                 millis());
             if (data_len > 127) data_len = 127;
-            sending_length = (uint8_t)data_len;
+            _sending_length = (uint8_t)data_len;
         }
     }
 
@@ -104,11 +104,11 @@ void loop() {
     /* === SPI "ISR" === */
 
     if (spi_state == WAIT_CMD) {
-        bool beacon = (cmd_byte >> 7) & 0x01;
-        uint8_t received_length = cmd_byte & 0x7F;
+        bool beacon = (_cmd_byte >> 7) & 0x01;
+        uint8_t received_length = _cmd_byte & 0x7F;
 
         Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
-                      cmd_byte, beacon, received_length);
+                      _cmd_byte, beacon, received_length);
 
         if (!beacon) {  // master → slave
             if (received_length > 0 && received_length <= DATA_SIZE) {
@@ -134,7 +134,7 @@ void loop() {
     else if (spi_state == RX_PAYLOAD) {
         Serial.printf("Received %u bytes: ", active_length);
         for (uint8_t i = 0; i < active_length; i++) {
-            char c = rx_buffer[i];
+            char c = _rx_buffer[i];
             if (c >= 32 && c <= 126) Serial.print(c);
             else Serial.printf("[%02X]", c);
         }
@@ -146,7 +146,7 @@ void loop() {
 
     else if (spi_state == TX_PAYLOAD) {
         Serial.printf("Sent %u bytes\n", active_length);
-        sending_length = 0;
+        _sending_length = 0;
 
         spi_state = WAIT_CMD;
         queue_cmd();

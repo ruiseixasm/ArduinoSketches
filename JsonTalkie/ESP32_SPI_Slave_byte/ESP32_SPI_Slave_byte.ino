@@ -18,9 +18,9 @@ https://github.com/ruiseixasm/JsonTalkie
 #define VSPI_CS 5
 #define DATA_SIZE 128
 
-uint8_t rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
-uint8_t tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
-uint8_t cmd_byte __attribute__((aligned(4)));
+uint8_t _rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
+uint8_t _tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
+uint8_t _cmd_byte __attribute__((aligned(4)));
 
 void setup() {
     Serial.begin(115200);
@@ -46,21 +46,21 @@ void setup() {
 void loop() {
     bool slave_has_data = (random(100) < 10);
     
-    memset(tx_buffer, 0, DATA_SIZE);
+    memset(_tx_buffer, 0, DATA_SIZE);
     if (slave_has_data) {
-        snprintf((char*)tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
+        snprintf((char*)_tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
     }
     
     spi_slave_transaction_t t1 = {};
     t1.length = 8;
-    t1.rx_buffer = &cmd_byte;
+    t1.rx_buffer = &_cmd_byte;
     t1.tx_buffer = nullptr;
     spi_slave_transmit(VSPI_HOST, &t1, portMAX_DELAY);
     
-    uint8_t d = (cmd_byte >> 7) & 0x01;
-    uint8_t l = cmd_byte & 0x7F;
+    uint8_t d = (_cmd_byte >> 7) & 0x01;
+    uint8_t l = _cmd_byte & 0x7F;
     
-    Serial.printf("\n[Slave] Cmd: 0x%02X D=%d L=%d ", cmd_byte, d, l);
+    Serial.printf("\n[Slave] Cmd: 0x%02X D=%d L=%d ", _cmd_byte, d, l);
     
     if (d == 0) {
         if (l > 0) {
@@ -69,13 +69,13 @@ void loop() {
             
             spi_slave_transaction_t t2 = {};
             t2.length = DATA_SIZE * 8;
-            t2.rx_buffer = rx_buffer;
+            t2.rx_buffer = _rx_buffer;
             t2.tx_buffer = nullptr;
             spi_slave_transmit(VSPI_HOST, &t2, portMAX_DELAY);
             
             Serial.print("Received: ");
             for (int i = 0; i < l && i < 40; i++) {
-                char c = rx_buffer[i];
+                char c = _rx_buffer[i];
                 if (c >= 32 && c <= 126) Serial.print(c);
                 else Serial.printf("[%02X]", c);
             }
@@ -85,7 +85,7 @@ void loop() {
         }
     } else {
         uint8_t response_byte __attribute__((aligned(4)));
-        int data_len = strlen((char*)tx_buffer);
+        int data_len = strlen((char*)_tx_buffer);
         if (data_len > 127) data_len = 127;
         
         if (slave_has_data) {
@@ -107,7 +107,7 @@ void loop() {
             spi_slave_transaction_t t3 = {};
             t3.length = DATA_SIZE * 8;
             t3.rx_buffer = nullptr;
-            t3.tx_buffer = tx_buffer;
+            t3.tx_buffer = _tx_buffer;
             spi_slave_transmit(VSPI_HOST, &t3, portMAX_DELAY);
         }
     }

@@ -20,9 +20,9 @@ https://github.com/ruiseixasm/JsonTalkie
 // Convert 3000ms to FreeRTOS ticks
 #define TIMEOUT_MS 3000
 
-uint8_t rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
-uint8_t tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
-uint8_t cmd_byte __attribute__((aligned(4)));
+uint8_t _rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
+uint8_t _tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
+uint8_t _cmd_byte __attribute__((aligned(4)));
 
 void setup() {
     Serial.begin(115200);
@@ -54,21 +54,21 @@ void loop() {
 	int data_len = 0;
     bool slave_has_data = (random(100) < 10);
     if (slave_has_data) {
-        data_len = snprintf((char*)tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
+        data_len = snprintf((char*)_tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
     }
     
     spi_slave_transaction_t t1 = {};
     t1.length = 1 * 8;	// Bytes to bits
-    t1.rx_buffer = &cmd_byte;
+    t1.rx_buffer = &_cmd_byte;
     t1.tx_buffer = nullptr;
     spi_slave_transmit(VSPI_HOST, &t1, timeout_ticks);
     
-    uint8_t d = (cmd_byte >> 7) & 0x01;
-    uint8_t l = cmd_byte & 0x7F;
+    uint8_t d = (_cmd_byte >> 7) & 0x01;
+    uint8_t l = _cmd_byte & 0x7F;
     
     if (d == 0) {	// Master sends
 		
-    	Serial.printf("\n[From Master] Cmd: 0x%02X D=%d L=%d ", cmd_byte, d, l);
+    	Serial.printf("\n[From Master] Cmd: 0x%02X D=%d L=%d ", _cmd_byte, d, l);
     
         if (l > 0) {
 			
@@ -79,13 +79,13 @@ void loop() {
 				
 				spi_slave_transaction_t t2 = {};
 				t2.length = l * 8;	// Bytes to bits
-				t2.rx_buffer = rx_buffer;
+				t2.rx_buffer = _rx_buffer;
 				t2.tx_buffer = nullptr;
 				spi_slave_transmit(VSPI_HOST, &t2, timeout_ticks);
 				
 				Serial.print("Received: ");
 				for (int i = 0; i < l; i++) {
-					char c = rx_buffer[i];
+					char c = _rx_buffer[i];
 					if (c >= 32 && c <= 126) Serial.print(c);
 					else Serial.printf("[%02X]", c);
 				}
@@ -98,7 +98,7 @@ void loop() {
         uint8_t response_byte __attribute__((aligned(4)));
         if (data_len > 127) data_len = 127;
         
-    	Serial.printf("\n[From Slave] Cmd: 0x%02X D=%d L=%d ", cmd_byte, d, data_len);
+    	Serial.printf("\n[From Slave] Cmd: 0x%02X D=%d L=%d ", _cmd_byte, d, data_len);
     
         if (slave_has_data) {
             response_byte = 0x80 | data_len;
@@ -119,7 +119,7 @@ void loop() {
             spi_slave_transaction_t t3 = {};
             t3.length = data_len * 8;	// Bytes to bits
             t3.rx_buffer = nullptr;
-            t3.tx_buffer = tx_buffer;
+            t3.tx_buffer = _tx_buffer;
             spi_slave_transmit(VSPI_HOST, &t3, timeout_ticks);
         }
     }

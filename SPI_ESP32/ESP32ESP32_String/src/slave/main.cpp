@@ -19,8 +19,8 @@
 
 
 spi_slave_transaction_t slave_trans;
-uint8_t rx_buffer[BUFFER_SIZE];
-uint8_t tx_buffer[BUFFER_SIZE];
+uint8_t _rx_buffer[BUFFER_SIZE];
+uint8_t _tx_buffer[BUFFER_SIZE];
 uint32_t packet_counter = 0;
 uint64_t last_packet_time = 0;
 bool last_command_was_on = false;
@@ -160,8 +160,8 @@ void setup() {
     setup_spi_slave();
     
     // Initialize TX buffer (echo/response)
-    memset(tx_buffer, 0x00, sizeof(tx_buffer));
-    memcpy(tx_buffer, "{'status':'ACK'}", 16);
+    memset(_tx_buffer, 0x00, sizeof(_tx_buffer));
+    memcpy(_tx_buffer, "{'status':'ACK'}", 16);
     
     // Blink LED 3 times for startup
     for (int i = 0; i < 3; i++) {
@@ -176,12 +176,12 @@ void setup() {
 
 void loop() {
     // Clear receive buffer
-    memset(rx_buffer, 0, sizeof(rx_buffer));
+    memset(_rx_buffer, 0, sizeof(_rx_buffer));
     
     // Setup transaction structure
     slave_trans.length = BUFFER_SIZE * 8;
-    slave_trans.rx_buffer = rx_buffer;
-    slave_trans.tx_buffer = tx_buffer;
+    slave_trans.rx_buffer = _rx_buffer;
+    slave_trans.tx_buffer = _tx_buffer;
     
     // Wait for master to initiate transfer (blocking)
     esp_err_t ret = spi_slave_transmit(VSPI_HOST, &slave_trans, portMAX_DELAY);
@@ -201,24 +201,24 @@ void loop() {
     Serial.printf("\n=== PACKET #%lu RECEIVED ===\n", packet_counter);
     
     // Show what we received
-    print_buffer_preview(rx_buffer, packet_counter, bytes_received);
+    print_buffer_preview(_rx_buffer, packet_counter, bytes_received);
     
     // Analyze the packet
-    analyze_packet(rx_buffer, bytes_received);
+    analyze_packet(_rx_buffer, bytes_received);
     
     // Check if alternating commands
-    bool current_is_on = (strstr((char*)rx_buffer, "'n':'ON'") != NULL);
+    bool current_is_on = (strstr((char*)_rx_buffer, "'n':'ON'") != NULL);
     if (packet_counter > 1 && current_is_on == last_command_was_on) {
         Serial.println("⚠ WARNING: Same command received twice!");
     }
     last_command_was_on = current_is_on;
     
     // Update TX buffer for next transaction
-    memset(tx_buffer, 0, sizeof(tx_buffer));
+    memset(_tx_buffer, 0, sizeof(_tx_buffer));
     if (current_is_on) {
-        snprintf((char*)tx_buffer, BUFFER_SIZE, "{'ack':'ON_RECEIVED','cnt':%lu}", packet_counter);
+        snprintf((char*)_tx_buffer, BUFFER_SIZE, "{'ack':'ON_RECEIVED','cnt':%lu}", packet_counter);
     } else {
-        snprintf((char*)tx_buffer, BUFFER_SIZE, "{'ack':'OFF_RECEIVED','cnt':%lu}", packet_counter);
+        snprintf((char*)_tx_buffer, BUFFER_SIZE, "{'ack':'OFF_RECEIVED','cnt':%lu}", packet_counter);
     }
     
     Serial.println("=== END OF PACKET ===\n");

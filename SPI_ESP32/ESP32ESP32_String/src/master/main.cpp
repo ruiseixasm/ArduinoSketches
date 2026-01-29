@@ -17,7 +17,7 @@ const char* string_on = "{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':35407511
 const char* string_off = "{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}";
 
 spi_device_handle_t _spi;
-uint8_t tx_buffer[BUFFER_SIZE];
+uint8_t _tx_buffer[BUFFER_SIZE];
 uint32_t counter = 0;
 bool send_on_string = true;
 
@@ -176,9 +176,9 @@ void setup() {
 }
 
 void loop() {
-    fill_buffer(tx_buffer, counter, send_on_string);
-    print_buffer_preview(tx_buffer, counter, send_on_string);
-    send_128byte_buffer_with_led(tx_buffer);
+    fill_buffer(_tx_buffer, counter, send_on_string);
+    print_buffer_preview(_tx_buffer, counter, send_on_string);
+    send_128byte_buffer_with_led(_tx_buffer);
     
     counter++;
     send_on_string = !send_on_string;
