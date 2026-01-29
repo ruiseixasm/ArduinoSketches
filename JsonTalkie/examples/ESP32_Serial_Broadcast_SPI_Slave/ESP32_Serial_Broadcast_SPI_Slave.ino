@@ -24,35 +24,27 @@ https://github.com/ruiseixasm/JsonTalkie
 // ONLY THE CHANGED LIBRARY ALLOWS THE RECEPTION OF BROADCASTED UDP PACKAGES TO 255.255.255.255
 #include "S_SocketSerial.hpp"
 #include "S_Broadcast_SPI_2xESP_Master.hpp"
-#include "M_Spy.hpp"
-#include "M_CyclerManifesto.hpp"
+#include "M_LedManifesto.hpp"
 
 
 // TALKERS 
 
-// M_Spy Talker
-const char t_spy_name[] = "spy";
-const char t_spy_desc[] = "I'm a M_Spy and I spy the talkers' pings";
-M_Spy spy_manifesto;
-JsonTalker t_spy = JsonTalker(t_spy_name, t_spy_desc, &spy_manifesto);
-
-// Talker cycler
-const char t_cycler_name[] = "cycler";
-const char t_cycler_desc[] = "I cycle the blue led";
-M_CyclerManifesto cycler_manifesto;
-JsonTalker t_cycler = JsonTalker(t_cycler_name, t_cycler_desc, &cycler_manifesto);
+// Talker (led)
+const char l_led_name[] = "blue";
+const char l_led_desc[] = "I turn led Blue on and off";
+M_LedManifesto led_manifesto(LED_BUILTIN);
+JsonTalker l_led = JsonTalker(l_led_name, l_led_desc, &led_manifesto);
 
 
 // SOCKETS
 // Singleton requires the & (to get a reference variable)
 auto& serial_socket = S_SocketSerial::instance();
-int spi_pins[] = {4, 16};
 auto& spi_socket = S_Broadcast_SPI_2xESP_Master::instance(spi_pins, sizeof(spi_pins)/sizeof(int));
 
 
 // SETTING THE REPEATER
 BroadcastSocket* uplinked_sockets[] = { &serial_socket };
-JsonTalker* downlinked_talkers[] = { &t_spy, &t_cycler };
+JsonTalker* downlinked_talkers[] = { &l_led };
 BroadcastSocket* downlinked_sockets[] = { &spi_socket };
 const MessageRepeater message_repeater(
 		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),
@@ -87,8 +79,8 @@ void setup() {
 	// Initialize SPI with HSPI pins: MOSI=13, MISO=12, SCK=14
     spi_socket.begin(13, 12, 14);	// MOSI, MISO, SCK
 
-    // Finally, sets the blue led as always HIGH signalling this way to be a SPI Master
-    digitalWrite(LED_BUILTIN, HIGH);
+    // Finally, sets the blue led as always LOW signalling this way to be a SPI Slave
+    digitalWrite(LED_BUILTIN, LOW);
 
     Serial.println("Setup completed - Ready for JSON communication!");
 }
