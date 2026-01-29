@@ -91,10 +91,7 @@ void loop() {
         int data_len = 0;
         bool slave_has_data = (random(100) < 10);
         if (slave_has_data) {
-            data_len = snprintf((char*)_tx_buffer,
-                                DATA_SIZE,
-                                "SlaveData_%lu",
-                                millis());
+            data_len = snprintf((char*)_tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
             if (data_len > 127) data_len = 127;
             _sending_length = (uint8_t)data_len;
         }
@@ -113,8 +110,7 @@ void loop() {
 			bool beacon = (_cmd_byte >> 7) & 0x01;
 			uint8_t received_length = _cmd_byte & 0x7F;
 
-			Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
-						_cmd_byte, beacon, received_length);
+			Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte, beacon, received_length);
 
 			if (!beacon) {  // master → slave
 				if (received_length > 0 && received_length <= DATA_SIZE) {
