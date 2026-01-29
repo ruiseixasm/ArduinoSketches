@@ -140,13 +140,11 @@ void loop() {
         
         for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(spi_cs_pins)/sizeof(int); ss_pin_i++) {
 
-            uint8_t response = receiveLength(spi_cs_pins[ss_pin_i]);
-            uint8_t d = (response >> 7) & 0x01;
-            uint8_t l = response & 0x7F;
+            uint8_t l = receiveLength(spi_cs_pins[ss_pin_i]);
             
-            Serial.printf("[Beacon] Slave: 0x%02X D=%d L=%d\n", response, d, l);
+            Serial.printf("[Beacon] Slave: 0x%02X D=0 L=%d\n", response, l);
             
-            if (d == 1 && l > 0) {
+            if (l > 0) {
                 delayMicroseconds(200);
                 receivePayload((size_t)l, spi_cs_pins[ss_pin_i]);
                 Serial.print("[From Slave] Received: ");

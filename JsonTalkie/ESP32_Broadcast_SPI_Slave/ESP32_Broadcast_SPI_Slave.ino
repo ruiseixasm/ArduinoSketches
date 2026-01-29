@@ -52,16 +52,19 @@ void loop() {
 	const TickType_t timeout_ticks = TIMEOUT_MS / portTICK_PERIOD_MS;
 
 	int data_len = 0;
+    uint8_t length_byte __attribute__((aligned(4))) = 0;
     bool slave_has_data = (random(100) < 10);
     if (slave_has_data) {
         data_len = snprintf((char*)tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
+        if (data_len > 127) data_len = 127;
+        length_byte = (uint8_t)data_len;
     }
-    
-    spi_slave_transaction_t t1 = {};
-    t1.length = 1 * 8;	// Bytes to bits
-    t1.rx_buffer = &cmd_byte;
-    t1.tx_buffer = nullptr;
-    spi_slave_transmit(VSPI_HOST, &t1, timeout_ticks);
+
+    spi_slave_transaction_t t = {};
+    t.length = 1 * 8;	// Bytes to bits
+    t.rx_buffer = &cmd_byte;
+    t.tx_buffer = &length_byte;  // Always send it's size
+    spi_slave_transmit(VSPI_HOST, &t, timeout_ticks);
     
     uint8_t d = (cmd_byte >> 7) & 0x01;
     uint8_t l = cmd_byte & 0x7F;
@@ -94,33 +97,21 @@ void loop() {
         } else {
             Serial.println("Master ping");
         }
+
     } else {
-        uint8_t response_byte __attribute__((aligned(4)));
-        if (data_len > 127) data_len = 127;
         
     	Serial.printf("\n[From Slave] Cmd: 0x%02X D=%d L=%d ", cmd_byte, d, data_len);
     
-        if (slave_has_data) {
-            response_byte = 0x80 | data_len;
+        if (length_byte > 0) {
+            delayMicroseconds(100);
+            t.length = data_len * 8;	// Bytes to bits
+            t.rx_buffer = nullptr;
+            t.tx_buffer = tx_buffer;
+            spi_slave_transmit(VSPI_HOST, &t, timeout_ticks);
+
             Serial.printf("Sending %d bytes\n", data_len);
         } else {
-            response_byte = 0x80;
-            Serial.println("No data");
-        }
-        
-        spi_slave_transaction_t t2 = {};
-        t2.length = 1 * 8;	// Bytes to bits
-        t2.rx_buffer = nullptr;
-        t2.tx_buffer = &response_byte;
-        spi_slave_transmit(VSPI_HOST, &t2, timeout_ticks);
-        
-        if (slave_has_data) {
-            delayMicroseconds(100);
-            spi_slave_transaction_t t3 = {};
-            t3.length = data_len * 8;	// Bytes to bits
-            t3.rx_buffer = nullptr;
-            t3.tx_buffer = tx_buffer;
-            spi_slave_transmit(VSPI_HOST, &t3, timeout_ticks);
+            Serial.println("No data to be sent");
         }
     }
 }
