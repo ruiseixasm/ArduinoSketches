@@ -25,7 +25,7 @@ void send1Byte(uint8_t data) {
     static uint8_t tx_byte __attribute__((aligned(4))) = 0;
     tx_byte = data;
     spi_transaction_t t = {};
-    t.length = 8;
+    t.length = 1 * 8;	// Bytes to bits
     t.tx_buffer = &tx_byte;
     t.rx_buffer = nullptr;
     spi_device_transmit(spi, &t);
@@ -34,7 +34,7 @@ void send1Byte(uint8_t data) {
 uint8_t receive1Byte() {
     static uint8_t rx_byte __attribute__((aligned(4))) = 0;
     spi_transaction_t t = {};
-    t.length = 8;
+    t.length = 1 * 8;	// Bytes to bits
     t.tx_buffer = nullptr;
     t.rx_buffer = &rx_byte;
     spi_device_transmit(spi, &t);

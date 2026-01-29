@@ -44,15 +44,17 @@ void setup() {
 }
 
 void loop() {
+	
+	memset(tx_buffer, 0, DATA_SIZE);	// Resets all with '\0'
+
+	int data_len = 0;
     bool slave_has_data = (random(100) < 10);
-    
-    memset(tx_buffer, 0, DATA_SIZE);
     if (slave_has_data) {
-        snprintf((char*)tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
+        data_len = snprintf((char*)tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
     }
     
     spi_slave_transaction_t t1 = {};
-    t1.length = 8;
+    t1.length = 1 * 8;	// Bytes to bits
     t1.rx_buffer = &cmd_byte;
     t1.tx_buffer = nullptr;
     spi_slave_transmit(VSPI_HOST, &t1, portMAX_DELAY);
@@ -60,34 +62,40 @@ void loop() {
     uint8_t d = (cmd_byte >> 7) & 0x01;
     uint8_t l = cmd_byte & 0x7F;
     
-    Serial.printf("\n[Slave] Cmd: 0x%02X D=%d L=%d ", cmd_byte, d, l);
+    if (d == 0) {	// Master sends
+		
+    	Serial.printf("\n[From Master] Cmd: 0x%02X D=%d L=%d ", cmd_byte, d, l);
     
-    if (d == 0) {
         if (l > 0) {
-            Serial.printf("Receiving %d bytes\n", l);
-            delayMicroseconds(100);
-            
-            spi_slave_transaction_t t2 = {};
-            t2.length = DATA_SIZE * 8;
-            t2.rx_buffer = rx_buffer;
-            t2.tx_buffer = nullptr;
-            spi_slave_transmit(VSPI_HOST, &t2, portMAX_DELAY);
-            
-            Serial.print("Received: ");
-            for (int i = 0; i < l && i < 40; i++) {
-                char c = rx_buffer[i];
-                if (c >= 32 && c <= 126) Serial.print(c);
-                else Serial.printf("[%02X]", c);
-            }
-            Serial.println();
+			
+			if (l <= DATA_SIZE) {
+	
+				Serial.printf("Receiving %d bytes\n", l);
+				delayMicroseconds(100);
+				
+				spi_slave_transaction_t t2 = {};
+				t2.length = l * 8;	// Bytes to bits
+				t2.rx_buffer = rx_buffer;
+				t2.tx_buffer = nullptr;
+				spi_slave_transmit(VSPI_HOST, &t2, portMAX_DELAY);
+				
+				Serial.print("Received: ");
+				for (int i = 0; i < l; i++) {
+					char c = rx_buffer[i];
+					if (c >= 32 && c <= 126) Serial.print(c);
+					else Serial.printf("[%02X]", c);
+				}
+				Serial.println();
+			}
         } else {
             Serial.println("Master ping");
         }
     } else {
         uint8_t response_byte __attribute__((aligned(4)));
-        int data_len = strlen((char*)tx_buffer);
         if (data_len > 127) data_len = 127;
         
+    	Serial.printf("\n[From Slave] Cmd: 0x%02X D=%d L=%d ", cmd_byte, d, data_len);
+    
         if (slave_has_data) {
             response_byte = 0x80 | data_len;
             Serial.printf("Sending %d bytes\n", data_len);
@@ -97,7 +105,7 @@ void loop() {
         }
         
         spi_slave_transaction_t t2 = {};
-        t2.length = 8;
+        t2.length = 1 * 8;	// Bytes to bits
         t2.rx_buffer = nullptr;
         t2.tx_buffer = &response_byte;
         spi_slave_transmit(VSPI_HOST, &t2, portMAX_DELAY);
@@ -105,7 +113,7 @@ void loop() {
         if (slave_has_data) {
             delayMicroseconds(100);
             spi_slave_transaction_t t3 = {};
-            t3.length = DATA_SIZE * 8;
+            t3.length = data_len * 8;	// Bytes to bits
             t3.rx_buffer = nullptr;
             t3.tx_buffer = tx_buffer;
             spi_slave_transmit(VSPI_HOST, &t3, portMAX_DELAY);
