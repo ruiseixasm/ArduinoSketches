@@ -225,7 +225,7 @@ public:
     }
 
 
-    virtual void begin(int mosi_io_num, int miso_io_num, int sclk_io_num) {
+    void begin(int mosi_io_num, int miso_io_num, int sclk_io_num) {
 		
 		spi_bus_config_t buscfg = {};
 		buscfg.mosi_io_num = mosi_io_num;
