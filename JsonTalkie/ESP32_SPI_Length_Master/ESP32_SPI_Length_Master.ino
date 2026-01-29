@@ -67,7 +67,7 @@ void sendBroadcastPayload(size_t length, int* ss_pins, uint8_t ss_pins_count) {
 
 
 uint8_t receiveLength(int ss_pin) {
-    static uint8_t rx_byte __attribute__((aligned(4))) = 0;
+    static uint8_t rx_byte __attribute__((aligned(4))) = 0b10000000;
     spi_transaction_t t = {};
     t.length = 1 * 8;	// Bytes to bits
     t.tx_buffer = nullptr;
@@ -135,23 +135,28 @@ void loop() {
         sendBroadcastPayload((size_t)len, spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int));
         
         Serial.printf("[From Master] Sent %d bytes\n", len);
+
     } else {
         
-        uint8_t response = receiveLength(0b10000000);
-        uint8_t d = (response >> 7) & 0x01;
-        uint8_t l = response & 0x7F;
-        
-        Serial.printf("[Beacon] Slave: 0x%02X D=%d L=%d\n", response, d, l);
-        
-        if (d == 1 && l > 0) {
-            delayMicroseconds(200);
-            receivePayload(l);
-            Serial.print("Received: ");
-            for (int i = 0; i < l; i++) {
-                Serial.print((char)data_buffer[i]);
+        for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(spi_cs_pins)/sizeof(int); ss_pin_i++) {
+
+            uint8_t response = receiveLength(spi_cs_pins[ss_pin_i]);
+            uint8_t d = (response >> 7) & 0x01;
+            uint8_t l = response & 0x7F;
+            
+            Serial.printf("[Beacon] Slave: 0x%02X D=%d L=%d\n", response, d, l);
+            
+            if (d == 1 && l > 0) {
+                delayMicroseconds(200);
+                receivePayload((size_t)l, spi_cs_pins[ss_pin_i]);
+                Serial.print("[From Slave] Received: ");
+                for (int i = 0; i < l; i++) {
+                    Serial.print((char)data_buffer[i]);
+                }
+                Serial.println();
             }
-            Serial.println();
         }
+
     }
     
     delay(1000);
