@@ -30,7 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define TALKIE_MAX_NAMES 8
 
 
-class S_Broadcast_SPI_ESP_Arduino_Master : public BroadcastSocket {
+class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
 public:
 
 	// The Socket class description shouldn't be greater than 35 chars
@@ -69,7 +69,7 @@ protected:
 
 
     // Constructor
-    S_Broadcast_SPI_ESP_Arduino_Master(int* ss_pins, uint8_t ss_pins_count) : BroadcastSocket() {
+    S_Broadcast_SPI_2xESP_Master(int* ss_pins, uint8_t ss_pins_count) : BroadcastSocket() {
             
 		_ss_pins = ss_pins;
 		_ss_pins_count = ss_pins_count;
@@ -317,8 +317,8 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static S_Broadcast_SPI_ESP_Arduino_Master& instance(int* ss_pins, uint8_t ss_pins_count) {
-        static S_Broadcast_SPI_ESP_Arduino_Master instance(ss_pins, ss_pins_count);
+    static S_Broadcast_SPI_2xESP_Master& instance(int* ss_pins, uint8_t ss_pins_count) {
+        static S_Broadcast_SPI_2xESP_Master instance(ss_pins, ss_pins_count);
 
         return instance;
     }
