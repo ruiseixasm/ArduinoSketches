@@ -163,15 +163,17 @@ void loop() {
             
             if (l > 0) {
                 // delayMicroseconds(200);
-                sendBeacon(spi_cs_pins[ss_pin_i], l);
-            	Serial.printf("[From Beacon to pin %d |2] Slave: 0x%02X Beacon=1 L=%d\n", spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
-                // delayMicroseconds(200);
-                receivePayload(spi_cs_pins[ss_pin_i], l);
-                Serial.print("[From Slave] Received: ");
-                for (int i = 0; i < l; i++) {
-                    Serial.print((char)data_buffer[i]);
-                }
-                Serial.println();
+                uint8_t match_l = sendBeacon(spi_cs_pins[ss_pin_i], l);
+				if (match_l == l) {	// Avoid noise triggering
+					Serial.printf("[From Beacon to pin %d |2] Slave: 0x%02X Beacon=1 L=%d\n", spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
+					// delayMicroseconds(200);
+					receivePayload(spi_cs_pins[ss_pin_i], l);
+					Serial.print("[From Slave] Received: ");
+					for (int i = 0; i < l; i++) {
+						Serial.print((char)data_buffer[i]);
+					}
+					Serial.println();
+				}
             }
         }
     }
