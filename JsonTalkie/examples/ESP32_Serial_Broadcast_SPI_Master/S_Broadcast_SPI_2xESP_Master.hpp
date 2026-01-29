@@ -16,7 +16,8 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #include <BroadcastSocket.h>
-#include <SPI.h>
+#include "driver/spi_master.h"
+
 
 // #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_1
@@ -24,10 +25,6 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG_NEW
 // #define BROADCAST_SPI_DEBUG_TIMING
 
-
-#define send_delay_us 10
-#define receive_delay_us 18
-#define TALKIE_MAX_NAMES 8
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
@@ -37,24 +34,6 @@ public:
 	// {"m":7,"f":"","s":3,"b":1,"t":"","i":58485,"0":1,"1":"","2":11,"c":11266} <-- 128 - (73 + 2*10) = 35
     const char* class_description() const override { return "Broadcast_SPI_2xESP_Master"; }
 
-    enum StatusByte : uint8_t {
-        TALKIE_SB_ACK		= 0xF0, // Acknowledge
-        TALKIE_SB_NACK		= 0xF1, // Not acknowledged
-        TALKIE_SB_READY   	= 0xF2, // Slave is ready
-        TALKIE_SB_BUSY   	= 0xF3, // Tells the Master to wait a little
-        TALKIE_SB_RECEIVE	= 0xF4, // Asks the receiver to start receiving
-        TALKIE_SB_SEND    	= 0xF5, // Asks the receiver to start sending
-        TALKIE_SB_NONE    	= 0xF6, // Means nothing to send
-        TALKIE_SB_START   	= 0xF7, // Start of transmission
-        TALKIE_SB_END     	= 0xF8, // End of transmission
-		TALKIE_SB_LAST		= 0xF9,	// Asks for the last char
-		TALKIE_SB_DONE		= 0xFA,	// Marks the action as DONE
-        TALKIE_SB_ERROR   	= 0xFB, // Error frame
-        TALKIE_SB_FULL    	= 0xFC, // Signals the buffer as full
-        
-        TALKIE_SB_VOID    	= 0xFF  // MISO floating (0xFF) → no slave responding
-    };
-
 
 	#ifdef BROADCAST_SPI_DEBUG_TIMING
 	unsigned long _reference_time = millis();
@@ -62,16 +41,18 @@ public:
 
 protected:
 
-	SPIClass* _spi_instance;  // Pointer to SPI instance
 	bool _initiated = false;
-    int* _ss_pins;
+    int* _spi_cs_pins;
     uint8_t _ss_pins_count = 0;
+	
+	spi_device_handle_t _spi;
+	uint8_t _data_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 
 
     // Constructor
     S_Broadcast_SPI_2xESP_Master(int* ss_pins, uint8_t ss_pins_count) : BroadcastSocket() {
             
-		_ss_pins = ss_pins;
+		_spi_cs_pins = ss_pins;
 		_ss_pins_count = ss_pins_count;
 		_max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
 	}
@@ -97,7 +78,7 @@ protected:
 
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 					
-					size_t length = receiveSPI(_ss_pins[ss_pin_i], message_buffer);
+					// size_t length = receiveSPI(_ss_pins[ss_pin_i], message_buffer);
 					if (length > 0) {
 						
 						new_message._set_length(length);
@@ -137,7 +118,7 @@ protected:
 			const char* message_buffer = json_message._read_buffer();
 			size_t message_length = json_message.get_length();
 
-			sendBroadcastSPI(_ss_pins, _ss_pins_count, message_buffer, message_length);
+			// sendBroadcastSPI(_ss_pins, _ss_pins_count, message_buffer, message_length);
 			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
@@ -154,26 +135,42 @@ protected:
     }
 
 
-	bool initiate() {
+	bool initiate(int mosi_io_num, int miso_io_num, int sclk_io_num) {
 		
-		if (_spi_instance) {
-
-			// Configure SPI settings
-			_spi_instance->setDataMode(SPI_MODE0);
-			_spi_instance->setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
-			_spi_instance->setFrequency(4000000); 	// 4MHz if needed (optional)
-			// ====================================================
-			
-			// ================== CONFIGURE SS PINS ==================
-			// CRITICAL: Configure all SS pins as outputs and set HIGH
-			for (uint8_t i = 0; i < _ss_pins_count; i++) {
-				pinMode(_ss_pins[i], OUTPUT);
-				digitalWrite(_ss_pins[i], HIGH);
-				delayMicroseconds(10); // Small delay between pins
-			}
-
-			_initiated = true;
+		// ================== CONFIGURE SS PINS ==================
+		// CRITICAL: Configure all SS pins as outputs and set HIGH
+		for (uint8_t i = 0; i < _ss_pins_count; i++) {
+			pinMode(_spi_cs_pins[i], OUTPUT);
+			digitalWrite(_spi_cs_pins[i], HIGH);
+			delayMicroseconds(10); // Small delay between pins
 		}
+
+		spi_bus_config_t buscfg = {};
+		buscfg.mosi_io_num = mosi_io_num;
+		buscfg.miso_io_num = miso_io_num;
+		buscfg.sclk_io_num = sclk_io_num;
+		buscfg.quadwp_io_num = -1;
+		buscfg.quadhd_io_num = -1;
+		buscfg.max_transfer_sz = TALKIE_BUFFER_SIZE;
+		
+		// https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/spi_master.html
+
+		spi_device_interface_config_t devcfg = {};
+		devcfg.clock_speed_hz = 4000000;  // 4 MHz - Sweet spot!
+		devcfg.mode = 0;
+		devcfg.queue_size = 3;
+		devcfg.spics_io_num = -1,  // DISABLE hardware CS completely! (Broadcast)
+		
+		
+		spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
+		spi_bus_add_device(HSPI_HOST, &devcfg, &_spi);
+		
+		for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(_spi_cs_pins)/sizeof(int); ss_pin_i++) {
+			pinMode(_spi_cs_pins[ss_pin_i], OUTPUT);
+			digitalWrite(_spi_cs_pins[ss_pin_i], HIGH);
+		}
+
+		_initiated = true;
 
 		#ifdef BROADCAST_SPI_DEBUG
 		if (_initiated) {
@@ -201,118 +198,76 @@ protected:
 	
     // Specific methods associated to Arduino SPI as Master
 	
-    bool sendBroadcastSPI(int* ss_pins, uint8_t ss_pins_count, const char* message_buffer, size_t length) {
+	void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
+		uint8_t tx_byte __attribute__((aligned(4))) = 0b01111111 & length;
+		spi_transaction_t t = {};
+		t.length = 1 * 8;	// Bytes to bits
+		t.tx_buffer = &tx_byte;
+		t.rx_buffer = nullptr;
+
+		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+			digitalWrite(ss_pins[ss_pin_i], LOW);
+		}    
+		spi_device_transmit(_spi, &t);
+		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+			digitalWrite(ss_pins[ss_pin_i], HIGH);
+		}
+	}
+
+	void broadcastPayload(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
+
+		if (length > TALKIE_BUFFER_SIZE) return;
 		
-		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-		Serial.print(F("\tSending on pin: "));
-		Serial.println(ss_pin);
-		#endif
-
-		if (length > TALKIE_BUFFER_SIZE) {
-			
-			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
-			Serial.println(F("\tlength > TALKIE_BUFFER_SIZE"));
-			#endif
-
-			return false;
+		Serial.print("broadcastPayload() first 10: ");
+		for(int i = 0; i < length; i++) {
+			Serial.printf("%02X ", _data_buffer[i]);
 		}
+		Serial.println();
 
-		// SENDS IN BROADCAST MODE, NO REPLY CONTROL (c = ...) !!
+		spi_transaction_t t = {};
+		t.length = (size_t)length * 8;	// Bytes to bits
+		t.tx_buffer = _data_buffer;
+		t.rx_buffer = nullptr;
 
-		if (length > 0) {	// Don't send empty strings
-			
-			for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
-				digitalWrite(ss_pins[ss_pin_i], LOW);
-			}
-
-			for (uint8_t receive_sends = 0; receive_sends < 2; ++receive_sends) {
-				delayMicroseconds(send_delay_us);
-				_spi_instance->transfer(TALKIE_SB_RECEIVE);
-			}
-
-			for (size_t sending_index = 0; sending_index < length; ++sending_index) {
-				delayMicroseconds(send_delay_us);
-				_spi_instance->transfer(message_buffer[sending_index]);
-			}
-
-			for (uint8_t end_sends = 0; end_sends < 2; ++end_sends) {
-				delayMicroseconds(send_delay_us);
-				_spi_instance->transfer(TALKIE_SB_END);
-			}
-
-			delayMicroseconds(5);
-			for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
-				digitalWrite(ss_pins[ss_pin_i], HIGH);
-			}
-			
-        	return true;
+		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+			digitalWrite(ss_pins[ss_pin_i], LOW);
 		}
-        return false;
-    }
+		spi_device_transmit(_spi, &t);
+		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+			digitalWrite(ss_pins[ss_pin_i], HIGH);
+		}
+	}
 
 
-    size_t receiveSPI(int ss_pin, char* message_buffer, size_t buffer_size = TALKIE_BUFFER_SIZE) {
-        size_t length = 0;	// No interrupts, so, not volatile
-        uint8_t c;			// Avoid using 'char' while using values above 127
+	uint8_t sendBeacon(int ss_pin, uint8_t length = 0) {
+		uint8_t tx_byte __attribute__((aligned(4))) = 0b10000000 | length;
+		uint8_t rx_byte __attribute__((aligned(4))) = 0;
+		spi_transaction_t t = {};
+		t.length = 1 * 8;	// Bytes to bits
+		t.tx_buffer = &tx_byte;
+		t.rx_buffer = &rx_byte;
 
-		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_2
-		Serial.print(F("\tReceiving on pin: "));
-		Serial.println(ss_pin);
-		#endif
+		digitalWrite(ss_pin, LOW);
+		spi_device_transmit(_spi, &t);
+		digitalWrite(ss_pin, HIGH);
 
-		size_t receiving_index = 0;
-		for (uint8_t receive_tries = 0; receiving_index == 0 && receive_tries < 3; receive_tries++) {
-			
-			digitalWrite(ss_pin, LOW);
-			
-			for (uint8_t get_ready_tries = 0; get_ready_tries < 3; ++get_ready_tries) {
-				delayMicroseconds(receive_delay_us);
-				c = _spi_instance->transfer(TALKIE_SB_START);
-				if (c == TALKIE_SB_READY) {
-					
-					while (1) {
-						
-						if (receiving_index < buffer_size) {
-							delayMicroseconds(receive_delay_us);
-							c = _spi_instance->transfer(TALKIE_SB_SEND);
+		return rx_byte;
+	}
 
-							if (c < 128) {
-								message_buffer[receiving_index++] = c;
-								continue;
-							} else if (c == TALKIE_SB_END) {
-								for (uint8_t end_tries = 0; end_tries < 5; ++end_tries) {
-									delayMicroseconds(receive_delay_us);
-									c = _spi_instance->transfer(TALKIE_SB_END);
-									if (c == TALKIE_SB_DONE) {
-										length = receiving_index;
-										receiving_index = 1;	// Finish transmission
-										goto close_transmission;
-									}
-								}
-							} else if (c == TALKIE_SB_NONE || c == TALKIE_SB_FULL) {
-								receiving_index = 1;	// Finish transmission
-								goto close_transmission;
-							}
-							_spi_instance->transfer(TALKIE_SB_ERROR);
-							receiving_index = 0;	// Retry transmission
-							goto close_transmission;
-						} else {
-							delayMicroseconds(receive_delay_us);
-							_spi_instance->transfer(TALKIE_SB_FULL);
-							receiving_index = 1;	// Finish transmission
-							goto close_transmission;
-						}
-					}
-				}
-			}
+	void receivePayload(int ss_pin, uint8_t length = 0) {
+		
+		if (length > TALKIE_BUFFER_SIZE) return;
+		
+		spi_transaction_t t = {};
+		t.length = (size_t)length * 8;	// Bytes to bits
+		t.tx_buffer = nullptr;
+		t.rx_buffer = _data_buffer;
+		
+		digitalWrite(ss_pin, LOW);
+		spi_device_transmit(_spi, &t);
+		digitalWrite(ss_pin, HIGH);
+	}
 
-			close_transmission:
-            delayMicroseconds(5);
-            digitalWrite(ss_pin, HIGH);
-        }
-        return length;
-    }
-	
 
 public:
 

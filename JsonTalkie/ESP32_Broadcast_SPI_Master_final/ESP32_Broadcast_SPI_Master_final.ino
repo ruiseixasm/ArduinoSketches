@@ -128,6 +128,7 @@ void setup() {
     
     for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(_spi_cs_pins)/sizeof(int); ss_pin_i++) {
         pinMode(_spi_cs_pins[ss_pin_i], OUTPUT);
+        digitalWrite(_spi_cs_pins[ss_pin_i], HIGH);
     }
 
     // Initialize pins FIRST before anything else
