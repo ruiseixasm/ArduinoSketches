@@ -110,7 +110,7 @@ void loop() {
         delayMicroseconds(200);
         sendLengthBytes(len);
         
-        Serial.printf("[Master] Sent %d bytes\n", len);
+        Serial.printf("[From Master] Sent %d bytes\n", len);
     } else {
         send1Byte(0b10000000); // D=1, L=0
         delayMicroseconds(200);
@@ -119,7 +119,7 @@ void loop() {
         uint8_t d = (response >> 7) & 0x01;
         uint8_t l = response & 0x7F;
         
-        Serial.printf("[Master] Slave: 0x%02X D=%d L=%d\n", response, d, l);
+        Serial.printf("[Beacon] Slave: 0x%02X D=%d L=%d\n", response, d, l);
         
         if (d == 1 && l > 0) {
             delayMicroseconds(200);
