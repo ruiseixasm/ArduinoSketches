@@ -23,7 +23,7 @@ https://github.com/ruiseixasm/JsonTalkie
 uint8_t rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
 uint8_t tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
 uint8_t cmd_byte __attribute__((aligned(4)));
-uint8_t length_byte __attribute__((aligned(4))) = 0;
+uint8_t sending_length __attribute__((aligned(4))) = 0;
 
 void setup() {
     Serial.begin(115200);
@@ -52,43 +52,43 @@ void loop() {
 	// Convert milliseconds to FreeRTOS ticks
 	const TickType_t timeout_ticks = TIMEOUT_MS / portTICK_PERIOD_MS;
 
-    if (length_byte == 0) {
+    if (sending_length == 0) {
         int data_len = 0;
         bool slave_has_data = (random(100) < 10);
         if (slave_has_data) {
             data_len = snprintf((char*)tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
             if (data_len > 127) data_len = 127;
-            length_byte = (uint8_t)data_len;
+            sending_length = (uint8_t)data_len;
         }
     }
 
     spi_slave_transaction_t t = {};
     t.length = 1 * 8;	// Bytes to bits
     t.rx_buffer = &cmd_byte;
-    t.tx_buffer = &length_byte;  // Always send it's size
+    t.tx_buffer = &sending_length;  // Always send it's size
     spi_slave_transmit(VSPI_HOST, &t, timeout_ticks);
     
 
     bool beacon = (bool)((cmd_byte >> 7) & 0x01);
+    uint8_t received_length = cmd_byte & ~0b10000000;
     if (!beacon) {	// Master sends
 		
-        size_t length = (size_t)cmd_byte;
-    	Serial.printf("\n[From Master] Cmd: 0x%02X Beacon=0 L=%d ", cmd_byte, length);
+    	Serial.printf("\n[From Master] Cmd: 0x%02X Beacon=0 L=%d ", cmd_byte, received_length);
     
-        if (length > 0) {
+        if (received_length > 0) {
 			
-			if (length <= DATA_SIZE) {
+			if (received_length <= DATA_SIZE) {
 	
-				Serial.printf("Receiving %d bytes\n", length);
+				Serial.printf("Receiving %d bytes\n", received_length);
 				delayMicroseconds(100);
 				
-				t.length = length * 8;	// Bytes to bits
+				t.length = received_length * 8;	// Bytes to bits
 				t.rx_buffer = rx_buffer;
 				t.tx_buffer = nullptr;
 				spi_slave_transmit(VSPI_HOST, &t, timeout_ticks);
 				
 				Serial.print("Received: ");
-				for (int i = 0; i < length; i++) {
+				for (int i = 0; i < received_length; i++) {
 					char c = rx_buffer[i];
 					if (c >= 32 && c <= 126) Serial.print(c);
 					else Serial.printf("[%02X]", c);
@@ -99,22 +99,20 @@ void loop() {
             Serial.println("Master ping");
         }
 
-    } else {    // Beacon
+    } else if (received_length > 0) {    // Beacon with length
         
-    	Serial.printf("\n[From Slave] Cmd: 0x%02X Beacon=1 L=%d ", cmd_byte, length_byte);
+    	Serial.printf("\n[From Slave] Cmd: 0x%02X Beacon=1 L=%d ", cmd_byte, received_length);
     
-        if (length_byte > 0) {
-            delayMicroseconds(100);
-            t.length = (size_t)length_byte * 8;	// Bytes to bits
-            t.rx_buffer = nullptr;
-            t.tx_buffer = tx_buffer;
-            spi_slave_transmit(VSPI_HOST, &t, timeout_ticks);
+        delayMicroseconds(100);
+        t.length = (size_t)received_length * 8;	// Bytes to bits
+        t.rx_buffer = nullptr;
+        t.tx_buffer = tx_buffer;
+        spi_slave_transmit(VSPI_HOST, &t, timeout_ticks);
 
-            Serial.printf("Sending %d bytes\n", length_byte);
-            length_byte = 0;    // Payload sent
-        } else {
-            Serial.println("No data to be sent");
-        }
+        Serial.printf("Sending %d bytes\n", received_length);
+        sending_length = 0;    // Payload sent
+    } else {
+        Serial.println("No data to be sent");
     }
 }
 
