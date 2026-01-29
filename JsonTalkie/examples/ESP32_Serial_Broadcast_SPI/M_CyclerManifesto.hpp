@@ -1,0 +1,97 @@
+/*
+JsonTalkie - Json Talkie is intended for direct IoT communication.
+Original Copyright (c) 2025 Rui Seixas Monteiro. All right reserved.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Lesser General Public License for more details.
+https://github.com/ruiseixasm/JsonTalkie
+*/
+#ifndef CYCLER_MANIFESTO_HPP
+#define CYCLER_MANIFESTO_HPP
+
+#include <TalkerManifesto.hpp>
+
+// #define CYCLER_MANIFESTO_DEBUG
+
+
+class M_CyclerManifesto : public TalkerManifesto {
+public:
+
+	// The Manifesto class description shouldn't be greater than 42 chars
+	// {"m":7,"f":"","s":1,"b":1,"t":"","i":58485,"0":"","1":1,"c":11266} <-- 128 - (66 + 2*10) = 42
+    const char* class_description() const override { return "CyclerManifesto"; }
+
+    M_CyclerManifesto() : TalkerManifesto() {}	// Constructor
+
+protected:
+
+	uint32_t _last_blink = 0;
+	uint8_t _blue_led_on = 0;
+	bool _cyclic_transmission = true;	// true by default
+
+	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
+
+    Action calls[2] = {
+		{"enable", "Enables 1sec cyclic transmission"},
+		{"disable", "Disables 1sec cyclic transmission"}
+    };
+    
+public:
+
+    const Action* _getActionsArray() const override { return calls; }
+
+    // Size methods
+    uint8_t _actionsCount() const override { return sizeof(calls)/sizeof(Action); }
+
+
+	void _loop(JsonTalker& talker) override {
+		
+		if (millis() - _last_blink > 1000) {
+			_last_blink = millis();
+
+			JsonMessage toggle_yellow_on_off(MessageValue::TALKIE_MSG_CALL, BroadcastValue::TALKIE_BC_LOCAL);
+			toggle_yellow_on_off.set_to_name("blue");
+			if (_blue_led_on++ % 2) {
+				toggle_yellow_on_off.set_action_name("off");
+			} else {
+				toggle_yellow_on_off.set_action_name("on");
+			}
+			if (_cyclic_transmission) talker.transmitToRepeater(toggle_yellow_on_off);
+		}
+	}
+
+    
+    // Index-based operations (simplified examples)
+    bool _actionByIndex(uint8_t index, JsonTalker& talker, JsonMessage& json_message, TalkerMatch talker_match) override {
+        (void)talker;		// Silence unused parameter warning
+    	(void)talker_match;	// Silence unused parameter warning
+
+		if (index < _actionsCount()) {
+			// Actual implementation would do something based on index
+			switch(index) {
+
+				case 0:
+					_cyclic_transmission = true;
+					return true;
+				break;
+					
+				case 1:
+					_cyclic_transmission = false;
+					return true;
+				break;
+					
+				default: break;
+			}
+		}
+		return false;
+	}
+
+};
+
+
+#endif // CYCLER_MANIFESTO_HPP
