@@ -101,19 +101,21 @@ void loop() {
 
     } else if (received_length > 0) {    // Beacon with length
         
-    	Serial.printf("\n[From Slave] Cmd: 0x%02X Beacon=1 L=%d ", cmd_byte, received_length);
-    
+        sending_length = 0;    // Payload sent
         delayMicroseconds(100);
         t.length = (size_t)received_length * 8;	// Bytes to bits
         t.rx_buffer = nullptr;
         t.tx_buffer = tx_buffer;
         spi_slave_transmit(VSPI_HOST, &t, timeout_ticks);
-
-        Serial.printf("Sending %d bytes\n", received_length);
-        sending_length = 0;    // Payload sent
+		
+    	Serial.printf("\n[To Beacon] Cmd: 0x%02X Beacon=1 L=%d ", cmd_byte, received_length);
+        Serial.printf("\n[From Slave] Sending %d bytes\n", received_length);
     } else {
-        Serial.println("No data to be sent");
-    }
+		Serial.printf("\n[From Beacon] Cmd: 0x%02X Beacon=1 L=%d ", cmd_byte, received_length);
+		if (sending_length == 0) {
+        	Serial.println("\n[From Slave] No data to be sent");
+		}
+	}
 }
 
 
