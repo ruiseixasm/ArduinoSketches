@@ -23,6 +23,7 @@ https://github.com/ruiseixasm/JsonTalkie
 uint8_t rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
 uint8_t tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
 uint8_t cmd_byte __attribute__((aligned(4)));
+uint8_t length_byte __attribute__((aligned(4))) = 0;
 
 void setup() {
     Serial.begin(115200);
@@ -51,13 +52,14 @@ void loop() {
 	// Convert milliseconds to FreeRTOS ticks
 	const TickType_t timeout_ticks = TIMEOUT_MS / portTICK_PERIOD_MS;
 
-	int data_len = 0;
-    uint8_t length_byte __attribute__((aligned(4))) = 0;
-    bool slave_has_data = (random(100) < 10);
-    if (slave_has_data) {
-        data_len = snprintf((char*)tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
-        if (data_len > 127) data_len = 127;
-        length_byte = (uint8_t)data_len;
+    if (length_byte == 0) {
+        int data_len = 0;
+        bool slave_has_data = (random(100) < 10);
+        if (slave_has_data) {
+            data_len = snprintf((char*)tx_buffer, DATA_SIZE, "SlaveData_%lu", millis());
+            if (data_len > 127) data_len = 127;
+            length_byte = (uint8_t)data_len;
+        }
     }
 
     spi_slave_transaction_t t = {};
@@ -100,16 +102,17 @@ void loop() {
 
     } else {    // Beacon
         
-    	Serial.printf("\n[From Slave] Cmd: 0x%02X D=0 L=%d ", cmd_byte, data_len);
+    	Serial.printf("\n[From Slave] Cmd: 0x%02X D=0 L=%d ", cmd_byte, length_byte);
     
         if (length_byte > 0) {
             delayMicroseconds(100);
-            t.length = data_len * 8;	// Bytes to bits
+            t.length = (size_t)length_byte * 8;	// Bytes to bits
             t.rx_buffer = nullptr;
             t.tx_buffer = tx_buffer;
             spi_slave_transmit(VSPI_HOST, &t, timeout_ticks);
 
-            Serial.printf("Sending %d bytes\n", data_len);
+            Serial.printf("Sending %d bytes\n", length_byte);
+            length_byte = 0;    // Payload sent
         } else {
             Serial.println("No data to be sent");
         }
