@@ -100,7 +100,7 @@ void loop() {
 
     } else {
         
-    	Serial.printf("\n[From Slave] Cmd: 0x%02X D=%d L=%d ", cmd_byte, d, data_len);
+    	Serial.printf("\n[From Slave] Cmd: 0x%02X D=0 L=%d ", cmd_byte, data_len);
     
         if (length_byte > 0) {
             delayMicroseconds(100);
