@@ -94,10 +94,8 @@ void setup() {
 	hspi->begin(14, 12, 13, 15);  // SCK, MISO, MOSI, SS
     spi_socket.begin(hspi);
 
-    // Final startup indication
+    // Finally, sets the blue led as always HIGH signalling this way to be a SPI Master
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(500);
-    digitalWrite(LED_BUILTIN, LOW);
 
     Serial.println("Setup completed - Ready for JSON communication!");
 }
