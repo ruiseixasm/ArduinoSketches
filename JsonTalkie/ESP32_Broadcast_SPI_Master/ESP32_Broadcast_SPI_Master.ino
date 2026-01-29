@@ -15,6 +15,12 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <Arduino.h>
 #include "driver/spi_master.h"
 
+// LED_BUILTIN is already defined by ESP32 platform
+// Typically GPIO2 for most ESP32 boards
+#ifndef LED_BUILTIN
+  #define LED_BUILTIN 2  // Fallback definition if not already defined
+#endif
+
 #define HSPI_CS 15
 #define DATA_SIZE 128
 
@@ -25,8 +31,7 @@ int spi_cs_pins[] = {4, HSPI_CS};
 
 
 void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length = 0) {
-    static uint8_t tx_byte __attribute__((aligned(4))) = 0;
-    tx_byte = (size_t)length;
+    static uint8_t tx_byte __attribute__((aligned(4))) = ~0b10000000 & length;
     spi_transaction_t t = {};
     t.length = 1 * 8;	// Bytes to bits
     t.tx_buffer = &tx_byte;
@@ -116,6 +121,10 @@ void setup() {
     
     spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
     spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
+    
+    // Initialize pins FIRST before anything else
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, HIGH); // Start with LED on for signalling MASTER
     
     Serial.println("Master ready");
 }
