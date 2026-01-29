@@ -142,7 +142,7 @@ void loop() {
 
             uint8_t l = sendBeacon(spi_cs_pins[ss_pin_i]);
             
-            Serial.printf("[Beacon] Slave: 0x%02X Beacon=1 L=%d\n", 0b10000000, l);
+            Serial.printf("[From Beacon] Slave: 0x%02X Beacon=1 L=%d\n", 0b10000000, l);
             
             if (l > 0) {
                 delayMicroseconds(200);
