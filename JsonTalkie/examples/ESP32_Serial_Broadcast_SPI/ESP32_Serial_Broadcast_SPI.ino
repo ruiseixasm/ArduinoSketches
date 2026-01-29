@@ -26,7 +26,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "S_Broadcast_SPI_2xESP_Master.hpp"
 #include "M_Spy.hpp"
 #include "M_LedManifesto.hpp"
-#include "M_MessageTester.hpp"
+#include "M_CyclerManifesto.hpp"
 
 
 // TALKERS 
@@ -48,11 +48,11 @@ const char l_led_desc[] = "I turn led Blue on and off";
 M_LedManifesto led_manifesto(LED_BUILTIN);
 JsonTalker l_led = JsonTalker(l_led_name, l_led_desc, &led_manifesto);
 
-// Talker (JsonMessage tester)
-const char t_tester_name[] = "test";
-const char t_tester_desc[] = "I test the JsonMessage class";
-M_MessageTester message_tester;
-JsonTalker t_tester = JsonTalker(t_tester_name, t_tester_desc, &message_tester);
+// Talker cycler
+const char t_cycler_name[] = "cycler";
+const char t_cycler_desc[] = "I cycle the blue led";
+M_CyclerManifesto cycler_manifesto;
+JsonTalker t_cycler = JsonTalker(t_cycler_name, t_cycler_desc, &cycler_manifesto);
 
 
 // SOCKETS
