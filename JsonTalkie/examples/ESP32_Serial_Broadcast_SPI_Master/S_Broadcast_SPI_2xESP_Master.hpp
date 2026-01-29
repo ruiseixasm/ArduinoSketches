@@ -137,60 +137,6 @@ protected:
 
 	bool initiate(int mosi_io_num, int miso_io_num, int sclk_io_num) {
 		
-		// ================== CONFIGURE SS PINS ==================
-		// CRITICAL: Configure all SS pins as outputs and set HIGH
-		for (uint8_t i = 0; i < _ss_pins_count; i++) {
-			pinMode(_spi_cs_pins[i], OUTPUT);
-			digitalWrite(_spi_cs_pins[i], HIGH);
-			delayMicroseconds(10); // Small delay between pins
-		}
-
-		spi_bus_config_t buscfg = {};
-		buscfg.mosi_io_num = mosi_io_num;
-		buscfg.miso_io_num = miso_io_num;
-		buscfg.sclk_io_num = sclk_io_num;
-		buscfg.quadwp_io_num = -1;
-		buscfg.quadhd_io_num = -1;
-		buscfg.max_transfer_sz = TALKIE_BUFFER_SIZE;
-		
-		// https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/spi_master.html
-
-		spi_device_interface_config_t devcfg = {};
-		devcfg.clock_speed_hz = 4000000;  // 4 MHz - Sweet spot!
-		devcfg.mode = 0;
-		devcfg.queue_size = 3;
-		devcfg.spics_io_num = -1,  // DISABLE hardware CS completely! (Broadcast)
-		
-		
-		spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
-		spi_bus_add_device(HSPI_HOST, &devcfg, &_spi);
-		
-		for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(_spi_cs_pins)/sizeof(int); ss_pin_i++) {
-			pinMode(_spi_cs_pins[ss_pin_i], OUTPUT);
-			digitalWrite(_spi_cs_pins[ss_pin_i], HIGH);
-		}
-
-		_initiated = true;
-
-		#ifdef BROADCAST_SPI_DEBUG
-		if (_initiated) {
-			Serial.print(class_description());
-			Serial.println(": initiate1: Socket initiated!");
-
-			Serial.print(F("\tinitiate2: Total SS pins connected: "));
-			Serial.println(_ss_pins_count);
-			Serial.print(F("\t\tinitiate3: SS pins: "));
-			
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				Serial.print(_ss_pins[ss_pin_i]);
-				Serial.print(F(", "));
-			}
-			Serial.println();
-		} else {
-			Serial.println("initiate1: Socket NOT initiated!");
-		}
-	
-		#endif
 
 		return _initiated;
 	}
@@ -279,10 +225,62 @@ public:
     }
 
 
-    virtual void begin(SPIClass* spi_instance) {
+    virtual void begin(int mosi_io_num, int miso_io_num, int sclk_io_num) {
 		
-		_spi_instance = spi_instance;
-		initiate();
+		// ================== CONFIGURE SS PINS ==================
+		// CRITICAL: Configure all SS pins as outputs and set HIGH
+		for (uint8_t i = 0; i < _ss_pins_count; i++) {
+			pinMode(_spi_cs_pins[i], OUTPUT);
+			digitalWrite(_spi_cs_pins[i], HIGH);
+			delayMicroseconds(10); // Small delay between pins
+		}
+
+		spi_bus_config_t buscfg = {};
+		buscfg.mosi_io_num = mosi_io_num;
+		buscfg.miso_io_num = miso_io_num;
+		buscfg.sclk_io_num = sclk_io_num;
+		buscfg.quadwp_io_num = -1;
+		buscfg.quadhd_io_num = -1;
+		buscfg.max_transfer_sz = TALKIE_BUFFER_SIZE;
+		
+		// https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/spi_master.html
+
+		spi_device_interface_config_t devcfg = {};
+		devcfg.clock_speed_hz = 4000000;  // 4 MHz - Sweet spot!
+		devcfg.mode = 0;
+		devcfg.queue_size = 3;
+		devcfg.spics_io_num = -1,  // DISABLE hardware CS completely! (Broadcast)
+		
+		
+		spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
+		spi_bus_add_device(HSPI_HOST, &devcfg, &_spi);
+		
+		for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(_spi_cs_pins)/sizeof(int); ss_pin_i++) {
+			pinMode(_spi_cs_pins[ss_pin_i], OUTPUT);
+			digitalWrite(_spi_cs_pins[ss_pin_i], HIGH);
+		}
+
+		_initiated = true;
+
+		#ifdef BROADCAST_SPI_DEBUG
+		if (_initiated) {
+			Serial.print(class_description());
+			Serial.println(": initiate1: Socket initiated!");
+
+			Serial.print(F("\tinitiate2: Total SS pins connected: "));
+			Serial.println(_ss_pins_count);
+			Serial.print(F("\t\tinitiate3: SS pins: "));
+			
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+				Serial.print(_ss_pins[ss_pin_i]);
+				Serial.print(F(", "));
+			}
+			Serial.println();
+		} else {
+			Serial.println("initiate1: Socket NOT initiated!");
+		}
+	
+		#endif
     }
 };
 
