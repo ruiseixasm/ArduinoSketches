@@ -21,6 +21,7 @@ https://github.com/ruiseixasm/JsonTalkie
 uint8_t rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
 uint8_t tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
 uint8_t cmd_byte __attribute__((aligned(4)));
+bool pending_send __attribute__((aligned(4))) = false;
 
 void setup() {
     Serial.begin(115200);
@@ -114,6 +115,8 @@ void loop() {
             t3.length = data_len * 8;	// Bytes to bits
             t3.rx_buffer = nullptr;
             t3.tx_buffer = tx_buffer;
+			// MAKE IT THAT THE TRANSMISSION SETS pending_send TO FALSE WHEN TRULY SENT
+			pending_send = true;
             spi_slave_transmit(VSPI_HOST, &t3, portMAX_DELAY);
         }
     }
