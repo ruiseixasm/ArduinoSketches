@@ -104,6 +104,7 @@ void loop() {
     /* === SPI "ISR" === */
 
     if (spi_state == WAIT_CMD) {
+
         bool beacon = (_cmd_byte >> 7) & 0x01;
         uint8_t received_length = _cmd_byte & 0x7F;
 
@@ -119,19 +120,18 @@ void loop() {
             } else {
                 Serial.println("Master ping");
             }
-        } else {         // beacon
-            if (received_length > 0) {
-                active_length = received_length;
-                spi_state = TX_PAYLOAD;
-                queue_tx(received_length);
-                return;
-            }
+
+        } else if (received_length > 0 && received_length == _sending_length) {	// beacon
+			active_length = received_length;
+			spi_state = TX_PAYLOAD;
+			queue_tx(received_length);
+			return;
         }
 
         queue_cmd();
-    }
 
-    else if (spi_state == RX_PAYLOAD) {
+    } else if (spi_state == RX_PAYLOAD) {
+
         Serial.printf("Received %u bytes: ", active_length);
         for (uint8_t i = 0; i < active_length; i++) {
             char c = _rx_buffer[i];
@@ -142,9 +142,9 @@ void loop() {
 
         spi_state = WAIT_CMD;
         queue_cmd();
-    }
 
-    else if (spi_state == TX_PAYLOAD) {
+    } else if (spi_state == TX_PAYLOAD) {
+
         Serial.printf("Sent %u bytes\n", active_length);
         _sending_length = 0;
 
