@@ -68,28 +68,27 @@ void loop() {
     t.tx_buffer = &length_byte;  // Always send it's size
     spi_slave_transmit(VSPI_HOST, &t, timeout_ticks);
     
-    uint8_t d = (cmd_byte >> 7) & 0x01;
-    uint8_t l = cmd_byte & 0x7F;
-    
-    if (d == 0) {	// Master sends
+
+    bool beacon = (bool)((cmd_byte >> 7) & 0x01);
+    if (!beacon) {	// Master sends
 		
-    	Serial.printf("\n[From Master] Cmd: 0x%02X D=%d L=%d ", cmd_byte, d, l);
+        size_t length = (size_t)cmd_byte;
+    	Serial.printf("\n[From Master] Cmd: 0x%02X Beacon=0 L=%d ", cmd_byte, length);
     
-        if (l > 0) {
+        if (length > 0) {
 			
-			if (l <= DATA_SIZE) {
+			if (length <= DATA_SIZE) {
 	
-				Serial.printf("Receiving %d bytes\n", l);
+				Serial.printf("Receiving %d bytes\n", length);
 				delayMicroseconds(100);
 				
-				spi_slave_transaction_t t2 = {};
-				t2.length = l * 8;	// Bytes to bits
-				t2.rx_buffer = rx_buffer;
-				t2.tx_buffer = nullptr;
-				spi_slave_transmit(VSPI_HOST, &t2, timeout_ticks);
+				t.length = length * 8;	// Bytes to bits
+				t.rx_buffer = rx_buffer;
+				t.tx_buffer = nullptr;
+				spi_slave_transmit(VSPI_HOST, &t, timeout_ticks);
 				
 				Serial.print("Received: ");
-				for (int i = 0; i < l; i++) {
+				for (int i = 0; i < length; i++) {
 					char c = rx_buffer[i];
 					if (c >= 32 && c <= 126) Serial.print(c);
 					else Serial.printf("[%02X]", c);
@@ -102,7 +101,7 @@ void loop() {
 
     } else {    // Beacon
         
-    	Serial.printf("\n[From Slave] Cmd: 0x%02X D=0 L=%d ", cmd_byte, length_byte);
+    	Serial.printf("\n[From Slave] Cmd: 0x%02X Beacon=0 L=%d ", cmd_byte, length_byte);
     
         if (length_byte > 0) {
             delayMicroseconds(100);
