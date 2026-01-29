@@ -30,7 +30,7 @@ uint8_t data_buffer[DATA_SIZE] __attribute__((aligned(4)));
 int spi_cs_pins[] = {4, HSPI_CS};
 
 
-void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length = 0) {
+void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
     uint8_t tx_byte __attribute__((aligned(4))) = 0b01111111 & length;
     spi_transaction_t t = {};
     t.length = 1 * 8;	// Bytes to bits
@@ -46,7 +46,7 @@ void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length = 0) {
     }
 }
 
-void broadcastPayload(int* ss_pins, uint8_t ss_pins_count, uint8_t length = 0) {
+void broadcastPayload(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
 
 	if (length > DATA_SIZE) return;
 	
