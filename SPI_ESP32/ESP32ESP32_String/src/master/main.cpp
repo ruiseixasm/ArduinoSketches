@@ -16,7 +16,7 @@
 const char* string_on = "{'t':'Nano','m':2,'n':'ON','f':'Talker-9f','i':3540751170,'c':24893}";
 const char* string_off = "{'t':'Nano','m':2,'n':'OFF','f':'Talker-9f','i':3540751170,'c':24893}";
 
-spi_device_handle_t spi;
+spi_device_handle_t _spi;
 uint8_t tx_buffer[BUFFER_SIZE];
 uint32_t counter = 0;
 bool send_on_string = true;
@@ -62,7 +62,7 @@ void setup_spi_master() {
     }
     
     // Attach device
-    ret = spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
+    ret = spi_bus_add_device(HSPI_HOST, &devcfg, &_spi);
     if (ret != ESP_OK) {
         Serial.printf("SPI device add failed: %s\n", esp_err_to_name(ret));
         return;
@@ -115,7 +115,7 @@ void send_128byte_buffer_with_led(uint8_t *buffer) {
     trans.rx_buffer = NULL;
     
     uint64_t start = esp_timer_get_time();
-    esp_err_t ret = spi_device_transmit(spi, &trans);
+    esp_err_t ret = spi_device_transmit(_spi, &trans);
     uint64_t duration = esp_timer_get_time() - start;
     
     if (ret == ESP_OK) {

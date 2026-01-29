@@ -24,10 +24,10 @@ https://github.com/ruiseixasm/JsonTalkie
 #define HSPI_CS 15
 #define DATA_SIZE 128
 
-spi_device_handle_t spi;
-uint8_t data_buffer[DATA_SIZE] __attribute__((aligned(4)));
+spi_device_handle_t _spi;
+uint8_t _data_buffer[DATA_SIZE] __attribute__((aligned(4)));
 
-int spi_cs_pins[] = {4, HSPI_CS};
+int _spi_cs_pins[] = {4, HSPI_CS};
 
 
 void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
@@ -40,7 +40,7 @@ void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], LOW);
     }    
-    spi_device_transmit(spi, &t);
+    spi_device_transmit(_spi, &t);
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], HIGH);
     }
@@ -52,19 +52,19 @@ void broadcastPayload(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
 	
     Serial.print("broadcastPayload() first 10: ");
     for(int i = 0; i < length; i++) {
-        Serial.printf("%02X ", data_buffer[i]);
+        Serial.printf("%02X ", _data_buffer[i]);
     }
     Serial.println();
 
     spi_transaction_t t = {};
     t.length = (size_t)length * 8;	// Bytes to bits
-    t.tx_buffer = data_buffer;
+    t.tx_buffer = _data_buffer;
     t.rx_buffer = nullptr;
 
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], LOW);
     }
-    spi_device_transmit(spi, &t);
+    spi_device_transmit(_spi, &t);
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], HIGH);
     }
@@ -80,7 +80,7 @@ uint8_t sendBeacon(int ss_pin, uint8_t length = 0) {
     t.rx_buffer = &rx_byte;
 
     digitalWrite(ss_pin, LOW);
-    spi_device_transmit(spi, &t);
+    spi_device_transmit(_spi, &t);
     digitalWrite(ss_pin, HIGH);
 
     return rx_byte;
@@ -93,10 +93,10 @@ void receivePayload(int ss_pin, uint8_t length = 0) {
     spi_transaction_t t = {};
     t.length = (size_t)length * 8;	// Bytes to bits
     t.tx_buffer = nullptr;
-    t.rx_buffer = data_buffer;
+    t.rx_buffer = _data_buffer;
     
     digitalWrite(ss_pin, LOW);
-    spi_device_transmit(spi, &t);
+    spi_device_transmit(_spi, &t);
     digitalWrite(ss_pin, HIGH);
 }
 
@@ -124,10 +124,10 @@ void setup() {
     
     
     spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
-    spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
+    spi_bus_add_device(HSPI_HOST, &devcfg, &_spi);
     
-    for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(spi_cs_pins)/sizeof(int); ss_pin_i++) {
-        pinMode(spi_cs_pins[ss_pin_i], OUTPUT);
+    for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(_spi_cs_pins)/sizeof(int); ss_pin_i++) {
+        pinMode(_spi_cs_pins[ss_pin_i], OUTPUT);
     }
 
     // Initialize pins FIRST before anything else
@@ -144,33 +144,33 @@ void loop() {
     
     if (random(100) < 10) {
 		
-        int len = snprintf((char*)data_buffer, 128, "MasterData_%lu:Value=%ld", millis(), random(10000));
+        int len = snprintf((char*)_data_buffer, 128, "MasterData_%lu:Value=%ld", millis(), random(10000));
         if (len > 127) len = 127;
         
         Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
-        broadcastLength(spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int), (uint8_t)len); // D=0, L=len
+        broadcastLength(_spi_cs_pins, sizeof(_spi_cs_pins)/sizeof(int), (uint8_t)len); // D=0, L=len
         // delayMicroseconds(200);
-        broadcastPayload(spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int), (uint8_t)len);
+        broadcastPayload(_spi_cs_pins, sizeof(_spi_cs_pins)/sizeof(int), (uint8_t)len);
         
         Serial.printf("[To Slave] Sent %d bytes\n", len);
 
     } else {
         
-        for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(spi_cs_pins)/sizeof(int); ss_pin_i++) {
+        for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(_spi_cs_pins)/sizeof(int); ss_pin_i++) {
 
-			uint8_t l = sendBeacon(spi_cs_pins[ss_pin_i]);
-            Serial.printf("\n[From Beacon to pin %d |1] Slave: 0x%02X Beacon=1 L=%d\n", spi_cs_pins[ss_pin_i], 0b10000000, 0);
+			uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
+            Serial.printf("\n[From Beacon to pin %d |1] Slave: 0x%02X Beacon=1 L=%d\n", _spi_cs_pins[ss_pin_i], 0b10000000, 0);
             
             if (l > 0) {
                 // delayMicroseconds(200);
-                uint8_t match_l = sendBeacon(spi_cs_pins[ss_pin_i], l);
+                uint8_t match_l = sendBeacon(_spi_cs_pins[ss_pin_i], l);
 				if (match_l == l) {	// Avoid noise triggering
-					Serial.printf("[From Beacon to pin %d |2] Slave: 0x%02X Beacon=1 L=%d\n", spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
+					Serial.printf("[From Beacon to pin %d |2] Slave: 0x%02X Beacon=1 L=%d\n", _spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
 					// delayMicroseconds(200);
-					receivePayload(spi_cs_pins[ss_pin_i], l);
+					receivePayload(_spi_cs_pins[ss_pin_i], l);
 					Serial.print("[From Slave] Received: ");
 					for (int i = 0; i < l; i++) {
-						Serial.print((char)data_buffer[i]);
+						Serial.print((char)_data_buffer[i]);
 					}
 					Serial.println();
 				}

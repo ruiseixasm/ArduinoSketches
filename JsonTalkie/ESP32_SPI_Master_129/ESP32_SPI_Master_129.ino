@@ -20,7 +20,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #define HSPI_CS 15  // HSPI CS is typically GPIO15
 
-spi_device_handle_t spi;
+spi_device_handle_t _spi;
 uint8_t tx_frame[FRAME_SIZE];
 uint8_t rx_frame[FRAME_SIZE];
 
@@ -44,7 +44,7 @@ void setup() {
 	devcfg.queue_size = 1;
 
 	spi_bus_initialize(HSPI_HOST, &buscfg, 1);
-	spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
+	spi_bus_add_device(HSPI_HOST, &devcfg, &_spi);
 
 	Serial.println("MASTER ready");
 }
@@ -62,7 +62,7 @@ void sendFrame(const char *msg) {
 	t.length = FRAME_SIZE * 8;
 	t.tx_buffer = tx_frame;
 	t.rx_buffer = nullptr; // ignore slave during broadcast
-	spi_device_transmit(spi, &t);
+	spi_device_transmit(_spi, &t);
 
 	Serial.print("MASTER sent: ");
 	Serial.write(&tx_frame[1], len);
@@ -78,7 +78,7 @@ uint8_t pollSlave(char *out) {
 	t.length = FRAME_SIZE * 8;
 	t.tx_buffer = tx_frame;
 	t.rx_buffer = rx_frame;
-	spi_device_transmit(spi, &t);
+	spi_device_transmit(_spi, &t);
 
 	uint8_t len = rx_frame[0];
 	if (len > MAX_PAYLOAD) len = 0;

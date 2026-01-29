@@ -6,7 +6,7 @@
 #define HSPI_SS   15
 #define LED_PIN   2
 
-spi_device_handle_t spi;
+spi_device_handle_t _spi;
 
 void setup() {
   Serial.begin(115200);
@@ -26,7 +26,7 @@ void setup() {
   devcfg.queue_size = 1;
 
   spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
-  spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
+  spi_bus_add_device(HSPI_HOST, &devcfg, &_spi);
 
   Serial.println("Master Ready");
 }
@@ -44,7 +44,7 @@ void loop() {
     spi_transaction_t trans = {};
     trans.length = 8;
     trans.tx_buffer = &data;
-    spi_device_transmit(spi, &trans);
+    spi_device_transmit(_spi, &trans);
     digitalWrite(HSPI_SS, HIGH); // CS high to end transaction
 
     Serial.print("Sent: ");
