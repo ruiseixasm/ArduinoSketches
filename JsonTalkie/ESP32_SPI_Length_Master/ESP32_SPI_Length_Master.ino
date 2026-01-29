@@ -41,25 +41,29 @@ uint8_t receive1Byte() {
     return rx_byte;
 }
 
-void send128Bytes() {
+void sendLengthBytes(size_t length) {
+
+	if (length > DATA_SIZE) return;
 	
-    // DEBUG: Print first 10 bytes before sending
-    Serial.print("send128Bytes() first 10: ");
-    for(int i = 0; i < 10; i++) {
+    Serial.print("sendLengthBytes() first 10: ");
+    for(int i = 0; i < length; i++) {
         Serial.printf("%02X ", data_buffer[i]);
     }
     Serial.println();
 
     spi_transaction_t t = {};
-    t.length = DATA_SIZE * 8;
+    t.length = length * 8;	// Bytes to bits
     t.tx_buffer = data_buffer;
     t.rx_buffer = nullptr;
     spi_device_transmit(spi, &t);
 }
 
-void receive128Bytes() {
+void receiveLengthBytes(size_t length) {
+	
+	if (length > DATA_SIZE) return;
+	
     spi_transaction_t t = {};
-    t.length = DATA_SIZE * 8;
+    t.length = length * 8;	// Bytes to bits
     t.tx_buffer = nullptr;
     t.rx_buffer = data_buffer;
     spi_device_transmit(spi, &t);
@@ -104,7 +108,7 @@ void loop() {
         
         send1Byte(len); // D=0, L=len
         delayMicroseconds(200);
-        send128Bytes();
+        sendLengthBytes(len);
         
         Serial.printf("[Master] Sent %d bytes\n", len);
     } else {
@@ -119,9 +123,9 @@ void loop() {
         
         if (d == 1 && l > 0) {
             delayMicroseconds(200);
-            receive128Bytes();
+            receiveLengthBytes(l);
             Serial.print("Received: ");
-            for (int i = 0; i < l && i < 40; i++) {
+            for (int i = 0; i < l && i < l; i++) {
                 Serial.print((char)data_buffer[i]);
             }
             Serial.println();
