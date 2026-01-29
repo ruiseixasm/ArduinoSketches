@@ -130,6 +130,10 @@ void setup() {
     spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
     spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
     
+    for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(spi_cs_pins)/sizeof(int); ss_pin_i++) {
+        pinMode(spi_cs_pins[ss_pin_i], OUTPUT);
+    }
+
     // Initialize pins FIRST before anything else
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH); // Start with LED on for signalling MASTER
