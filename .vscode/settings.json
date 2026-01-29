@@ -8,6 +8,7 @@
 		"espressif",
 		"Ethercard",
 		"fullclean",
+		"HALFDUPLEX",
 		"HSPI",
 		"ICSP",
 		"IMXRT",
