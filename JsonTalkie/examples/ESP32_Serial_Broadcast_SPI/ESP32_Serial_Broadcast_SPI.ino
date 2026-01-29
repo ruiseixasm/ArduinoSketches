@@ -25,7 +25,6 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "S_SocketSerial.hpp"
 #include "S_Broadcast_SPI_2xESP_Master.hpp"
 #include "M_Spy.hpp"
-#include "M_LedManifesto.hpp"
 #include "M_CyclerManifesto.hpp"
 
 
@@ -41,12 +40,6 @@ const char t_spy_name[] = "spy";
 const char t_spy_desc[] = "I'm a M_Spy and I spy the talkers' pings";
 M_Spy spy_manifesto;
 JsonTalker t_spy = JsonTalker(t_spy_name, t_spy_desc, &spy_manifesto);
-
-// Talker (led)
-const char l_led_name[] = "blue";
-const char l_led_desc[] = "I turn led Blue on and off";
-M_LedManifesto led_manifesto(LED_BUILTIN);
-JsonTalker l_led = JsonTalker(l_led_name, l_led_desc, &led_manifesto);
 
 // Talker cycler
 const char t_cycler_name[] = "cycler";
