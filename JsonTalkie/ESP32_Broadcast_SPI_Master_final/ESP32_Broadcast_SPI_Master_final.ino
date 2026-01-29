@@ -149,7 +149,7 @@ void loop() {
         
         Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
         broadcastLength(spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int), (uint8_t)len); // D=0, L=len
-        delayMicroseconds(200);
+        // delayMicroseconds(200);
         broadcastPayload(spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int), (uint8_t)len);
         
         Serial.printf("[To Slave] Sent %d bytes\n", len);
@@ -162,10 +162,10 @@ void loop() {
             Serial.printf("\n[From Beacon to pin %d |1] Slave: 0x%02X Beacon=1 L=%d\n", spi_cs_pins[ss_pin_i], 0b10000000, 0);
             
             if (l > 0) {
-                delayMicroseconds(200);
+                // delayMicroseconds(200);
                 sendBeacon(spi_cs_pins[ss_pin_i], l);
             	Serial.printf("[From Beacon to pin %d |2] Slave: 0x%02X Beacon=1 L=%d\n", spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
-                delayMicroseconds(200);
+                // delayMicroseconds(200);
                 receivePayload(spi_cs_pins[ss_pin_i], l);
                 Serial.print("[From Slave] Received: ");
                 for (int i = 0; i < l; i++) {
