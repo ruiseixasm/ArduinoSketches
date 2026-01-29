@@ -82,7 +82,7 @@ void setup() {
     // Then start Serial
     Serial.begin(115200);
     delay(2000); // Important: Give time for serial to initialize
-    Serial.println("\n\n=== ESP32 with EthernetENC STARTING ===");
+    Serial.println("\n\n=== ESP32 with Broadcast SPI STARTING ===");
 
     // Add a small LED blink to confirm code is running
     digitalWrite(LED_BUILTIN, HIGH);
@@ -111,46 +111,6 @@ void setup() {
 
 
 void loop() {
-    Ethernet.maintain();		// Maintain DHCP lease (important for long-running applications)
 	message_repeater.loop();	// Keep calling the Repeater
 }
-
-
-// ESP32 wiring with the ENC28J60 (SPI)
-
-//     MOSI (D23)  =   SI
-//     MISO (D19)  =   SO
-//     SCK  (D18)  =   SCK
-//     SS   (D5)   =   CS
-//     GND         =   GND
-//     MUTUAL EXCLUSIVE:
-//         VIN     =   5V
-//         3V3     =   Q3
-
-
-// ESP32 (3.3V)        →   Nano (5V)          Risk Level
-// ─────────────────────────────────────────────────────
-// ESP32 MOSI (D13)    →   Nano MOSI (D11)    SAFE (Nano input)
-// ESP32 MISO (D12)    ←   Nano MISO (D12)    DANGEROUS! (Nano output=5V)
-// ESP32 SCK  (D14)    →   Nano SCK  (D13)    SAFE (Nano input) (Also DANGEROUS due to LED_BUILTIN on pin 13)
-// ESP32 SS   (D15)    →   Nano SS   (D10)    SAFE (Nano input)
-
-// Use level shifter or resistors
-//     ESP32 → Nano: Direct (3.3V → 5V input is fine)
-//     Nano → ESP32: 1K series resistor (limits current to safe level)
-
-// Direct connection often works:
-//     ESP32 MOSI (3.3V) → Nano D11 (5V input)  // SAFE
-//     ESP32 SCK  (3.3V) → Nano D13 (5V input)  // RISKY due to LED_BUILTIN on pin 13 
-//     ESP32 SS   (3.3V) → Nano D10 (5V input)  // SAFE
-//     Nano MISO  (5V)   → ESP32 MISO (3.3V)    // RISKY but usually survives
-
-// Key Parameters:
-//     Nano output: 5V, can source ~20mA max
-//     ESP32 input: Has ESD protection diodes to 3.3V rail
-//     Diode forward voltage: ~0.6V each
-
-// Calculations:
-//     V_resistor = V_nano - V_esp32 = 5V - 3.9V = 1.1V
-//     I = V_resistor / R = 1.1V / 1000Ω = 1.1mA
 
