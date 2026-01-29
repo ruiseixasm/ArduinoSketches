@@ -31,7 +31,7 @@ int spi_cs_pins[] = {4, HSPI_CS};
 
 
 void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length = 0) {
-    static uint8_t tx_byte __attribute__((aligned(4))) = ~0b10000000 & length;
+    uint8_t tx_byte __attribute__((aligned(4))) = ~0b10000000 & length;
     spi_transaction_t t = {};
     t.length = 1 * 8;	// Bytes to bits
     t.tx_buffer = &tx_byte;
@@ -72,7 +72,7 @@ void broadcastPayload(int* ss_pins, uint8_t ss_pins_count, uint8_t length = 0) {
 
 
 uint8_t sendBeacon(int ss_pin, uint8_t length = 0) {
-    static uint8_t rx_byte __attribute__((aligned(4))) = 0b10000000 | length;
+    uint8_t rx_byte __attribute__((aligned(4))) = 0b10000000 | length;
     spi_transaction_t t = {};
     t.length = 1 * 8;	// Bytes to bits
     t.tx_buffer = nullptr;
