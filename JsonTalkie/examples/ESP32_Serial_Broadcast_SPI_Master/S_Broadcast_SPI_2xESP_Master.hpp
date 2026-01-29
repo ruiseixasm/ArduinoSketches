@@ -77,7 +77,6 @@ protected:
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 
 					uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
-					Serial.printf("\n[From Beacon to pin %d |1] Slave: 0x%02X Beacon=1 L=%d\n", _spi_cs_pins[ss_pin_i], 0b10000000, 0);
 					
 					if (l > 0) {
 						// delayMicroseconds(200);
@@ -186,10 +185,8 @@ protected:
 
 		if (length > TALKIE_BUFFER_SIZE) return;
 		
-		Serial.print("broadcastPayload() first 10: ");
-		for(int i = 0; i < length; i++) {
-			Serial.printf("%02X ", _data_buffer[i]);
-		}
+		Serial.print("broadcastPayload(): ");
+		Serial.write(_data_buffer, length);
 		Serial.println();
 
 		spi_transaction_t t = {};
