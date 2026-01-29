@@ -227,14 +227,6 @@ public:
 
     virtual void begin(int mosi_io_num, int miso_io_num, int sclk_io_num) {
 		
-		// ================== CONFIGURE SS PINS ==================
-		// CRITICAL: Configure all SS pins as outputs and set HIGH
-		for (uint8_t i = 0; i < _ss_pins_count; i++) {
-			pinMode(_spi_cs_pins[i], OUTPUT);
-			digitalWrite(_spi_cs_pins[i], HIGH);
-			delayMicroseconds(10); // Small delay between pins
-		}
-
 		spi_bus_config_t buscfg = {};
 		buscfg.mosi_io_num = mosi_io_num;
 		buscfg.miso_io_num = miso_io_num;
@@ -255,7 +247,9 @@ public:
 		spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
 		spi_bus_add_device(HSPI_HOST, &devcfg, &_spi);
 		
-		for (uint8_t ss_pin_i = 0; ss_pin_i < sizeof(_spi_cs_pins)/sizeof(int); ss_pin_i++) {
+		// ================== CONFIGURE SS PINS ==================
+		// CRITICAL: Configure all SS pins as outputs and set HIGH
+		for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 			pinMode(_spi_cs_pins[ss_pin_i], OUTPUT);
 			digitalWrite(_spi_cs_pins[ss_pin_i], HIGH);
 		}
