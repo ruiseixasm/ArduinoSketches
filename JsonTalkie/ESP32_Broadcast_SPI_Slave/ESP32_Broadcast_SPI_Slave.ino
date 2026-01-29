@@ -98,7 +98,7 @@ void loop() {
             Serial.println("Master ping");
         }
 
-    } else {
+    } else {    // Beacon
         
     	Serial.printf("\n[From Slave] Cmd: 0x%02X D=0 L=%d ", cmd_byte, data_len);
     
