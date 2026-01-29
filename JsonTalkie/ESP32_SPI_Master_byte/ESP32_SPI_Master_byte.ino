@@ -31,7 +31,7 @@ void send1Byte(uint8_t data) {
     spi_device_transmit(spi, &t);
 }
 
-uint8_t receive1Byte() {
+uint8_t receiveLength() {
     static uint8_t rx_byte __attribute__((aligned(4))) = 0;
     spi_transaction_t t = {};
     t.length = 8;
@@ -111,7 +111,7 @@ void loop() {
         send1Byte(0b10000000); // D=1, L=0
         delayMicroseconds(200);
         
-        uint8_t response = receive1Byte();
+        uint8_t response = receiveLength();
         uint8_t d = (response >> 7) & 0x01;
         uint8_t l = response & 0x7F;
         

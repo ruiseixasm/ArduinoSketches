@@ -24,9 +24,9 @@ uint8_t data_buffer[DATA_SIZE] __attribute__((aligned(4)));
 int spi_cs_pins[] = {4, HSPI_CS};
 
 
-void sendBroadcastByte(uint8_t data, int* ss_pins, uint8_t ss_pins_count) {
+void sendBroadcastLength(uint8_t length, int* ss_pins, uint8_t ss_pins_count) {
     static uint8_t tx_byte __attribute__((aligned(4))) = 0;
-    tx_byte = data;
+    tx_byte = length;
     spi_transaction_t t = {};
     t.length = 1 * 8;	// Bytes to bits
     t.tx_buffer = &tx_byte;
@@ -41,11 +41,11 @@ void sendBroadcastByte(uint8_t data, int* ss_pins, uint8_t ss_pins_count) {
     }
 }
 
-void sendBroadcastLengthBytes(size_t length, int* ss_pins, uint8_t ss_pins_count) {
+void sendBroadcastPayload(size_t length, int* ss_pins, uint8_t ss_pins_count) {
 
 	if (length > DATA_SIZE) return;
 	
-    Serial.print("sendBroadcastLengthBytes() first 10: ");
+    Serial.print("sendBroadcastPayload() first 10: ");
     for(int i = 0; i < length; i++) {
         Serial.printf("%02X ", data_buffer[i]);
     }
@@ -66,7 +66,7 @@ void sendBroadcastLengthBytes(size_t length, int* ss_pins, uint8_t ss_pins_count
 }
 
 
-uint8_t receive1Byte(int ss_pin) {
+uint8_t receiveLength(int ss_pin) {
     static uint8_t rx_byte __attribute__((aligned(4))) = 0;
     spi_transaction_t t = {};
     t.length = 1 * 8;	// Bytes to bits
@@ -80,7 +80,7 @@ uint8_t receive1Byte(int ss_pin) {
     return rx_byte;
 }
 
-void receiveLengthBytes(size_t length, int ss_pin) {
+void receivePayload(size_t length, int ss_pin) {
 	
 	if (length > DATA_SIZE) return;
 	
@@ -130,16 +130,14 @@ void loop() {
         int len = snprintf((char*)data_buffer, 128, "MasterData_%lu:Value=%ld", millis(), random(10000));
         if (len > 127) len = 127;
         
-        sendBroadcastByte(len, spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int)); // D=0, L=len
+        sendBroadcastLength((uint8_t)len, spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int)); // D=0, L=len
         delayMicroseconds(200);
-        sendBroadcastLengthBytes(len, spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int));
+        sendBroadcastPayload((size_t)len, spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int));
         
         Serial.printf("[From Master] Sent %d bytes\n", len);
     } else {
-        sendBroadcastByte(0b10000000); // D=1, L=0
-        delayMicroseconds(200);
         
-        uint8_t response = receive1Byte();
+        uint8_t response = receiveLength(0b10000000);
         uint8_t d = (response >> 7) & 0x01;
         uint8_t l = response & 0x7F;
         
@@ -147,7 +145,7 @@ void loop() {
         
         if (d == 1 && l > 0) {
             delayMicroseconds(200);
-            receiveLengthBytes(l);
+            receivePayload(l);
             Serial.print("Received: ");
             for (int i = 0; i < l; i++) {
                 Serial.print((char)data_buffer[i]);
