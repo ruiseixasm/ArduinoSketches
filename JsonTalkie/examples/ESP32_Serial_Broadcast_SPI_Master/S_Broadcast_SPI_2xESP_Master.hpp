@@ -64,7 +64,7 @@ protected:
 		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
 		static uint16_t timeout = (uint16_t)micros();
 
-		if (micros() - timeout > 250) {
+		if (micros() - timeout > 100) {
 			timeout = (uint16_t)micros();
 
 			if (_initiated) {
