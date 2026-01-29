@@ -18,18 +18,15 @@ https://github.com/ruiseixasm/JsonTalkie
 #include <BroadcastSocket.h>
 #include <SPI.h>
 
-// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_RECEIVE
-// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_SEND
-// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_1
-// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_2
-// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_NEW
-// #define BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
+// #define BROADCAST_SPI_DEBUG
+// #define BROADCAST_SPI_DEBUG_1
+// #define BROADCAST_SPI_DEBUG_2
+// #define BROADCAST_SPI_DEBUG_NEW
+// #define BROADCAST_SPI_DEBUG_TIMING
 
 
 #define send_delay_us 10
 #define receive_delay_us 18
-
-
 #define TALKIE_MAX_NAMES 8
 
 
@@ -59,35 +56,25 @@ public:
     };
 
 
-	#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
+	#ifdef BROADCAST_SPI_DEBUG_TIMING
 	unsigned long _reference_time = millis();
 	#endif
 
 protected:
 
-	SPIClass* const _spi_instance = &SPI;  // Alias pointer
-    int _ss_pin = 10;
-	// Just create a pointer to the existing SPI object
+	SPIClass* _spi_instance;  // Pointer to SPI instance
+	bool _initiated = false;
+    int* _ss_pins;
+    uint8_t _ss_pins_count = 0;
 
 
     // Constructor
-    S_Broadcast_SPI_2xESP_Master(int ss_pin) : BroadcastSocket() {
-		
-			_ss_pin = ss_pin;
-			if (_spi_instance) {
-				// Initialize SPI
-				_spi_instance->begin();
-				_spi_instance->setClockDivider(SPI_CLOCK_DIV4);    // Only affects the char transmission
-				_spi_instance->setDataMode(SPI_MODE0);
-				_spi_instance->setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST! (OTHERWISE is LSB)
-				// Enable the SS pin
-				pinMode(_ss_pin, OUTPUT);
-				digitalWrite(_ss_pin, HIGH);
-				// Sets the class SS pin
-			}
-            _max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
-        }
-
+    S_Broadcast_SPI_2xESP_Master(int* ss_pins, uint8_t ss_pins_count) : BroadcastSocket() {
+            
+		_ss_pins = ss_pins;
+		_ss_pins_count = ss_pins_count;
+		_max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
+	}
 
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
@@ -99,28 +86,23 @@ protected:
 		if (micros() - timeout > 250) {
 			timeout = (uint16_t)micros();
 
-			if (_spi_instance) {
+			if (_initiated) {
 
-				#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
+				#ifdef BROADCAST_SPI_DEBUG_TIMING
 				_reference_time = millis();
 				#endif
 
 				JsonMessage new_message;
 				char* message_buffer = new_message._write_buffer();
-				size_t length = receiveSPI(_ss_pin, message_buffer);
 
-				if (length > 0) {
+				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 					
-					new_message._set_length(length);
-
-					#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_RECEIVE
-					Serial.print(F("\t\t\t\t\treceive1: Received message: "));
-					new_message.write_to(Serial);
-					Serial.print(" | ");
-					Serial.println(new_message.get_length());
-					#endif
-
-					_startTransmission(new_message);
+					size_t length = receiveSPI(_ss_pins[ss_pin_i], message_buffer);
+					if (length > 0) {
+						
+						new_message._set_length(length);
+						_startTransmission(new_message);
+					}
 				}
 			}
 		}
@@ -130,38 +112,38 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     bool _send(const JsonMessage& json_message) override {
 
-		if (_spi_instance) {
+		if (_initiated) {
 			
-			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print("\n\tsend: ");
 			#endif
 				
-			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			_reference_time = millis();
 			#endif
 
-			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_SEND
+			#ifdef BROADCAST_SPI_DEBUG
 			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
-			Serial.write(message_buffer, json_message.get_length());
-			Serial.println();
-			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
+			Serial.write(json_message._read_buffer(), json_message.get_length());
+			Serial.print(F("\n\t\t\t\t\tsend2: Sent length: "));
 			Serial.println(json_message.get_length());
 			#endif
 			
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
+			Serial.print(" | ");
+			Serial.print(millis() - _reference_time);
+			#endif
+
 			const char* message_buffer = json_message._read_buffer();
 			size_t message_length = json_message.get_length();
 
-			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_SEND
-			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
-			Serial.write(message_buffer, message_length);
-			Serial.println();
-			Serial.print(F("\t\t\t\t\tsend2: Sent length: "));
-			Serial.println(message_length);
-			#endif
+			sendBroadcastSPI(_ss_pins, _ss_pins_count, message_buffer, message_length);
 			
-			sendSPI(_ss_pin, message_buffer, message_length);
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
+			#endif
 
-			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_TIMING
+			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print(" | ");
 			Serial.print(millis() - _reference_time);
 			#endif
@@ -171,19 +153,64 @@ protected:
         return false;
     }
 
-    
+
+	bool initiate() {
+		
+		if (_spi_instance) {
+
+			// Configure SPI settings
+			_spi_instance->setDataMode(SPI_MODE0);
+			_spi_instance->setBitOrder(MSBFIRST);  // EXPLICITLY SET MSB FIRST!
+			_spi_instance->setFrequency(4000000); 	// 4MHz if needed (optional)
+			// ====================================================
+			
+			// ================== CONFIGURE SS PINS ==================
+			// CRITICAL: Configure all SS pins as outputs and set HIGH
+			for (uint8_t i = 0; i < _ss_pins_count; i++) {
+				pinMode(_ss_pins[i], OUTPUT);
+				digitalWrite(_ss_pins[i], HIGH);
+				delayMicroseconds(10); // Small delay between pins
+			}
+
+			_initiated = true;
+		}
+
+		#ifdef BROADCAST_SPI_DEBUG
+		if (_initiated) {
+			Serial.print(class_description());
+			Serial.println(": initiate1: Socket initiated!");
+
+			Serial.print(F("\tinitiate2: Total SS pins connected: "));
+			Serial.println(_ss_pins_count);
+			Serial.print(F("\t\tinitiate3: SS pins: "));
+			
+			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+				Serial.print(_ss_pins[ss_pin_i]);
+				Serial.print(F(", "));
+			}
+			Serial.println();
+		} else {
+			Serial.println("initiate1: Socket NOT initiated!");
+		}
+	
+		#endif
+
+		return _initiated;
+	}
+
+	
     // Specific methods associated to Arduino SPI as Master
 	
-    bool sendSPI(int ss_pin, const char* message_buffer, size_t length) {
+    bool sendBroadcastSPI(int* ss_pins, uint8_t ss_pins_count, const char* message_buffer, size_t length) {
 		
-		#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_1
+		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 		Serial.print(F("\tSending on pin: "));
 		Serial.println(ss_pin);
 		#endif
 
 		if (length > TALKIE_BUFFER_SIZE) {
 			
-			#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_1
+			#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_1
 			Serial.println(F("\tlength > TALKIE_BUFFER_SIZE"));
 			#endif
 
@@ -194,7 +221,9 @@ protected:
 
 		if (length > 0) {	// Don't send empty strings
 			
-			digitalWrite(ss_pin, LOW);
+			for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+				digitalWrite(ss_pins[ss_pin_i], LOW);
+			}
 
 			for (uint8_t receive_sends = 0; receive_sends < 2; ++receive_sends) {
 				delayMicroseconds(send_delay_us);
@@ -212,7 +241,9 @@ protected:
 			}
 
 			delayMicroseconds(5);
-			digitalWrite(ss_pin, HIGH);
+			for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+				digitalWrite(ss_pins[ss_pin_i], HIGH);
+			}
 			
         	return true;
 		}
@@ -224,7 +255,7 @@ protected:
         size_t length = 0;	// No interrupts, so, not volatile
         uint8_t c;			// Avoid using 'char' while using values above 127
 
-		#ifdef BROADCAST_SPI_ESP2X_MASTER_DEBUG_2
+		#ifdef BROADCAST_SPI_ARDUINO2X_MASTER_DEBUG_2
 		Serial.print(F("\tReceiving on pin: "));
 		Serial.println(ss_pin);
 		#endif
@@ -238,7 +269,7 @@ protected:
 				delayMicroseconds(receive_delay_us);
 				c = _spi_instance->transfer(TALKIE_SB_START);
 				if (c == TALKIE_SB_READY) {
-
+					
 					while (1) {
 						
 						if (receiving_index < buffer_size) {
@@ -281,17 +312,23 @@ protected:
         }
         return length;
     }
-
+	
 
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static S_Broadcast_SPI_2xESP_Master& instance(int ss_pin) {
-        static S_Broadcast_SPI_2xESP_Master instance(ss_pin);
+    static S_Broadcast_SPI_2xESP_Master& instance(int* ss_pins, uint8_t ss_pins_count) {
+        static S_Broadcast_SPI_2xESP_Master instance(ss_pins, ss_pins_count);
 
         return instance;
     }
 
+
+    virtual void begin(SPIClass* spi_instance) {
+		
+		_spi_instance = spi_instance;
+		initiate();
+    }
 };
 
 
