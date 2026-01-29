@@ -130,9 +130,9 @@ void loop() {
         int len = snprintf((char*)data_buffer, 128, "MasterData_%lu:Value=%ld", millis(), random(10000));
         if (len > 127) len = 127;
         
-        sendBroadcastByte(len); // D=0, L=len
+        sendBroadcastByte(len, spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int)); // D=0, L=len
         delayMicroseconds(200);
-        sendBroadcastLengthBytes(len);
+        sendBroadcastLengthBytes(len, spi_cs_pins, sizeof(spi_cs_pins)/sizeof(int));
         
         Serial.printf("[From Master] Sent %d bytes\n", len);
     } else {
