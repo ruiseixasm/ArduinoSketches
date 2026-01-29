@@ -39,12 +39,8 @@ void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
 
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], LOW);
-    }
-	delayMicroseconds(20);  // CS setup time
-    
-    spi_device_polling_transmit(spi, &t);
-
-    delayMicroseconds(10);	// Ensure transmission is complete before releasing CS
+    }    
+    spi_device_transmit(spi, &t);
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], HIGH);
     }
@@ -68,7 +64,7 @@ void broadcastPayload(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], LOW);
     }
-    spi_device_polling_transmit(spi, &t);
+    spi_device_transmit(spi, &t);
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], HIGH);
     }
