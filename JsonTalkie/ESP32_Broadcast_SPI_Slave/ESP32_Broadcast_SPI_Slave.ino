@@ -70,7 +70,7 @@ void loop() {
     
 
     bool beacon = (bool)((cmd_byte >> 7) & 0x01);
-    uint8_t received_length = cmd_byte & ~0b10000000;
+    uint8_t received_length = cmd_byte & 0b01111111;
     if (!beacon) {	// Master sends
 		
     	Serial.printf("\n[From Master] Cmd: 0x%02X Beacon=0 L=%d ", cmd_byte, received_length);
