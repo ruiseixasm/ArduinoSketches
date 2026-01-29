@@ -125,7 +125,7 @@ void loop() {
             delayMicroseconds(200);
             receiveLengthBytes(l);
             Serial.print("Received: ");
-            for (int i = 0; i < l && i < l; i++) {
+            for (int i = 0; i < l; i++) {
                 Serial.print((char)data_buffer[i]);
             }
             Serial.println();
