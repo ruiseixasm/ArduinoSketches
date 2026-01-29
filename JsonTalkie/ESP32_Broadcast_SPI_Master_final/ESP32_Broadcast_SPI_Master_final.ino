@@ -117,7 +117,7 @@ void setup() {
 	// https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/spi_master.html
 
     spi_device_interface_config_t devcfg = {};
-    devcfg.clock_speed_hz = 1000000;
+    devcfg.clock_speed_hz = 4000000;  // 4 MHz - Sweet spot!
     devcfg.mode = 0;
     devcfg.queue_size = 3;
     devcfg.spics_io_num = -1,  // DISABLE hardware CS completely! (Broadcast)
