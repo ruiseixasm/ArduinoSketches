@@ -99,12 +99,9 @@ void loop() {
     Serial.printf("\n=== Cycle %lu ===\n", cycle++);
     
     if (random(100) < 10) {
-        char temp[128];
-        int len = snprintf(temp, 128, "MasterData_%lu:Value=%ld", millis(), random(10000));
+		
+        int len = snprintf((char*)data_buffer, 128, "MasterData_%lu:Value=%ld", millis(), random(10000));
         if (len > 127) len = 127;
-        
-        memset(data_buffer, 0, DATA_SIZE);
-        memcpy(data_buffer, temp, len);
         
         send1Byte(len); // D=0, L=len
         delayMicroseconds(200);

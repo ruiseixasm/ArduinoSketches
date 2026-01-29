@@ -45,8 +45,6 @@ void setup() {
 
 void loop() {
 	
-	memset(tx_buffer, 0, DATA_SIZE);	// Resets all with '\0'
-
 	int data_len = 0;
     bool slave_has_data = (random(100) < 10);
     if (slave_has_data) {
