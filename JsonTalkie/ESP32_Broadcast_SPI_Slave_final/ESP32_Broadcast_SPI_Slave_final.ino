@@ -33,27 +33,30 @@ enum SpiState {
 };
 
 SpiState spi_state = WAIT_CMD;
+uint8_t active_length = 0;
 
-void queue_cmd_transaction() {
-    memset(&cmd_trans, 0, sizeof(cmd_trans));
-    cmd_trans.length    = 8;
-    cmd_trans.rx_buffer = &cmd_byte;
-    cmd_trans.tx_buffer = &sending_length;   // always report availability
-    spi_slave_queue_trans(VSPI_HOST, &cmd_trans, portMAX_DELAY);
+static inline void queue_cmd() {
+    spi_slave_transaction_t *t = &cmd_trans;
+    t->length    = 8;
+    t->rx_buffer = &cmd_byte;
+    t->tx_buffer = &sending_length;
+    spi_slave_queue_trans(VSPI_HOST, t, portMAX_DELAY);
 }
 
-void queue_rx_transaction(uint8_t len) {
-    memset(&data_trans, 0, sizeof(data_trans));
-    data_trans.length    = len * 8;
-    data_trans.rx_buffer = rx_buffer;
-    spi_slave_queue_trans(VSPI_HOST, &data_trans, portMAX_DELAY);
+static inline void queue_rx(uint8_t len) {
+    spi_slave_transaction_t *t = &data_trans;
+    t->length    = (size_t)len * 8;
+    t->rx_buffer = rx_buffer;
+    t->tx_buffer = nullptr;
+    spi_slave_queue_trans(VSPI_HOST, t, portMAX_DELAY);
 }
 
-void queue_tx_transaction(uint8_t len) {
-    memset(&data_trans, 0, sizeof(data_trans));
-    data_trans.length    = len * 8;
-    data_trans.tx_buffer = tx_buffer;
-    spi_slave_queue_trans(VSPI_HOST, &data_trans, portMAX_DELAY);
+static inline void queue_tx(uint8_t len) {
+    spi_slave_transaction_t *t = &data_trans;
+    t->length    = (size_t)len * 8;
+    t->rx_buffer = nullptr;
+    t->tx_buffer = tx_buffer;
+    spi_slave_queue_trans(VSPI_HOST, t, portMAX_DELAY);
 }
 
 void setup() {
@@ -74,57 +77,63 @@ void setup() {
     spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
     Serial.println("Slave ready");
 
-    queue_cmd_transaction();   // ARM IMMEDIATELY
+    queue_cmd();   // always armed
 }
 
 void loop() {
     spi_slave_transaction_t *ret;
 
-    /* --- generate data opportunistically --- */
-    if (sending_length == 0 && random(100) < 10) {
-        int len = snprintf((char*)tx_buffer, DATA_SIZE,
-                           "SlaveData_%lu", millis());
-        if (len > 127) len = 127;
-        sending_length = (uint8_t)len;
+    /* === ORIGINAL DATA GENERATION LOGIC (UNCHANGED) === */
+    if (sending_length == 0) {
+        int data_len = 0;
+        bool slave_has_data = (random(100) < 10);
+        if (slave_has_data) {
+            data_len = snprintf((char*)tx_buffer,
+                                DATA_SIZE,
+                                "SlaveData_%lu",
+                                millis());
+            if (data_len > 127) data_len = 127;
+            sending_length = (uint8_t)data_len;
+        }
     }
 
-    /* --- check for completed SPI transaction --- */
     if (spi_slave_get_trans_result(VSPI_HOST, &ret, 0) != ESP_OK) {
-        return; // nothing finished yet
+        return;
     }
 
-    /* --- "ISR" logic --- */
+    /* === SPI "ISR" === */
+
     if (spi_state == WAIT_CMD) {
-        bool beacon = (cmd_byte & 0x80);
+        bool beacon = (cmd_byte >> 7) & 0x01;
         uint8_t received_length = cmd_byte & 0x7F;
 
         Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
                       cmd_byte, beacon, received_length);
 
-        if (!beacon) {
+        if (!beacon) {  // master → slave
             if (received_length > 0 && received_length <= DATA_SIZE) {
+                active_length = received_length;
                 spi_state = RX_PAYLOAD;
-                queue_rx_transaction(received_length);
+                queue_rx(received_length);
                 return;
             } else {
                 Serial.println("Master ping");
             }
-        } else {
+        } else {         // beacon
             if (received_length > 0) {
+                active_length = received_length;
                 spi_state = TX_PAYLOAD;
-                queue_tx_transaction(received_length);
+                queue_tx(received_length);
                 return;
-            } else {
-                Serial.println("Beacon, no data requested");
             }
         }
 
-        queue_cmd_transaction();
+        queue_cmd();
     }
 
     else if (spi_state == RX_PAYLOAD) {
-        Serial.print("Received: ");
-        for (int i = 0; i < (cmd_byte & 0x7F); i++) {
+        Serial.printf("Received %u bytes: ", active_length);
+        for (uint8_t i = 0; i < active_length; i++) {
             char c = rx_buffer[i];
             if (c >= 32 && c <= 126) Serial.print(c);
             else Serial.printf("[%02X]", c);
@@ -132,15 +141,15 @@ void loop() {
         Serial.println();
 
         spi_state = WAIT_CMD;
-        queue_cmd_transaction();
+        queue_cmd();
     }
 
     else if (spi_state == TX_PAYLOAD) {
-        Serial.printf("Sent %u bytes\n", sending_length);
+        Serial.printf("Sent %u bytes\n", active_length);
         sending_length = 0;
 
         spi_state = WAIT_CMD;
-        queue_cmd_transaction();
+        queue_cmd();
     }
 }
 
