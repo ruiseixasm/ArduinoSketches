@@ -21,6 +21,9 @@ https://github.com/ruiseixasm/JsonTalkie
 spi_device_handle_t spi;
 uint8_t data_buffer[DATA_SIZE] __attribute__((aligned(4)));
 
+
+int spi_cs_pins[] = {4, HSPI_CS};
+
 void send1Byte(uint8_t data) {
     static uint8_t tx_byte __attribute__((aligned(4))) = 0;
     tx_byte = data;
@@ -85,7 +88,7 @@ void setup() {
     spi_device_interface_config_t devcfg = {};
     devcfg.clock_speed_hz = 1000000;
     devcfg.mode = 0;
-    devcfg.spics_io_num = HSPI_CS;
+    devcfg.spics_io_num = -1,  // DISABLE hardware CS completely! (Broadcast)
     devcfg.queue_size = 3;
     
     spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
