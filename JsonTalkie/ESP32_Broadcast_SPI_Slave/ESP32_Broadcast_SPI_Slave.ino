@@ -117,3 +117,16 @@ void loop() {
         }
     }
 }
+
+
+// // LOGIC TO BE USED BY SPI SLAVES
+
+// // once
+// queue_idle_transaction();
+
+// // forever
+// if (spi_slave_get_trans_result(host, &t, 0) == ESP_OK) {
+//     process(t);
+//     queue_next_transaction();
+// }
+
