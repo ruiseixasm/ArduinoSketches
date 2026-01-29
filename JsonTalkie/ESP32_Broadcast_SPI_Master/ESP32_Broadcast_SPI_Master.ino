@@ -40,14 +40,11 @@ void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], LOW);
     }
-	delayMicroseconds(5);  // CS setup time
-    // Disable any automatic CS control
-    gpio_set_direction((gpio_num_t)ss_pins[0], GPIO_MODE_OUTPUT);
+	delayMicroseconds(20);  // CS setup time
     
-    spi_device_transmit(spi, &t);
+    spi_device_polling_transmit(spi, &t);
 
-	// Ensure transmission is complete before releasing CS
-    delayMicroseconds(5);
+    delayMicroseconds(10);	// Ensure transmission is complete before releasing CS
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], HIGH);
     }
@@ -71,7 +68,7 @@ void broadcastPayload(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], LOW);
     }
-    spi_device_transmit(spi, &t);
+    spi_device_polling_transmit(spi, &t);
     for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
         digitalWrite(ss_pins[ss_pin_i], HIGH);
     }
@@ -128,11 +125,6 @@ void setup() {
     devcfg.mode = 0;
     devcfg.queue_size = 3;
     devcfg.spics_io_num = -1,  // DISABLE hardware CS completely! (Broadcast)
-    // SET THESE TO ZERO TO DISABLE AUTOMATIC CS CONTROL:
-    devcfg.cs_ena_pretrans = 0;    // No CS pre-activation
-    devcfg.cs_ena_posttrans = 0;   // No CS post-hold
-    // Also set this flag:
-    devcfg.flags = SPI_DEVICE_HALFDUPLEX;  // Required for cs_ena settings
     
     
     spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
