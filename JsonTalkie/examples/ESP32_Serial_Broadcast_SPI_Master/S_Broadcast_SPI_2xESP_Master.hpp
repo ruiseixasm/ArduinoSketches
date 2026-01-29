@@ -73,16 +73,31 @@ protected:
 				_reference_time = millis();
 				#endif
 
-				JsonMessage new_message;
-				char* message_buffer = new_message._write_buffer();
 
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+
+					uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
+					Serial.printf("\n[From Beacon to pin %d |1] Slave: 0x%02X Beacon=1 L=%d\n", _spi_cs_pins[ss_pin_i], 0b10000000, 0);
 					
-					// size_t length = receiveSPI(_ss_pins[ss_pin_i], message_buffer);
-					if (length > 0) {
-						
-						new_message._set_length(length);
-						_startTransmission(new_message);
+					if (l > 0) {
+						// delayMicroseconds(200);
+						uint8_t match_l = sendBeacon(_spi_cs_pins[ss_pin_i], l);
+						if (match_l == l) {	// Avoid noise triggering
+							Serial.printf("[From Beacon to pin %d |2] Slave: 0x%02X Beacon=1 L=%d\n", _spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
+							// delayMicroseconds(200);
+							receivePayload(_spi_cs_pins[ss_pin_i], l);
+							Serial.print("[From Slave] Received: ");
+							for (int i = 0; i < l; i++) {
+								Serial.print((char)_data_buffer[i]);
+							}
+							Serial.println();
+							
+							JsonMessage new_message(
+								reinterpret_cast<const char*>( _data_buffer ),
+								static_cast<size_t>( l )
+							);
+							_startTransmission(new_message);
+						}
 					}
 				}
 			}
@@ -115,10 +130,17 @@ protected:
 			Serial.print(millis() - _reference_time);
 			#endif
 
-			const char* message_buffer = json_message._read_buffer();
-			size_t message_length = json_message.get_length();
+			size_t len = json_message.serialize_json(
+				reinterpret_cast<char*>( _data_buffer ),
+				TALKIE_BUFFER_SIZE
+			);
 
-			// sendBroadcastSPI(_ss_pins, _ss_pins_count, message_buffer, message_length);
+			Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
+
+			broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
+			broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
+			
+			Serial.printf("[To Slave] Sent %d bytes\n", len);
 			
 			#ifdef BROADCAST_SPI_DEBUG
 			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
