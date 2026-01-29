@@ -72,10 +72,11 @@ void broadcastPayload(int* ss_pins, uint8_t ss_pins_count, uint8_t length = 0) {
 
 
 uint8_t sendBeacon(int ss_pin, uint8_t length = 0) {
-    uint8_t rx_byte __attribute__((aligned(4))) = 0b10000000 | length;
+    uint8_t tx_byte __attribute__((aligned(4))) = 0b10000000 | length;
+    uint8_t rx_byte __attribute__((aligned(4))) = 0;
     spi_transaction_t t = {};
     t.length = 1 * 8;	// Bytes to bits
-    t.tx_buffer = nullptr;
+    t.tx_buffer = &tx_byte;
     t.rx_buffer = &rx_byte;
 
     digitalWrite(ss_pin, LOW);
