@@ -17,11 +17,12 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #define VSPI_CS 5
 #define DATA_SIZE 128
+// Convert 3000ms to FreeRTOS ticks
+#define TIMEOUT_MS 3000
 
 uint8_t rx_buffer[DATA_SIZE] __attribute__((aligned(4)));
 uint8_t tx_buffer[DATA_SIZE] __attribute__((aligned(4)));
 uint8_t cmd_byte __attribute__((aligned(4)));
-bool pending_send __attribute__((aligned(4))) = false;
 
 void setup() {
     Serial.begin(115200);
@@ -44,8 +45,12 @@ void setup() {
     Serial.println("Slave ready");
 }
 
+
 void loop() {
 	
+	// Convert milliseconds to FreeRTOS ticks
+	const TickType_t timeout_ticks = TIMEOUT_MS / portTICK_PERIOD_MS;
+
 	int data_len = 0;
     bool slave_has_data = (random(100) < 10);
     if (slave_has_data) {
@@ -56,7 +61,7 @@ void loop() {
     t1.length = 1 * 8;	// Bytes to bits
     t1.rx_buffer = &cmd_byte;
     t1.tx_buffer = nullptr;
-    spi_slave_transmit(VSPI_HOST, &t1, portMAX_DELAY);
+    spi_slave_transmit(VSPI_HOST, &t1, timeout_ticks);
     
     uint8_t d = (cmd_byte >> 7) & 0x01;
     uint8_t l = cmd_byte & 0x7F;
@@ -76,7 +81,7 @@ void loop() {
 				t2.length = l * 8;	// Bytes to bits
 				t2.rx_buffer = rx_buffer;
 				t2.tx_buffer = nullptr;
-				spi_slave_transmit(VSPI_HOST, &t2, portMAX_DELAY);
+				spi_slave_transmit(VSPI_HOST, &t2, timeout_ticks);
 				
 				Serial.print("Received: ");
 				for (int i = 0; i < l; i++) {
@@ -107,7 +112,7 @@ void loop() {
         t2.length = 1 * 8;	// Bytes to bits
         t2.rx_buffer = nullptr;
         t2.tx_buffer = &response_byte;
-        spi_slave_transmit(VSPI_HOST, &t2, portMAX_DELAY);
+        spi_slave_transmit(VSPI_HOST, &t2, timeout_ticks);
         
         if (slave_has_data) {
             delayMicroseconds(100);
@@ -115,9 +120,7 @@ void loop() {
             t3.length = data_len * 8;	// Bytes to bits
             t3.rx_buffer = nullptr;
             t3.tx_buffer = tx_buffer;
-			// MAKE IT THAT THE TRANSMISSION SETS pending_send TO FALSE WHEN TRULY SENT
-			pending_send = true;
-            spi_slave_transmit(VSPI_HOST, &t3, portMAX_DELAY);
+            spi_slave_transmit(VSPI_HOST, &t3, timeout_ticks);
         }
     }
 }
