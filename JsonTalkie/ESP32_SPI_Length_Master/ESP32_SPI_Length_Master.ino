@@ -21,34 +21,31 @@ https://github.com/ruiseixasm/JsonTalkie
 spi_device_handle_t spi;
 uint8_t data_buffer[DATA_SIZE] __attribute__((aligned(4)));
 
-
 int spi_cs_pins[] = {4, HSPI_CS};
 
-void send1Byte(uint8_t data) {
+
+void sendBroadcastByte(uint8_t data, int* ss_pins, uint8_t ss_pins_count) {
     static uint8_t tx_byte __attribute__((aligned(4))) = 0;
     tx_byte = data;
     spi_transaction_t t = {};
     t.length = 1 * 8;	// Bytes to bits
     t.tx_buffer = &tx_byte;
     t.rx_buffer = nullptr;
+
+    for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+        digitalWrite(ss_pins[ss_pin_i], LOW);
+    }
     spi_device_transmit(spi, &t);
+    for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+        digitalWrite(ss_pins[ss_pin_i], HIGH);
+    }
 }
 
-uint8_t receive1Byte() {
-    static uint8_t rx_byte __attribute__((aligned(4))) = 0;
-    spi_transaction_t t = {};
-    t.length = 1 * 8;	// Bytes to bits
-    t.tx_buffer = nullptr;
-    t.rx_buffer = &rx_byte;
-    spi_device_transmit(spi, &t);
-    return rx_byte;
-}
-
-void sendLengthBytes(size_t length) {
+void sendBroadcastLengthBytes(size_t length, int* ss_pins, uint8_t ss_pins_count) {
 
 	if (length > DATA_SIZE) return;
 	
-    Serial.print("sendLengthBytes() first 10: ");
+    Serial.print("sendBroadcastLengthBytes() first 10: ");
     for(int i = 0; i < length; i++) {
         Serial.printf("%02X ", data_buffer[i]);
     }
@@ -58,10 +55,32 @@ void sendLengthBytes(size_t length) {
     t.length = length * 8;	// Bytes to bits
     t.tx_buffer = data_buffer;
     t.rx_buffer = nullptr;
+
+    for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+        digitalWrite(ss_pins[ss_pin_i], LOW);
+    }
     spi_device_transmit(spi, &t);
+    for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
+        digitalWrite(ss_pins[ss_pin_i], HIGH);
+    }
 }
 
-void receiveLengthBytes(size_t length) {
+
+uint8_t receive1Byte(int ss_pin) {
+    static uint8_t rx_byte __attribute__((aligned(4))) = 0;
+    spi_transaction_t t = {};
+    t.length = 1 * 8;	// Bytes to bits
+    t.tx_buffer = nullptr;
+    t.rx_buffer = &rx_byte;
+
+    digitalWrite(ss_pin, LOW);
+    spi_device_transmit(spi, &t);
+    digitalWrite(ss_pin, HIGH);
+
+    return rx_byte;
+}
+
+void receiveLengthBytes(size_t length, int ss_pin) {
 	
 	if (length > DATA_SIZE) return;
 	
@@ -69,8 +88,12 @@ void receiveLengthBytes(size_t length) {
     t.length = length * 8;	// Bytes to bits
     t.tx_buffer = nullptr;
     t.rx_buffer = data_buffer;
+    
+    digitalWrite(ss_pin, LOW);
     spi_device_transmit(spi, &t);
+    digitalWrite(ss_pin, HIGH);
 }
+
 
 void setup() {
     Serial.begin(115200);
@@ -97,6 +120,7 @@ void setup() {
     Serial.println("Master ready");
 }
 
+
 void loop() {
     static uint32_t cycle = 0;
     Serial.printf("\n=== Cycle %lu ===\n", cycle++);
@@ -106,13 +130,13 @@ void loop() {
         int len = snprintf((char*)data_buffer, 128, "MasterData_%lu:Value=%ld", millis(), random(10000));
         if (len > 127) len = 127;
         
-        send1Byte(len); // D=0, L=len
+        sendBroadcastByte(len); // D=0, L=len
         delayMicroseconds(200);
-        sendLengthBytes(len);
+        sendBroadcastLengthBytes(len);
         
         Serial.printf("[From Master] Sent %d bytes\n", len);
     } else {
-        send1Byte(0b10000000); // D=1, L=0
+        sendBroadcastByte(0b10000000); // D=1, L=0
         delayMicroseconds(200);
         
         uint8_t response = receive1Byte();
