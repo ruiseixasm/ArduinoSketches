@@ -101,7 +101,7 @@ void loop() {
 
     } else {    // Beacon
         
-    	Serial.printf("\n[From Slave] Cmd: 0x%02X Beacon=0 L=%d ", cmd_byte, length_byte);
+    	Serial.printf("\n[From Slave] Cmd: 0x%02X Beacon=1 L=%d ", cmd_byte, length_byte);
     
         if (length_byte > 0) {
             delayMicroseconds(100);
