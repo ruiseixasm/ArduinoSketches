@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "driver/spi_master.h"
 
 
-#define BROADCAST_SPI_DEBUG
+// #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 #define border_delay_us 10
@@ -84,15 +84,15 @@ protected:
 
 						receivePayload(_spi_cs_pins[actual_pin_index], l);
 
-						// #ifdef BROADCAST_SPI_DEBUG
-						// 	Serial.printf("[From Beacon to pin %d] Slave: 0x%02X Beacon=1 L=%d\n",
-						// 		_spi_cs_pins[actual_pin_index], 0b10000000 | l, l);
-						// 	Serial.print("[From Slave] Received: ");
-						// 	for (int i = 0; i < l; i++) {
-						// 		Serial.print((char)_data_buffer[i]);
-						// 	}
-						// 	Serial.println();
-						// #endif
+						#ifdef BROADCAST_SPI_DEBUG
+							Serial.printf("[From Beacon to pin %d] Slave: 0x%02X Beacon=1 L=%d\n",
+								_spi_cs_pins[actual_pin_index], 0b10000000 | l, l);
+							Serial.print("[From Slave] Received: ");
+							for (int i = 0; i < l; i++) {
+								Serial.print((char)_data_buffer[i]);
+							}
+							Serial.println();
+						#endif
 						
 						JsonMessage new_message(
 							reinterpret_cast<const char*>( _data_buffer ),
@@ -117,12 +117,12 @@ protected:
 				_reference_time = millis();
 			#endif
 
-			// #ifdef BROADCAST_SPI_DEBUG
-			// Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
-			// Serial.write(json_message._read_buffer(), json_message.get_length());
-			// Serial.print(F("\n\t\t\t\t\tsend2: Sent length: "));
-			// Serial.println(json_message.get_length());
-			// #endif
+			#ifdef BROADCAST_SPI_DEBUG
+			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
+			Serial.write(json_message._read_buffer(), json_message.get_length());
+			Serial.print(F("\n\t\t\t\t\tsend2: Sent length: "));
+			Serial.println(json_message.get_length());
+			#endif
 			
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 			Serial.print(" | ");
@@ -137,11 +137,11 @@ protected:
 			broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
 			broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
 			
-			// #ifdef BROADCAST_SPI_DEBUG
-			// 	Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
-			// 	Serial.printf("[To Slave] Sent %d bytes\n", len);
-			// 	Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
-			// #endif
+			#ifdef BROADCAST_SPI_DEBUG
+				Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
+				Serial.printf("[To Slave] Sent %d bytes\n", len);
+				Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
+			#endif
 
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
 				Serial.print(" | ");
@@ -291,7 +291,6 @@ public:
 		} else {
 			Serial.println("initiate1: Socket NOT initiated!");
 		}
-	
 		#endif
     }
 };

@@ -21,7 +21,7 @@ extern "C" {
 }
 
 
-// #define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 
@@ -94,7 +94,7 @@ protected:
 							_spi_state = RX_PAYLOAD;
 							queue_rx(received_length);
 							
-							#ifdef BROADCASTSOCKET_DEBUG
+							#ifdef BROADCAST_SPI_DEBUG
 								Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
 									_cmd_byte, beacon, received_length);
 							#endif
@@ -102,7 +102,7 @@ protected:
 							return;
 						} else {
 
-							#ifdef BROADCASTSOCKET_DEBUG
+							#ifdef BROADCAST_SPI_DEBUG
 								Serial.println("Master ping");
 							#endif
 						}
@@ -112,7 +112,7 @@ protected:
 						_spi_state = TX_PAYLOAD;
 						queue_tx(received_length);
 						
-						#ifdef BROADCASTSOCKET_DEBUG
+						#ifdef BROADCAST_SPI_DEBUG
 							Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
 								_cmd_byte, beacon, received_length);
 						#endif
@@ -127,7 +127,7 @@ protected:
 				case RX_PAYLOAD:
 				{
 
-					#ifdef BROADCASTSOCKET_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG
 						Serial.printf("Received %u bytes: ", _active_length);
 						for (uint8_t i = 0; i < _active_length; i++) {
 							char c = _rx_buffer[i];
@@ -155,7 +155,7 @@ protected:
 				case TX_PAYLOAD:
 				{
 
-					#ifdef BROADCASTSOCKET_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG
 						Serial.printf("Sent %u bytes\n", _active_length);
 					#endif
 
@@ -184,7 +184,7 @@ protected:
 
 				if ((uint16_t)millis() - start_waiting > 1 * 1000) {
 
-					#ifdef BROADCASTSOCKET_DEBUG
+					#ifdef BROADCAST_SPI_DEBUG
 						Serial.println(F("\t_unlockSendingBuffer: NOT available sending buffer"));
 					#endif
 
@@ -268,7 +268,7 @@ public:
 		queue_cmd();   // always armed
 		_initiated = true;
 
-		#ifdef BROADCASTSOCKET_DEBUG
+		#ifdef BROADCAST_SPI_DEBUG
 			Serial.println("Slave ready");
 		#endif
     }
