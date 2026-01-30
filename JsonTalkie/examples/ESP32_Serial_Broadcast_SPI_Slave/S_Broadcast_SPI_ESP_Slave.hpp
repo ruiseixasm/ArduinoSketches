@@ -76,6 +76,12 @@ protected:
 
 		if (_initiated) {
 			
+			// Where the receiving get is triggered
+    		spi_slave_transaction_t *ret;
+			if (spi_slave_get_trans_result(_host, &ret, 0) != ESP_OK) {
+				return;
+			}
+
 			/* === SPI "ISR" === */
 
 			switch (_spi_state) {
@@ -167,8 +173,7 @@ protected:
 				TALKIE_BUFFER_SIZE
 			);			
 
-    		spi_slave_transaction_t *ret;
-			return spi_slave_get_trans_result(VSPI_HOST, &ret, 0) == ESP_OK;
+			return true;
 		}
         return false;
     }
