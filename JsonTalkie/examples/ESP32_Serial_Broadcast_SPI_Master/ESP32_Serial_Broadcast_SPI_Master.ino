@@ -12,7 +12,8 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
 
-// To upload a sketch to an ESP32, when the "......." appears press the button BOOT for a while
+
+// #define SKETCH_DEBUG
 
 // LED_BUILTIN is already defined by ESP32 platform
 // Typically GPIO2 for most ESP32 boards
@@ -71,9 +72,12 @@ void setup() {
     
     // Then start Serial
     Serial.begin(115200);
-    delay(2000); // Important: Give time for serial to initialize
-    Serial.println("\n\n=== ESP32 with Broadcast SPI STARTING ===");
+    delay(500); // Important: Give time for serial to initialize
 
+	#ifdef SKETCH_DEBUG
+        Serial.println("\n\n=== ESP32 with Broadcast SPI STARTING ===");
+    #endif
+    
     // Add a small LED blink to confirm code is running
     digitalWrite(LED_BUILTIN, HIGH);
     delay(100);
@@ -84,7 +88,11 @@ void setup() {
     digitalWrite(LED_BUILTIN, LOW);
     
     // Setting up broadcast sockets
-    Serial.println("Setting up broadcast sockets...");
+
+	#ifdef SKETCH_DEBUG
+        Serial.println("Setting up broadcast sockets...");
+    #endif
+
 	// ================== INITIALIZE HSPI ==================
 	// Initialize SPI with HSPI pins: MOSI=13, MISO=12, SCK=14
     spi_socket.begin(13, 12, 14);	// MOSI, MISO, SCK
@@ -92,7 +100,9 @@ void setup() {
     // Finally, sets the blue led as always HIGH signalling this way to be a SPI Master
     digitalWrite(LED_BUILTIN, HIGH);
 
-    Serial.println("Setup completed - Ready for JSON communication!");
+	#ifdef SKETCH_DEBUG
+        Serial.println("Setup completed - Ready for JSON communication!");
+    #endif
 }
 
 
