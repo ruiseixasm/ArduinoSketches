@@ -19,7 +19,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "driver/spi_master.h"
 
 
-// #define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 
