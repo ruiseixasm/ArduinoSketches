@@ -58,7 +58,6 @@ protected:
 	spi_slave_transaction_t _data_trans;
 
 	SpiState _spi_state = WAIT_CMD;
-	uint8_t _active_length = 0;
 
 
     // Constructor
@@ -79,57 +78,59 @@ protected:
 				return;
 			}
 
+			// At this point a queued element is consumed, as to queue a new one afterwards !
+
 			/* === SPI "ISR" === */
+
+			const bool beacon = (_cmd_byte >> 7) & 0x01;
+			const uint8_t cmd_length = _cmd_byte & 0x7F;
 
 			switch (_spi_state) {
 
 				case WAIT_CMD:
 				{
-					bool beacon = (_cmd_byte >> 7) & 0x01;
-					uint8_t received_length = _cmd_byte & 0x7F;
-
-					if (!beacon) {  // master → slave
-						if (received_length > 0 && received_length <= TALKIE_BUFFER_SIZE) {
-							_active_length = received_length;
-							_spi_state = RX_PAYLOAD;
-							queue_rx(received_length);
+					if (beacon) {
+						if (cmd_length > 0 && cmd_length == _length_byte) {	// beacon
+							
+							_spi_state = TX_PAYLOAD;
+							queue_tx(cmd_length);
 							
 							// #ifdef BROADCAST_SPI_DEBUG
-							// 	Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
-							// 		_cmd_byte, beacon, received_length);
+							// 	Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte, beacon, cmd_length);
 							// #endif
-
-							return;
+							
 						} else {
-
-							#ifdef BROADCAST_SPI_DEBUG
-								Serial.println("Master ping");
-							#endif
+							queue_cmd();
 						}
 
-					} else if (received_length > 0 && received_length == _length_byte) {	// beacon
-						_active_length = received_length;
-						_spi_state = TX_PAYLOAD;
-						queue_tx(received_length);
+					} else if (cmd_length > 0 && cmd_length <= TALKIE_BUFFER_SIZE) {
+
+						_spi_state = RX_PAYLOAD;
+						queue_rx(cmd_length);
 						
 						// #ifdef BROADCAST_SPI_DEBUG
 						// 	Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
-						// 		_cmd_byte, beacon, received_length);
+						// 		_cmd_byte, beacon, cmd_length);
 						// #endif
 
-						return;
-					}
+					} else {
 
-					queue_cmd();
+						#ifdef BROADCAST_SPI_DEBUG
+							Serial.println("Master ping");
+						#endif
+
+						queue_cmd();
+					}
 				}
 				break;
 				
 				case RX_PAYLOAD:
 				{
+					_spi_state = WAIT_CMD;
 
 					// #ifdef BROADCAST_SPI_DEBUG
-					// 	Serial.printf("Received %u bytes: ", _active_length);
-					// 	for (uint8_t i = 0; i < _active_length; i++) {
+					// 	Serial.printf("Received %u bytes: ", cmd_length);
+					// 	for (uint8_t i = 0; i < cmd_length; i++) {
 					// 		char c = _rx_buffer[i];
 					// 		if (c >= 32 && c <= 126) Serial.print(c);
 					// 		else Serial.printf("[%02X]", c);
@@ -139,14 +140,13 @@ protected:
 
 					JsonMessage new_message(
 						reinterpret_cast<const char*>( _rx_buffer ),
-						static_cast<size_t>( _active_length )
+						static_cast<size_t>( cmd_length )
 					);
 
 					// Needs the queue a new command, otherwise nothing is processed again (lock)
 					// Real scenario if at this moment a payload is still in the queue to be sent and now
 					// has no queue to be picked up
-					_spi_state = WAIT_CMD;
-					queue_cmd();
+					queue_cmd();	// After the reading above to avoid _rx_buffer corruption
 					
 					_startTransmission(new_message);
 				}
@@ -154,18 +154,16 @@ protected:
 				
 				case TX_PAYLOAD:
 				{
+					_spi_state = WAIT_CMD;
 
 					// #ifdef BROADCAST_SPI_DEBUG
-					// 	Serial.printf("Sent %u bytes\n", _active_length);
+					// 	Serial.printf("Sent %u bytes\n", cmd_length);
 					// #endif
 
-					_length_byte = 0;
-					_spi_state = WAIT_CMD;
+					_length_byte = 0;	// payload was sent
 					queue_cmd();
 				}
 				break;
-				
-				default: break;
 			}
 		}
     }
