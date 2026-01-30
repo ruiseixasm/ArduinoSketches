@@ -75,8 +75,6 @@ protected:
 
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 
-					// NEEDS TO BE REVISED !!!
-
 					uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
 					
 					if (l > 0) {
