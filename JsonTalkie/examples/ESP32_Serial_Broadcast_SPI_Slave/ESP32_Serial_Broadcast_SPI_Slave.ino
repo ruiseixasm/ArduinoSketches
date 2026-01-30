@@ -77,7 +77,7 @@ void setup() {
     Serial.println("Setting up broadcast sockets...");
 	// ================== INITIALIZE VSPI ==================
 	// Initialize SPI with VSPI pins: MOSI=23, MISO=19, SCK=18, CS=5
-    spi_socket.begin(13, 12, 14, 5);	// MOSI, MISO, SCK, CS
+    spi_socket.begin(23, 19, 18, 5);	// MOSI, MISO, SCK, CS
 
     // Finally, sets the blue led as always LOW signalling this way to be a SPI Slave
     digitalWrite(LED_BUILTIN, LOW);
