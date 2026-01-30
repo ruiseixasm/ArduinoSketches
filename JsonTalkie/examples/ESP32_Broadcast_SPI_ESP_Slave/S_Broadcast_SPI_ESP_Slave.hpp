@@ -94,10 +94,10 @@ protected:
 							_spi_state = RX_PAYLOAD;
 							queue_rx(received_length);
 							
-							#ifdef BROADCAST_SPI_DEBUG
-								Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
-									_cmd_byte, beacon, received_length);
-							#endif
+							// #ifdef BROADCAST_SPI_DEBUG
+							// 	Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
+							// 		_cmd_byte, beacon, received_length);
+							// #endif
 
 							return;
 						} else {
@@ -112,10 +112,10 @@ protected:
 						_spi_state = TX_PAYLOAD;
 						queue_tx(received_length);
 						
-						#ifdef BROADCAST_SPI_DEBUG
-							Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
-								_cmd_byte, beacon, received_length);
-						#endif
+						// #ifdef BROADCAST_SPI_DEBUG
+						// 	Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
+						// 		_cmd_byte, beacon, received_length);
+						// #endif
 
 						return;
 					}
@@ -127,15 +127,15 @@ protected:
 				case RX_PAYLOAD:
 				{
 
-					#ifdef BROADCAST_SPI_DEBUG
-						Serial.printf("Received %u bytes: ", _active_length);
-						for (uint8_t i = 0; i < _active_length; i++) {
-							char c = _rx_buffer[i];
-							if (c >= 32 && c <= 126) Serial.print(c);
-							else Serial.printf("[%02X]", c);
-						}
-						Serial.println();
-					#endif
+					// #ifdef BROADCAST_SPI_DEBUG
+					// 	Serial.printf("Received %u bytes: ", _active_length);
+					// 	for (uint8_t i = 0; i < _active_length; i++) {
+					// 		char c = _rx_buffer[i];
+					// 		if (c >= 32 && c <= 126) Serial.print(c);
+					// 		else Serial.printf("[%02X]", c);
+					// 	}
+					// 	Serial.println();
+					// #endif
 
 					JsonMessage new_message(
 						reinterpret_cast<const char*>( _rx_buffer ),
@@ -155,9 +155,9 @@ protected:
 				case TX_PAYLOAD:
 				{
 
-					#ifdef BROADCAST_SPI_DEBUG
-						Serial.printf("Sent %u bytes\n", _active_length);
-					#endif
+					// #ifdef BROADCAST_SPI_DEBUG
+					// 	Serial.printf("Sent %u bytes\n", _active_length);
+					// #endif
 
 					_length_byte = 0;
 					_spi_state = WAIT_CMD;
