@@ -168,11 +168,7 @@ protected:
 			);			
 
     		spi_slave_transaction_t *ret;
-			if (spi_slave_get_trans_result(VSPI_HOST, &ret, 0) != ESP_OK) {
-				return false;
-			}
-
-			return true;
+			return spi_slave_get_trans_result(VSPI_HOST, &ret, 0) == ESP_OK;
 		}
         return false;
     }
