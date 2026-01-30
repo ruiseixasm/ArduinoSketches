@@ -44,13 +44,11 @@ auto& spi_socket = S_Broadcast_SPI_ESP_Slave::instance(VSPI_HOST);
 
 
 // SETTING THE REPEATER
-BroadcastSocket* uplinked_sockets[] = { &serial_socket };
+BroadcastSocket* uplinked_sockets[] = { &serial_socket, &spi_socket };
 JsonTalker* downlinked_talkers[] = { &l_led };
-BroadcastSocket* downlinked_sockets[] = { &spi_socket };
 const MessageRepeater message_repeater(
 		uplinked_sockets, sizeof(uplinked_sockets)/sizeof(BroadcastSocket*),
-		downlinked_talkers, sizeof(downlinked_talkers)/sizeof(JsonTalker*),
-		downlinked_sockets, sizeof(downlinked_sockets)/sizeof(BroadcastSocket*)
+		downlinked_talkers, sizeof(downlinked_talkers)/sizeof(JsonTalker*)
 	);
 
 
@@ -86,6 +84,7 @@ void setup() {
 	// ================== INITIALIZE VSPI ==================
 	// Initialize SPI with VSPI pins: MOSI=23, MISO=19, SCK=18, CS=5
     spi_socket.begin(23, 19, 18, 5);	// MOSI, MISO, SCK, CS
+	spi_socket.bridgeSocket();	// Makes sure it accepts LOCAL messages too
 
     // Finally, sets the blue led as always LOW signalling this way to be a SPI Slave
     digitalWrite(LED_BUILTIN, LOW);
