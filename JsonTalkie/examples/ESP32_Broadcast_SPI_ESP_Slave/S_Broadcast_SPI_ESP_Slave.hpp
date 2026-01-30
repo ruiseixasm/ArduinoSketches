@@ -54,7 +54,7 @@ protected:
 	uint8_t _cmd_byte __attribute__((aligned(4)));
 	uint8_t _length_byte __attribute__((aligned(4))) = 0;
 
-	SpiState _spi_state;
+	SpiState _spi_state = WAIT_CMD;
 	spi_slave_transaction_t _transaction;
 
 
