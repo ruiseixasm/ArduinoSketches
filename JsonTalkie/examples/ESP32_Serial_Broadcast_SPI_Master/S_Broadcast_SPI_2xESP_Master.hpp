@@ -276,7 +276,7 @@ public:
 			Serial.print(F("\t\tinitiate3: SS pins: "));
 			
 			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				Serial.print(_ss_pins[ss_pin_i]);
+				Serial.print(_spi_cs_pins[ss_pin_i]);
 				Serial.print(F(", "));
 			}
 			Serial.println();
