@@ -83,7 +83,7 @@ protected:
 							receivePayload(_spi_cs_pins[ss_pin_i], l);
 
 							#ifdef BROADCAST_SPI_DEBUG
-								Serial.printf("[From Beacon to pin %d |2] Slave: 0x%02X Beacon=1 L=%d\n",
+								Serial.printf("[From Beacon to pin %d] Slave: 0x%02X Beacon=1 L=%d\n",
 									_spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
 								Serial.print("[From Slave] Received: ");
 								for (int i = 0; i < l; i++) {
