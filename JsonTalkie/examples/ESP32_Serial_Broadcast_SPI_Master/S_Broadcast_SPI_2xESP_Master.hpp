@@ -22,8 +22,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
-#define receive_delay_us 100
-#define send_delay_us 100
+#define receive_delay_us 20
+#define send_delay_us 20
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
@@ -142,7 +142,7 @@ protected:
 			delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 			broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
 			_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
-			delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
+			// delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 			
 			// #ifdef BROADCAST_SPI_DEBUG
 			// 	Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
