@@ -22,8 +22,8 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
-#define receive_delay_us 10
-#define send_delay_us 10
+#define receive_delay_us 100
+#define send_delay_us 100
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
@@ -78,7 +78,7 @@ protected:
 					uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
 					
 					if (l > 0) {
-						
+
 						delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 						uint8_t match_l = sendBeacon(_spi_cs_pins[ss_pin_i], l);
 						if (match_l == l) {	// Avoid noise triggering
