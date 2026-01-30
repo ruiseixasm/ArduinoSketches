@@ -174,7 +174,7 @@ protected:
 
 		if (_initiated) {
 			
-			uint16_t start_waiting = (uint16_t)millis();
+			const uint16_t start_waiting = (uint16_t)millis();
 			while (_length_byte > 0) {
 				// There is NO need to do any of this
     			// yield();          // or vTaskDelay(1)
@@ -194,8 +194,6 @@ protected:
 				reinterpret_cast<char*>( _tx_buffer ),
 				TALKIE_BUFFER_SIZE
 			);
-			// // Queues a new send
-			// queue_cmd();
 			return true;
 		}
         return false;
