@@ -52,7 +52,7 @@ protected:
 	uint8_t _rx_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 	uint8_t _tx_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 	uint8_t _cmd_byte __attribute__((aligned(4)));
-	volatile uint8_t _sending_length __attribute__((aligned(4))) = 0;
+	uint8_t _length_byte __attribute__((aligned(4))) = 0;
 
 	spi_slave_transaction_t _cmd_trans;
 	spi_slave_transaction_t _data_trans;
@@ -107,7 +107,7 @@ protected:
 							#endif
 						}
 
-					} else if (received_length > 0 && received_length == _sending_length) {	// beacon
+					} else if (received_length > 0 && received_length == _length_byte) {	// beacon
 						_active_length = received_length;
 						_spi_state = TX_PAYLOAD;
 						queue_tx(received_length);
@@ -159,7 +159,7 @@ protected:
 						Serial.printf("Sent %u bytes\n", _active_length);
 					#endif
 
-					_sending_length = 0;
+					_length_byte = 0;
 					_spi_state = WAIT_CMD;
 					queue_cmd();
 				}
@@ -177,7 +177,7 @@ protected:
 		if (_initiated) {
 			
 			uint16_t start_waiting = (uint16_t)millis();
-			while (_sending_length > 0) {
+			while (_length_byte > 0) {
     			// yield();          // or vTaskDelay(1)
     			vTaskDelay(1);   // ← allows SPI driver + DMA completion
 				if ((uint16_t)millis() - start_waiting > 1 * 1000) {
@@ -190,7 +190,7 @@ protected:
 				}
 			}
 			
-			_sending_length = (uint8_t)json_message.serialize_json(
+			_length_byte = (uint8_t)json_message.serialize_json(
 				reinterpret_cast<char*>( _tx_buffer ),
 				TALKIE_BUFFER_SIZE
 			);			
@@ -208,9 +208,11 @@ protected:
 		t->length    = 8;
 		// Full-Duplex
 		t->rx_buffer = &_cmd_byte;
+		t->tx_buffer = &_length_byte;	// <-- EXTREMELY IMPORTANT LINE
+		// NO NEED TO BE VOLATILE
 		// If you see 80 on the Master side it means the Slave wasn't given the time to respond!
-		t->tx_buffer = const_cast<const uint8_t*>(&_sending_length);	// <-- EXTREMELY IMPORTANT LINE
-		// t->tx_buffer = (const void*)(&_sending_length);	// Also works
+		// t->tx_buffer = const_cast<const uint8_t*>(&_length_byte);
+		// t->tx_buffer = (const void*)(&_length_byte);	// Also works
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
 	}
 
