@@ -62,7 +62,7 @@ void setup() {
     
     // Then start Serial
     Serial.begin(115200);
-    delay(500); // Important: Give time for serial to initialize
+    delay(2000); // Important: Give time for serial to initialize
 
 	#ifdef SKETCH_DEBUG
         Serial.println("\n\n=== ESP32 with Broadcast SPI STARTING ===");

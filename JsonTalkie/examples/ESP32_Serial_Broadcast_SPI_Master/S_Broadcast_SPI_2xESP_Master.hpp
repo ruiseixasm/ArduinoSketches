@@ -49,6 +49,9 @@ protected:
 	spi_device_handle_t _spi;
 	uint8_t _data_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 
+	// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
+	uint16_t _beacon_timeout = (uint16_t)micros();
+
 
     // Constructor
     S_Broadcast_SPI_2xESP_Master(const int* ss_pins, uint8_t ss_pins_count, spi_host_device_t host)
@@ -61,11 +64,8 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
 
-		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
-		static uint16_t timeout = (uint16_t)micros();
-
-		if (micros() - timeout > 100) {
-			timeout = (uint16_t)micros();
+		if (micros() - _beacon_timeout > 100) {
+			_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
 
 			if (_initiated) {
 
@@ -86,15 +86,17 @@ protected:
 							delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 							receivePayload(_spi_cs_pins[ss_pin_i], l);
 
-							#ifdef BROADCAST_SPI_DEBUG
-								Serial.printf("[From Beacon to pin %d] Slave: 0x%02X Beacon=1 L=%d\n",
-									_spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
-								Serial.print("[From Slave] Received: ");
-								for (int i = 0; i < l; i++) {
-									Serial.print((char)_data_buffer[i]);
-								}
-								Serial.println();
-							#endif
+							_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
+
+							// #ifdef BROADCAST_SPI_DEBUG
+							// 	Serial.printf("[From Beacon to pin %d] Slave: 0x%02X Beacon=1 L=%d\n",
+							// 		_spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
+							// 	Serial.print("[From Slave] Received: ");
+							// 	for (int i = 0; i < l; i++) {
+							// 		Serial.print((char)_data_buffer[i]);
+							// 	}
+							// 	Serial.println();
+							// #endif
 							
 							JsonMessage new_message(
 								reinterpret_cast<const char*>( _data_buffer ),
@@ -139,6 +141,7 @@ protected:
 			broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
 			delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 			broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
+			_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
 			delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 			
 			// #ifdef BROADCAST_SPI_DEBUG
