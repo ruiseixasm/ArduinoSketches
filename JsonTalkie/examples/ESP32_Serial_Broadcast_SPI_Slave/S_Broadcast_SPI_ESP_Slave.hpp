@@ -202,6 +202,7 @@ protected:
 		t->length    = 8;
 		// Full-Duplex
 		t->rx_buffer = &_cmd_byte;
+		// If you see 80 on the Master side it means the Slave wasn't given the time to respond!
 		t->tx_buffer = &_sending_length;	// <-- EXTREMELY IMPORTANT LINE
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
 	}
