@@ -13,7 +13,7 @@ https://github.com/ruiseixasm/JsonTalkie
 */
 
 
-#define SKETCH_DEBUG
+// #define SKETCH_DEBUG
 
 // LED_BUILTIN is already defined by ESP32 platform
 // Typically GPIO2 for most ESP32 boards
