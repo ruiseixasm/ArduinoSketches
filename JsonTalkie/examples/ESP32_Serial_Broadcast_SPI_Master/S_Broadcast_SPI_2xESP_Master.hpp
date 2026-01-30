@@ -20,9 +20,6 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 // #define BROADCAST_SPI_DEBUG
-// #define BROADCAST_SPI_DEBUG_1
-// #define BROADCAST_SPI_DEBUG_2
-// #define BROADCAST_SPI_DEBUG_NEW
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 
@@ -74,7 +71,6 @@ protected:
 				_reference_time = millis();
 				#endif
 
-
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 
 					uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
@@ -83,14 +79,18 @@ protected:
 						// delayMicroseconds(200);
 						uint8_t match_l = sendBeacon(_spi_cs_pins[ss_pin_i], l);
 						if (match_l == l) {	// Avoid noise triggering
-							Serial.printf("[From Beacon to pin %d |2] Slave: 0x%02X Beacon=1 L=%d\n", _spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
-							// delayMicroseconds(200);
+
 							receivePayload(_spi_cs_pins[ss_pin_i], l);
-							Serial.print("[From Slave] Received: ");
-							for (int i = 0; i < l; i++) {
-								Serial.print((char)_data_buffer[i]);
-							}
-							Serial.println();
+
+							#ifdef BROADCAST_SPI_DEBUG
+								Serial.printf("[From Beacon to pin %d |2] Slave: 0x%02X Beacon=1 L=%d\n",
+									_spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
+								Serial.print("[From Slave] Received: ");
+								for (int i = 0; i < l; i++) {
+									Serial.print((char)_data_buffer[i]);
+								}
+								Serial.println();
+							#endif
 							
 							JsonMessage new_message(
 								reinterpret_cast<const char*>( _data_buffer ),
@@ -111,11 +111,8 @@ protected:
 		if (_initiated) {
 			
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			Serial.print("\n\tsend: ");
-			#endif
-				
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			_reference_time = millis();
+				Serial.print("\n\tsend: ");
+				_reference_time = millis();
 			#endif
 
 			#ifdef BROADCAST_SPI_DEBUG
@@ -134,21 +131,19 @@ protected:
 				reinterpret_cast<char*>( _data_buffer ),
 				TALKIE_BUFFER_SIZE
 			);
-
-			Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
-
+			
 			broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
 			broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
 			
-			Serial.printf("[To Slave] Sent %d bytes\n", len);
-			
 			#ifdef BROADCAST_SPI_DEBUG
-			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
+				Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
+				Serial.printf("[To Slave] Sent %d bytes\n", len);
+				Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
 			#endif
 
 			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			Serial.print(" | ");
-			Serial.print(millis() - _reference_time);
+				Serial.print(" | ");
+				Serial.print(millis() - _reference_time);
 			#endif
 
 			return true;
@@ -240,6 +235,13 @@ public:
 
     void begin(int mosi_io_num, int miso_io_num, int sclk_io_num) {
 		
+		// ================== CONFIGURE SS PINS ==================
+		// CRITICAL: Configure all SS pins as outputs and set HIGH
+		for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+			pinMode(_spi_cs_pins[ss_pin_i], OUTPUT);
+			digitalWrite(_spi_cs_pins[ss_pin_i], HIGH);
+		}
+
 		spi_bus_config_t buscfg = {};
 		buscfg.mosi_io_num = mosi_io_num;
 		buscfg.miso_io_num = miso_io_num;
@@ -260,13 +262,6 @@ public:
 		spi_bus_initialize(_host, &buscfg, SPI_DMA_CH_AUTO);
 		spi_bus_add_device(_host, &devcfg, &_spi);
 		
-		// ================== CONFIGURE SS PINS ==================
-		// CRITICAL: Configure all SS pins as outputs and set HIGH
-		for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-			pinMode(_spi_cs_pins[ss_pin_i], OUTPUT);
-			digitalWrite(_spi_cs_pins[ss_pin_i], HIGH);
-		}
-
 		_initiated = true;
 
 		#ifdef BROADCAST_SPI_DEBUG
