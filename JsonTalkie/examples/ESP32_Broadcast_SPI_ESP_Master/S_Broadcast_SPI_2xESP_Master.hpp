@@ -22,7 +22,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
-#define border_delay_us 10
+#define border_delay_us 20
 #define padding_delay_us 5
 
 
