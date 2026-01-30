@@ -101,7 +101,7 @@ protected:
 						_startTransmission(new_message);
 					}
 				}
-				actual_pin_index = ++actual_pin_index % _ss_pins_count;
+				actual_pin_index = (actual_pin_index + 1) % _ss_pins_count;
 			}
 		}
     }
