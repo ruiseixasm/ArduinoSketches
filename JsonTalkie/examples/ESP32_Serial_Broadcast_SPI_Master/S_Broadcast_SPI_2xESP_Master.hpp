@@ -49,9 +49,6 @@ protected:
 	spi_device_handle_t _spi;
 	uint8_t _data_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 
-	// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
-	uint16_t _beacon_timeout = (uint16_t)micros();
-
 
     // Constructor
     S_Broadcast_SPI_2xESP_Master(const int* ss_pins, uint8_t ss_pins_count, spi_host_device_t host)
@@ -64,8 +61,11 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
 
-		if (micros() - _beacon_timeout > 250) {
-			_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
+		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
+		static uint16_t beacon_timeout = (uint16_t)micros();
+
+		if (micros() - beacon_timeout > 250) {
+			beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
 
 			if (_initiated) {
 
@@ -85,8 +85,6 @@ protected:
 						if (match_l == l) {	// Avoid noise triggering
 
 							receivePayload(_spi_cs_pins[ss_pin_i], l);
-
-							_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
 
 							// #ifdef BROADCAST_SPI_DEBUG
 							// 	Serial.printf("[From Beacon to pin %d] Slave: 0x%02X Beacon=1 L=%d\n",
