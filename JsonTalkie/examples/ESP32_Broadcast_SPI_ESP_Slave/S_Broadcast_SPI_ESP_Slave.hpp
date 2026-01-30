@@ -206,13 +206,15 @@ protected:
     // Specific methods associated to ESP SPI as Slave
 	
 	void queue_cmd() {
+    	static uint8_t length_latched;       // persists across calls
 		spi_slave_transaction_t *t = &_cmd_trans;
 		t->length    = 1 * 8;	// Bytes to bits
 		// Full-Duplex
 		t->rx_buffer = &_cmd_byte;
 		// If you see 80 on the Master side it means the Slave wasn't given the time to respond!
-		t->tx_buffer = &_length_byte;	// <-- EXTREMELY IMPORTANT LINE
-		// NO NEED TO BE VOLATILE
+		length_latched = _length_byte;	// Avoids a racing to a shared variable (no race) (stable copy)
+		t->tx_buffer = &length_latched;	// <-- EXTREMELY IMPORTANT LINE
+		// THUS, NO NEED TO BE VOLATILE
 		// t->tx_buffer = const_cast<const uint8_t*>(&_length_byte);
 		// t->tx_buffer = (const void*)(&_length_byte);	// Also works
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
