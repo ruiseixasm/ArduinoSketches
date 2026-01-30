@@ -61,11 +61,13 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
 
+		// Sends once per pin, avoids getting stuck in processing many pins
+		static uint8_t actual_pin_index = 0;
 		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
-		static uint16_t beacon_timeout = (uint16_t)micros();
+		static uint16_t last_beacon_time = (uint16_t)micros();
 
-		if (micros() - beacon_timeout > 250) {
-			beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
+		if (micros() - last_beacon_time > 100) {
+			last_beacon_time = (uint16_t)micros();	// Avoid calling the beacon right away
 
 			if (_initiated) {
 
@@ -73,35 +75,33 @@ protected:
 				_reference_time = millis();
 				#endif
 
-				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
+				uint8_t l = sendBeacon(_spi_cs_pins[actual_pin_index]);
+				
+				if (l > 0) {
 
-					uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
-					
-					if (l > 0) {
+					uint8_t match_l = sendBeacon(_spi_cs_pins[actual_pin_index], l);
+					if (match_l == l) {	// Avoid noise triggering
 
-						uint8_t match_l = sendBeacon(_spi_cs_pins[ss_pin_i], l);
-						if (match_l == l) {	// Avoid noise triggering
+						receivePayload(_spi_cs_pins[actual_pin_index], l);
 
-							receivePayload(_spi_cs_pins[ss_pin_i], l);
-
-							// #ifdef BROADCAST_SPI_DEBUG
-							// 	Serial.printf("[From Beacon to pin %d] Slave: 0x%02X Beacon=1 L=%d\n",
-							// 		_spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
-							// 	Serial.print("[From Slave] Received: ");
-							// 	for (int i = 0; i < l; i++) {
-							// 		Serial.print((char)_data_buffer[i]);
-							// 	}
-							// 	Serial.println();
-							// #endif
-							
-							JsonMessage new_message(
-								reinterpret_cast<const char*>( _data_buffer ),
-								static_cast<size_t>( l )
-							);
-							_startTransmission(new_message);
-						}
+						// #ifdef BROADCAST_SPI_DEBUG
+						// 	Serial.printf("[From Beacon to pin %d] Slave: 0x%02X Beacon=1 L=%d\n",
+						// 		_spi_cs_pins[actual_pin_index], 0b10000000 | l, l);
+						// 	Serial.print("[From Slave] Received: ");
+						// 	for (int i = 0; i < l; i++) {
+						// 		Serial.print((char)_data_buffer[i]);
+						// 	}
+						// 	Serial.println();
+						// #endif
+						
+						JsonMessage new_message(
+							reinterpret_cast<const char*>( _data_buffer ),
+							static_cast<size_t>( l )
+						);
+						_startTransmission(new_message);
 					}
 				}
+				actual_pin_index = ++actual_pin_index % _ss_pins_count;
 			}
 		}
     }
