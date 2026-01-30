@@ -54,9 +54,7 @@ protected:
 	uint8_t _cmd_byte __attribute__((aligned(4)));
 	uint8_t _length_byte __attribute__((aligned(4))) = 0;
 
-	spi_slave_transaction_t _cmd_trans;
-	spi_slave_transaction_t _data_trans;
-
+	spi_slave_transaction_t _transaction;
 	SpiState _spi_state = WAIT_CMD;
 
 
@@ -207,7 +205,7 @@ protected:
 	
 	void queue_cmd() {
     	static uint8_t length_latched;       // persists across calls
-		spi_slave_transaction_t *t = &_cmd_trans;
+		spi_slave_transaction_t *t = &_transaction;
 		t->length    = 1 * 8;	// Bytes to bits
 		// Full-Duplex
 		t->rx_buffer = &_cmd_byte;
@@ -221,7 +219,7 @@ protected:
 	}
 
 	void queue_rx(uint8_t len) {
-		spi_slave_transaction_t *t = &_data_trans;
+		spi_slave_transaction_t *t = &_transaction;
 		t->length    = (size_t)len * 8;
 		// Half-Duplex
 		t->rx_buffer = _rx_buffer;
@@ -230,7 +228,7 @@ protected:
 	}
 
 	void queue_tx(uint8_t len) {
-		spi_slave_transaction_t *t = &_data_trans;
+		spi_slave_transaction_t *t = &_transaction;
 		t->length    = (size_t)len * 8;
 		// Half-Duplex
 		t->rx_buffer = nullptr;
