@@ -52,7 +52,7 @@ protected:
 	uint8_t _rx_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 	uint8_t _tx_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 	uint8_t _cmd_byte __attribute__((aligned(4)));
-	uint8_t _sending_length __attribute__((aligned(4))) = 0;
+	volatile uint8_t _sending_length __attribute__((aligned(4))) = 0;
 
 	spi_slave_transaction_t _cmd_trans;
 	spi_slave_transaction_t _data_trans;
@@ -174,6 +174,8 @@ protected:
 			
 			uint16_t start_waiting = (uint16_t)millis();
 			while (_sending_length > 0) {
+    			// yield();          // or vTaskDelay(1)
+    			vTaskDelay(1);   // ← allows SPI driver + DMA completion
 				if ((uint16_t)millis() - start_waiting > 1 * 1000) {
 
 					#ifdef BROADCASTSOCKET_DEBUG
@@ -203,7 +205,8 @@ protected:
 		// Full-Duplex
 		t->rx_buffer = &_cmd_byte;
 		// If you see 80 on the Master side it means the Slave wasn't given the time to respond!
-		t->tx_buffer = &_sending_length;	// <-- EXTREMELY IMPORTANT LINE
+		t->tx_buffer = const_cast<const uint8_t*>(&_sending_length);	// <-- EXTREMELY IMPORTANT LINE
+		// t->tx_buffer = (const void*)(&_sending_length);	// Also works
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
 	}
 
