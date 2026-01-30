@@ -43,7 +43,7 @@ protected:
 
 	bool _initiated = false;
 	
-    const int* const _spi_cs_pins;
+    const int* _spi_cs_pins;
     const uint8_t _ss_pins_count;
 	const spi_host_device_t _host;
 	
@@ -52,7 +52,7 @@ protected:
 
 
     // Constructor
-    S_Broadcast_SPI_2xESP_Master(const int* const ss_pins, uint8_t ss_pins_count, spi_host_device_t host)
+    S_Broadcast_SPI_2xESP_Master(const int* ss_pins, uint8_t ss_pins_count, spi_host_device_t host)
 		: BroadcastSocket(), _spi_cs_pins(ss_pins), _ss_pins_count(ss_pins_count), _host(host) {
             
 		_max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
