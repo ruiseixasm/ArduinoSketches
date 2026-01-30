@@ -72,7 +72,7 @@ protected:
 
 		if (_initiated) {
 			
-			// Where the receiving get is triggered
+			// Checks if the queued element was consumed and needs to be processed
     		spi_slave_transaction_t *ret;
 			if (spi_slave_get_trans_result(_host, &ret, 0) != ESP_OK) {
 				return;
@@ -207,7 +207,7 @@ protected:
 	
 	void queue_cmd() {
 		spi_slave_transaction_t *t = &_cmd_trans;
-		t->length    = 8;
+		t->length    = 1 * 8;	// Bytes to bits
 		// Full-Duplex
 		t->rx_buffer = &_cmd_byte;
 		// If you see 80 on the Master side it means the Slave wasn't given the time to respond!
