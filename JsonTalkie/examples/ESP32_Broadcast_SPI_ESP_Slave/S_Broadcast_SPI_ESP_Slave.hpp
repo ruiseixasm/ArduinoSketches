@@ -54,8 +54,8 @@ protected:
 	uint8_t _cmd_byte __attribute__((aligned(4)));
 	uint8_t _length_byte __attribute__((aligned(4))) = 0;
 
+	SpiState _spi_state;
 	spi_slave_transaction_t _transaction;
-	SpiState _spi_state = WAIT_CMD;
 
 
     // Constructor
@@ -90,7 +90,6 @@ protected:
 					if (beacon) {
 						if (cmd_length > 0 && cmd_length == _length_byte) {	// beacon
 							
-							_spi_state = TX_PAYLOAD;
 							queue_tx(cmd_length);
 							
 							// #ifdef BROADCAST_SPI_DEBUG
@@ -103,7 +102,6 @@ protected:
 
 					} else if (cmd_length > 0 && cmd_length <= TALKIE_BUFFER_SIZE) {
 
-						_spi_state = RX_PAYLOAD;
 						queue_rx(cmd_length);
 						
 						// #ifdef BROADCAST_SPI_DEBUG
@@ -124,7 +122,6 @@ protected:
 				
 				case RX_PAYLOAD:
 				{
-					_spi_state = WAIT_CMD;
 
 					// #ifdef BROADCAST_SPI_DEBUG
 					// 	Serial.printf("Received %u bytes: ", cmd_length);
@@ -152,8 +149,6 @@ protected:
 				
 				case TX_PAYLOAD:
 				{
-					_spi_state = WAIT_CMD;
-
 					// #ifdef BROADCAST_SPI_DEBUG
 					// 	Serial.printf("Sent %u bytes\n", cmd_length);
 					// #endif
@@ -193,7 +188,6 @@ protected:
 				TALKIE_BUFFER_SIZE
 			);
 			// // Queues a new send
-			// _spi_state = WAIT_CMD;
 			// queue_cmd();
 			return true;
 		}
@@ -204,6 +198,7 @@ protected:
     // Specific methods associated to ESP SPI as Slave
 	
 	void queue_cmd() {
+		_spi_state = WAIT_CMD;
     	static uint8_t length_latched;       // persists across calls
 		spi_slave_transaction_t *t = &_transaction;
 		t->length    = 1 * 8;	// Bytes to bits
@@ -219,6 +214,7 @@ protected:
 	}
 
 	void queue_rx(uint8_t len) {
+		_spi_state = RX_PAYLOAD;
 		spi_slave_transaction_t *t = &_transaction;
 		t->length    = (size_t)len * 8;
 		// Half-Duplex
@@ -228,6 +224,7 @@ protected:
 	}
 
 	void queue_tx(uint8_t len) {
+		_spi_state = TX_PAYLOAD;
 		spi_slave_transaction_t *t = &_transaction;
 		t->length    = (size_t)len * 8;
 		// Half-Duplex
