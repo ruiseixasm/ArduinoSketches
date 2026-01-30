@@ -91,13 +91,14 @@ protected:
 					bool beacon = (_cmd_byte >> 7) & 0x01;
 					uint8_t received_length = _cmd_byte & 0x7F;
 
-					Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte, beacon, received_length);
-
 					if (!beacon) {  // master → slave
 						if (received_length > 0 && received_length <= TALKIE_BUFFER_SIZE) {
 							_active_length = received_length;
 							_spi_state = RX_PAYLOAD;
 							queue_rx(received_length);
+							
+							Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte, beacon, received_length);
+
 							return;
 						} else {
 							Serial.println("Master ping");
@@ -107,6 +108,9 @@ protected:
 						_active_length = received_length;
 						_spi_state = TX_PAYLOAD;
 						queue_tx(received_length);
+						
+						Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte, beacon, received_length);
+
 						return;
 					}
 
