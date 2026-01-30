@@ -23,7 +23,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 #define border_delay_us 10
-#define padding_delay_us 5
+#define padding_delay_us 2
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
