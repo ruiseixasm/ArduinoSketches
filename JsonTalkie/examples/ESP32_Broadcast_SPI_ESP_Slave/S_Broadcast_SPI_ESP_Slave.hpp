@@ -180,6 +180,7 @@ protected:
     			// yield();          // or vTaskDelay(1)
     			// vTaskDelay(1);   // ← allows SPI driver + DMA completion
 
+				_receive();	// keeps processing pending messages, mainly the ones pooled to be sent
 				if ((uint16_t)millis() - start_waiting > 1 * 1000) {
 
 					#ifdef BROADCAST_SPI_DEBUG
