@@ -19,6 +19,13 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define CYCLER_MANIFESTO_DEBUG
 
 
+// LED_BUILTIN is already defined by ESP32 platform
+// Typically GPIO2 for most ESP32 boards
+#ifndef LED_BUILTIN
+  #define LED_BUILTIN 2  // Fallback definition if not already defined
+#endif
+
+
 class M_CyclerManifesto : public TalkerManifesto {
 public:
 
@@ -29,6 +36,8 @@ public:
     M_CyclerManifesto() : TalkerManifesto() {}	// Constructor
 
 protected:
+
+	uint16_t _self_blink_time = 0;
 
 	uint32_t _last_blink = 0;
 	uint8_t _blue_led_on = 0;
@@ -51,6 +60,11 @@ public:
 
 	void _loop(JsonTalker& talker) override {
 		
+		if ((uint16_t)millis() - _self_blink_time > 100) {	// turns off for 100 milliseconds
+			
+			digitalWrite(LED_BUILTIN, HIGH);
+		}
+
 		if (millis() - _last_blink > 1000) {
 			_last_blink = millis();
 
@@ -91,6 +105,15 @@ public:
 		return false;
 	}
 
+
+    void _echo(JsonTalker& talker, JsonMessage& json_message, MessageValue message_value, TalkerMatch talker_match) override {
+		(void)talker;		// Silence unused parameter warning
+        (void)message_value;	// Silence unused parameter warning
+		(void)talker_match;	// Silence unused parameter warning
+
+		digitalWrite(LED_BUILTIN, LOW);
+		_self_blink_time = millis();
+    }
 };
 
 

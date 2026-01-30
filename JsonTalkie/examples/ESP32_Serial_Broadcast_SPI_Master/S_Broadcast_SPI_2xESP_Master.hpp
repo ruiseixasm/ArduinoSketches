@@ -174,9 +174,11 @@ protected:
 
 		if (length > TALKIE_BUFFER_SIZE) return;
 		
-		Serial.print("broadcastPayload(): ");
-		Serial.write(_data_buffer, length);
-		Serial.println();
+		#ifdef BROADCAST_SPI_DEBUG
+			Serial.print("broadcastPayload(): ");
+			Serial.write(_data_buffer, length);
+			Serial.println();
+		#endif
 
 		spi_transaction_t t = {};
 		t.length = (size_t)length * 8;	// Bytes to bits
