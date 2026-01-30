@@ -19,9 +19,11 @@ https://github.com/ruiseixasm/JsonTalkie
 #include "driver/spi_master.h"
 
 
-#define BROADCAST_SPI_DEBUG
+// #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
+#define receive_delay_us 10
+#define send_delay_us 10
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
@@ -76,10 +78,12 @@ protected:
 					uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
 					
 					if (l > 0) {
-						// delayMicroseconds(200);
+						
+						delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 						uint8_t match_l = sendBeacon(_spi_cs_pins[ss_pin_i], l);
 						if (match_l == l) {	// Avoid noise triggering
 
+							delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 							receivePayload(_spi_cs_pins[ss_pin_i], l);
 
 							#ifdef BROADCAST_SPI_DEBUG
@@ -133,6 +137,7 @@ protected:
 			);
 			
 			broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
+			delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 			broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
 			
 			#ifdef BROADCAST_SPI_DEBUG
@@ -174,12 +179,6 @@ protected:
 
 		if (length > TALKIE_BUFFER_SIZE) return;
 		
-		#ifdef BROADCAST_SPI_DEBUG
-			Serial.print("broadcastPayload(): ");
-			Serial.write(_data_buffer, length);
-			Serial.println();
-		#endif
-
 		spi_transaction_t t = {};
 		t.length = (size_t)length * 8;	// Bytes to bits
 		t.tx_buffer = _data_buffer;
