@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonTalkie
 */
-#ifndef BROADCAST_SPI_ESP2X_MASTER_HPP
-#define BROADCAST_SPI_ESP2X_MASTER_HPP
+#ifndef BROADCAST_SPI_ESP_SLAVE_HPP
+#define BROADCAST_SPI_ESP_SLAVE_HPP
 
 
 #include <BroadcastSocket.h>
@@ -27,12 +27,12 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 
-class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
+class S_Broadcast_SPI_ESP_Slave : public BroadcastSocket {
 public:
 
 	// The Socket class description shouldn't be greater than 35 chars
 	// {"m":7,"f":"","s":3,"b":1,"t":"","i":58485,"0":1,"1":"","2":11,"c":11266} <-- 128 - (73 + 2*10) = 35
-    const char* class_description() const override { return "Broadcast_SPI_2xESP_Master"; }
+    const char* class_description() const override { return "Broadcast_SPI_ESP_Slave"; }
 
 
 	#ifdef BROADCAST_SPI_DEBUG_TIMING
@@ -50,7 +50,7 @@ protected:
 
 
     // Constructor
-    S_Broadcast_SPI_2xESP_Master(int* ss_pins, uint8_t ss_pins_count) : BroadcastSocket() {
+    S_Broadcast_SPI_ESP_Slave(int* ss_pins, uint8_t ss_pins_count) : BroadcastSocket() {
             
 		_spi_cs_pins = ss_pins;
 		_ss_pins_count = ss_pins_count;
@@ -237,8 +237,8 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static S_Broadcast_SPI_2xESP_Master& instance(int* ss_pins, uint8_t ss_pins_count) {
-        static S_Broadcast_SPI_2xESP_Master instance(ss_pins, ss_pins_count);
+    static S_Broadcast_SPI_ESP_Slave& instance(int* ss_pins, uint8_t ss_pins_count) {
+        static S_Broadcast_SPI_ESP_Slave instance(ss_pins, ss_pins_count);
 
         return instance;
     }
@@ -299,4 +299,4 @@ public:
 
 
 
-#endif // BROADCAST_SPI_ESP2X_MASTER_HPP
+#endif // BROADCAST_SPI_ESP_SLAVE_HPP
