@@ -292,5 +292,4 @@ public:
 };
 
 
-
 #endif // BROADCAST_SPI_ESP2X_MASTER_HPP
