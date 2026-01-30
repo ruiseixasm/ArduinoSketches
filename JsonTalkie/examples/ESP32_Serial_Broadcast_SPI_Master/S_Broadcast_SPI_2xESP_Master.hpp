@@ -22,7 +22,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
-#define receive_delay_us 20
+#define receive_delay_us 30
 #define send_delay_us 30
 
 
