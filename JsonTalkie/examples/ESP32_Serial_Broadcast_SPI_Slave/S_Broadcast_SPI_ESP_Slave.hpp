@@ -178,8 +178,10 @@ protected:
 			
 			uint16_t start_waiting = (uint16_t)millis();
 			while (_length_byte > 0) {
+				// There is NO need to do any of this
     			// yield();          // or vTaskDelay(1)
-    			vTaskDelay(1);   // ← allows SPI driver + DMA completion
+    			// vTaskDelay(1);   // ← allows SPI driver + DMA completion
+
 				if ((uint16_t)millis() - start_waiting > 1 * 1000) {
 
 					#ifdef BROADCASTSOCKET_DEBUG
@@ -194,7 +196,6 @@ protected:
 				reinterpret_cast<char*>( _tx_buffer ),
 				TALKIE_BUFFER_SIZE
 			);			
-
 			return true;
 		}
         return false;
