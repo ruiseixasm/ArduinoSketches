@@ -24,6 +24,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #define receive_delay_us 30
 #define send_delay_us 30
+#define padding_delay_us 50
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
@@ -75,16 +76,18 @@ protected:
 
 				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
 
-					delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
+					// NEEDS TO BE REVISED !!!
+
+					// delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 					uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
 					
 					if (l > 0) {
 
-						delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
+						// delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 						uint8_t match_l = sendBeacon(_spi_cs_pins[ss_pin_i], l);
 						if (match_l == l) {	// Avoid noise triggering
 
-							delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
+							// delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 							receivePayload(_spi_cs_pins[ss_pin_i], l);
 
 							_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
@@ -140,7 +143,7 @@ protected:
 			);
 			
 			broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
-			delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
+			// delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 			broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
 			_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
 			// delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
@@ -173,8 +176,10 @@ protected:
 
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], LOW);
-		}    
+		}
+		delayMicroseconds(padding_delay_us);
 		spi_device_transmit(_spi, &t);
+		delayMicroseconds(padding_delay_us);
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], HIGH);
 		}
@@ -192,7 +197,9 @@ protected:
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], LOW);
 		}
+		delayMicroseconds(padding_delay_us);
 		spi_device_transmit(_spi, &t);
+		delayMicroseconds(padding_delay_us);
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], HIGH);
 		}
@@ -208,7 +215,9 @@ protected:
 		t.rx_buffer = &rx_byte;
 
 		digitalWrite(ss_pin, LOW);
+		delayMicroseconds(padding_delay_us);
 		spi_device_transmit(_spi, &t);
+		delayMicroseconds(padding_delay_us);
 		digitalWrite(ss_pin, HIGH);
 
 		return rx_byte;
@@ -224,7 +233,9 @@ protected:
 		t.rx_buffer = _data_buffer;
 		
 		digitalWrite(ss_pin, LOW);
+		delayMicroseconds(padding_delay_us);
 		spi_device_transmit(_spi, &t);
+		delayMicroseconds(padding_delay_us);
 		digitalWrite(ss_pin, HIGH);
 	}
 
