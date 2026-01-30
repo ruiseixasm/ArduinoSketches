@@ -141,10 +141,14 @@ protected:
 						reinterpret_cast<const char*>( _rx_buffer ),
 						static_cast<size_t>( _active_length )
 					);
-					_startTransmission(new_message);
 
+					// Needs the queue a new command, otherwise nothing is processed again (lock)
+					// Real scenario if at this moment a payload is still in the queue to be sent and now
+					// has no queue to be picked up
 					_spi_state = WAIT_CMD;
 					queue_cmd();
+					
+					_startTransmission(new_message);
 				}
 				break;
 				
