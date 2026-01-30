@@ -22,9 +22,8 @@ https://github.com/ruiseixasm/JsonTalkie
 #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
-#define receive_delay_us 30
-#define send_delay_us 30
-#define padding_delay_us 50
+#define border_delay_us 30
+#define padding_delay_us 10
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
@@ -65,7 +64,7 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
 
-		if (micros() - _beacon_timeout > 100) {
+		if (micros() - _beacon_timeout > 250) {
 			_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
 
 			if (_initiated) {
@@ -78,16 +77,13 @@ protected:
 
 					// NEEDS TO BE REVISED !!!
 
-					// delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 					uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
 					
 					if (l > 0) {
 
-						// delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 						uint8_t match_l = sendBeacon(_spi_cs_pins[ss_pin_i], l);
 						if (match_l == l) {	// Avoid noise triggering
 
-							// delayMicroseconds(receive_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 							receivePayload(_spi_cs_pins[ss_pin_i], l);
 
 							_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
@@ -143,10 +139,7 @@ protected:
 			);
 			
 			broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
-			// delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 			broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
-			_beacon_timeout = (uint16_t)micros();	// Avoid calling the beacon right away
-			// delayMicroseconds(send_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 			
 			// #ifdef BROADCAST_SPI_DEBUG
 			// 	Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
@@ -174,6 +167,7 @@ protected:
 		t.tx_buffer = &tx_byte;
 		t.rx_buffer = nullptr;
 
+		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], LOW);
 		}
@@ -194,6 +188,7 @@ protected:
 		t.tx_buffer = _data_buffer;
 		t.rx_buffer = nullptr;
 
+		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], LOW);
 		}
@@ -214,6 +209,7 @@ protected:
 		t.tx_buffer = &tx_byte;
 		t.rx_buffer = &rx_byte;
 
+		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		digitalWrite(ss_pin, LOW);
 		delayMicroseconds(padding_delay_us);
 		spi_device_transmit(_spi, &t);
@@ -232,6 +228,7 @@ protected:
 		t.tx_buffer = nullptr;
 		t.rx_buffer = _data_buffer;
 		
+		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		digitalWrite(ss_pin, LOW);
 		delayMicroseconds(padding_delay_us);
 		spi_device_transmit(_spi, &t);
