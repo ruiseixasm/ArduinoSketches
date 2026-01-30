@@ -156,13 +156,6 @@ protected:
         return false;
     }
 
-
-	bool initiate(int mosi_io_num, int miso_io_num, int sclk_io_num) {
-		
-
-		return _initiated;
-	}
-
 	
     // Specific methods associated to ESP SPI as Master
 	

@@ -74,7 +74,68 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
 
-		
+		if (_initiated) {
+			
+			/* === SPI "ISR" === */
+
+			switch (_spi_state) {
+
+				case WAIT_CMD:
+				{
+					bool beacon = (_cmd_byte >> 7) & 0x01;
+					uint8_t received_length = _cmd_byte & 0x7F;
+
+					Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte, beacon, received_length);
+
+					if (!beacon) {  // master → slave
+						if (received_length > 0 && received_length <= TALKIE_BUFFER_SIZE) {
+							_active_length = received_length;
+							_spi_state = RX_PAYLOAD;
+							queue_rx(received_length);
+							return;
+						} else {
+							Serial.println("Master ping");
+						}
+
+					} else if (received_length > 0 && received_length == _sending_length) {	// beacon
+						_active_length = received_length;
+						_spi_state = TX_PAYLOAD;
+						queue_tx(received_length);
+						return;
+					}
+
+					queue_cmd();
+				}
+				break;
+				
+				case RX_PAYLOAD:
+				{
+					Serial.printf("Received %u bytes: ", _active_length);
+					for (uint8_t i = 0; i < _active_length; i++) {
+						char c = _rx_buffer[i];
+						if (c >= 32 && c <= 126) Serial.print(c);
+						else Serial.printf("[%02X]", c);
+					}
+					Serial.println();
+
+					_spi_state = WAIT_CMD;
+					queue_cmd();
+				}
+				break;
+				
+				case TX_PAYLOAD:
+				{
+					Serial.printf("Sent %u bytes\n", _active_length);
+					_sending_length = 0;
+
+					_spi_state = WAIT_CMD;
+					queue_cmd();
+				}
+				break;
+				
+				default: break;
+			}
+		}
     }
 
     
@@ -83,18 +144,32 @@ protected:
 
 		if (_initiated) {
 			
+			uint16_t start_waiting = (uint16_t)millis();
+			while (_sending_length > 0) {
+				if ((uint16_t)millis() - start_waiting > 1 * 1000) {
+
+					#ifdef BROADCASTSOCKET_DEBUG
+					Serial.println(F("\t_unlockSendingBuffer: NOT available sending buffer"));
+					#endif
+
+					return false;
+				}
+			}
+			
+			_sending_length = json_message.serialize_json(
+				reinterpret_cast<char*>( _tx_buffer ),
+				TALKIE_BUFFER_SIZE
+			);			
+
+    		spi_slave_transaction_t *ret;
+			if (spi_slave_get_trans_result(VSPI_HOST, &ret, 0) != ESP_OK) {
+				return false;
+			}
 
 			return true;
 		}
         return false;
     }
-
-
-	bool initiate(int mosi_io_num, int miso_io_num, int sclk_io_num) {
-		
-
-		return _initiated;
-	}
 
 	
     // Specific methods associated to ESP SPI as Slave
