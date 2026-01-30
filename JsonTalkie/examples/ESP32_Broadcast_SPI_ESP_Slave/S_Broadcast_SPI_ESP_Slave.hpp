@@ -72,7 +72,14 @@ protected:
 			
 			// Checks if the queued element was consumed and needs to be processed
     		spi_slave_transaction_t *ret;
-			if (spi_slave_get_trans_result(_host, &ret, 0) != ESP_OK) {
+    		esp_err_t err = spi_slave_get_trans_result(_host, &ret, 0);
+			if (err != ESP_OK) {
+				// if (err == ESP_ERR_TIMEOUT) {
+				// 	// The transaction we queued (via queue_cmd/queue_rx/queue_tx) 
+				// 	// either never got queued properly or got dropped!
+				// 	// The SPI communication pipe is EMPTY!
+				// 	queue_cmd();  // ← MUST re-queue to restore communication!
+				// }
 				return;
 			}
 
