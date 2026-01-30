@@ -16,7 +16,9 @@ https://github.com/ruiseixasm/JsonTalkie
 
 
 #include <BroadcastSocket.h>
-#include "driver/spi_master.h"
+extern "C" {
+    #include "driver/spi_slave.h"
+}
 
 
 // #define BROADCAST_SPI_DEBUG
@@ -41,16 +43,29 @@ public:
 
 protected:
 
+	enum SpiState {
+		WAIT_CMD,
+		RX_PAYLOAD,
+		TX_PAYLOAD
+	};
+
 	bool _initiated = false;
-    int* _spi_cs_pins;
-    uint8_t _ss_pins_count = 0;
-	
-	spi_device_handle_t _spi;
-	uint8_t _data_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
+	const spi_host_device_t _host;
+
+	uint8_t _rx_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
+	uint8_t _tx_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
+	uint8_t _cmd_byte __attribute__((aligned(4)));
+	uint8_t _sending_length __attribute__((aligned(4))) = 0;
+
+	spi_slave_transaction_t _cmd_trans;
+	spi_slave_transaction_t _data_trans;
+
+	SpiState _spi_state = WAIT_CMD;
+	uint8_t _active_length = 0;
 
 
     // Constructor
-    S_Broadcast_SPI_ESP_Slave() : BroadcastSocket() {
+    S_Broadcast_SPI_ESP_Slave(spi_host_device_t host) : BroadcastSocket(), _host(host) {
             
 		_max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
 	}
@@ -82,14 +97,38 @@ protected:
 	}
 
 	
-    // Specific methods associated to Arduino SPI as Master
+    // Specific methods associated to ESP SPI as Slave
 	
+	void queue_cmd() {
+		spi_slave_transaction_t *t = &_cmd_trans;
+		t->length    = 8;
+		t->rx_buffer = &_cmd_byte;
+		t->tx_buffer = &_sending_length;
+		spi_slave_queue_trans(_host, t, portMAX_DELAY);
+	}
+
+	void queue_rx(uint8_t len) {
+		spi_slave_transaction_t *t = &_data_trans;
+		t->length    = (size_t)len * 8;
+		t->rx_buffer = _rx_buffer;
+		t->tx_buffer = nullptr;
+		spi_slave_queue_trans(_host, t, portMAX_DELAY);
+	}
+
+	void queue_tx(uint8_t len) {
+		spi_slave_transaction_t *t = &_data_trans;
+		t->length    = (size_t)len * 8;
+		t->rx_buffer = nullptr;
+		t->tx_buffer = _tx_buffer;
+		spi_slave_queue_trans(_host, t, portMAX_DELAY);
+	}
+
 
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static S_Broadcast_SPI_ESP_Slave& instance() {
-        static S_Broadcast_SPI_ESP_Slave instance;
+    static S_Broadcast_SPI_ESP_Slave& instance(spi_host_device_t host = HSPI_HOST) {
+        static S_Broadcast_SPI_ESP_Slave instance(host);
 
         return instance;
     }
@@ -110,33 +149,14 @@ public:
 		slvcfg.spics_io_num = spics_io_num;
 		slvcfg.queue_size = 3;
 
-		spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
+		spi_slave_initialize(_host, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
 		Serial.println("Slave ready");
 
 		queue_cmd();   // always armed
 
 		_initiated = true;
-
-		#ifdef BROADCAST_SPI_DEBUG
-		if (_initiated) {
-			Serial.print(class_description());
-			Serial.println(": initiate1: Socket initiated!");
-
-			Serial.print(F("\tinitiate2: Total SS pins connected: "));
-			Serial.println(_ss_pins_count);
-			Serial.print(F("\t\tinitiate3: SS pins: "));
-			
-			for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-				Serial.print(_ss_pins[ss_pin_i]);
-				Serial.print(F(", "));
-			}
-			Serial.println();
-		} else {
-			Serial.println("initiate1: Socket NOT initiated!");
-		}
-	
-		#endif
     }
+
 };
 
 

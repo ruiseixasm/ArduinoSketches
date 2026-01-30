@@ -164,7 +164,7 @@ protected:
 	}
 
 	
-    // Specific methods associated to Arduino SPI as Master
+    // Specific methods associated to ESP SPI as Master
 	
 	void broadcastLength(const int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
 		uint8_t tx_byte __attribute__((aligned(4))) = 0b01111111 & length;

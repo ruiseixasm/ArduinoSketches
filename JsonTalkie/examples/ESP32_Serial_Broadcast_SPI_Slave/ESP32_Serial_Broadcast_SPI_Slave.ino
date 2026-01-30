@@ -39,7 +39,7 @@ JsonTalker l_led = JsonTalker(l_led_name, l_led_desc, &led_manifesto);
 // SOCKETS
 // Singleton requires the & (to get a reference variable)
 auto& serial_socket = S_SocketSerial::instance();
-auto& spi_socket = S_Broadcast_SPI_ESP_Slave::instance(spi_pins, sizeof(spi_pins)/sizeof(int));
+auto& spi_socket = S_Broadcast_SPI_ESP_Slave::instance(VSPI_HOST);
 
 
 // SETTING THE REPEATER
@@ -75,9 +75,9 @@ void setup() {
     
     // Setting up broadcast sockets
     Serial.println("Setting up broadcast sockets...");
-	// ================== INITIALIZE HSPI ==================
-	// Initialize SPI with HSPI pins: MOSI=13, MISO=12, SCK=14
-    spi_socket.begin(13, 12, 14);	// MOSI, MISO, SCK
+	// ================== INITIALIZE VSPI ==================
+	// Initialize SPI with VSPI pins: MOSI=23, MISO=19, SCK=18, CS=5
+    spi_socket.begin(13, 12, 14, 5);	// MOSI, MISO, SCK, CS
 
     // Finally, sets the blue led as always LOW signalling this way to be a SPI Slave
     digitalWrite(LED_BUILTIN, LOW);
