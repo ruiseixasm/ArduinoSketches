@@ -46,7 +46,7 @@ JsonTalker t_cycler = JsonTalker(t_cycler_name, t_cycler_desc, &cycler_manifesto
 // SOCKETS
 // Singleton requires the & (to get a reference variable)
 auto& serial_socket = S_SocketSerial::instance();
-int spi_pins[] = {4, 16};
+const int spi_pins[] = {4, 16};
 auto& spi_socket = S_Broadcast_SPI_2xESP_Master::instance(spi_pins, sizeof(spi_pins)/sizeof(int));
 
 

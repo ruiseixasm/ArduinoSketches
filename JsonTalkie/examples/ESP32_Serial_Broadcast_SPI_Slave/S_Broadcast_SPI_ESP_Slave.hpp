@@ -50,10 +50,8 @@ protected:
 
 
     // Constructor
-    S_Broadcast_SPI_ESP_Slave(int* ss_pins, uint8_t ss_pins_count) : BroadcastSocket() {
+    S_Broadcast_SPI_ESP_Slave() : BroadcastSocket() {
             
-		_spi_cs_pins = ss_pins;
-		_ss_pins_count = ss_pins_count;
 		_max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
 	}
 
@@ -61,46 +59,7 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
 
-		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
-		static uint16_t timeout = (uint16_t)micros();
-
-		if (micros() - timeout > 100) {
-			timeout = (uint16_t)micros();
-
-			if (_initiated) {
-
-				#ifdef BROADCAST_SPI_DEBUG_TIMING
-				_reference_time = millis();
-				#endif
-
-
-				for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-
-					uint8_t l = sendBeacon(_spi_cs_pins[ss_pin_i]);
-					
-					if (l > 0) {
-						// delayMicroseconds(200);
-						uint8_t match_l = sendBeacon(_spi_cs_pins[ss_pin_i], l);
-						if (match_l == l) {	// Avoid noise triggering
-							Serial.printf("[From Beacon to pin %d |2] Slave: 0x%02X Beacon=1 L=%d\n", _spi_cs_pins[ss_pin_i], 0b10000000 | l, l);
-							// delayMicroseconds(200);
-							receivePayload(_spi_cs_pins[ss_pin_i], l);
-							Serial.print("[From Slave] Received: ");
-							for (int i = 0; i < l; i++) {
-								Serial.print((char)_data_buffer[i]);
-							}
-							Serial.println();
-							
-							JsonMessage new_message(
-								reinterpret_cast<const char*>( _data_buffer ),
-								static_cast<size_t>( l )
-							);
-							_startTransmission(new_message);
-						}
-					}
-				}
-			}
-		}
+		
     }
 
     
@@ -109,46 +68,6 @@ protected:
 
 		if (_initiated) {
 			
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			Serial.print("\n\tsend: ");
-			#endif
-				
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			_reference_time = millis();
-			#endif
-
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.print(F("\t\t\t\t\tsend1: Sent message: "));
-			Serial.write(json_message._read_buffer(), json_message.get_length());
-			Serial.print(F("\n\t\t\t\t\tsend2: Sent length: "));
-			Serial.println(json_message.get_length());
-			#endif
-			
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			Serial.print(" | ");
-			Serial.print(millis() - _reference_time);
-			#endif
-
-			size_t len = json_message.serialize_json(
-				reinterpret_cast<char*>( _data_buffer ),
-				TALKIE_BUFFER_SIZE
-			);
-
-			Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
-
-			broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
-			broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
-			
-			Serial.printf("[To Slave] Sent %d bytes\n", len);
-			
-			#ifdef BROADCAST_SPI_DEBUG
-			Serial.println(F("\t\t\t\t\tsend4: --> Broadcast sent to all pins -->"));
-			#endif
-
-			#ifdef BROADCAST_SPI_DEBUG_TIMING
-			Serial.print(" | ");
-			Serial.print(millis() - _reference_time);
-			#endif
 
 			return true;
 		}
@@ -165,113 +84,36 @@ protected:
 	
     // Specific methods associated to Arduino SPI as Master
 	
-	void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
-		uint8_t tx_byte __attribute__((aligned(4))) = 0b01111111 & length;
-		spi_transaction_t t = {};
-		t.length = 1 * 8;	// Bytes to bits
-		t.tx_buffer = &tx_byte;
-		t.rx_buffer = nullptr;
-
-		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
-			digitalWrite(ss_pins[ss_pin_i], LOW);
-		}    
-		spi_device_transmit(_spi, &t);
-		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
-			digitalWrite(ss_pins[ss_pin_i], HIGH);
-		}
-	}
-
-	void broadcastPayload(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
-
-		if (length > TALKIE_BUFFER_SIZE) return;
-		
-		Serial.print("broadcastPayload(): ");
-		Serial.write(_data_buffer, length);
-		Serial.println();
-
-		spi_transaction_t t = {};
-		t.length = (size_t)length * 8;	// Bytes to bits
-		t.tx_buffer = _data_buffer;
-		t.rx_buffer = nullptr;
-
-		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
-			digitalWrite(ss_pins[ss_pin_i], LOW);
-		}
-		spi_device_transmit(_spi, &t);
-		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
-			digitalWrite(ss_pins[ss_pin_i], HIGH);
-		}
-	}
-
-
-	uint8_t sendBeacon(int ss_pin, uint8_t length = 0) {
-		uint8_t tx_byte __attribute__((aligned(4))) = 0b10000000 | length;
-		uint8_t rx_byte __attribute__((aligned(4))) = 0;
-		spi_transaction_t t = {};
-		t.length = 1 * 8;	// Bytes to bits
-		t.tx_buffer = &tx_byte;
-		t.rx_buffer = &rx_byte;
-
-		digitalWrite(ss_pin, LOW);
-		spi_device_transmit(_spi, &t);
-		digitalWrite(ss_pin, HIGH);
-
-		return rx_byte;
-	}
-
-	void receivePayload(int ss_pin, uint8_t length = 0) {
-		
-		if (length > TALKIE_BUFFER_SIZE) return;
-		
-		spi_transaction_t t = {};
-		t.length = (size_t)length * 8;	// Bytes to bits
-		t.tx_buffer = nullptr;
-		t.rx_buffer = _data_buffer;
-		
-		digitalWrite(ss_pin, LOW);
-		spi_device_transmit(_spi, &t);
-		digitalWrite(ss_pin, HIGH);
-	}
-
 
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static S_Broadcast_SPI_ESP_Slave& instance(int* ss_pins, uint8_t ss_pins_count) {
-        static S_Broadcast_SPI_ESP_Slave instance(ss_pins, ss_pins_count);
+    static S_Broadcast_SPI_ESP_Slave& instance() {
+        static S_Broadcast_SPI_ESP_Slave instance;
 
         return instance;
     }
 
 
-    void begin(int mosi_io_num, int miso_io_num, int sclk_io_num) {
+    void begin(int mosi_io_num, int miso_io_num, int sclk_io_num, int spics_io_num) {
 		
 		spi_bus_config_t buscfg = {};
 		buscfg.mosi_io_num = mosi_io_num;
 		buscfg.miso_io_num = miso_io_num;
 		buscfg.sclk_io_num = sclk_io_num;
-		buscfg.quadwp_io_num = -1;
-		buscfg.quadhd_io_num = -1;
 		buscfg.max_transfer_sz = TALKIE_BUFFER_SIZE;
 		
 		// https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/peripherals/spi_master.html
 
-		spi_device_interface_config_t devcfg = {};
-		devcfg.clock_speed_hz = 4000000;  // 4 MHz - Sweet spot!
-		devcfg.mode = 0;
-		devcfg.queue_size = 3;
-		devcfg.spics_io_num = -1,  // DISABLE hardware CS completely! (Broadcast)
-		
-		
-		spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
-		spi_bus_add_device(HSPI_HOST, &devcfg, &_spi);
-		
-		// ================== CONFIGURE SS PINS ==================
-		// CRITICAL: Configure all SS pins as outputs and set HIGH
-		for (uint8_t ss_pin_i = 0; ss_pin_i < _ss_pins_count; ss_pin_i++) {
-			pinMode(_spi_cs_pins[ss_pin_i], OUTPUT);
-			digitalWrite(_spi_cs_pins[ss_pin_i], HIGH);
-		}
+		spi_slave_interface_config_t slvcfg = {};
+		slvcfg.mode = 0;
+		slvcfg.spics_io_num = spics_io_num;
+		slvcfg.queue_size = 3;
+
+		spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
+		Serial.println("Slave ready");
+
+		queue_cmd();   // always armed
 
 		_initiated = true;
 

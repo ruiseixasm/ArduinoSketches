@@ -42,18 +42,19 @@ public:
 protected:
 
 	bool _initiated = false;
-    int* _spi_cs_pins;
-    uint8_t _ss_pins_count = 0;
+	
+    const int* const _spi_cs_pins;
+    const uint8_t _ss_pins_count;
+	const spi_host_device_t _host;
 	
 	spi_device_handle_t _spi;
 	uint8_t _data_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 
 
     // Constructor
-    S_Broadcast_SPI_2xESP_Master(int* ss_pins, uint8_t ss_pins_count) : BroadcastSocket() {
+    S_Broadcast_SPI_2xESP_Master(const int* const ss_pins, uint8_t ss_pins_count, spi_host_device_t host)
+		: BroadcastSocket(), _spi_cs_pins(ss_pins), _ss_pins_count(ss_pins_count), _host(host) {
             
-		_spi_cs_pins = ss_pins;
-		_ss_pins_count = ss_pins_count;
 		_max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
 	}
 
@@ -165,7 +166,7 @@ protected:
 	
     // Specific methods associated to Arduino SPI as Master
 	
-	void broadcastLength(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
+	void broadcastLength(const int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
 		uint8_t tx_byte __attribute__((aligned(4))) = 0b01111111 & length;
 		spi_transaction_t t = {};
 		t.length = 1 * 8;	// Bytes to bits
@@ -181,7 +182,7 @@ protected:
 		}
 	}
 
-	void broadcastPayload(int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
+	void broadcastPayload(const int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
 
 		if (length > TALKIE_BUFFER_SIZE) return;
 		
@@ -237,8 +238,8 @@ protected:
 public:
 
     // Move ONLY the singleton instance method to subclass
-    static S_Broadcast_SPI_2xESP_Master& instance(int* ss_pins, uint8_t ss_pins_count) {
-        static S_Broadcast_SPI_2xESP_Master instance(ss_pins, ss_pins_count);
+    static S_Broadcast_SPI_2xESP_Master& instance(const int* ss_pins, uint8_t ss_pins_count, spi_host_device_t host = HSPI_HOST) {
+        static S_Broadcast_SPI_2xESP_Master instance(ss_pins, ss_pins_count, host);
 
         return instance;
     }
@@ -263,8 +264,8 @@ public:
 		devcfg.spics_io_num = -1,  // DISABLE hardware CS completely! (Broadcast)
 		
 		
-		spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
-		spi_bus_add_device(HSPI_HOST, &devcfg, &_spi);
+		spi_bus_initialize(_host, &buscfg, SPI_DMA_CH_AUTO);
+		spi_bus_add_device(_host, &devcfg, &_spi);
 		
 		// ================== CONFIGURE SS PINS ==================
 		// CRITICAL: Configure all SS pins as outputs and set HIGH
