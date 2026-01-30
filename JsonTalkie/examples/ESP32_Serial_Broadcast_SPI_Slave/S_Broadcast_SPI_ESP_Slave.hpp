@@ -195,7 +195,10 @@ protected:
 			_length_byte = (uint8_t)json_message.serialize_json(
 				reinterpret_cast<char*>( _tx_buffer ),
 				TALKIE_BUFFER_SIZE
-			);			
+			);
+			// // Queues a new send
+			// _spi_state = WAIT_CMD;
+			// queue_cmd();
 			return true;
 		}
         return false;
