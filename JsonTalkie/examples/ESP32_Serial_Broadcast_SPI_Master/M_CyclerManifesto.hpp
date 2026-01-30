@@ -60,7 +60,7 @@ public:
 
 	void _loop(JsonTalker& talker) override {
 		
-		if ((uint16_t)millis() - _self_blink_time > 100) {	// turns off for 100 milliseconds
+		if ((uint16_t)millis() - _self_blink_time > 50) {	// turns off for 50 milliseconds
 			
 			digitalWrite(LED_BUILTIN, HIGH);
 		}
