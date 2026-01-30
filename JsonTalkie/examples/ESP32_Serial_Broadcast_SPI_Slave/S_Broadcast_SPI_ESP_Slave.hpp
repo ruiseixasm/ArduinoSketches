@@ -162,7 +162,7 @@ protected:
 				}
 			}
 			
-			_sending_length = json_message.serialize_json(
+			_sending_length = (uint8_t)json_message.serialize_json(
 				reinterpret_cast<char*>( _tx_buffer ),
 				TALKIE_BUFFER_SIZE
 			);			
