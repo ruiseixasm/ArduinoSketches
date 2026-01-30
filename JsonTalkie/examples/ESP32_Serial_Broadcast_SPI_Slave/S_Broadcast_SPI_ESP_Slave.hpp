@@ -237,5 +237,4 @@ public:
 };
 
 
-
 #endif // BROADCAST_SPI_ESP_SLAVE_HPP
