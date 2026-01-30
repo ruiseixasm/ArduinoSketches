@@ -118,6 +118,12 @@ protected:
 					}
 					Serial.println();
 
+					JsonMessage new_message(
+						reinterpret_cast<const char*>( _rx_buffer ),
+						static_cast<size_t>( _active_length )
+					);
+					_startTransmission(new_message);
+
 					_spi_state = WAIT_CMD;
 					queue_cmd();
 				}
