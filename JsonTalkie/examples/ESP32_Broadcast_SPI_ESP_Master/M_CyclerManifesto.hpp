@@ -43,11 +43,15 @@ protected:
 	uint8_t _blue_led_on = 0;
 	bool _cyclic_transmission = true;	// true by default
 
+    uint16_t _total_calls = 0;
+    uint16_t _total_echoes = 0;
+
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action calls[2] = {
+    Action calls[3] = {
 		{"enable", "Enables 1sec cyclic transmission"},
-		{"disable", "Disables 1sec cyclic transmission"}
+		{"disable", "Disables 1sec cyclic transmission"},
+		{"calls", "Gets total calls and their echoes"}
     };
     
 public:
@@ -75,7 +79,10 @@ public:
 			} else {
 				toggle_yellow_on_off.set_action_name("on");
 			}
-			if (_cyclic_transmission) talker.transmitToRepeater(toggle_yellow_on_off);
+			if (_cyclic_transmission) {
+				talker.transmitToRepeater(toggle_yellow_on_off);
+				_total_calls++;
+			}
 		}
 	}
 
@@ -85,22 +92,26 @@ public:
         (void)talker;		// Silence unused parameter warning
     	(void)talker_match;	// Silence unused parameter warning
 
-		if (index < _actionsCount()) {
-			// Actual implementation would do something based on index
-			switch(index) {
+		// Actual implementation would do something based on index
+		switch(index) {
 
-				case 0:
-					_cyclic_transmission = true;
-					return true;
-				break;
-					
-				case 1:
-					_cyclic_transmission = false;
-					return true;
-				break;
-					
-				default: break;
-			}
+			case 0:
+				_cyclic_transmission = true;
+				return true;
+			break;
+				
+			case 1:
+				_cyclic_transmission = false;
+				return true;
+			break;
+				
+			case 2:
+				json_message.set_nth_value_number(0, _total_calls);
+				json_message.set_nth_value_number(1, _total_echoes);
+				return true;
+			break;
+			
+			default: break;
 		}
 		return false;
 	}
@@ -113,6 +124,7 @@ public:
 
 		digitalWrite(LED_BUILTIN, LOW);
 		_self_blink_time = millis();
+		_total_echoes++;
     }
 };
 
