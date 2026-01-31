@@ -275,7 +275,7 @@ public:
 		spi_slave_interface_config_t slvcfg = {};
 		slvcfg.mode = 0;
 		slvcfg.spics_io_num = spics_io_num;
-		slvcfg.queue_size = 3;
+		slvcfg.queue_size = 1;	// It's just 128 bytes maximum, so, a queue of 1 is all it needs
 
 		spi_slave_initialize(_host, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
 		queue_cmd();   // always armed
