@@ -49,9 +49,16 @@ protected:
 	bool _initiated = false;
 	const spi_host_device_t _host;
 
-	uint8_t _rx_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
+	
+	uint8_t _actual_queue = 0;
+	uint8_t _rx_buffer_0[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
+	uint8_t _rx_buffer_1[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
+	uint8_t _rx_buffer_2[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 	uint8_t _tx_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
-	uint8_t _cmd_byte __attribute__((aligned(4)));
+
+	uint8_t _cmd_byte_0 __attribute__((aligned(4)));
+	uint8_t _cmd_byte_1 __attribute__((aligned(4)));
+	uint8_t _cmd_byte_2 __attribute__((aligned(4)));
 	uint8_t _length_byte __attribute__((aligned(4))) = 0;
 
 	SpiState _spi_state = WAIT_CMD;
@@ -89,8 +96,8 @@ protected:
 
 			/* === SPI "ISR" === */
 
-			const bool beacon = (_cmd_byte >> 7) & 0x01;
-			const uint8_t cmd_length = _cmd_byte & 0x7F;
+			const bool beacon = (_cmd_byte_0 >> 7) & 0x01;
+			const uint8_t cmd_length = _cmd_byte_0 & 0x7F;
 
 			switch (_spi_state) {
 
@@ -102,7 +109,7 @@ protected:
 							queue_tx(cmd_length);
 							
 							// #ifdef BROADCAST_SPI_DEBUG
-							// 	Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte, beacon, cmd_length);
+							// 	Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte_0, beacon, cmd_length);
 							// #endif
 							
 						} else {
@@ -115,7 +122,7 @@ protected:
 						
 						// #ifdef BROADCAST_SPI_DEBUG
 						// 	Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
-						// 		_cmd_byte, beacon, cmd_length);
+						// 		_cmd_byte_0, beacon, cmd_length);
 						// #endif
 
 					} else {
@@ -135,7 +142,7 @@ protected:
 					// #ifdef BROADCAST_SPI_DEBUG
 					// 	Serial.printf("Received %u bytes: ", cmd_length);
 					// 	for (uint8_t i = 0; i < cmd_length; i++) {
-					// 		char c = _rx_buffer[i];
+					// 		char c = _rx_buffer_0[i];
 					// 		if (c >= 32 && c <= 126) Serial.print(c);
 					// 		else Serial.printf("[%02X]", c);
 					// 	}
@@ -151,14 +158,14 @@ protected:
 
 						stacked_transmissions++;
 						JsonMessage new_message(
-							reinterpret_cast<const char*>( _rx_buffer ),
+							reinterpret_cast<const char*>( _rx_buffer_0 ),
 							static_cast<size_t>( cmd_length )
 						);
 
 						// Needs the queue a new command, otherwise nothing is processed again (lock)
 						// Real scenario if at this moment a payload is still in the queue to be sent and now
 						// has no queue to be picked up
-						queue_cmd();	// After the reading above to avoid _rx_buffer corruption
+						queue_cmd();	// After the reading above to avoid _rx_buffer_0 corruption
 						
 						_startTransmission(new_message);
 						stacked_transmissions--;
@@ -221,7 +228,7 @@ protected:
 		spi_slave_transaction_t *t = &_transaction;
 		t->length    = 1 * 8;	// Bytes to bits
 		// Full-Duplex
-		t->rx_buffer = &_cmd_byte;
+		t->rx_buffer = &_cmd_byte_0;
 		// If you see 80 on the Master side it means the Slave wasn't given the time to respond!
 		length_latched = _length_byte;	// Avoids a racing to a shared variable (no race) (stable copy)
 		t->tx_buffer = &length_latched;	// <-- EXTREMELY IMPORTANT LINE
@@ -236,7 +243,7 @@ protected:
 		spi_slave_transaction_t *t = &_transaction;
 		t->length    = (size_t)len * 8;
 		// Half-Duplex
-		t->rx_buffer = _rx_buffer;
+		t->rx_buffer = _rx_buffer_0;
 		t->tx_buffer = nullptr;
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
 	}
