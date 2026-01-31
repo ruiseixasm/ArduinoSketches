@@ -62,7 +62,7 @@ protected:
     S_Broadcast_SPI_ESP_Slave(spi_host_device_t host) : BroadcastSocket(), _host(host) {
             
 		for (uint8_t transaction_i = 0; transaction_i < 3; ++transaction_i) {
-			_transaction[transaction_i].user = (void*)(uintptr_t)i;  // Set ONCE here, the index
+			_transaction[transaction_i].user = (void*)(uintptr_t)transaction_i;  // Set ONCE here, the index
 		}
 		_max_delay_ms = 0;  // SPI is sequencial, no need to control out of order packages
 	}
@@ -226,7 +226,7 @@ protected:
 		spi_slave_transaction_t *t = &_transaction[queue_index];
 		t->length    = (size_t)len * 8;
 		// Half-Duplex
-		t->rx_buffer = _rx_buffer[queue_index];
+		t->rx_buffer = &_rx_buffer[queue_index];
 		t->tx_buffer = nullptr;
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
 	}
@@ -236,7 +236,7 @@ protected:
 		t->length    = (size_t)len * 8;
 		// Half-Duplex
 		t->rx_buffer = nullptr;
-		t->tx_buffer = _tx_buffer[queue_index];
+		t->tx_buffer = &_tx_buffer[queue_index];
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
 	}
 
@@ -274,7 +274,11 @@ public:
 		slvcfg.queue_size = 3;
 
 		spi_slave_initialize(_host, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
-		queue_cmd();   // always armed
+		
+		for (uint8_t transaction_i = 0; transaction_i < 3; ++transaction_i) {
+			queue_cmd(transaction_i);   // Starts by arming all 3 transactions
+		}
+		
 		_initiated = true;
 
 		#ifdef BROADCAST_SPI_DEBUG
