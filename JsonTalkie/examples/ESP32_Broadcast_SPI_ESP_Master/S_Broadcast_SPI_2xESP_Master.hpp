@@ -137,6 +137,8 @@ protected:
 			if (len > 0) {
 				broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
 				broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
+			} else {
+				return false;
 			}
 			
 			#ifdef BROADCAST_SPI_DEBUG
