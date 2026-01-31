@@ -33,7 +33,10 @@ public:
 	// {"m":7,"f":"","s":1,"b":1,"t":"","i":58485,"0":"","1":1,"c":11266} <-- 128 - (66 + 2*10) = 42
     const char* class_description() const override { return "CyclerManifesto"; }
 
-    M_CyclerManifesto() : TalkerManifesto() {}	// Constructor
+    M_CyclerManifesto() : TalkerManifesto() {
+
+		_toggle_yellow_on_off.set_to_name("blue");
+	}	// Constructor
 
 protected:
 
@@ -43,8 +46,15 @@ protected:
 	uint8_t _blue_led_on = 0;
 	bool _cyclic_transmission = true;	// true by default
 
+	JsonMessage _toggle_yellow_on_off{
+		MessageValue::TALKIE_MSG_CALL,
+		BroadcastValue::TALKIE_BC_LOCAL
+	};
+
     uint16_t _total_calls = 0;
     uint16_t _total_echoes = 0;
+
+	uint8_t _burst_toggles = 0;
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
@@ -74,17 +84,27 @@ public:
 		if (millis() - _last_blink > 1000) {
 			_last_blink = millis();
 
-			JsonMessage toggle_yellow_on_off(MessageValue::TALKIE_MSG_CALL, BroadcastValue::TALKIE_BC_LOCAL);
-			toggle_yellow_on_off.set_to_name("blue");
 			if (_blue_led_on++ % 2) {
-				toggle_yellow_on_off.set_action_name("off");
+				_toggle_yellow_on_off.set_action_name("off");
 			} else {
-				toggle_yellow_on_off.set_action_name("on");
+				_toggle_yellow_on_off.set_action_name("on");
 			}
 			if (_cyclic_transmission) {
-				talker.transmitToRepeater(toggle_yellow_on_off);
+				talker.transmitToRepeater(_toggle_yellow_on_off);
 				_total_calls++;
 			}
+		}
+
+		if (_burst_toggles > 0) {
+			_burst_toggles--;
+
+			if (_blue_led_on++ % 2) {
+				_toggle_yellow_on_off.set_action_name("off");
+			} else {
+				_toggle_yellow_on_off.set_action_name("on");
+			}
+			talker.transmitToRepeater(_toggle_yellow_on_off);
+			_total_calls++;
 		}
 	}
 
@@ -109,17 +129,7 @@ public:
 				
 			case 2:
 			{
-				JsonMessage toggle_yellow_on_off(MessageValue::TALKIE_MSG_CALL, BroadcastValue::TALKIE_BC_LOCAL);
-				toggle_yellow_on_off.set_to_name("blue");
-				for (uint8_t toggle_i = 0; toggle_i < 20; ++toggle_i) {
-					if (_blue_led_on++ % 2) {
-						toggle_yellow_on_off.set_action_name("off");
-					} else {
-						toggle_yellow_on_off.set_action_name("on");
-					}
-					talker.transmitToRepeater(toggle_yellow_on_off);
-					_total_calls++;
-				}		
+				_burst_toggles = 20;
 				return true;
 			}
 			break;
