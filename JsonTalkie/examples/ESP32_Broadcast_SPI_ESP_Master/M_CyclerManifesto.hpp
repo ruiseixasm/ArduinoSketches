@@ -48,9 +48,10 @@ protected:
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action calls[3] = {
+    Action calls[4] = {
 		{"enable", "Enables 1sec cyclic transmission"},
 		{"disable", "Disables 1sec cyclic transmission"},
+		{"burst", "Sends many messages at once"},
 		{"calls", "Gets total calls and their echoes"}
     };
     
@@ -105,6 +106,23 @@ public:
 				return true;
 			break;
 				
+			case 3:
+			{
+				JsonMessage toggle_yellow_on_off(MessageValue::TALKIE_MSG_CALL, BroadcastValue::TALKIE_BC_LOCAL);
+				toggle_yellow_on_off.set_to_name("blue");
+				for (uint8_t toggle_i = 0; toggle_i < 20; ++toggle_i) {
+					if (_blue_led_on++ % 2) {
+						toggle_yellow_on_off.set_action_name("off");
+					} else {
+						toggle_yellow_on_off.set_action_name("on");
+					}
+					talker.transmitToRepeater(toggle_yellow_on_off);
+					_total_calls++;
+				}		
+				return true;
+			}
+			break;
+			
 			case 2:
 				json_message.set_nth_value_number(0, _total_calls);
 				json_message.set_nth_value_number(1, _total_echoes);
