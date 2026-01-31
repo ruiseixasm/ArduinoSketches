@@ -21,7 +21,7 @@ extern "C" {
 }
 
 
-#define BROADCAST_SPI_DEBUG
+// #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 
@@ -275,9 +275,7 @@ public:
 
 		spi_slave_initialize(_host, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
 		
-		for (uint8_t transaction_i = 0; transaction_i < 3; ++transaction_i) {
-			queue_cmd(transaction_i);   // Starts by arming all 3 transactions
-		}
+		queue_cmd(0);   // Starts by arming a single transaction
 		
 		_initiated = true;
 
