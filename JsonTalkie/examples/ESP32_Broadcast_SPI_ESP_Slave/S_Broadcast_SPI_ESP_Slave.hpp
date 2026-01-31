@@ -21,7 +21,7 @@ extern "C" {
 }
 
 
-// #define BROADCAST_SPI_DEBUG
+#define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 
@@ -90,6 +90,7 @@ protected:
 			const uint8_t cmd_length = _cmd_byte[0] & 0x7F;
 
 			uint8_t queue_index = (uint8_t)(uintptr_t)ret->user;
+			
 			SpiState spi_state = get_state(ret);
 			switch (spi_state) {
 
@@ -101,7 +102,7 @@ protected:
 							queue_tx(queue_index, cmd_length);
 							
 							#ifdef BROADCAST_SPI_DEBUG
-								Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte[0], beacon, cmd_length);
+								Serial.printf("\n[CMD |%d] 0x%02X beacon=%d len=%u\n", queue_index, _cmd_byte[0], beacon, cmd_length);
 							#endif
 							
 						} else {
@@ -113,14 +114,13 @@ protected:
 						queue_rx(queue_index, cmd_length);
 						
 						#ifdef BROADCAST_SPI_DEBUG
-							Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
-								_cmd_byte[0], beacon, cmd_length);
+							Serial.printf("\n[CMD |%d] 0x%02X beacon=%d len=%u\n", queue_index, _cmd_byte[0], beacon, cmd_length);
 						#endif
 
 					} else {
 
 						#ifdef BROADCAST_SPI_DEBUG
-							Serial.println("Master ping");
+							Serial.printf("\n[Master ping |%d]\n", queue_index);
 						#endif
 
 						queue_cmd(queue_index);
@@ -132,7 +132,7 @@ protected:
 				{
 
 					#ifdef BROADCAST_SPI_DEBUG
-						Serial.printf("Received %u bytes: ", cmd_length);
+						Serial.printf("[Master |%d] Received %u bytes: ", queue_index, cmd_length);
 						for (uint8_t i = 0; i < cmd_length; i++) {
 							char c = _rx_buffer[queue_index][i];
 							if (c >= 32 && c <= 126) Serial.print(c);
@@ -168,7 +168,7 @@ protected:
 				case TX_PAYLOAD:
 				{
 					#ifdef BROADCAST_SPI_DEBUG
-						Serial.printf("Sent %u bytes\n", cmd_length);
+						Serial.printf("[Slave |%d] Sent %u bytes\n", queue_index, cmd_length);
 					#endif
 
 					_send_length = 0;	// payload was sent
