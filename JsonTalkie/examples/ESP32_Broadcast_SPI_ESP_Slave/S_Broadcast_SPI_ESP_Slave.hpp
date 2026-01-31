@@ -134,7 +134,7 @@ protected:
 					#ifdef BROADCAST_SPI_DEBUG
 						Serial.printf("Received %u bytes: ", cmd_length);
 						for (uint8_t i = 0; i < cmd_length; i++) {
-							char c = _rx_buffer[0][i];
+							char c = _rx_buffer[queue_index][i];
 							if (c >= 32 && c <= 126) Serial.print(c);
 							else Serial.printf("[%02X]", c);
 						}
@@ -150,14 +150,14 @@ protected:
 
 						stacked_transmissions++;
 						JsonMessage new_message(
-							reinterpret_cast<const char*>( _rx_buffer[0] ),
+							reinterpret_cast<const char*>( _rx_buffer[queue_index] ),
 							static_cast<size_t>( cmd_length )
 						);
 
 						// Needs the queue a new command, otherwise nothing is processed again (lock)
 						// Real scenario if at this moment a payload is still in the queue to be sent and now
 						// has no queue to be picked up
-						queue_cmd(queue_index);	// After the reading above to avoid _rx_buffer[0] corruption
+						queue_cmd(queue_index);	// After the reading above to avoid _rx_buffer[queue_index] corruption
 						
 						_startTransmission(new_message);
 						stacked_transmissions--;
