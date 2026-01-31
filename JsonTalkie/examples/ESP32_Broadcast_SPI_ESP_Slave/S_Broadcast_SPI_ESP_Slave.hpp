@@ -223,20 +223,20 @@ protected:
 	}
 
 	void queue_rx(uint8_t queue_index, uint8_t len) {
-		spi_slave_transaction_t *t = &_transaction[0];
+		spi_slave_transaction_t *t = &_transaction[queue_index];
 		t->length    = (size_t)len * 8;
 		// Half-Duplex
-		t->rx_buffer = _rx_buffer[0];
+		t->rx_buffer = _rx_buffer[queue_index];
 		t->tx_buffer = nullptr;
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
 	}
 
 	void queue_tx(uint8_t queue_index, uint8_t len) {
-		spi_slave_transaction_t *t = &_transaction[0];
+		spi_slave_transaction_t *t = &_transaction[queue_index];
 		t->length    = (size_t)len * 8;
 		// Half-Duplex
 		t->rx_buffer = nullptr;
-		t->tx_buffer = _tx_buffer;
+		t->tx_buffer = _tx_buffer[queue_index];
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
 	}
 
