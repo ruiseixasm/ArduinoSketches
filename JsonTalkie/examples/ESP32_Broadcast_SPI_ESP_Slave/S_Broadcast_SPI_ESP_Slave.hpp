@@ -142,12 +142,7 @@ protected:
 						Serial.println();
 					#endif
 
-					if (stacked_transmissions > 5) {
-
-						// Shouldn't process more than 5 messages at once
-						queue_cmd(transaction_index);
-						
-					} else {
+					if (stacked_transmissions < 5) {
 
 						JsonMessage new_message(
 							reinterpret_cast<const char*>( _rx_buffer[transaction_index] ),
@@ -162,6 +157,11 @@ protected:
 						stacked_transmissions++;
 						_startTransmission(new_message);
 						stacked_transmissions--;
+						
+					} else {
+
+						// Shouldn't process more than 5 messages at once
+						queue_cmd(transaction_index);
 					}
 				}
 				break;
