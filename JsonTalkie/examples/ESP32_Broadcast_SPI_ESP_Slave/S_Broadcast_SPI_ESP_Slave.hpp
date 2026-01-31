@@ -52,10 +52,10 @@ protected:
 	uint8_t _rx_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 	uint8_t _tx_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 	uint8_t _cmd_byte __attribute__((aligned(4)));
-	uint8_t _length_byte __attribute__((aligned(4))) = 0;
 
 	SpiState _spi_state = WAIT_CMD;
 	spi_slave_transaction_t _transaction;
+	uint8_t _send_length = 0;
 
 
     // Constructor
@@ -97,7 +97,7 @@ protected:
 				case WAIT_CMD:
 				{
 					if (beacon) {
-						if (cmd_length > 0 && cmd_length == _length_byte) {	// beacon
+						if (cmd_length > 0 && cmd_length == _send_length) {	// beacon
 							
 							queue_tx(cmd_length);
 							
@@ -172,7 +172,7 @@ protected:
 					// 	Serial.printf("Sent %u bytes\n", cmd_length);
 					// #endif
 
-					_length_byte = 0;	// payload was sent
+					_send_length = 0;	// payload was sent
 					queue_cmd();
 				}
 				break;
@@ -187,7 +187,7 @@ protected:
 		if (_initiated) {
 			
 			const uint16_t start_waiting = (uint16_t)millis();
-			while (_length_byte > 0) {
+			while (_send_length > 0) {
 				// There is NO need to do any of this
     			// yield();          // or vTaskDelay(1)
     			// vTaskDelay(1);   // ← allows SPI driver + DMA completion
@@ -203,7 +203,7 @@ protected:
 				}
 			}
 			
-			_length_byte = (uint8_t)json_message.serialize_json(
+			_send_length = (uint8_t)json_message.serialize_json(
 				reinterpret_cast<char*>( _tx_buffer ),
 				TALKIE_BUFFER_SIZE
 			);
@@ -217,17 +217,17 @@ protected:
 	
 	void queue_cmd() {
 		_spi_state = WAIT_CMD;
-    	static uint8_t length_latched;       // persists across calls
+    	static uint8_t length_latched  __attribute__((aligned(4)));       // persists across calls
 		spi_slave_transaction_t *t = &_transaction;
 		t->length    = 1 * 8;	// Bytes to bits
 		// Full-Duplex
 		t->rx_buffer = &_cmd_byte;
 		// If you see 80 on the Master side it means the Slave wasn't given the time to respond!
-		length_latched = _length_byte;	// Avoids a racing to a shared variable (no race) (stable copy)
+		length_latched = _send_length;	// Avoids a racing to a shared variable (no race) (stable copy)
 		t->tx_buffer = &length_latched;	// <-- EXTREMELY IMPORTANT LINE
 		// THUS, NO NEED TO BE VOLATILE
-		// t->tx_buffer = const_cast<const uint8_t*>(&_length_byte);
-		// t->tx_buffer = (const void*)(&_length_byte);	// Also works
+		// t->tx_buffer = const_cast<const uint8_t*>(&_send_length);
+		// t->tx_buffer = (const void*)(&_send_length);	// Also works
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
 	}
 
