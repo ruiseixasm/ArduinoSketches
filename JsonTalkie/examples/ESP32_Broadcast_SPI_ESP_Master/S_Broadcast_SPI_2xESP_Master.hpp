@@ -22,7 +22,8 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
-#define border_delay_us 10
+#define header_delay_us 10
+#define tail_delay_us 50
 #define padding_delay_us 2
 
 
@@ -49,6 +50,7 @@ protected:
 	spi_device_handle_t _spi;
 	uint8_t _data_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 
+	
 
     // Constructor
     S_Broadcast_SPI_2xESP_Master(const int* ss_pins, uint8_t ss_pins_count, spi_host_device_t host)
@@ -167,7 +169,7 @@ protected:
 		t.tx_buffer = &tx_byte;
 		t.rx_buffer = nullptr;
 
-		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
+		delayMicroseconds(header_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], LOW);
 		}
@@ -188,7 +190,7 @@ protected:
 		t.tx_buffer = _data_buffer;
 		t.rx_buffer = nullptr;
 
-		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
+		delayMicroseconds(header_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], LOW);
 		}
@@ -198,6 +200,7 @@ protected:
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], HIGH);
 		}
+		delayMicroseconds(tail_delay_us);	// Needed to give time to the Slaves to process it BEFORE sending any other message
 	}
 
 
@@ -209,7 +212,7 @@ protected:
 		t.tx_buffer = &tx_byte;
 		t.rx_buffer = &rx_byte;
 
-		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
+		delayMicroseconds(header_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		digitalWrite(ss_pin, LOW);
 		delayMicroseconds(padding_delay_us);
 		spi_device_transmit(_spi, &t);
@@ -228,7 +231,7 @@ protected:
 		t.tx_buffer = nullptr;
 		t.rx_buffer = _data_buffer;
 		
-		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
+		delayMicroseconds(header_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		digitalWrite(ss_pin, LOW);
 		delayMicroseconds(padding_delay_us);
 		spi_device_transmit(_spi, &t);
