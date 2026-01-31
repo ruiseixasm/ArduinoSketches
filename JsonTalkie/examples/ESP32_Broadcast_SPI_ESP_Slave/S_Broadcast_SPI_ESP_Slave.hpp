@@ -59,8 +59,8 @@ protected:
 	uint8_t _cmd_byte_0 __attribute__((aligned(4)));
 	uint8_t _cmd_byte_1 __attribute__((aligned(4)));
 	uint8_t _cmd_byte_2 __attribute__((aligned(4)));
-	uint8_t _length_byte __attribute__((aligned(4))) = 0;
-
+	
+	uint8_t _send_length = 0;
 	SpiState _spi_state = WAIT_CMD;
 	spi_slave_transaction_t _transaction;
 
@@ -83,12 +83,6 @@ protected:
     		spi_slave_transaction_t *ret;
     		esp_err_t err = spi_slave_get_trans_result(_host, &ret, 0);
 			if (err != ESP_OK) {
-				// if (err == ESP_ERR_TIMEOUT) {
-				// 	// The transaction we queued (via queue_cmd/queue_rx/queue_tx) 
-				// 	// either never got queued properly or got dropped!
-				// 	// The SPI communication pipe is EMPTY!
-				// 	queue_cmd();  // ← MUST re-queue to restore communication!
-				// }
 				return;
 			}
 
@@ -104,13 +98,13 @@ protected:
 				case WAIT_CMD:
 				{
 					if (beacon) {
-						if (cmd_length > 0 && cmd_length == _length_byte) {	// beacon
+						if (cmd_length > 0 && cmd_length == _send_length) {	// beacon
 							
 							queue_tx(cmd_length);
 							
-							// #ifdef BROADCAST_SPI_DEBUG
-							// 	Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte_0, beacon, cmd_length);
-							// #endif
+							#ifdef BROADCAST_SPI_DEBUG
+								Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte_0, beacon, cmd_length);
+							#endif
 							
 						} else {
 							queue_cmd();
@@ -120,10 +114,10 @@ protected:
 
 						queue_rx(cmd_length);
 						
-						// #ifdef BROADCAST_SPI_DEBUG
-						// 	Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
-						// 		_cmd_byte_0, beacon, cmd_length);
-						// #endif
+						#ifdef BROADCAST_SPI_DEBUG
+							Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n",
+								_cmd_byte_0, beacon, cmd_length);
+						#endif
 
 					} else {
 
@@ -139,15 +133,15 @@ protected:
 				case RX_PAYLOAD:
 				{
 
-					// #ifdef BROADCAST_SPI_DEBUG
-					// 	Serial.printf("Received %u bytes: ", cmd_length);
-					// 	for (uint8_t i = 0; i < cmd_length; i++) {
-					// 		char c = _rx_buffer_0[i];
-					// 		if (c >= 32 && c <= 126) Serial.print(c);
-					// 		else Serial.printf("[%02X]", c);
-					// 	}
-					// 	Serial.println();
-					// #endif
+					#ifdef BROADCAST_SPI_DEBUG
+						Serial.printf("Received %u bytes: ", cmd_length);
+						for (uint8_t i = 0; i < cmd_length; i++) {
+							char c = _rx_buffer_0[i];
+							if (c >= 32 && c <= 126) Serial.print(c);
+							else Serial.printf("[%02X]", c);
+						}
+						Serial.println();
+					#endif
 
 					if (stacked_transmissions > 5) {
 
@@ -175,11 +169,11 @@ protected:
 				
 				case TX_PAYLOAD:
 				{
-					// #ifdef BROADCAST_SPI_DEBUG
-					// 	Serial.printf("Sent %u bytes\n", cmd_length);
-					// #endif
+					#ifdef BROADCAST_SPI_DEBUG
+						Serial.printf("Sent %u bytes\n", cmd_length);
+					#endif
 
-					_length_byte = 0;	// payload was sent
+					_send_length = 0;	// payload was sent
 					queue_cmd();
 				}
 				break;
@@ -194,11 +188,8 @@ protected:
 		if (_initiated) {
 			
 			const uint16_t start_waiting = (uint16_t)millis();
-			while (_length_byte > 0) {
-				// There is NO need to do any of this
-    			// yield();          // or vTaskDelay(1)
-    			// vTaskDelay(1);   // ← allows SPI driver + DMA completion
-
+			while (_send_length > 0) {
+				
 				_receive();	// keeps processing pending messages, mainly the ones pooled to be sent
 				if ((uint16_t)millis() - start_waiting > 1 * 1000) {
 
@@ -210,7 +201,7 @@ protected:
 				}
 			}
 			
-			_length_byte = (uint8_t)json_message.serialize_json(
+			_send_length = (uint8_t)json_message.serialize_json(
 				reinterpret_cast<char*>( _tx_buffer ),
 				TALKIE_BUFFER_SIZE
 			);
@@ -224,17 +215,14 @@ protected:
 	
 	void queue_cmd() {
 		_spi_state = WAIT_CMD;
-    	static uint8_t length_latched;       // persists across calls
+    	static uint8_t __attribute__((aligned(4))) length_latched;       // persists across calls
 		spi_slave_transaction_t *t = &_transaction;
 		t->length    = 1 * 8;	// Bytes to bits
 		// Full-Duplex
 		t->rx_buffer = &_cmd_byte_0;
 		// If you see 80 on the Master side it means the Slave wasn't given the time to respond!
-		length_latched = _length_byte;	// Avoids a racing to a shared variable (no race) (stable copy)
+		length_latched = _send_length;	// Avoids a racing to a shared variable (no race) (stable copy)
 		t->tx_buffer = &length_latched;	// <-- EXTREMELY IMPORTANT LINE
-		// THUS, NO NEED TO BE VOLATILE
-		// t->tx_buffer = const_cast<const uint8_t*>(&_length_byte);
-		// t->tx_buffer = (const void*)(&_length_byte);	// Also works
 		spi_slave_queue_trans(_host, t, portMAX_DELAY);
 	}
 
