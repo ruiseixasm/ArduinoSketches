@@ -48,11 +48,12 @@ protected:
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action calls[4] = {
+    Action calls[5] = {
 		{"enable", "Enables 1sec cyclic transmission"},
 		{"disable", "Disables 1sec cyclic transmission"},
 		{"burst", "Sends many messages at once"},
-		{"calls", "Gets total calls and their echoes"}
+		{"calls", "Gets total calls and their echoes"},
+		{"reset", "Resets the totals counter"}
     };
     
 public:
@@ -126,6 +127,12 @@ public:
 			case 3:
 				json_message.set_nth_value_number(0, _total_calls);
 				json_message.set_nth_value_number(1, _total_echoes);
+				return true;
+			break;
+			
+			case 4:
+				_total_calls = 0;
+				_total_echoes = 0;
 				return true;
 			break;
 			
