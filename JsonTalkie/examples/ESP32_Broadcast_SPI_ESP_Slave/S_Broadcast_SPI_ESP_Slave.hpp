@@ -142,14 +142,8 @@ protected:
 					// 	Serial.println();
 					// #endif
 
-					if (stacked_transmissions > 5) {
+					if (stacked_transmissions < 5) {
 
-						// Shouldn't process more than 5 messages at once
-						queue_cmd();
-						
-					} else {
-
-						stacked_transmissions++;
 						JsonMessage new_message(
 							reinterpret_cast<const char*>( _rx_buffer ),
 							static_cast<size_t>( cmd_length )
@@ -160,8 +154,14 @@ protected:
 						// has no queue to be picked up
 						queue_cmd();	// After the reading above to avoid _rx_buffer corruption
 						
+						stacked_transmissions++;
 						_startTransmission(new_message);
 						stacked_transmissions--;
+						
+					} else {
+
+						// Shouldn't process more than 5 messages at once
+						queue_cmd();
 					}
 				}
 				break;
