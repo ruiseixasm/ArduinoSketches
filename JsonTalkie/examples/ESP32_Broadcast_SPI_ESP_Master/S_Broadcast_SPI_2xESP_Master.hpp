@@ -134,8 +134,10 @@ protected:
 				TALKIE_BUFFER_SIZE
 			);
 			
-			broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
-			broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
+			if (len > 0) {
+				broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
+				broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
+			}
 			
 			#ifdef BROADCAST_SPI_DEBUG
 				Serial.printf("\n[From Master] Slave: 0x%02X Beacon=0 L=%d\n", len, len);
