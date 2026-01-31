@@ -105,7 +105,7 @@ protected:
 							#endif
 							
 						} else {
-							queue_cmd( (transaction_index + 1) % 3 );
+							queue_cmd(transaction_index);
 						}
 
 					} else if (cmd_length > 0 && cmd_length <= TALKIE_BUFFER_SIZE) {
@@ -118,7 +118,7 @@ protected:
 
 					} else {
 
-						queue_cmd( (transaction_index + 1) % 3 );
+						queue_cmd(transaction_index);
 
 						#ifdef BROADCAST_SPI_DEBUG
 							Serial.printf("\n[Master ping |%d]\n", transaction_index);
@@ -144,20 +144,20 @@ protected:
 					if (stacked_transmissions > 5) {
 
 						// Shouldn't process more than 5 messages at once
-						queue_cmd( (transaction_index + 1) % 3 );
+						queue_cmd(transaction_index);
 						
 					} else {
-
-						// Needs the queue a new command, otherwise nothing is processed again (lock)
-						// Real scenario if at this moment a payload is still in the queue to be sent and now
-						// has no queue to be picked up
-						queue_cmd( (transaction_index + 1) % 3 );	// After the reading above to avoid _rx_buffer[transaction_index] corruption
 
 						JsonMessage new_message(
 							reinterpret_cast<const char*>( _rx_buffer[transaction_index] ),
 							static_cast<size_t>( cmd_length )
 						);
 						
+						// Needs the queue a new command, otherwise nothing is processed again (lock)
+						// Real scenario if at this moment a payload is still in the queue to be sent and now
+						// has no queue to be picked up
+						queue_cmd(transaction_index);	// After the reading above to avoid _rx_buffer[transaction_index] corruption
+
 						stacked_transmissions++;
 						_startTransmission(new_message);
 						stacked_transmissions--;
@@ -168,7 +168,7 @@ protected:
 				case TX_PAYLOAD:
 				{
 					_send_length = 0;	// payload was sent
-					queue_cmd( (transaction_index + 1) % 3 );
+					queue_cmd(transaction_index);
 
 					#ifdef BROADCAST_SPI_DEBUG
 						Serial.printf("[Slave |%d] Sent %u bytes\n", transaction_index, cmd_length);
