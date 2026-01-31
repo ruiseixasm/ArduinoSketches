@@ -68,7 +68,7 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
 
-		static bool processing_message = false;
+		static int stacked_transmissions = 0;
 
 		if (_initiated) {
 			
@@ -142,14 +142,14 @@ protected:
 					// 	Serial.println();
 					// #endif
 
-					if (processing_message) {
+					if (stacked_transmissions > 5) {
 
-						// Shouldn't receive new messages while processing old ones
+						// Shouldn't process more than 5 messages at once
 						queue_cmd();
 						
 					} else {
 
-						processing_message = true;
+						stacked_transmissions++;
 						JsonMessage new_message(
 							reinterpret_cast<const char*>( _rx_buffer ),
 							static_cast<size_t>( cmd_length )
@@ -161,7 +161,7 @@ protected:
 						queue_cmd();	// After the reading above to avoid _rx_buffer corruption
 						
 						_startTransmission(new_message);
-						processing_message = false;
+						stacked_transmissions--;
 					}
 				}
 				break;
