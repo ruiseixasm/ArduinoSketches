@@ -106,7 +106,7 @@ public:
 				return true;
 			break;
 				
-			case 3:
+			case 2:
 			{
 				JsonMessage toggle_yellow_on_off(MessageValue::TALKIE_MSG_CALL, BroadcastValue::TALKIE_BC_LOCAL);
 				toggle_yellow_on_off.set_to_name("blue");
@@ -123,7 +123,7 @@ public:
 			}
 			break;
 			
-			case 2:
+			case 3:
 				json_message.set_nth_value_number(0, _total_calls);
 				json_message.set_nth_value_number(1, _total_echoes);
 				return true;
