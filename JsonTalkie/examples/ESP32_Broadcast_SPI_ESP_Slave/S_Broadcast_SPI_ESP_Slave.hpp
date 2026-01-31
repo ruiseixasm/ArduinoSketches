@@ -90,6 +90,7 @@ protected:
 			const bool beacon = (_cmd_byte[transaction_index] >> 7) & 0x01;
 			const uint8_t cmd_length = _cmd_byte[transaction_index] & 0x7F;
 
+			uint8_t next_transaction_index = (transaction_index + 1) % 3;
 			SpiState spi_state = get_state(ret);
 			switch (spi_state) {
 
