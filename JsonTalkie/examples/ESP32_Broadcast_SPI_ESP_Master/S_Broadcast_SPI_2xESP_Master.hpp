@@ -52,7 +52,7 @@ protected:
 	uint8_t _data_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 
 	bool _in_time_slot = false;
-	uint16_t _sent_time_us;
+	uint32_t _sent_time_us;
 
 
     // Constructor
@@ -67,17 +67,17 @@ protected:
     void _receive() override {
 
 		static uint8_t stacked_transmissions = 0;
-		if (_in_time_slot == true && (uint16_t)micros() - _sent_time_us > send_time_slot_us) {
+		if (_in_time_slot == true && micros() - _sent_time_us > send_time_slot_us) {
 			_in_time_slot = false;
 		}
 
 		// Sends once per pin, avoids getting stuck in processing many pins
 		static uint8_t actual_pin_index = 0;
 		// Too many SPI sends to the Slaves asking if there is something to send will overload them, so, a timeout is needed
-		static uint16_t last_beacon_time = (uint16_t)micros();
+		static uint32_t last_beacon_time = micros();
 
-		if ((uint16_t)micros() - last_beacon_time > 100) {
-			last_beacon_time = (uint16_t)micros();	// Avoid calling the beacon right away
+		if (micros() - last_beacon_time > 100) {
+			last_beacon_time = micros();	// Avoid calling the beacon right away
 
 			if (_initiated) {
 
@@ -169,7 +169,7 @@ protected:
 				broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
 
 				_in_time_slot = true;
-				_sent_time_us = (uint16_t)micros();
+				_sent_time_us = micros();
 
 			} else {
 				return false;
