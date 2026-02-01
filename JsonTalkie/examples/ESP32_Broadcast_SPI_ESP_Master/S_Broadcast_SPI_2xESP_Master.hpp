@@ -24,6 +24,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #define header_delay_us 10
 #define padding_delay_us 2
+// #define ENABLED_TIME_WINDOW
 #define send_time_slot_us 100
 
 
@@ -53,6 +54,7 @@ protected:
 	bool _in_time_slot = false;
 	uint16_t _sent_time_us;
 
+
     // Constructor
     S_Broadcast_SPI_2xESP_Master(const int* ss_pins, uint8_t ss_pins_count, spi_host_device_t host)
 		: BroadcastSocket(), _spi_cs_pins(ss_pins), _ss_pins_count(ss_pins_count), _host(host) {
@@ -65,7 +67,6 @@ protected:
     void _receive() override {
 
 		static uint8_t stacked_transmissions = 0;
-
 		if (_in_time_slot == true && (uint16_t)micros() - _sent_time_us > send_time_slot_us) {
 			_in_time_slot = false;
 		}
@@ -103,16 +104,24 @@ protected:
 							Serial.println();
 						#endif
 						
-						if (stacked_transmissions < 5) {
+						#ifdef ENABLED_TIME_WINDOW
+							if (stacked_transmissions < 5) {
 
+								JsonMessage new_message(
+									reinterpret_cast<const char*>( _data_buffer ),
+									static_cast<size_t>( l )
+								);
+								stacked_transmissions++;
+								_startTransmission(new_message);
+								stacked_transmissions--;
+							}
+						#else
 							JsonMessage new_message(
 								reinterpret_cast<const char*>( _data_buffer ),
 								static_cast<size_t>( l )
 							);
-							stacked_transmissions++;
 							_startTransmission(new_message);
-							stacked_transmissions--;
-						}
+						#endif
 					}
 				}
 				actual_pin_index = (actual_pin_index + 1) % _ss_pins_count;
@@ -150,9 +159,11 @@ protected:
 			
 			if (len > 0) {
 
-				while (_in_time_slot == true) {	// Avoids too many sends too close in time
-					_receive();	// Don't stop receiving
-				}
+				#ifdef ENABLED_TIME_WINDOW
+					while (_in_time_slot == true) {	// Avoids too many sends too close in time
+						_receive();	// Don't stop receiving
+					}
+				#endif
 
 				broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
 				broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
