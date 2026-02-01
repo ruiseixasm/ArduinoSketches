@@ -25,7 +25,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define header_delay_us 10
 #define padding_delay_us 2
 #define ENABLED_TIME_WINDOW
-#define send_time_spacing_us 0
+#define send_time_spacing_us 300	// 250 works but 200 doesn't, so, 300 is a safe value
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
