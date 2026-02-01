@@ -56,16 +56,19 @@ protected:
     uint16_t _total_echoes = 0;
 
 	uint8_t _burst_toggles = 0;
+	uint32_t _burst_spacing_us = 0;
+	uint32_t _last_burst_us = 0;
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action calls[6] = {
+    Action calls[7] = {
 		{"period", "Sets cycle period milliseconds"},
 		{"enable", "Enables 1sec cyclic transmission"},
 		{"disable", "Disables 1sec cyclic transmission"},
 		{"calls", "Gets total calls and their echoes"},
 		{"reset", "Resets the totals counter"},
-		{"burst", "Sends many messages at once"}
+		{"burst", "Sends many messages at once"},
+		{"spacing", "Burst spacing in microseconds"}
     };
     
 public:
@@ -97,7 +100,8 @@ public:
 			}
 		}
 
-		if (_burst_toggles > 0) {
+		if (_burst_toggles > 0 && micros() - _last_burst_us > _burst_spacing_us) {
+			_last_burst_us = micros();
 			_burst_toggles--;
 
 			if (_blue_led_on++ % 2) {
@@ -120,7 +124,7 @@ public:
 		switch(index) {
 
 			case 0:
-				_cyclic_period_ms = json_message.get_nth_value_number(0);;
+				_cyclic_period_ms = json_message.get_nth_value_number(0);
 				return true;
 			break;
 				
@@ -153,6 +157,11 @@ public:
 			}
 			break;
 			
+			case 6:
+				_burst_spacing_us = json_message.get_nth_value_number(0);;
+				return true;
+			break;
+				
 			default: break;
 		}
 		return false;
