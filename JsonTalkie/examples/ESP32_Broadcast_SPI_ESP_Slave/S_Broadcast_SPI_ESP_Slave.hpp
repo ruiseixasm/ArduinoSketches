@@ -68,7 +68,7 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
 
-		static int stacked_transmissions = 0;
+		static uint8_t stacked_transmissions = 0;
 
 		if (_initiated) {
 			

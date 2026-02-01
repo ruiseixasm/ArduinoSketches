@@ -64,6 +64,8 @@ protected:
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
 
+		static uint8_t stacked_transmissions = 0;
+
 		if (_in_time_slot == true && micros() - _sent_time_us > send_time_slot_us) {
 			_in_time_slot = false;
 		}
@@ -101,11 +103,16 @@ protected:
 							Serial.println();
 						#endif
 						
-						JsonMessage new_message(
-							reinterpret_cast<const char*>( _data_buffer ),
-							static_cast<size_t>( l )
-						);
-						_startTransmission(new_message);
+						if (stacked_transmissions < 5) {
+
+							JsonMessage new_message(
+								reinterpret_cast<const char*>( _data_buffer ),
+								static_cast<size_t>( l )
+							);
+							stacked_transmissions++;
+							_startTransmission(new_message);
+							stacked_transmissions--;
+						}
 					}
 				}
 				actual_pin_index = (actual_pin_index + 1) % _ss_pins_count;
@@ -144,9 +151,7 @@ protected:
 			if (len > 0) {
 
 				while (_in_time_slot == true) {	// Avoids too many sends too close in time
-					if (micros() - _sent_time_us > send_time_slot_us) {
-						_in_time_slot = false;
-					}
+					_receive();	// Don't stop receiving
 				}
 
 				broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
