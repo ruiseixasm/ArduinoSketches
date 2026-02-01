@@ -22,10 +22,12 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
+// Broadcast SPI is fire and forget, so, it is needed to give some time to the Slaves catch up with the next send from the Master
+#define broadcast_time_spacing_us 1000	// Gives 1 millisecond to all Slaves to process the received broadcast before a next one
+
 #define padding_delay_us 2
 #define border_delay_us 10
 #define ENABLED_BROADCAST_TIME_SLOT
-#define broadcast_time_spacing_us 1000	// Gives 1 millisecond to all Slaves to process the received broadcast before a next one
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
