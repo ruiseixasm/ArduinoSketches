@@ -101,9 +101,8 @@ public:
 		}
 
 		if (_burst_toggles > 0 && micros() - _last_burst_us > _burst_spacing_us) {
-			_last_burst_us = micros();
 			_burst_toggles--;
-
+			
 			if (_blue_led_on++ % 2) {
 				_toggle_yellow_on_off.set_action_name("off");
 			} else {
@@ -111,6 +110,7 @@ public:
 			}
 			talker.transmitToRepeater(_toggle_yellow_on_off);
 			_total_calls++;
+			_last_burst_us = micros();
 		}
 	}
 

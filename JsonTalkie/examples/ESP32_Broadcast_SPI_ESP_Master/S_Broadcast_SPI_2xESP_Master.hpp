@@ -25,7 +25,7 @@ https://github.com/ruiseixasm/JsonTalkie
 #define header_delay_us 10
 #define padding_delay_us 2
 #define ENABLED_TIME_WINDOW
-#define send_time_slot_us 100
+#define send_time_spacing_us 0
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
@@ -67,7 +67,7 @@ protected:
     void _receive() override {
 
 		static uint8_t stacked_transmissions = 0;
-		if (_in_time_slot == true && micros() - _sent_time_us > send_time_slot_us) {
+		if (_in_time_slot == true && micros() - _sent_time_us > send_time_spacing_us) {
 			_in_time_slot = false;
 		}
 
@@ -167,9 +167,8 @@ protected:
 
 				broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
 				broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
-
+				_sent_time_us = micros();	// send time spacing applies after the sending
 				_in_time_slot = true;
-				_sent_time_us = micros();
 
 			} else {
 				return false;
