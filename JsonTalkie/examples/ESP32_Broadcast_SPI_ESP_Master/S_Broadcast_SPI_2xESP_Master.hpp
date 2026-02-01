@@ -22,10 +22,10 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG
 // #define BROADCAST_SPI_DEBUG_TIMING
 
-#define header_delay_us 10
 #define padding_delay_us 2
-#define ENABLED_TIME_WINDOW
-#define send_time_spacing_us 300	// 250 works but 200 doesn't, so, 300 is a safe value
+#define border_delay_us 10
+#define ENABLED_BROADCAST_TIME_SLOT
+#define broadcast_time_spacing_us 300	// 250 works but 200 doesn't, so, 300 is a safe value
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
@@ -51,8 +51,8 @@ protected:
 	spi_device_handle_t _spi;
 	uint8_t _data_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 
-	bool _in_time_slot = false;
-	uint32_t _sent_time_us;
+	bool _in_broadcast_slot = false;
+	uint32_t _broadcast_time_us;
 
 
     // Constructor
@@ -67,8 +67,8 @@ protected:
     void _receive() override {
 
 		static uint8_t stacked_transmissions = 0;
-		if (_in_time_slot == true && micros() - _sent_time_us > send_time_spacing_us) {
-			_in_time_slot = false;
+		if (_in_broadcast_slot && micros() - _broadcast_time_us > broadcast_time_spacing_us) {
+			_in_broadcast_slot = false;
 		}
 
 		// Sends once per pin, avoids getting stuck in processing many pins
@@ -104,7 +104,7 @@ protected:
 							Serial.println();
 						#endif
 						
-						#ifdef ENABLED_TIME_WINDOW
+						#ifdef ENABLED_BROADCAST_TIME_SLOT
 							if (stacked_transmissions < 5) {
 
 								JsonMessage new_message(
@@ -159,16 +159,17 @@ protected:
 			
 			if (len > 0) {
 
-				#ifdef ENABLED_TIME_WINDOW
-					while (_in_time_slot == true) {	// Avoids too many sends too close in time
-						_receive();	// Don't stop receiving
+				#ifdef ENABLED_BROADCAST_TIME_SLOT
+					while (_in_broadcast_slot) {	// Avoids too many sends too close in time
+						// Broadcast has priority over receiving, so, no beacons are sent during broadcast time slot!
+						if (micros() - _broadcast_time_us > broadcast_time_spacing_us) _in_broadcast_slot = false;
 					}
 				#endif
 
 				broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
 				broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
-				_sent_time_us = micros();	// send time spacing applies after the sending
-				_in_time_slot = true;
+				_broadcast_time_us = micros();	// send time spacing applies after the sending
+				_in_broadcast_slot = true;
 
 			} else {
 				return false;
@@ -200,7 +201,6 @@ protected:
 		t.tx_buffer = &tx_byte;
 		t.rx_buffer = nullptr;
 
-		delayMicroseconds(header_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], LOW);
 		}
@@ -210,6 +210,7 @@ protected:
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], HIGH);
 		}
+		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 	}
 
 	void broadcastPayload(const int* ss_pins, uint8_t ss_pins_count, uint8_t length) {
@@ -221,7 +222,6 @@ protected:
 		t.tx_buffer = _data_buffer;
 		t.rx_buffer = nullptr;
 
-		delayMicroseconds(header_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], LOW);
 		}
@@ -231,6 +231,7 @@ protected:
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], HIGH);
 		}
+		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 	}
 
 
@@ -242,12 +243,12 @@ protected:
 		t.tx_buffer = &tx_byte;
 		t.rx_buffer = &rx_byte;
 
-		delayMicroseconds(header_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		digitalWrite(ss_pin, LOW);
 		delayMicroseconds(padding_delay_us);
 		spi_device_transmit(_spi, &t);
 		delayMicroseconds(padding_delay_us);
 		digitalWrite(ss_pin, HIGH);
+		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 
 		return rx_byte;
 	}
@@ -261,12 +262,12 @@ protected:
 		t.tx_buffer = nullptr;
 		t.rx_buffer = _data_buffer;
 		
-		delayMicroseconds(header_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 		digitalWrite(ss_pin, LOW);
 		delayMicroseconds(padding_delay_us);
 		spi_device_transmit(_spi, &t);
 		delayMicroseconds(padding_delay_us);
 		digitalWrite(ss_pin, HIGH);
+		delayMicroseconds(border_delay_us);	// Needs a small delay of separation in order to the CS pins be able to cycle
 	}
 
 
