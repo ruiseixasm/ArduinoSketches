@@ -44,6 +44,7 @@ protected:
 
 	uint32_t _last_blink = 0;
 	uint8_t _blue_led_on = 0;
+	uint32_t _cyclic_period_ms = 1000;
 	bool _cyclic_transmission = true;	// true by default
 
 	JsonMessage _toggle_yellow_on_off{
@@ -58,12 +59,13 @@ protected:
 
 	// ALWAYS MAKE SURE THE DIMENSIONS OF THE ARRAYS BELOW ARE THE CORRECT!
 
-    Action calls[5] = {
+    Action calls[6] = {
+		{"period", "Sets cycle period milliseconds"},
 		{"enable", "Enables 1sec cyclic transmission"},
 		{"disable", "Disables 1sec cyclic transmission"},
-		{"burst", "Sends many messages at once"},
 		{"calls", "Gets total calls and their echoes"},
-		{"reset", "Resets the totals counter"}
+		{"reset", "Resets the totals counter"},
+		{"burst", "Sends many messages at once"}
     };
     
 public:
@@ -81,7 +83,7 @@ public:
 			digitalWrite(LED_BUILTIN, HIGH);
 		}
 
-		if (millis() - _last_blink > 1000) {
+		if (millis() - _last_blink > _cyclic_period_ms) {
 			_last_blink = millis();
 
 			if (_blue_led_on++ % 2) {
@@ -118,22 +120,20 @@ public:
 		switch(index) {
 
 			case 0:
-				_cyclic_transmission = true;
+				_cyclic_period_ms = json_message.get_nth_value_number(0);;
 				return true;
 			break;
 				
 			case 1:
-				_cyclic_transmission = false;
+				_cyclic_transmission = true;
 				return true;
 			break;
 				
 			case 2:
-			{
-				_burst_toggles = 20;
+				_cyclic_transmission = false;
 				return true;
-			}
 			break;
-			
+				
 			case 3:
 				json_message.set_nth_value_number(0, _total_calls);
 				json_message.set_nth_value_number(1, _total_echoes);
@@ -144,6 +144,13 @@ public:
 				_total_calls = 0;
 				_total_echoes = 0;
 				return true;
+			break;
+			
+			case 5:
+			{
+				_burst_toggles = 20;
+				return true;
+			}
 			break;
 			
 			default: break;

@@ -23,7 +23,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 #define header_delay_us 10
-#define tail_delay_us 50
+#define tail_delay_us 20
 #define padding_delay_us 2
 
 
