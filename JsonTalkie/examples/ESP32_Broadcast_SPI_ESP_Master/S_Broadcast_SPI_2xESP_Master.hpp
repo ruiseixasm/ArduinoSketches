@@ -24,7 +24,7 @@ https://github.com/ruiseixasm/JsonTalkie
 
 #define header_delay_us 10
 #define padding_delay_us 2
-// #define ENABLED_TIME_WINDOW
+#define ENABLED_TIME_WINDOW
 #define send_time_slot_us 100
 
 
