@@ -57,6 +57,7 @@ protected:
 	spi_slave_transaction_t _transaction;
 	uint8_t _send_length = 0;
 
+	uint8_t _stacked_transmissions = 0;
 
     // Constructor
     S_Broadcast_SPI_ESP_Slave(spi_host_device_t host) : BroadcastSocket(), _host(host) {
@@ -67,8 +68,6 @@ protected:
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
-
-		static uint8_t stacked_transmissions = 0;
 
 		if (_initiated) {
 			
@@ -142,22 +141,22 @@ protected:
 					// 	Serial.println();
 					// #endif
 
-					if (stacked_transmissions < 5) {
+					if (_stacked_transmissions < 5) {
 
 						JsonMessage new_message(
 							reinterpret_cast<const char*>( _rx_buffer ),
 							static_cast<size_t>( cmd_length )
 						);
 
-						stacked_transmissions++;	// Limits to 5 if before than queue_cmd(), otherwise limits to 6
-
+						
 						// Needs the queue a new command, otherwise nothing is processed again (lock)
 						// Real scenario if at this moment a payload is still in the queue to be sent and now
 						// has no queue to be picked up
 						queue_cmd();	// After the reading above to avoid _rx_buffer corruption
 						
+						_stacked_transmissions++;
 						_startTransmission(new_message);
-						stacked_transmissions--;
+						_stacked_transmissions--;
 						
 					} else {
 
@@ -189,17 +188,25 @@ protected:
 			
 			const uint16_t start_waiting = (uint16_t)millis();
 			while (_send_length > 0) {
-				// There is NO need to do any of this
-    			// yield();          // or vTaskDelay(1)
-    			// vTaskDelay(1);   // ← allows SPI driver + DMA completion
 
-				_receive();	// keeps processing pending messages, mainly the ones pooled to be sent
-				if ((uint16_t)millis() - start_waiting > 1 * 1000) {
+				if (_stacked_transmissions < 3) {
+					// There is NO need to do any of this
+					// yield();          // or vTaskDelay(1)
+					// vTaskDelay(1);   // ← allows SPI driver + DMA completion
 
-					#ifdef BROADCAST_SPI_DEBUG
-						Serial.println(F("\t_unlockSendingBuffer: NOT available sending buffer"));
-					#endif
+					_receive();	// keeps processing pending messages, mainly the ones pooled to be sent
+					if ((uint16_t)millis() - start_waiting > 1 * 1000) {
 
+						#ifdef BROADCAST_SPI_DEBUG
+							Serial.println(F("\t_unlockSendingBuffer: NOT available sending buffer"));
+						#endif
+
+						return false;
+					}
+
+				// If there is already 3 messages staked, then, start dropping sends
+				// Receive HAS priority over send!
+				} else {	// Start dropping
 					return false;
 				}
 			}
