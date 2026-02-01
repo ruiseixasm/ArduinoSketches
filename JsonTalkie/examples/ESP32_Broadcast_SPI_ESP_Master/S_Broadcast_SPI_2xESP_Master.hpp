@@ -23,8 +23,8 @@ https://github.com/ruiseixasm/JsonTalkie
 // #define BROADCAST_SPI_DEBUG_TIMING
 
 #define header_delay_us 10
-#define tail_delay_us 20
 #define padding_delay_us 2
+#define send_time_slot_us 100
 
 
 class S_Broadcast_SPI_2xESP_Master : public BroadcastSocket {
@@ -50,7 +50,8 @@ protected:
 	spi_device_handle_t _spi;
 	uint8_t _data_buffer[TALKIE_BUFFER_SIZE] __attribute__((aligned(4)));
 
-	
+	bool _in_time_slot = false;
+	uint16_t _sent_time_us;
 
     // Constructor
     S_Broadcast_SPI_2xESP_Master(const int* ss_pins, uint8_t ss_pins_count, spi_host_device_t host)
@@ -62,6 +63,10 @@ protected:
 
     // Socket processing is always Half-Duplex because there is just one buffer to receive and other to send
     void _receive() override {
+
+		if (_in_time_slot == true && micros() - _sent_time_us > send_time_slot_us) {
+			_in_time_slot = false;
+		}
 
 		// Sends once per pin, avoids getting stuck in processing many pins
 		static uint8_t actual_pin_index = 0;
@@ -137,8 +142,19 @@ protected:
 			);
 			
 			if (len > 0) {
+
+				while (_in_time_slot == true) {	// Avoids too many sends too close in time
+					if (micros() - _sent_time_us > send_time_slot_us) {
+						_in_time_slot = false;
+					}
+				}
+
 				broadcastLength(_spi_cs_pins, _ss_pins_count, (uint8_t)len); // D=0, L=len
 				broadcastPayload(_spi_cs_pins, _ss_pins_count, (uint8_t)len);
+
+				_in_time_slot = true;
+				_sent_time_us = micros();
+
 			} else {
 				return false;
 			}
@@ -200,7 +216,6 @@ protected:
 		for (uint8_t ss_pin_i = 0; ss_pin_i < ss_pins_count; ss_pin_i++) {
 			digitalWrite(ss_pins[ss_pin_i], HIGH);
 		}
-		delayMicroseconds(tail_delay_us);	// Needed to give time to the Slaves to process it BEFORE sending any other message
 	}
 
 
