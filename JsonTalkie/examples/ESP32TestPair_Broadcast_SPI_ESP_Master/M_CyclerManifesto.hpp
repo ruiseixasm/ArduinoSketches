@@ -35,7 +35,7 @@ public:
 
     M_CyclerManifesto() : TalkerManifesto() {
 
-		_toggle_yellow_on_off.set_to_name("blue");
+		_toggle_yellow_on_off.set_to_name("slave");
 	}	// Constructor
 
 protected:

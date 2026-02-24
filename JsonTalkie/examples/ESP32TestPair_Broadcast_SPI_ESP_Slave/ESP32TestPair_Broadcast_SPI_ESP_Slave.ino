@@ -30,7 +30,7 @@ https://github.com/ruiseixasm/JsonTalkie
 // TALKERS 
 
 // Talker (led)
-const char l_led_name[] = "blue";
+const char l_led_name[] = "slave";
 const char l_led_desc[] = "I turn led Blue on and off";
 M_LedManifesto led_manifesto(LED_BUILTIN);
 JsonTalker l_led = JsonTalker(l_led_name, l_led_desc, &led_manifesto);

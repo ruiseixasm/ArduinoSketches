@@ -77,7 +77,7 @@ void setup() {
     slvcfg.queue_size = 3;
 
     spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, SPI_DMA_CH_AUTO);
-    Serial.println("Slave ready");
+    // Serial.println("Slave ready");
 
     queue_cmd();   // always armed
 }
@@ -110,7 +110,7 @@ void loop() {
 			bool beacon = (_cmd_byte >> 7) & 0x01;
 			uint8_t received_length = _cmd_byte & 0x7F;
 
-			Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte, beacon, received_length);
+			// Serial.printf("\n[CMD] 0x%02X beacon=%d len=%u\n", _cmd_byte, beacon, received_length);
 
 			if (!beacon) {  // master → slave
 				if (received_length > 0 && received_length <= DATA_SIZE) {
@@ -119,7 +119,7 @@ void loop() {
 					queue_rx(received_length);
 					return;
 				} else {
-					Serial.println("Master ping");
+					// Serial.println("Master ping");
 				}
 
 			} else if (received_length > 0 && received_length == _sending_length) {	// beacon
@@ -135,13 +135,13 @@ void loop() {
 		
 		case RX_PAYLOAD:
 		{
-			Serial.printf("Received %u bytes: ", _active_length);
-			for (uint8_t i = 0; i < _active_length; i++) {
-				char c = _rx_buffer[i];
-				if (c >= 32 && c <= 126) Serial.print(c);
-				else Serial.printf("[%02X]", c);
-			}
-			Serial.println();
+			// Serial.printf("Received %u bytes: ", _active_length);
+			// for (uint8_t i = 0; i < _active_length; i++) {
+			// 	char c = _rx_buffer[i];
+			// 	if (c >= 32 && c <= 126) Serial.print(c);
+			// 	else Serial.printf("[%02X]", c);
+			// }
+			// Serial.println();
 
 			_spi_state = WAIT_CMD;
 			queue_cmd();
@@ -150,7 +150,7 @@ void loop() {
 		
 		case TX_PAYLOAD:
 		{
-			Serial.printf("Sent %u bytes\n", _active_length);
+			// Serial.printf("Sent %u bytes\n", _active_length);
 			_sending_length = 0;
 
 			_spi_state = WAIT_CMD;
